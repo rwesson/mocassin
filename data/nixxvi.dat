@@ -1,4 +1,4 @@
- 43
+ 40
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (1-24): Sugar, J., Corliss, C., 1979, J.Phys.Chem.Ref.Data, 8, 865.
 %energy levels (9,10,11,12,13): Kelly, R.L., 1987, J.Phys.Chem.Ref.Data 16, Suppl. 1.
@@ -22,17 +22,14 @@
    and 1980, ADNDT, 25, 311 - updated by U.I. Safronova, 1999
 %Comment: Other radiative data were calculated using SUPERSTRUCTURE with a 23 configuration model
 %comment:  unobserved lines
-
     1   28        -1.6017      2.665e-05      1.154e+10        1s2.2s 2S0.5 --  1s.(2S).2s.2p 4P2.5
     1   35        -1.5901      2.340e-03      1.543e+12        1s2.2s 2S0.5 -  1s.(2S).2s.2p 2P1.5
     2   25        -1.6203      9.512e-03      1.208e+13        1s2.2p 2P0.5 -         1s.2s2 2S0.5
     3   25        -1.6250      8.197e-03      1.035e+13        1s2.2p 2P1.5 -         1s.2s2 2S0.5
     3   33        -1.6035      1.420e-01      6.136e+13        1s2.2p 2P1.5 -    1s.(2S).2p2 4P2.5
-
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi and K.P.Dere - July 1999
-
 %filename: ni_26.splups
 %oscillator strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 31
 %oscillator strengths innershell transitions: Vainshtein, L.A., Safronova, U.I., 1978, ADNDT, 21, 49

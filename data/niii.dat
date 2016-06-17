@@ -1,4 +1,4 @@
- 46
+ 43
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (n=2): Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %energy levels (n=3): Kelly,R.L., 1987, J.Phys.Chem.Ref.Data 16, Suppl. 1
@@ -19,7 +19,6 @@
    differences are seen for the intercombination lines, and for some of the n=3
    levels.
    Also, two new (weak) transitions are present in the new model (8-12, 5-13).
-
   i  j       wvl       A_1       A_2   %diff
   1  3  1748.652 2.52e+002 3.49e+002   38.61
   1  4  1746.820 4.47e+000 8.90e+000   99.02
@@ -33,11 +32,9 @@
  14 19  2714.711 1.41e+006 6.26e+005  -55.61
  15 19  2715.227 2.82e+005 1.25e+005  -55.82
  15 20  2714.814 1.70e+006 7.52e+005  -55.75
-
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   P.R.Young - 12-Dec-03
-
 %filename: n_3.splups
 %oscillator strengths: Stafford, R.P., Hibbert, A., Bell, K.L., 1993, MNRAS, 260, L11
 %effective collision strengths: Stafford, R.P., Bell, K.L., Hibbert, A., 1994, MNRAS, 266, 715

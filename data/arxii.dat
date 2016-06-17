@@ -1,4 +1,4 @@
- 25
+ 24
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (1 - 15): Edlen, 1984, Phys.Scripta, 30, 135
 %Observed energy levels (n=3): NIST Database for Atomic Spectroscopy, Version 2.0, 1999, NIST Standard Reference Database # 78
@@ -15,7 +15,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Oct 2003
-
 %filename: ar_12.splups
 %Oscillator strengths: Eissner, Landi & Bhatia 2005, ADNDT, 89, 195
 %Collision strengths: Eissner, Landi & Bhatia 2005, ADNDT, 89, 195

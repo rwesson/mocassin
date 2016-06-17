@@ -1,4 +1,4 @@
- 26
+ 25
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels:  Martin, W. C., Sugar, J., Musgrove, A., and Dalton, G. R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -15,7 +15,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration 
 %
 %  K.P. Dere, Nov. 1995
-
 %filename: ar_8.splups
 %oscillator strengths: Sampson, D.H., Zhang, H.L., Fontes, C.J., 1990, ADNDT, 44, 209
 %oscillator strengths: hydrogenic values for 4f-5g

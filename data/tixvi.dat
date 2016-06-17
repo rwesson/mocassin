@@ -1,4 +1,4 @@
- 31
+ 30
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (1 - 15): Edlen, 1984, Phys.Scripta, 30, 135 
 %Observed energy levels (n=3): Fuhr et al 1999, NIST Database for Atomic Spectroscopy, 
@@ -20,7 +20,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % G. Del Zanna, Jan 2002
-
 %filename: ti_16.splups
 %oscillator strengths (levels 1 - 15): Zhang, Sampson, 1999, ADNDT, 72, 153
 %%oscillator strengths (levels 16 - 72): Bhatia,A.K., Seely,J.F., Feldman,U., 1989, ADNDT, 43, 99

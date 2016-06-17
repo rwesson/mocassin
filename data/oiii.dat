@@ -1,4 +1,4 @@
- 31
+ 30
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: 
    v.3 of NIST Atomic Spectra Database
@@ -21,7 +21,6 @@
 %
 % Enrico Landi and P.R. Young - Jun 10, 2005
 %   Updated with Tachiev A-values, P.R. Young, Jul 14, 2006
-
 %filename: o_3.upsdat
 %effective collision strengths: Burke, V.M., Lennon, D.J., A&ASS, 1994, 103,273
 %produced as part of the Arcetri/Cambridge/NRL atomic data base collaboration

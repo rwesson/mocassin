@@ -1,4 +1,4 @@
- 23
+ 22
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -13,7 +13,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic database collaboration
 %
 %   E. Landi 1996
-
 %filename: si_3.splups
 %oscillator strengths: Dufton P.L., Hibbert A., Kingston A.E., Doschek G.A., 1983, ApJ, 274, 420
 %oscillator strengths: P.R.Young (DAMTP, Un. of Cambridge, UK), SUPERSTRUCTURE calculations, 1996

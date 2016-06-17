@@ -1,4 +1,4 @@
- 23
+ 22
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (n=2): Edlen, B., Phys. Scr. 1985, 31, 345.
 %observed energy levels (n=3): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R.,
@@ -15,7 +15,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  Enrico Landi - 2000
-
 % filename: al_8.splups
 %collision strengths: Zhang, Sampson, 1996, ADNDT, 63, 275
 % oscillator strengths: Zhang, Sampson, 1996, ADNDT, 63, 275

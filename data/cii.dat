@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels:  Moore, C. E., Tables of Spectra of Hydrogen, Carbon,
   Nitrogen, and Oxygen Atoms and Ions, J. W. Gallagher ed., CRC Press, 1993.
@@ -19,7 +19,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration CHIANTI
 %
 %  K.P.Dere and E.Landi 2003
-
 %filename: c_2.splups
 %oscillator strengths: Dankwort, W., Trefftz, E., 1978, A&A, 65, 93
 %oscillator strengths: Lennon, D.J., Dufton, P.L., Hibbert, A., Kingston, A.E., 1985, ApJ, 294, 200

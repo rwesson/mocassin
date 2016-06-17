@@ -24,9 +24,10 @@ module dust_mod
       real, pointer :: scaOpacTmp(:,:)
 
       integer :: err ! allocation error status
-      integer :: iP,jP,kP,i,j ! counter
+      integer :: iP,jP,kP ! counter
       integer :: size ! size of MPI reducing string
       integer :: ios ! I/O error status
+      integer :: yTop
 
       logical,save :: lgFirstDustEm=.true.
 
@@ -56,28 +57,32 @@ module dust_mod
          stop
       end if
 
-
       if (.not. lgWarm) then
-         allocate(grid%Tdust(0:nSpecies, 0:nSizes, 0:grid%nCells), stat = err)
+         allocate(grid%Tdust(0:nSpeciesMax, 0:nSizes, 0:grid%nCells), stat = err)
          if (err /= 0) then
             print*, "! dustOpacity: can't allocate Tdust memory"
             stop
          end if
-         grid%Tdust(0:nSpecies, 0:nSizes, 0:grid%nCells)   = 50.
+         grid%Tdust   = 50.
       end if
 
       ! initialize arrays
-      grid%absOpac(0:grid%nCells, 1:nbins) = 0.
-      grid%scaOpac(0:grid%nCells, 1:nbins) = 0.
+      grid%absOpac = 0.
+      grid%scaOpac = 0.
 
-      
       ! initialize tmp arrays
-      absOpacTmp(0:grid%nCells, 1:nbins) = 0.
-      scaOpacTmp(0:grid%nCells, 1:nbins) = 0.
+      absOpacTmp = 0.
+      scaOpacTmp = 0.
+
+      if (lg2D) then
+         yTop = 1
+      else
+         yTop = grid%ny
+      end if
 
 
       do iP = taskid+1, grid%nx, numtasks
-         do jP = 1, grid%ny
+         do jP = 1, yTop
             do kP = 1, grid%nz
 
                call dustOpacity()
@@ -93,10 +98,11 @@ module dust_mod
       call mpi_allreduce(grid%scaOpac, scaOpacTmp, size, &
 &                             mpi_real, mpi_sum, mpi_comm_world, ierr)
 
-      do i = 0, grid%nCells
-         do j = 1, nbins
-            grid%absOpac(i,j) = absOpacTmp(i,j)
-            grid%scaOpac(i,j) = scaOpacTmp(i,j)
+
+      do iP = 0, grid%nCells
+         do jP = 1, nbins
+            grid%absOpac(iP,jP) = absOpacTmp(iP,jP)
+            grid%scaOpac(iP,jP) = scaOpacTmp(iP,jP)
          end do
       end do
 
@@ -106,6 +112,7 @@ module dust_mod
          lgFirstDustEm=.false.
       end if
       lgDust = .true.
+
 
     contains
 

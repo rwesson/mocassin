@@ -1,4 +1,4 @@
- 34
+ 33
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (1-24): Del Zanna, 2005, A&A, in press
 %Theoretical energy levels (1-24): Whiteford et al.,  2002, J.Phys.B, 35, 3729
@@ -19,7 +19,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % G. Del Zanna and E. Landi - Jun 27, 2005
-
 % filename: fe_24.splups
 %Oscillator strengths (1-15): Berrington and Tully 1997, A&AS, 126, 105
 %Oscillator strengths (16-24): Whiteford et al., 2002, J.Phys.B, 35, 3729

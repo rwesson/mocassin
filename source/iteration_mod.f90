@@ -80,6 +80,9 @@ module iteration_mod
            integer                :: gpLoc           ! local grid counter
            integer                :: ii,jj,kk        ! counters
            integer                :: ngridloc
+           integer                :: yTop
+
+           integer                :: dcp, nsp
 
            allocate(noHitPercent(nGrids))
            allocate(noIonBalPercent(nGrids))
@@ -109,14 +112,23 @@ module iteration_mod
 !*****************************************************************************
 
            iCell = 0
+
            do iG = 1, nGrids
+
+              if (ig>1 .or. (.not.lg2D)) then
+                 yTop = grid(iG)%ny
+              else if (iG ==1 .and. lg2D) then
+                 yTop = 1
+              end if
+
+
               grid(iG)%opacity(0:grid(iG)%nCells, 1:nbins) = 0.
 
               if (lgGas) then
                  if (taskid==0) print*, '! iterateMC: ionizationDriver in', iG
                  ! calculate the opacities at every grid cell
                  do i = 1, grid(iG)%nx
-                    do j = 1, grid(iG)%ny
+                    do j = 1, yTop
                        do k = 1, grid(iG)%nz
                           iCell = iCell+1
                           if (mod(iCell-(taskid+1),numtasks)==0) &
@@ -142,7 +154,7 @@ module iteration_mod
 
                  call mpi_barrier(mpi_comm_world, ierr)
                  do i = 1, grid(iG)%nx
-                    do j = 1, grid(iG)%ny
+                    do j = 1, yTop
                        do k = 1, grid(iG)%nz
                           do freq = 1, nbins
                              
@@ -168,23 +180,41 @@ module iteration_mod
                     grid(iG)%scaOpac(0:grid(iG)%nCells, 1:nbins) = 0.
                     grid(iG)%absOpac(0:grid(iG)%nCells, 1:nbins) = 0.
                  else
+
+
+                    if (ig>1 .or. (.not. lg2D)) then
+                       yTop = grid(iG)%ny
+                    else if (iG ==1 .and. lg2D) then
+                       yTop = 1
+                    end if
+
                     do i = 1, grid(iG)%nx
-                       do j = 1, grid(iG)%ny
+                       do j = 1, yTop
                           do k = 1, grid(iG)%nz
-                             
                              if (grid(iG)%active(i,j,k)>0) then
-                                do nS = 1, nSpecies
+                                if (lgMultiDustChemistry) then 
+                                   dcp = dustComPoint(grid(iG)%dustAbunIndex(grid(iG)%active(i,j,k)))
+                                   nsp = grid(iG)%dustAbunIndex(grid(iG)%active(i,j,k))
+                                else
+                                   dcp = dustComPoint(1)
+                                   nsp = 1
+                                end if
+
+                                do nS = 1, nSpeciesPart(nsp)
+
                                    do ai = 1, nSizes                                
-                                      if (grid(iG)%Tdust(nS,ai,grid(iG)%active(i,j,k))<TdustSublime(nS)) then
+                                      if (grid(iG)%Tdust(nS,ai,grid(iG)%active(i,j,k))<TdustSublime(dcp-1+nS)) then
                                          do freq = 1, nbins 
                                             grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) = &
                                                  & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
-                                                 & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
-                                                 & xSecArray(dustScaXsecP(nS,ai)+freq-1)
+                                                 & grainAbun(nsp,nS)*&
+                                                 & grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
+                                                 & xSecArray(dustScaXsecP(nS+dcp-1,ai)+freq-1)
                                             grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
                                                  & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
-                                                 & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
-                                                 & xSecArray(dustAbsXsecP(nS,ai)+freq-1)
+                                                 & grainAbun(nsp,nS)&
+                                                 & *grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
+                                                 & xSecArray(dustAbsXsecP(nS+dcp-1,ai)+freq-1)
                                          end do
                                       end if
                                    end do
@@ -255,10 +285,17 @@ module iteration_mod
            ! set the diffuse PDFs at every grid cell
            do iG = 1, nGrids
 
+              if (ig>1 .or. (.not.lg2D) ) then
+                 yTop = grid(iG)%ny
+              else if (iG ==1 .and. lg2D) then
+                 yTop = 1
+              end if
+
+
               if (taskid==0) print*, '! iterateMC: emissionDriver in',iG           
               iCell = 0
               do i = 1, grid(iG)%nx
-                 do j = 1, grid(iG)%ny
+                 do j = 1, yTop
                     do k = 1, grid(iG)%nz
 
                        iCell = iCell+1
@@ -368,7 +405,7 @@ module iteration_mod
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
                  
                  do i = 1, grid(iG)%nx
-                    do j = 1, grid(iG)%ny
+                    do j = 1, yTop
                        do k = 1, grid(iG)%nz
                           if (grid(iG)%active(i,j,k)>0) then
                              grid(iG)%totalLines(grid(iG)%active(i,j,k)) = totalLinesTemp(grid(iG)%active(i,j,k))
@@ -476,9 +513,17 @@ module iteration_mod
               end if
 
               do gpLoc = 1, nGridloc
+
+                 if (gploc>1 .or. (.not. lg2D)) then
+                    yTop = grid(gploc)%ny
+                 else if (gploc ==1 .and. lg2D) then
+                    yTop = 1
+                 end if
+
+
                  if(taskid==0) print*, 'iterateMC: Starting transfer for diffuse source grid: ', gpLoc
                  do ii = 1,grid(gpLoc)%nx
-                    do jj = 1,grid(gpLoc)%ny
+                    do jj = 1,yTop
                        do kk = 1,grid(gpLoc)%nz
                  
                           if (grid(gpLoc)%active(ii,jj,kk)>0) then
@@ -545,6 +590,15 @@ module iteration_mod
            end if
 
            do iG = 1, nGrids
+
+              if (ig>1 .or. (.not. lg2D)) then
+                 yTop = grid(iG)%ny
+              else if (iG ==1 .and. lg2D) then
+                 yTop = 1
+              end if
+
+  
+
               allocate(escapedPacketsTemp(0:grid(iG)%nCells, 0:nbins, 0:nAngleBins), stat = err)
               if (err /= 0) then
                  print*, "! iterateMC: can't allocate grid memory: escapedPacketsTemp", iG
@@ -618,7 +672,7 @@ module iteration_mod
 
 
               do i = 1, grid(iG)%nx
-                 do j = 1, grid(iG)%ny
+                 do j = 1, yTop
                     do k = 1, grid(iG)%nz
                        if (grid(iG)%active(i,j,k)>0) then
                           do freq = 1, nbins
@@ -628,12 +682,19 @@ module iteration_mod
                              end if
                              grid(iG)%JSte(grid(iG)%active(i,j,k),freq) = &
                                   & JSteTemp(grid(iG)%active(i,j,k),freq)
+                             if (lg2D) grid(iG)%JSte(grid(iG)%active(i,j,k),freq) = &
+                                  & grid(iG)%JSte(grid(iG)%active(i,j,k),freq)/&
+                                  & TwoDscaleJ(grid(iG)%active(i,j,k))
                              
                           end do
                           if (lgDebug) then
                              do freq = 1, nLines
                                 grid(iG)%linePackets(grid(iG)%active(i,j,k),freq) &
                                      & = linePacketsTemp(grid(iG)%active(i,j,k),freq)
+                                if (lg2D) grid(iG)%JDif(grid(iG)%active(i,j,k),freq) = &
+                                     & grid(iG)%JDif(grid(iG)%active(i,j,k),freq)/&
+                                     & TwoDscaleJ(grid(iG)%active(i,j,k))
+ 
                              end do
                           end if
                        end if
@@ -692,6 +753,13 @@ module iteration_mod
 
            do iG = 1, nGrids
               
+              if (ig>1 .or. (.not.lg2D)) then
+                 yTop = grid(iG)%ny
+              else if (iG ==1 .and. lg2D) then
+                 yTop = 1
+              end if
+
+
               allocate(lgConvergedTemp(0:grid(iG)%nCells), stat &
                    &= err)
               if (err /= 0) then
@@ -736,7 +804,7 @@ module iteration_mod
               end if
              
               if (lgDust) then
-                 allocate(TdustTemp(0:nSpecies,0:nSizes,0:grid(iG)%nCells), stat = err)
+                 allocate(TdustTemp(0:nSpeciesMax,0:nSizes,0:grid(iG)%nCells), stat = err)
                  if (err /= 0) then
                     print*, "! iterateMC: can't allocate array memory:&
                          &TdustTemp ", iG
@@ -768,7 +836,7 @@ module iteration_mod
               if(taskid==0) print*, 'iterateMC: updateCell in', iG
               iCell = 0
               do i = 1, grid(iG)%nx
-                 do j = 1, grid(iG)%ny
+                 do j = 1, yTop
                     do k = 1, grid(iG)%nz
                        iCell = iCell+1
                        if (mod(iCell-(taskid+1),numtasks)==0) &
@@ -822,7 +890,7 @@ module iteration_mod
               end if
 
               if (lgDust) then
-                 size =  (grid(iG)%nCells+1)*(nspecies+1)*(nsizes+1)
+                 size =  (grid(iG)%nCells+1)*(nspeciesMax+1)*(nsizes+1)
 
                  call mpi_allreduce(TdustTemp,grid(iG)%Tdust,size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
@@ -854,7 +922,7 @@ module iteration_mod
               end if
 
               do i = 1, grid(iG)%nx
-                 do j = 1, grid(iG)%ny
+                 do j = 1, yTop
                     do k = 1, grid(iG)%nz
                        if (grid(iG)%active(i,j,k)>0) then
                           grid(iG)%lgConverged(grid(iG)%active(i,j,k)) = &
@@ -901,8 +969,14 @@ module iteration_mod
               totCells    = 0.
               convPercent = 0.
 
+              if (ig>1 .or. (.not.lg2D)) then
+                 yTop = grid(iG)%ny
+              else if (iG ==1 .and. lg2D) then
+                 yTop = 1
+              end if
+
               do i = 1, grid(iG)%nx
-                 do j = 1, grid(iG)%ny
+                 do j = 1, yTop
                     do k = 1, grid(iG)%nz
                        if (grid(iG)%active(i,j,k)>0)  then
                           convPercent = convPercent + grid(iG)%lgConverged(grid(iG)%active(i,j,k))

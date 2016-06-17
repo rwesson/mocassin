@@ -1,4 +1,4 @@
- 21
+ 20
 ** Atomic data from version 5.2 of the CHIANTI database **
 %experimental energy levels: Edlen, B., 1983, Phys. Scripta, 28, 51
 %theoretical energy levels 2s2p5, 2p6 conf.: Butler, K., Zeippen, C.J., 1994, AASS, 108, 1
@@ -11,7 +11,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 % 
 % E. Landi - May 2004
-
 %filename: na_4.splups
 %oscillator strengths: interpolated using Ne III, Mg V, Si VII, S IX, Ar XI
 %effective collision strengths ground conf.: Butler, K., Zeippen, C.J., 1994, AASS, 108, 1

@@ -1,4 +1,4 @@
- 22
+ 21
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
      NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -14,7 +14,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration CHIANTI
 %  
 % Ken Dere - 1998
-
 %filename: ni_28.splups
 %oscillator strengths: Wiese,W.L., Smith,M.W., Glennon,B.M., 1966, Atomic Transition Probabilities, NSRDS-NBS-4 (hydrogenic)
 %collision strengths: interpolation of R-matrix calculations of Aggarwal,K.M., Kingston,A.E., 1991, J. Phys. B, 24, 4583

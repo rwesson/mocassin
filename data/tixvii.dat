@@ -1,4 +1,4 @@
- 19
+ 18
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energies: Edlen, B., 1985, Physica Scripta, 31, 345
 %theoretical energies: Zhang, Sampson, ADNDT, 1996, 63, 275.
@@ -11,7 +11,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   Enrico Landi - 2000
-
 %filename: ti_17.splups
 %oscillator strengths: Zhang, Sampson, 1996, ADNDT, 63, 275
 %collision strengths: Zhang, Sampson, 1996, ADNDT, 63, 275

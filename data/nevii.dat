@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
@@ -17,7 +17,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi and K.P. Dere, Jan 1996
-
 %filename: ne_7.splups
 %oscillator strengths: Zhang, H., Sampson, D.H., 1992, ADNDT, 52, 43
 %effective collision strengths: Ramsbottom, Berrington, Bell, 1994, J.Phys.B, 27, L811

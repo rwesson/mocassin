@@ -1,4 +1,4 @@
- 39
+ 38
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (n=2): Fuhr, J.R., Kelleher, D.E., Martin, W.C., Musgrove, A., Sugar, J., Wiese, W.L.,
       Dalton, G.R., Dragoset, R.A., Mohr, P.J., Olsen, K., Reader, J., Saloman, E.B., Sansonetti, C.J.,
@@ -25,7 +25,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration CHIANTI
 %
 % E. Landi and K.P. Dere - Mar 2005
-
 %filename: ar_15.splups
 %oscillator strengths (n=2): Zhang, Sampson, 1992, ADNDT, 52, 143
 %oscillator strengths (n=3): Sampson, Goett, Clark, 1984, ADNDT, 30, 125

@@ -1,4 +1,4 @@
- 35
+ 34
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (n=2): Edlen, B, 1983, Phys. Scripta, 28, 483
 %observed energy levels (n=3): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
@@ -25,7 +25,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % K.P.Dere and E.Landi 1999
-
 %filename: ni_24.splups
 %oscillator strengths (levels 8 and 9): Sampson,D.H., Weaver,G.M., Goett,S.J., Zhang,H., Clark,R.E.H., 1990, ADNDT, 44, 31
 %oscillator strengths: Dankwort,W., Trefftz,E., 1978, A&A, 65, 93

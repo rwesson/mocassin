@@ -1,4 +1,4 @@
- 23
+ 22
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C. and Zalubas, R., 1983, J.Phys.Chem.Ref.Data, 12, 323.
 %theoretical energy levels: Bhatia, unpublished calculations
@@ -13,7 +13,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %    K.P. Dere - Oct 1995
-
 %filename: si_6.splups
 %oscillator strengths: Blackford, H.M.S., Hibbert, A., 1994, ADNDT, 58, 101
 %effective collision strengths: Saraph, H.E., Tully, J.A., 1994, A&AS, 107, 29

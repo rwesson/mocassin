@@ -29,9 +29,11 @@ module set_input_mod
         
         
         ! set default values and set non oprional values to 0 or 0. or "zero"
-       
+
+        lgIsotropic   = .false.       
         lgRecombination = .false.
         lgAutoPackets = .false.
+        lgMultiDustChemistry = .false.
         lgMultiChemistry = .false.
         lgTalk        = .false.
         lgHdenConstant= .false.
@@ -136,9 +138,16 @@ module set_input_mod
 
             ! check if the end of file has been reached
             read(unit=10, fmt=*, iostat=ios) keyword
+print*, lgDust, 'lgdust'
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case("isotropicScattering")
+               lgIsotropic = .true.
+               print*, keyword, lgIsotropic
+            case("2D")
+               lg2D = .true.
+               print*, keyword, lg2D
             case("nstages")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, nstages
@@ -229,8 +238,20 @@ module set_input_mod
                lgMultiChemistry = .true.
                backspace(10)
                allocate(abundanceFile(1:nAbComponents))
-               read(unit=10, fmt=*, iostat=ios) keyword, nAbComponents, (abundanceFile(j), j=1,nAbComponents)
+               read(unit=10, fmt=*, iostat=ios) keyword, nAbComponents, &
+                    & (abundanceFile(j), j=1,nAbComponents)
                print*, keyword, nAbComponents, (abundanceFile(j), j=1,nAbComponents)
+            case ("multiDustChemistry")
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, nDustComponents
+               lgMultiDustChemistry = .true.
+               lgDust = .true.
+               backspace(10)
+               allocate(dustSpeciesFile(1:nDustComponents))
+               allocate(nSpeciesPart(1:nDustComponents))
+               read(unit=10, fmt=*, iostat=ios) keyword, nDustComponents, (dustSpeciesFile(j), j=1,nDustComponents), dustFile(2)
+               print*, keyword, nDustComponents, (dustSpeciesFile(j), j=1,nDustComponents)
+               print*, dustFile(2)
             case ("planeIonization")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, meanField, nu0
@@ -259,6 +280,10 @@ module set_input_mod
                  backspace 10
                  read(unit=10, fmt=*, iostat=ios) keyword, dustFile(1), dustFile(2)
                  print*, keyword, dustFile(1), dustFile(2)
+                 allocate(dustSpeciesFile(1:1))
+                 allocate(nspeciesPart(1:1))
+                 nDustComponents = 1
+                 dustSpeciesFile(1) = dustFile(1)
              case ("debug")
                  backspace 10
                  read(unit=10, fmt=*, iostat=ios) keyword
@@ -548,6 +573,9 @@ module set_input_mod
            nyIn = 1
            nzIn = 1
            lgSymmetricXYZ = .true.
+        else if (lgPlaneIonization .and. lg2d) then
+           print*, "! readInput: planeIonization and 2D options are not compatible"
+           stop
         else if (resLinesTransfer >= minConvergence .and. resLinesTransfer /= 101. .and. lgDust) then
            print*, "! readInput: the min convergence level assigned to the calculation of &
                 &the resonant lines transfer is higher or equal to that assigned by maxIterateMC"
@@ -618,7 +646,8 @@ module set_input_mod
                  & file", in_file, nPhotons
             stop
         else if (lgDust) then
-            if (dustFile(1) == "none" .or. dustFile(2)=="none" ) then
+            if ((dustFile(1) == "none" .or. dustFile(2)=="none") .and. &
+                 &.not.lgMultiDustChemistry) then
                print*, "! readInput: dust files were not specified; please include dustFile field &
                     & in the input files and specify name and location of dust files"
                stop

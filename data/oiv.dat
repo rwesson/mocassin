@@ -1,4 +1,4 @@
- 65
+ 61
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (n=2): Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %energy levels (n=3): Kelly,R.L., 1987, J.Phys.Chem.Ref.Data 16, Suppl. 1. 
@@ -20,9 +20,7 @@
 %comment: gf and A values for transitions 123-71 and 124-72 are estimates
 %comment: The following table lists all those transitions for which the A-values
    are more than 30% different from the previous CHIANTI file (pre-v5):
-
   i  j       wvl       A_1       A_2   %diff
-
   1 16   279.631 1.91e+009 2.67e+009   39.44
   1 31   238.360 2.17e+010 2.91e+010   33.78
   2 16   279.934 3.85e+009 5.35e+009   38.81
@@ -49,11 +47,9 @@
   7 87   379.778 6.75e+007 4.44e+008  556.84
   5106   272.127 4.25e+009 7.15e+009   68.35
   7106   320.211 2.71e+004 8.98e+004  230.81
-
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % P.R. Young and E. Landi - 12-Dec-2003
-
 %filename: o_4.splups
 %oscillator strengths: Dankwort, W., Trefftz, E., 1978, A&A, 65, 93
 %oscillator strengths: Bhatia, A.K., Feldman, U., Seely, J.F., 1986, ADNDT, 35, 319

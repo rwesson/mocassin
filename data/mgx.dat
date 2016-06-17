@@ -1,4 +1,4 @@
- 31
+ 30
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (1-24): Martin, W.C., Zalubas, R., 1980, J.Phys.Chem.Ref.Data, 9, 1.
 %Theoretical energy levels (1-24): Zhang,H.L., Sampson,D.H., Fontes,C.J., ADNDT, 44, 31.
@@ -21,7 +21,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   E. Landi and K.P. Dere - Nov 1999
-
 %filename: mg_10.splups
 %oscillator strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 31
 %collision strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 31

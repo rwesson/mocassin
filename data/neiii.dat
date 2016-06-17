@@ -1,4 +1,4 @@
- 27
+ 26
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Fuhr, J.R., et al., 1999, "NIST Atomic Spectra Database" ver. 2.0
      March 1999. NIST Physical Reference Data
@@ -17,7 +17,6 @@ comment: the NIST energy of level 2s2.2p3(2D).3p 3P2 has been associated to leve
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi - Feb 2004
-
 %filename: ne_3.splups
 %oscillator strengths: Landi & Bhatia 2005, ADNDT, 89, 139
 %effective collision strengths within the ground configuration: McLaughlin B.M., Bell K.L., 2000, J.Phys.B, 33, 597

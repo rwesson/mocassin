@@ -12,13 +12,15 @@ module common_mod
     integer          :: nVP   ! # of fluorescent viewing angles
 
     character(len=4), pointer :: fluorescenceLabel(:) ! ID labels of fluorescent transitions
-
     real, pointer    :: fluorescenceVP(:,:) ! viewing angles for fluorescence cube &
                                             ! (for the first dimension 1=theta;2=phi)
 
     ! MPI variables
     integer, pointer :: lgConvergedTemp(:)  ! temporary converged? flag
     integer, pointer :: lgBlackTemp(:)      ! temporary converged? flag
+
+    logical         :: lg2D=.false.             ! 2D?
+    logical         :: lgIsotropic
 
     logical             :: lgMultiStars=.false.
     logical         :: lgEquivalentTau          ! calculate equivalent tau?
@@ -33,6 +35,8 @@ module common_mod
     logical         :: lgGrainSpiking = .true.  ! temperature spiking for small grains
 
 
+    real, pointer :: gSca(:)                 ! gSca(freq)
+
     real, pointer   :: TdustTemp(:,:,:)     ! temporary dust temperature array (species,size,cell)
     real, pointer   :: ionDenTemp(:,:,:)    ! temporary ion density array    
     real, pointer   :: NeTemp(:)            ! temporary electron density array
@@ -41,6 +45,7 @@ module common_mod
     real, pointer   :: KNsigmaArray(:,:)    ! Klein Nishina calc PDFs (nbins,180)
     real, pointer   :: KNsigmaT(:)          ! Klein Nishina cross-sections integrated over the solid angle
     real, pointer   :: PcompArray (:,:) 
+    real, pointer   :: twoDscaleJ(:)
 
     integer         :: radio4p9GHzP   ! 
       
@@ -231,6 +236,7 @@ module common_mod
         integer :: nCells                           ! number of active cells
         integer :: motherP                          ! pointer to the motherGrid
 
+        integer, pointer :: dustAbunIndex(:)        ! dust chemistry file index (cell) 
         integer, pointer :: resLinePackets(:)       ! extraPackets to be generated cell (cell)
         integer, pointer :: abFileIndex(:,:,:)      ! abundance file index axxay
         integer, pointer :: lgConverged(:)          ! has the model converged at this grid cell?
@@ -336,6 +342,7 @@ module common_mod
     !  model parameters
 
     type(vector), pointer :: starPosition(:) ! ionising source(s) position
+    type(vector)       :: nullUnitVector 
 
     logical            :: lgCompton        ! evaluate Compton energy exchange?
     logical            :: lgAutoPackets    ! automatic increase of packets on the fly? 
@@ -352,6 +359,7 @@ module common_mod
     logical            :: lgMdMh           ! dust to hydrogen mass ratio used>? 
     logical            :: lgOutput         ! output line fluxes,temp & ion struct files?
     logical            :: lg1D             ! 1-D switch
+    logical            :: lgMultiDustChemistry ! do we have a inhomogeneous dust species distribution? 
     logical            :: lgMultiChemistry ! do we have a chemically inhomogeneous gas? 
     logical            :: lgNeutral        ! starting from neutral gas?
     logical            :: lgPlaneIonization! plane parallel ionization?    
@@ -359,6 +367,7 @@ module common_mod
 
     character(len=50)  :: gridList ! grid list file name
     character(len=50), pointer  :: abundanceFIle(:) ! abundance file names
+    character(len=50), pointer  :: dustSpeciesFIle(:) ! abundance file names
     character(len=50)           :: contDiffuse      ! shape of the diffuse ionising spectrum
     character(len=50), pointer  :: contShape(:)     ! continuumShape
     character(len=50), pointer  :: contShapeIn(:)   ! continuumShape
@@ -377,8 +386,10 @@ module common_mod
     integer            :: TotAngleBinsPhi=360 ! total # of phi angle bins for SED
     integer            :: nGrids           ! total number of grids to be used in the simulation
     integer            :: maxIterateMC     ! limit on number of MC iterations
-    integer            :: maxPhotons       ! limit to packets to be used
+    integer            :: maxPhotons       ! limit to packets to be use
     integer            :: nAbComponents=1  ! number of abundance components            
+    integer            :: nDustComponents=1 ! number of dust components            
+    integer, pointer   :: dustComPoint(:)  !  
     integer            :: nBins            ! number of energy bins 
     integer            :: nElementsUsed    ! actual number of elements used
     integer, pointer   :: nPhotons(:)      ! # of packets to be used in the sim
@@ -402,7 +413,7 @@ module common_mod
     real               :: convWriteGrid    ! min conv level before starting to write the grid
     real               :: nPhotIncrease    ! nPhoton increase factor
     real               :: densityLaw(3)    ! density law parameters (R1,n,f,N0)
-    real,pointer       :: grainAbun(:)     ! abundance of this species
+    real,pointer       :: grainAbun(:,:)     ! abundance of this species
     real,pointer       :: grainRadius(:)   ! grain radius [um]
     real,pointer       :: grainWeight(:)   ! grain weight normalised to 1
     real,pointer       :: viewPointTheta(:),viewPointPhi(:)     ! viewing angles
@@ -437,7 +448,9 @@ module common_mod
     integer             :: lymanP                  ! frequency pointer to Lyman limit
     ! dust parameters
     integer            :: nSizes           ! number of grain sizes
-    integer            :: nSpecies         ! number of grain species
+    integer,pointer    :: nSpeciesPart(:)  ! number of grain specie
+    integer            :: nSpecies         ! number of grain specie
+    integer            :: nSpeciesMax      ! max number of grain species
     integer            :: nResLines=0      ! number of resonant lines to be transfered
 
 end module common_mod

@@ -1,4 +1,4 @@
- 21
+ 20
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Churilov S.S., Levashov V.E., 1993, Physica Scripta 48, 425
 %theoretical energy levels: Churilov S.S., Levashov V.E., 1993, Physica Scripta 48, 425
@@ -12,7 +12,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Sept 2001
-
 %filename: ca_8.splups
 %oscillator strengths: Landi, Storey, & Zeippen, 2004, ApJ, 607, 640
 %effective collision strengths: Landi, Storey & Zeippen, 2004, ApJ, 607, 640

@@ -1,4 +1,4 @@
- 29
+ 28
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (1 - 13): Edlen, 1984, Phys.Scripta, 30, 135 
 %observed energy levels (17 - 18): Kelly,R.L., 1987, J.Phys.Chem.Ref.Data 16, Suppl. 1
@@ -20,7 +20,6 @@
 %Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E.Landi and P.R.Young 1999
-
 %filename: ne_4.splups
 %oscillator strengths: SUPERSTRUCTURE calculation (see ne_4.wgfa)
 %Effective collision strength: Ramsbottom, Bell, Keenan, 1998, MNRAS, 293, 233

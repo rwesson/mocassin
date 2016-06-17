@@ -1,4 +1,4 @@
- 20
+ 19
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energies: Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %theoretical energies: Wilson, N. J., Bell, K. L. 2001, MNRAS 325, 159
@@ -10,7 +10,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % P.R. Young - 12-Jun-02
-
 %filename: k_5.splups
 %theoretical energy levels: Wilson, N. J., Bell, K. L. 2001, MNRAS 325, 159
 %effective collision strengths: Wilson, N. J., Bell, K. L. 2001, MNRAS 325, 159

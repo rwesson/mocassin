@@ -1,4 +1,4 @@
- 48
+ 42
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energies: Fuhr et al., 1999, NIST Atomic Spectra Database Version 2.0
 %theoretical energies: Berrington, K.A., Nakazaki, S., Norrington, P.H., 2000, A&AS, 142, 313
@@ -10,16 +10,13 @@
 %comment:
      The following A-values were incorrect in the Berrington et al. (2000)
      paper and have been corrected (K.A. Berrington, 2004, private communication)
-
 i-i'   A(correct)    (in paper)
 1-4   .372            3.25
 1-7   .0150            .174
 4-7   .182             .191
-
      The following table lists those transitions for which the new
      A-values (A_2) are more than 30% different from the previous
      CHIANTI A-values (Nussbaumer & Storey 1982).
-
   i  j       wvl       A_1       A_2   %diff
   1  5  4989.954 9.37e-002 1.35e-001   44.08
   1  6  4894.748 3.55e-002 5.02e-002   41.41
@@ -28,11 +25,9 @@ i-i'   A(correct)    (in paper)
   4  6 33845.598 4.37e-002 5.72e-002   30.89
   4  8  8732.268 1.23e-003 4.14e-003  236.59
   7  8 13074.140 1.74e-005 4.54e-005  160.92
-
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  P.R. Young - 19-Feb-2004
-
 %filename: fe_7.splups
 %energies: Berrington, K.A., Nakazaki, S., Norrington, P.H., 2000, A&AS, 142, 313
 %effective collision strengths: Berrington, K.A., Nakazaki, S., Norrington, P.H., 2000, A&AS, 142, 313
@@ -41,7 +36,6 @@ i-i'   A(correct)    (in paper)
      than 20%. Note that there are large differences (factors 2-3) over
      the previous R-matrix calculation (Keenan & Norrington 1987, 1991)
      which are attributed to the much larger model used by Berrington et al.
-
      The CHIANTI fits reproduce the original upsilons to an accuracy of <1.4%.
 %comment: effective collision strengths were provided in the temperature range 4.3 < logT < 6.0.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration

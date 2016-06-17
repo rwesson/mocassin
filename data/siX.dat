@@ -1,4 +1,4 @@
- 38
+ 37
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (n=2): Edlen, B., 1983, Phys.Scripta, 28, 483
 %energy levels (n=3): Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 1995, NIST Database Version 1.0
@@ -21,7 +21,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   K.P.Dere and E.Landi 1999
-
 %filename: si_10.splups
 %oscillator strengths (1 - 15): Dankwort,W., Trefftz,E., 1978, A&A, 65, 93
 %oscillator strengths: Bhatia, A.K., Feldman, U., Seely, J.F., 1986, ADNDT, 35, 319

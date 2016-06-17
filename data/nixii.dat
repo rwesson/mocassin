@@ -1,4 +1,4 @@
- 34
+ 31
 ** Atomic data from version 5.2 of the CHIANTI database **
 % Experimental energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -15,17 +15,14 @@
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 % Theoretical energy levels and radiative transition probabilities: SUPERSTRUCTURE calculations
 %comment: the SUPERSTRUCTURE has been carried out with the following configurations:
-
          3s2.3p5, 3s.3p6,
          3s2.3p4.3d,  3s.3p5.3d,  3p6.3d,
          3s2.3p3.3d2, 3s.3p4.3d2, 3p5.3d2,
          3s2.3p2.3d3, 3s.3p3.3d3, 3p4.3d3,
          3s2.3p4.4s,  3s2.3p4.4d, 3s2.3p4.4f
-
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data collaboration
 %
 % E. Landi 1998
-
 %filename: ni_12.splups
 %Oscillator strengths: calculated using SUPERSTRUCTURE, see file ni_12.wgfa
 %effective collision strengths: Matthew, Ramsbottom, Bell, Keenan, ApJ, 491, 415

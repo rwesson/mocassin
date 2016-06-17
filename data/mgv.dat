@@ -1,4 +1,4 @@
- 32
+ 31
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (n=2): Edlen, B., 1983, Phisica Scripta, 28, 51
 %observed energy levels (n=3): Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
@@ -16,7 +16,6 @@ e Data
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  E. Landi - Feb 2004
-
 %filename: mg_5.splups
 %Oscillator strengths: Landi E. & Bhatia A.K. 2005, ADNDT, in press
 %effective collision strengths ground configuration T<10^5 :Butler, K., Zeippen, C.J., A&ASS, 1994, 108, 1

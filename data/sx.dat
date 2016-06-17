@@ -1,4 +1,4 @@
- 34
+ 33
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (1 - 15): Edlen, 1984, Phys.Scripta, 30, 135
 %Observed energy levels (16 - 22): Fuhr, J.R., Kelleher, D.E., Martin, W.C., Musgrove, A., Sugar, J., Wiese, W.L.,
@@ -18,7 +18,6 @@ Observed energy levels (1-15): Edlen, 1984, Phys.Scripta, 30, 135
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic database collaboration
 %
 % E. Landi - Aug 2002
-
 %filename: s_10.splups
 %oscillator strengths (1-15):  Zhang, Sampson, 1999, ADNDT, 72, 153
 %oscillator strengths (16-22): from the 6-conf model of Bhatia & Landi, 2003, ApJS, 147, 409

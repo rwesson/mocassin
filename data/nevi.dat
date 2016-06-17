@@ -1,4 +1,4 @@
- 28
+ 27
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (n=2): Edlen,B, 1983, Phys Scripta, 28, 483
 %observed energy levels (n=3): Fuhr, J.R., Kelleher, D.E., Martin, W.C., Musgrove, A., Sugar, J., Wiese, W.L.,
@@ -19,7 +19,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E.Landi and P.R. Young - Apr 2006
-
 %filename: ne_6.splups
 %Oscillator strengths: Mitnik, Griffin & Badnell, 2001, J.Phys.B, 34, 4455
 %Effective collision strengths: Mitnik, Griffin & Badnell, 2001, J.Phys.B, 34, 4455

@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: Fuhr, J.R., Kelleher, D.E., Martin, W.C., Musgrove, A., Sugar, J., Wiese, W.L.,
         Dalton, G.R., Dragoset, R.A., Mohr, P.J., Olsen, K., Reader, J., Saloman, E.B., Sansonetti, C.J.,
@@ -16,7 +16,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi Jul 2001
-
 %filename: n_1.splups
 %oscillator strengths: Hibbert, A., Biemont, E., Godefroid, M., Vaeck, N., 1991, A&AS, 88, 505
 %effective collision strengths: Tayal, S.S., 2000, ADNDT, 76, 191

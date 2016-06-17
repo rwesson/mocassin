@@ -1,4 +1,4 @@
- 52
+ 48
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Produced for the CHIANTI atomic database
 %energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
@@ -23,7 +23,6 @@
 %
 % Peter Young, 6-Jun-06
 %  swapped levels 4 and 5 to be consistent with new collision data.
-
 %file:  o_2.splups
 %prepared for the CHIANTI atomic database by Peter Young, 7-Jun-06
 %upsilons (ground configuration): 
@@ -39,13 +38,10 @@
 %comment:
    The Pradhan upsilons are tabulated over the range 1000-25,000 K. The fits
    reproduce the upsilons to within 0.61 %.
-
    The McLaughlin & Bell upsilons are accurate in the temperature range
    3.7 < Log T < 6.0.
-
    The Bhatia data were used for transitions involving the 2p5 configuration
    and for fine structure transitions.
-
    Note that levels 4 and 5 are swapped in this file compared to earlier
    versions of CHIANTI.
 %history:

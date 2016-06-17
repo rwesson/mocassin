@@ -1,4 +1,4 @@
- 42
+ 37
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -15,24 +15,19 @@
 %A-values: computed using a SSTRUCT model by P.R.Young
 %comment: A-values computed using a 15 configuration model of the ion. 
     The following configs were included:
-
         2s2, 2s 2p, 2p2
         2s 3s, 2s 3p, 2s 3d
         2p 3s, 2p 3p, 2p 3d
         3s2, 3p2, 3d2
         3s 3p, 3s 3d, 3p 3d
-
     For the levels with no observed energies, `best-guess' SSTRUCT energies were 
     used, which are more accurate than those derived from the theoretical 
     energies in the .elvlc file.
-
     A crucial aspect of this new data is the availability of allowed transitions 
     to de-populate the 3p.3p 3F4 level (level 26) which was previously metastable.
-
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   P.R.Young  Jul 1998
-
 %filename: mg_9.splups
 %oscillator strengths: SUPERSTRUCTURE calculations from P.R> Young (see mg_9.wgfa for details)
 %effective collision strengths (levels 1 to 10): Keenan et al., Physica Scripta 34, 216, 1986
