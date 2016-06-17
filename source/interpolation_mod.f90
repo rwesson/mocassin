@@ -39,31 +39,26 @@ module interpolation_mod
 
     end subroutine sortUp            
       
- 
-    ! subroutine locate uses the method of bisection   
-    ! given an array xa of length n, and given a value x,
-    ! it returns a value ns, such that x is located between 
+    ! given an array xa of length n, and given a value x, this
+    ! routine returns a value ns, such that x is located between
     ! xa(ns) and xa(ns+1) 
     ! ns = 0 or ns=n is returned to indicate that x is out
     ! of range. 
-    subroutine locate(xa,  x, ns)
+
+    subroutine locate(xa,x,ns)
+
         implicit none
 
         integer, intent(out) :: ns
-        
+
         real, dimension(:), intent(in) :: xa  ! input array
         real, intent(in) :: x                 ! variable to be located
-  
+
         ! local variables
 
-        integer :: i                          ! counter
-        integer :: jlow, jup   ! lower and upper limits
-        integer :: jm                       ! mid point
-        integer :: imax = 10000   ! max # of operations
         integer :: n                 ! size of array xa
- 
-        n = size(xa)
 
+        n = size(xa)
 
         ! first check if x is out of range
         if ( x > xa(n) ) then
@@ -74,35 +69,15 @@ module interpolation_mod
         if ( x < xa(1) ) then
             ns = 0
             return
-        end if        
+        end if
 
+        ! if not, then locate
+        ! the command finds the location of the smallest positive value of xa-x
+        ! x lies between this location and the previous one
+        ! so subtract one, and then x lies between xa(ns) and xa(ns+1)
 
-        ! initialize lower and upper limits
-        jlow = 0                 
-        jup = n+1
+        ns=max(minloc((xa-x),1,(xa-x).gt.0)-1,1)
 
-        do i = 1, imax
-            ! if we are not done yet
-            if ( (jup-jlow) < 1) exit 
-            ! compute another mid point and either
-            jm = (jup+jlow)/2             
-
-            ! the following if statement caters for the case when x
-            ! falls exactly on one of the array members
-            if ( (xa(jm) == x) ) then
-                ns = jm
-                return
-            end if
-
-            if ( (xa(n) > xa(1)) .eqv. (x > xa(jm)) ) then
-                jlow = jm ! reaplace the lower limit, or
-            else
-                jup = jm  ! replace the upper limit
-            end if
-        end do
-
-        ns = jlow ! set the output
-        
     end subroutine locate
 
 
