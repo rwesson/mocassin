@@ -13,7 +13,6 @@ module output_mod
         implicit none
 
         type(grid_type), intent(inout) :: grid(*) ! the 3D grid
-        type(vector) :: aVec, uHat
 
         character(len=30), optional, intent(in) :: extMap
 
@@ -21,13 +20,13 @@ module output_mod
 
         logical                     :: lgInSlit !is this cell within the slit? 
 
-        integer                     :: i,j,k,l,i1d,iG, & ! counters
-             & iup,ilow,iLine,lin,elem,ion,n,iCount,iAb,iRes
+        integer                     :: i,j,k,l,iG, &     ! counters
+             & iup,ilow,iLine,elem,ion,iCount,iAb,iRes
         integer                     :: nrec              ! counter for rec lines
         integer                     :: abFileUsed
         integer                     :: cellPUsed
         integer                     :: ios               ! I/O error status
-        integer                     :: nTau, err, imul
+        integer                     :: err, imul
         integer                     :: totLinePackets    ! total number of line packets
         integer                     :: totEscapedPackets ! total number of esc packets
         integer                     :: ypLoc
@@ -42,10 +41,8 @@ module output_mod
         real                        :: g        ! alpha*h*nu (used to calculate line intensities)
         real, pointer               :: HbetaLuminosity(:) ! MC Hbeta luminosity [E36 erg/sec]
         real, pointer               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]        
-        real                        :: lr       ! 
         real                        :: LtotAn   ! HbetaVol * sumAn
         real                        :: LtotMC   ! HbetaLuminosity * sumMC 
-        real                        :: muLoc    !
         real                        :: sumAn    ! sum of the relative an intensities
         real                        :: sumMC    ! sum of the relative MC intensities
         real                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
@@ -90,11 +87,6 @@ module output_mod
         real(kind=8), dimension(500) :: recLinesLambda        ! local rec lines wavelengths from subroutine
 
         real                         :: denIon=0.
-
-        character(len=30), dimension(500) :: recOIIMUL       !multiplet
-        character(len=30), dimension(500) :: recOIIlow       !low level
-        character(len=30), dimension(500) :: recOIIup        !upper level
-        character(len=30), dimension(500) :: recNIItran     !transition for NII
 
 
         print*, "in outputGas" 
@@ -1840,7 +1832,7 @@ module output_mod
           implicit none
           real, intent(in) :: tk
           real(kind=8), intent(inout) :: lamb(500),flux(500)
-          real(kind=8)  :: te,den,ahb,emhb,aeff,&
+          real(kind=8)  :: ahb,emhb,te,aeff,&
            &  a(51),b(51),c(51),br(500),em,a1,b1,c1,d1,z,br1
           integer :: i
           do i=1,500
@@ -1991,9 +1983,6 @@ module output_mod
 &                                      iup        ! pointer to upper level
         integer                    :: denint
 
-        real                       :: A4471, A4922! HeI reference lines 
-        real                       :: aFit        ! general interpolation coeff
-        real                       :: C5876, C6678! collition exc. corrections
         real                       :: Hbeta       ! Hbeta emission
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
@@ -2138,7 +2127,6 @@ module output_mod
       integer                    :: nlu        ! upper level
       integer                    :: ne         ! level
       integer                    :: ndum       ! level
-      integer                    :: i          ! integer
       integer                    :: j          ! integer
 
       real, dimension(15)              :: densx
@@ -2356,9 +2344,8 @@ module output_mod
       type(vector) :: aVec, uHat        
       
       real, pointer :: outTau(:)
-      real          :: nuR
 
-      integer :: nTau, err, i, ios
+      integer :: err, i, ios
 
       ! find the run of the optical depths from the illuminated
       ! surface to the edge of the nebula
@@ -2479,14 +2466,13 @@ module output_mod
       type(grid_type), intent(in) :: grid(*)     !
 
       integer :: ios, err                        ! I/O error status
-      integer :: i,j,k,freq, imu, iG, ic, ijk, nuP                 ! counters
+      integer :: i,j,k,freq, imu, iG, ic, ijk    ! counters
       
       real, pointer :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
 
       real          :: theta1, theta2, phi1, phi2
       real          :: lambda                    ! lambda [cm]
       real          :: totalE                    ! total energy [erg/sec]
-      real          :: echod1, echod2            ! light echo distances
 
       print*, 'in writeSED'      
 
@@ -2692,7 +2678,7 @@ module output_mod
 
       type(grid_type), intent(in) :: grid(*)     
 
-      integer :: ios, err, i,ix,iy,iz, iG        ! I/O error status, counters
+      integer :: ios,ix,iy,iz, iG        ! I/O error status, counters
       integer ::  freq, imu, ifreq1, ifreq2      ! counters
       
       real, intent(inout)         :: freq1,freq2 ! wavelengths in um

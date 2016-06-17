@@ -29,26 +29,20 @@ module grid_mod
         ! local variables
 
         integer :: err, ios                         ! allocation error status
-        integer :: ii
-        integer :: i, j, iCount, nuCount, elem, ion ! counters
-        integer :: nradio
+        integer :: i, iCount, nuCount, elem, ion    ! counters
         integer :: g0,g1
         integer :: nEdges  
         integer :: nElec
         integer :: outshell
 
         logical, save :: lgFirst=.true.
-        logical       :: lgAssigned
 
         integer, parameter :: maxLim = 10000
         integer, parameter :: nSeries = 17
 
-        real, dimension(450) :: ordered
         real, dimension(17)  :: seriesEdge
 
         real                 :: nuMinArray, nuMaxArray        
-        real                 :: dradio
-        real                 :: nuStepSizeLoc
 
         real, pointer        :: nuTemp(:)
 
@@ -493,31 +487,22 @@ module grid_mod
         type(grid_type), dimension(:),intent(inout) :: grid
 
         ! local variables
-        integer :: i, j, k, l, m, n, elem, ion, iG, jG    ! counters
-        integer :: ios                                    ! I/O status
+        integer :: i, j, k, elem, iG, jG                  ! counters
         integer :: err                                    ! memory allocation status
         integer :: ngridsloc
         integer, parameter :: max_points = 10000          ! safety limit
 
 !        character(len=30)            :: in_file
 
-        real :: radius     ! sqrt(x^2 + y^2 + z^2)
-
         ! pointer to the array of 2nd derivatives of the interpolating function
         ! calculated by spline for use into splint
 
-        integer :: iCount, nuCount              ! counters
-        integer :: g0,g1
-        integer :: nEdges  
-        integer :: nElec
-        integer :: outshell
         integer :: totCells
         integer :: totCellsLoc=0
 
         integer, parameter :: maxLim = 10000
         integer, parameter :: nSeries = 17
         
-        real                 :: nuStepSizeLoc
         real :: massFac,dV
         integer                        :: ix,iy,iz     ! counters   
         integer                        :: nspec, ai    ! counters
@@ -911,8 +896,6 @@ module grid_mod
         real                           :: denominator   ! denominator
         real                           :: dV           ! volume element
         real                           :: expFactor    ! exp factor in density law calculations
-        real                           :: expTerm      ! exp term
-        real                           :: factor       ! conputation factor
         real                           :: gasCell      ! mass of gas in current cell
         real                           :: H0in         ! estimated H0 at the inner radius for regionI
         real, pointer                  :: MdMg(:,:,:)  ! Md/Mg
@@ -920,8 +903,6 @@ module grid_mod
         real                           :: norm, scale  ! normalisation and scaling for meanField
         real                           :: radius       ! distance from the origin
         real                           :: random       ! random nmumber 
-        real                           :: readReal     ! real number reader
-        real                           :: surfIn       ! surface at inner radius [e36 cm^2]
         real                           :: totalMass    ! total ionized mass 
         real                           :: totalVolume  ! total active volume
         real                      :: echoVolume, vol   ! just echo volume
@@ -936,17 +917,13 @@ module grid_mod
         
 
 
-        integer                        :: icomp 
         integer                        :: i,j,k        ! counters
         integer                        :: index        ! general index
-        integer                        :: iOrigin,&    ! indeces of the origin of the grid
-             & jOrigin, kOrigin
         integer                        :: ios, err     ! I/O and allocation error status
         integer                        :: elem, ion    ! counters
         integer                        :: nspec, ai    ! counters
         integer                        :: nsp          ! pointer
         integer                        :: nu0P         ! 
-        integer                        :: RinP         ! pointer to the inner radius intercept  
 
         integer                        :: yTop, xPmap  ! 2D indeces
 
@@ -1813,26 +1790,18 @@ module grid_mod
            
 
            ! local variables
-           real, pointer                  :: a(:)         ! grain radii
            real                           :: x,y,z        ! x,y,z 
            real                           :: delta        ! displacement for realigning subgrids to mothergrid
            real                           :: denominator   ! denominator
            real                           :: denfac       ! enhancement factor
            real                           :: dV           ! volume element
-           real                           :: expFactor    ! exp factor in density law calculations
-           real                           :: expTerm      ! exp term
-           real                           :: factor       ! conputation factor
            real                           :: gasCell      ! mass of gas in current cell
            real                           :: H0in         ! estimated H0 at the inner radius for regionI
            real                           :: MhMg         ! hdrogen to gas mass ratio
-           real                           :: normWeight   ! normalization const for grain size distribution
            real                           :: radius       ! distance from the origin
-           real                           :: random       ! random nmumber 
-           real                           :: surfIn       ! surface at inner radius [e36 cm^2]
            real                           :: totalMass    ! total ionized mass 
            real                           :: totalVolume  ! total active volume
            real                      :: echoVolume, vol   ! just echo volume
-           real, pointer                  :: weight(:)    ! weight of grain
            
            
            real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
@@ -1842,16 +1811,9 @@ module grid_mod
            integer                        :: edgeP        ! subgrid edge pointer on mothergrid
            integer                        :: i,j,k,iG,ai  ! counters
            integer                        :: ix,iy,iz     ! counters          
-           integer                        :: index        ! general index
-           integer                        :: iOrigin,&    ! indeces of the origin of the grid jOrigin,&    
-                & kOrigin
            integer                        :: ios, err     ! I/O and allocation error status
            integer                        :: elem, ion    ! counters
-           integer                        :: nspec, nsize ! counters
-           integer                        :: nsp          ! pointer
-           integer                        :: NgrainSize   ! number of grain sizes
-           integer                        :: RinP         ! pointer to the inner radius intercept  
-                                                       ! with one of the axes
+           integer                        :: nsp, nspec   ! pointer
            character(len=50)              :: dFileRead    ! subgrid dFile  reader
 
            ! open grid info file
@@ -2989,19 +2951,14 @@ module grid_mod
 
       ! local variables
 
-      logical, save :: lgfirst = .true.
       integer                        :: cellP ! cell pointer
       integer                        :: err,ios   ! I/O error status
       integer                        :: i,j,k ! counters
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
-      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7, ind
+      real                           :: p0,p00,p1,p2,p3,ind
       real, pointer                  :: p(:)                                        
-      integer :: iCount, nuCount, iG, ai      ! counters
-      integer :: g0,g1
-      integer :: nEdges  
-      integer :: nElec
-      integer :: outshell
+      integer :: iG, ai  ! counters
       integer :: totCells, totcellsloc
       integer :: yTop, xPmap
         
@@ -3009,11 +2966,7 @@ module grid_mod
       integer, parameter :: maxLim = 10000
       integer, parameter :: nSeries = 17
       
-      real, dimension(450) :: ordered
-      real, dimension(17)  :: seriesEdge
       real                 :: radius
-
-      real                 :: nuStepSizeLoc
 
       print*, 'resetGrid in'
       
@@ -3688,7 +3641,7 @@ module grid_mod
       implicit none
       type(grid_type),intent(in) :: grid              ! the grid
       integer, intent(in)        :: xP, yP, zP        ! cell indeces  
-      double precision :: x,y,z,dx,dy,dz,t1,t2,vfrac,vol
+      double precision :: x,y,z,dx,dy,dz,t1,t2,vol
       real             :: t1i,t2i,vEcho,odx,ody,odz,volume
       double precision :: h,rho,ddx,ddy,xx,yy
       double precision :: dfac=9.4605284e17,tfac=365.25
@@ -3772,7 +3725,6 @@ module grid_mod
 !
     function zee(rho,t)
       double precision :: zee,rho,t
-      double precision :: cl=2.998e10
 
       zee=rho**2/(2.*t)-t/2.
       return 

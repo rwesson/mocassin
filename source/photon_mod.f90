@@ -44,35 +44,22 @@ module photon_mod
         ! local variables
         integer                        :: gPIn        ! 
         integer                        :: igp         ! 1= mother 2 =sub 
-        integer                        :: ian         ! angle counter
-        integer                        :: ifreq       ! freq counter
-        integer                        :: iview       ! viewing angle counter
-        integer                        :: freqP       ! pointer to frequency
-        integer                        :: i,j,k,iG,ii ! counters        
+        integer                        :: i           ! counter       
         integer                        :: iCell       ! cell counter
         integer                        :: igrid,ix,iy,iz ! location indeces
         integer                        :: ierr        ! allocation error status
         integer                        :: iPhot       ! counter
-        integer                        :: plotNum     ! counter
         integer                        :: seedSize    ! pseudo random number generator seed 
         integer, dimension(2)          :: inX,inY,inZ ! initial position indeces
         integer, pointer               :: seed(:)     ! seed array
         integer                        :: msec        ! millisecs of the sec
         integer                        :: dt(8)       ! date and time values
-        integer                        :: countRecursive
         integer                        :: trapped
         integer                        :: reRun
-
-        real                           :: JDifTot     ! tot JDif
-        real                           :: JsteTot     ! tot Jste
-        real                           :: radius      ! radius
-        
-
 
         character(len=7)               :: chTypeD     ! character type for driver
         character(len=7)               :: chTypeIn    ! character type 
 
-        type(vector)                   :: absPosition ! position of packet absorption
         type(vector)                   :: positionIn  ! position of packet absorption
 
 
@@ -305,9 +292,6 @@ module photon_mod
 
             type(vector),intent(inout) :: position         ! the position of the photon
 
-            real :: number 
-            real, save :: ionPhot = 0.       
-
             integer, dimension(2), intent(inout)    :: xP, yP, &
                  & zP                                            ! cartesian axes indeces 
                                                                  ! 1= mother; 2=sub
@@ -318,8 +302,6 @@ module photon_mod
             integer                          :: igpr             ! grid pointer 1= mother 2=sub
             integer                          :: difSourceL(3)    ! cell indeces
 
-            integer                          :: err              ! allocation error status
-            integer                          :: i, j             ! counters  
             integer                          :: idirP, idirT     ! direction cosines
 
             type(photon_packet)              :: enPacket         ! the energu packet
@@ -529,7 +511,7 @@ module photon_mod
             type(vector), intent(in) :: direction
             ! local variables
 
-            integer                  :: i, irepeat        ! counter
+            integer                  :: irepeat           ! counter
 
 
             initPhotonPacket%direction = direction
@@ -803,7 +785,6 @@ module photon_mod
             integer, intent(in)      :: difSource(3)  ! grid and cell indeces
             integer, intent(inout)   :: gP
             integer                            :: igpn           ! grid pointe 1=motehr, 2=sub
-            logical                            :: lgLine_loc=.false.! line photon?
 
             real                               :: random         ! random number
 
@@ -1100,7 +1081,7 @@ module photon_mod
           real                            :: random   ! random number
           real                            :: tauCell  ! local tau
 
-          integer                         :: icomp, iierr, ihg
+          integer                         :: iierr, ihg
           integer                         :: idirT,idirP ! direction cosine counters
           integer                         :: i, j, nS ! counter
           integer                         :: xP,yP,zP ! cartesian axes indeces
@@ -2898,14 +2879,9 @@ module photon_mod
  
    type(photon_packet), intent(inout) :: inpacket
    
-   real :: nxp,nyp,nzp
    real :: sint,cost,sinp,cosp,phi
-   real :: costp,sintp,phip
-   real :: bmu,b,ri1,ri3,cosi3,sini3,cosb2,sinbt,sini2,bott,cosdph
-   real :: cosi2,sin2i3,sin2i2,cos2i3,cos2i2,sin2,cos2,sin2cos1
-   real :: cos2sin1,cosi1,sini1,sin2i1,cos2i1
    real :: random, random0, vin(3), vout(3), s, denom
-   real :: hgg, g2, znorm
+   real :: hgg, znorm
    
    integer :: ierr
 

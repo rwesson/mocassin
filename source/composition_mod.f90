@@ -16,7 +16,7 @@ module composition_mod
         integer :: icount            ! counter
         integer :: nelem             ! counter
         integer :: ios               ! I/O error status     
-        integer :: i,j,k             ! counters
+        integer :: i,j               ! counters
         integer :: off               ! off everywhere? 
 
         ! open file containing composition data

@@ -17,10 +17,7 @@ module set_input_mod
         integer             :: err              ! allocation error status
         integer             :: i, j             ! counters
         integer             :: ios              ! I/O error status
-        integer             :: iValue           ! integer value corresponding to keyword
         integer             :: maxLim = 1000    ! max limit for reading loop
-
-        real                :: rValue           ! real value corresponding to keyword
 
         character(len=50)   :: cValue           ! character value corresponding to keyword
         character(len=50)   :: in_file          ! input file
@@ -811,8 +808,8 @@ module set_input_mod
             character(len=50), intent(in) :: filename
             character(len=50)             ::  skipC            
 
-            integer                       :: i,iG
-            integer                       :: err, ios
+            integer                       :: i
+            integer                       :: ios
             integer                       :: skip
             
             close(17)
@@ -839,9 +836,7 @@ module set_input_mod
         
         character(len=50), intent(in) :: infile
 
-        integer                       :: ios, i, iloop,nSafeLimit=10000
-
-        real                          :: E0
+        integer                       :: ios, i
 
 
         close(13)

@@ -19,17 +19,10 @@ module update_mod
         
         real, parameter :: Y0 = 0.5, Y1 = 0.2          ! see Baldwin et al. 1991
 
-        real                           :: aFit, bFit   ! general fit terms
         real                           :: deltaXHI        ! delta ionDen of H0                   
-        real                           :: echod1, echod2
-        real, dimension(3)             :: ions         ! # of ionizations (1 is from
                                                        ! H0 2 is from He0 and 3 is 
                                                        ! is for He+)
-        real                           :: phXSecM
-        real                           :: phXSecM1
         real                           :: phXSec      ! ph xSec of ion M at freqency bin j
-        real                           :: term1,term2,&! general calculation terms 
-             & term3        
         real                           :: thResidual   ! thermal balance residual
         real                           :: thResidualHigh! ther bal residual-high lim
         real                           :: thResidualLow! ther bal residual-low lim
@@ -71,19 +64,13 @@ module update_mod
 
         integer ,pointer               :: grainPotP(:,:) 
         integer                        :: cellP        ! points to this cell
-        integer                        :: HIPnuP       ! pointer to H IP in NuArray
-        integer                        :: HeIPnuP      ! pointer to HeI IP in NuArray
-        integer                        :: HeIIPnuP     ! pointer to HeII IP in NuArray
         integer                        :: highNuP      ! pointer to highest energy of shell
         integer                        :: IPnuP        ! pointer to this ion's IP in NuArray
         integer                        :: xSecP        ! pointer to an ion's xSec in xSecArray
         integer                        :: elem         ! element counter
-        integer                        :: err          ! allocation error status
         integer                        :: g0, g1       ! stat weights
         integer                        :: ion          ! ionization stage counter
-        integer                        :: ios          ! I/O error status
         integer                        :: i,j          ! counter
-        integer                        :: ncutoff= 0   ! see clrate
         integer                        :: nElec        ! # of electrons in ion
         integer                        :: nIterateGC   ! # of GC iterations
         integer                        :: nIterateT    ! # of T iterations
@@ -353,22 +340,14 @@ module update_mod
             implicit none
 
             ! local variables
-            integer                       :: i               ! counter
             integer                       :: isp, ai         ! counters
-            integer                       :: ios             ! I/O error status
-            integer                       :: n               ! stopper
             integer                       :: ispbig          ! counter
 
             logical                       :: lgGCBConv       ! grain charge converged?
             logical                       :: lgIBConv        ! converged?
 
-            real                          :: a, b, b2        ! calculation coefficients
             real                          :: coolInt         ! tot cooling integral [erg/s/Hden] 
-            real                          :: disc            ! discriminant
-            real                          :: expFact         ! general exponential factor 
-            real                          :: gamma           ! He+ density
             real                          :: heatInt         ! tot heating integral [erg/s/Hden]
-            real                          :: root            ! root for H and He calculations
 
             real, parameter               :: Xmax = 0.9999   ! max rel abundance
 
@@ -548,14 +527,14 @@ module update_mod
         recursive subroutine setGrainPotential(iSp, ai, lgGCBConv)
           implicit none 
 
-          real,save            :: delta0, delta,delta1
+          real,save            :: delta,delta1
           real,save            :: grainPotOld ! local copy of grai pot
           real                 :: grainEmi, grainRec ! grain emissions and recom          
           real,save            :: grainEmiOld, grainRecOld ! grain emissions and recom          
           real,parameter       :: errorLim = 0.005, dm = 0.05 ! loop convergence
           real,parameter       :: safeLim = 100 ! loop safety limit
           real                 :: threshold,fac
-          real,save :: dlow,dhigh,grainpotlow,grainpothigh,dVg,slope
+          real,save            :: dVg,slope
           
           integer, intent(in)  :: iSp, ai
 
@@ -692,7 +671,7 @@ module update_mod
           
           integer, intent(in) :: isp ! species identifier 
           
-          integer :: istage, ielem
+          integer :: istage
           
           getGrainRecombination = 0.
           eta = 0.
@@ -976,8 +955,6 @@ module update_mod
             real                   :: heatIonDif    ! heat due to this ion diffuse phot
             real                   :: heatSte       ! tot heat gain due to stellar phot
             real                   :: heatDif       ! tot heat gain due to diffuse phot
-            real                   :: hTerm1        ! heat calculation term
-            real                   :: hTerm2        ! heat calculation term
             real                   :: log10Te       ! log10(Te)
             real                   :: log10TeScaled ! log10(Te/Z^2)
             real                   :: Np            ! proton density
@@ -1354,7 +1331,6 @@ module update_mod
             real                   :: deltaHeI      ! delta(X(He0))
             real                   :: deltaHeII     ! delta(X(HeII))
             real                   :: expFact       ! exponential factor
-            real                   :: fac0,fac1     ! calculation factors
             real                   :: t4            ! TeUsed/10000.
             real, save             :: HIOld         ! X(H0) from last iteration
             real, save             :: HeIOld        ! X(He0) from last iteration
@@ -1902,11 +1878,10 @@ module update_mod
          subroutine getDustT()
             implicit none
 
-            real                   :: Tspike(nTbins),Pspike(nTbins)
             real                   :: dustAbsIntegral   ! dust absorption integral
             real                   :: dabs
             real                   :: resLineHeat       ! resonance line heating
-            real, dimension(nbins) :: radField,yint     ! radiation field
+            real, dimension(nbins) :: radField          ! radiation field
 
             integer :: nS, i, ai ! counters
             integer :: iT        ! pointer to dust temp in dust temp array

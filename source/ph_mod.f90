@@ -637,7 +637,7 @@ module xSec_mod
          
          ! local variables
          integer, parameter :: nData = 10
-         integer :: i, ixSec, j                            ! counters
+         integer :: i, ixSec                               ! counters
          integer :: nPairs                                 ! # of data pair
          
          real ::  slope                            ! slope for linear interpolation
@@ -807,7 +807,6 @@ module xSec_mod
       ! makes dust xsections [cm^2] ( pi a^2 Q )
       subroutine makeDustXsec()
 
-        real :: intValue ! interpolated value
         real :: normWeight ! normalization constant for grain size weighting
         real :: readReal     ! real number reader
         real :: value ! general value variable
@@ -822,12 +821,10 @@ module xSec_mod
         real, pointer :: CTabs(:) ! total abs cross-section [um^2] for grain mixture
         real, pointer :: CTsca(:) ! total sca cross-section [um^2] for grain mixture
         real, pointer :: Ere(:), Eim(:) 
-        real, pointer :: temp(:)
 
         integer :: err ! allocation error status
         integer :: i, j, iwav, n, iSize, icomp ! counter
         integer :: ios ! I/O error status
-        integer :: iP ! array pointer
         integer :: nSpec, ai ! counter
         integer :: nn, iskip ! counter
         integer :: Nwav, NwavOld ! # of wavelength points used
@@ -1621,7 +1618,7 @@ module xSec_mod
         real(kind = 8) ::  realpart
         real(kind = 8) :: imagpart
         
-        integer              :: nang,j,nstop,nmx,i,n,nn,rn,jj
+        integer              :: nang,j,nstop,nmx,n,nn,rn,jj
 
 
         realpart(dpcx)=real(dpcx)

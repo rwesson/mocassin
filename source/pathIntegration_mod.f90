@@ -33,7 +33,6 @@ module pathIntegration_mod
         type(vector)                :: vHat           ! direction vector
 
 
-        integer                     :: err            ! allocation error status
         integer                     :: freqP          ! frequency index
         integer                     :: i              ! counter
         integer                     :: xP, yP, zP     ! x, y, and z axis indeces
@@ -256,7 +255,6 @@ module pathIntegration_mod
 
         integer, intent(in)         :: freqP           ! the frequency index
 
-        integer                     :: err            ! allocation error status
         integer                     :: i              ! counter
         integer                     :: xP, yP, zP     ! x, y, and z axis indeces
 

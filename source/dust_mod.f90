@@ -26,7 +26,6 @@ module dust_mod
       integer :: err ! allocation error status
       integer :: iP,jP,kP ! counter
       integer :: size ! size of MPI reducing string
-      integer :: ios ! I/O error status
       integer :: yTop
 
       logical,save :: lgFirstDustEm=.true.
@@ -146,7 +145,7 @@ module dust_mod
       subroutine dustEmissionInt()
         implicit none
 
-        real :: bb, yint(nbins) ! blackbody flux                
+        real :: bb ! blackbody flux                
 
         integer :: i, nT, nS, ai  ! counters
 

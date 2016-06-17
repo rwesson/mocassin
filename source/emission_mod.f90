@@ -45,9 +45,8 @@ module emission_mod
 
         ! local variables
 
-        integer :: ncutoff= 0                ! see clrate
         integer :: err                       ! allocation error status
-        integer :: i, n                      ! counters
+        integer :: i                         ! counters
 
         real    :: dV                        ! volume element        
 
@@ -359,7 +358,6 @@ module emission_mod
              & highNuP,&                      ! pointer to the hi en of the current ion in nuArray
              & IPnuP                          ! pointer to the IP of the current ion in nuArray
         integer            :: i, j            ! counters
-        integer            :: ios             ! I/O error status
         integer            :: iup, ilow       ! counters
         integer            :: nElec           ! number of electrons in the ion
         integer            :: nTemp           ! =1 if 5000K<Te<10000K, =2 if 10000K<Te<20000K
@@ -861,9 +859,6 @@ module emission_mod
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
 
-        real                       :: A4471, A4922! HeI reference lines 
-        real                       :: aFit        ! general interpolation coeff
-        real                       :: C5876, C6678! collition exc. corrections
         real                       :: Hbeta       ! Hbeta emission
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
@@ -1049,12 +1044,8 @@ module emission_mod
         real (kind=8)     :: tg
         real(kind=8),dimension(nTbins) :: Tspike,Pspike
 
-        real              :: A4922             ! reference line intensity for HeI Lyman series
-        real              :: aFit              ! general calculations component
         real              :: alpha2tS          ! effective rec coeff to the 2s trip HeI
-        real              :: alpha2tP          ! effective rec coeff to the 2p trip HeI
         real              :: bb                ! blackbody
-        real              :: bFit              ! general calculations component
         real              :: const             ! general calculation constant
         real              :: correction        ! general correction term
         real              :: normalize         ! normHI+normHeI+normHeII
@@ -1089,8 +1080,6 @@ module emission_mod
 
         character(len=50) :: cShapeLoc
         
-        logical, save     :: lgFirst =.true.   ! first time setDiffusePDF is called? 
-
         cShapeLoc = 'blackbody'
 
         ! allocate space for the summation arrays
@@ -1568,16 +1557,13 @@ module emission_mod
            & temp1(nbins),temp2(nbins)
       real(kind=8)                :: U(nTbins),dU(nTbins)
       real(kind=8)                :: mgrain,mdUdt,ch
-      real(kind=8)                :: nu,nuh,nul !freq [ryd]
       real(kind=8)                :: const1, radField(nbins),hc,wlim
       real(kind=8)                :: qHeatTemp,X(nTbins)
       real(kind=8)                :: UiTrun,sumX, sumBx
       real(kind=8)                :: wl,wll,wls
       real(kind=8)                :: qint,qint1,qint2,delwav
       
-      real                        :: realarr(nbins),realvar
       integer :: ifreq
-      character(len=50) :: chvarloc
 
       dcp = dustComPoint(nspE)
      
@@ -1836,8 +1822,6 @@ module emission_mod
 
       real(kind=8), intent(out)      :: tmin  ! continuous heating/cooling equilibrium temp
       real                   :: dustAbsIntegral   ! dust absorption integral
-      real                   :: dabs
-      real                   :: resLineHeat       ! resonance line heating
       real                   :: cutoff            ! lambda=1000um (guhathakurta & draine 89)
       real, dimension(nbins) :: radField          ! radiation field
       
@@ -1980,7 +1964,7 @@ module emission_mod
             real(kind=8) :: cutoff, eout(nbins), engin, engout,eomid, & 
                  & delwav
 
-            integer :: k,ifreq,cutoffP
+            integer :: k,cutoffP
 
             cutoff = .1 ! cm
 
@@ -2013,14 +1997,13 @@ module emission_mod
           subroutine cheat(it,nTbins,lam,fl,sQa,U,ch)
             implicit none
             
-            real                        :: realvar
             real(kind=8), intent(out)   :: ch
             real(kind=8), intent(in)    :: U(*),lam(nbins),fl(nbins),sQa(nbins)
-            real(kind=8) :: einmax,const1,shwav,cutoff, ein(nbins),engin,&
+            real(kind=8) :: einmax,shwav,cutoff, ein(nbins),engin,&
                  & eimid,hc,delwav
 
             integer, intent(in) :: it,nTbins
-            integer :: nshort,nlong,ifreq,k
+            integer :: nshort,nlong,k
 
             if (it>nTbins) then
                ch=0.
@@ -2095,7 +2078,6 @@ module emission_mod
     double precision       :: qx                        ! reader
     double precision   :: sumN                      ! normalization factor for populations
     double precision        :: sqrTe                     ! sqrt(Te)
-    double precision    :: value                     ! general calculations value
     
     double precision, pointer          :: a(:,:)      ! transition rates array
     double precision, pointer          :: cs(:,:)     ! collisional strengths array
@@ -2110,7 +2092,6 @@ module emission_mod
 
     real                 :: a_r(4),a_d(5),z,br       !
     real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
-    real                 :: a_fit, b_fit              !         
     real                 :: qomInt                    ! interpolated value of qom
     real,    pointer     :: logTemp(:)                ! log10 temperature points array
     real,    pointer     :: qq(:)                     ! qq array
@@ -2124,7 +2105,7 @@ module emission_mod
     real  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats    
     integer  :: gx               ! stat weight reader  
     integer  :: i, j, k, l, iT   ! counters/indeces
-    integer  :: i1, j1, k1,i2, j2, k2,i3, j3, k3  ! counters/indeces
+    integer  :: i1, j1, i2, j2, i3, j3  ! counters/indeces
 
     integer  :: ios              ! I/O error status
     integer  :: nLev             ! number of levels in atomic data file
@@ -2559,7 +2540,6 @@ module emission_mod
     double precision       :: qx                        ! reader
     double precision   :: sumN                      ! normalization factor for populations
     double precision        :: sqrTe                     ! sqrt(Te)
-    double precision    :: value                     ! general calculations value
     
     double precision, pointer          :: a(:,:)      ! transition rates array
     double precision, pointer          :: cs(:,:)     ! collisional strengths array
@@ -2574,7 +2554,6 @@ module emission_mod
 
     real                 :: a_r(4),a_d(5),z,br       !
     real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
-    real                 :: a_fit, b_fit              !         
     real                 :: qomInt                    ! interpolated value of qom
     real,    pointer     :: logTemp(:)                ! log10 temperature points array
     real,    pointer     :: qq(:)                     ! qq array
@@ -3224,8 +3203,6 @@ module emission_mod
       real    :: k_d, k_l  ! dust and line opacities
       real    :: dSx, dSy, dSz, dS ! distances from walls
       real    :: I1, I2    ! calculation integrals
-      real    :: M2_tau    ! direction-dependent escape probability
-      real    :: nuFrac    ! fractional nu for profile integration
       real    :: Pline     ! prob line
       real    :: radius    ! radial distance from the centre of the grid
       real    :: tau_mu    ! optical depth in direction mu at line centre
@@ -3238,9 +3215,9 @@ module emission_mod
       integer             :: xp,yp,zp ! cell pointers
       integer             :: gPmother,xPmother,yPmother,zPmother
       integer             :: icount  ! counter
-      integer             :: inu, idir, jdir, kdir ! freq counter
+      integer             :: idir, jdir, kdir ! freq counter
       integer, parameter  :: safeLimit=1e5 ! loop limit
-      integer             :: isub,jsub,ksub,subTot,gP ! subgrid counters
+      integer             :: gP ! subgrid counters
       integer             :: cellP   ! cell pointer on active grid array 
       integer             :: compoP  ! pointer to gas component index 
       integer             :: iLine   ! res line counter
@@ -3975,7 +3952,6 @@ module emission_mod
       real              :: profile ! phi(nu)
       real, intent(in)  :: nuIn ! frequency [Ryd]
       real, intent(in)  :: widthIn ! 
-      real              :: m_ion
 
       character(len=7), intent(in) :: profileID ! what type of broadening?
 
@@ -4000,7 +3976,6 @@ module emission_mod
 
       real, intent(in)         :: width
       real, intent(out)        :: line_xSec
-      real                     :: m_ion          ! mass of the ion
       
 
       if (width<=0.) then
@@ -4026,7 +4001,6 @@ module emission_mod
 
       real, intent(in)         :: width
       real, intent(out)        :: line_xSec
-      real                     :: m_ion          ! mass of the ion
       
 
       if (width<=0.) then

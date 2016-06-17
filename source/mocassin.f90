@@ -45,9 +45,8 @@ program MoCaSSiN
     type(grid_type) :: grid3D(maxGrids)       ! the 3D Cartesian  grid
 
     real            :: test                   ! test
-    integer         :: i, iGrid, err          ! allocation error status
-    real            :: etime
-    real, dimension(2) :: tarray,timing        ! cputimer 
+    integer         :: i, iGrid               ! allocation error status
+    real, dimension(2) :: timing              ! cputimer 
     integer         :: nhours, nminutes, nseconds
 
     call cpu_time(timing(1))

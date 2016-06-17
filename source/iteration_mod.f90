@@ -23,7 +23,6 @@ module iteration_mod
  
        integer :: i, j, k                     ! counters
        
-       logical, save :: lgFirst = .true.      ! first time the procedure is called? 
 
        call iterateMC()
 
@@ -46,28 +45,18 @@ module iteration_mod
            real, pointer :: recPDFTemp(:,:)      ! temporary rec prob distribution function
            real, pointer :: linePDFTemp(:,:)     ! temporary line prob distribution function
            real, pointer :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
-   
-           real, pointer :: absTauTemp(:), &     ! temp absorption opacity
-                & lambdaTemp(:)                  ! temp displacement
-           real, pointer :: absTau(:), &         ! absorption opacity
-                & lambda(:)                      ! displacement
-
             
            real, pointer          :: noHitPercent(:)    ! percentage of no Hit cells
            real, pointer          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
            real, pointer          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
            real,save              :: totPercentOld   ! percentage of converged cells from prev iteration
-           real                   :: photRatio       ! photons/cells ratio
-           real                   :: radius          ! ditance in cm from star
-           real                   :: tau             ! optical depth
            real                   :: totCells        ! total # of active cells 
            real                   :: totheatdust     ! total dust heating
-           real          :: echod1, echod2            ! light echo distances  
            
            integer, pointer       :: planeIonDistributionTemp(:,:) 
            integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets
            integer                :: err             ! allocation error status
-           integer                :: elem,freq,ion,nS! counters
+           integer                :: freq,nS         ! counters
            integer                :: ifreq, ian      ! counters
            integer                :: ios,iG          ! I/O error status           
            integer                :: load,rest       ! 
