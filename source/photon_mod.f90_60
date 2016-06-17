@@ -38,11 +38,9 @@ module photon_mod
              & :: plot                                ! only used in the mocassinPlot version
         type(grid_type), dimension(:), intent(inout) :: grid        ! the grid(s)
         
-        type(vector)                   :: posDiff     ! initial position vector for diff ext
         type(vector)                   :: posVector   ! initial position vector for dust emi
 
         ! local variables
-        integer                        :: gPIn        ! 
         integer                        :: igp         ! 1= mother 2 =sub 
         integer                        :: ian         ! angle counter
         integer                        :: ifreq       ! freq counter
@@ -59,9 +57,6 @@ module photon_mod
         integer, pointer               :: seed(:)     ! seed array
         integer                        :: msec        ! millisecs of the sec
         integer                        :: dt(8)       ! date and time values
-        integer                        :: countRecursive
-        integer                        :: trapped
-        integer                        :: reRun
 
         real                           :: JDifTot     ! tot JDif
         real                           :: JsteTot     ! tot Jste
@@ -70,10 +65,8 @@ module photon_mod
 
 
         character(len=7)               :: chTypeD     ! character type for driver
-        character(len=7)               :: chTypeIn    ! character type 
 
         type(vector)                   :: absPosition ! position of packet absorption
-        type(vector)                   :: positionIn  ! position of packet absorption
 
 
         if (iStar == 0) then
@@ -103,44 +96,14 @@ module photon_mod
 
         Qphot = 0.
 
-        trapped = 0
-
         do iPhot = 1, n
 
            if (iStar>=1) then
 
-	      chTypeD = "stellar"
+              chTypeD = "stellar"              
+              
 
-              if (starIndeces(iStar,4)==1) then
-                 igp = 1
-              else if (starIndeces(iStar,4)>1) then
-                 igp = 2
-              else
-                 print*, "! energyPacketDriver: insane grid&
-                      & pointer, starIndeces(iStar,4)", starIndeces(iStar,4)
-                 stop
-              end if
-
-              inX=-1
-              inY=-1
-              inZ=-1
-
-              inX(igp) = starIndeces(iStar,1)
-              inY(igp) = starIndeces(iStar,2)
-              inZ(igp) = starIndeces(iStar,3)
-
-
-              chTypeIn = chTypeD
-              positionIn = starPosition(iStar)
-              gPIn = starIndeces(iStar,4)
-              reRun = 0
-              do i = 1, recursionLimit        
-                 call energyPacketRun(chTypeIn, positionIn, inX, inY, &
-                      &inZ, gPIn, reRun)
-                 if (rerun == 0) exit
-
-              end do
-              if (i>=recursionLimit) trapped = trapped+1
+              call energyPacketRun(chType=chTypeD, position=starPosition(iStar))
 
            else if (iStar==0) then
 
@@ -148,35 +111,12 @@ module photon_mod
               inX=-1
               inY=-1
               inZ=-1
+              inX(gpLoc) = cellLoc(1)
+              inY(gpLoc) = cellLoc(2)
+              inZ(gpLoc) = cellLoc(3)
 
-              if (gpLoc==1) then
-                 igp = 1
-              else if (gpLoc>1) then
-                 igp = 2
-              else
-                 print*, "! energyPacketDriver: insane grid pointer"
-                 stop
-              end if
-
-              inX(igp) = cellLoc(1)
-              inY(igp) = cellLoc(2)
-              inZ(igp) = cellLoc(3)
-
-              posDiff%x = grid(gpLoc)%xAxis(cellLoc(1))
-              posDiff%y = grid(gpLoc)%yAxis(cellLoc(2))
-              posDiff%z = grid(gpLoc)%zAxis(cellLoc(2))
-
-              chTypeIn = chTypeD
-              positionIn = posDiff
-              gPIn = gPLoc
-              reRun = 0
-              do i = 1, recursionLimit        
-                 call energyPacketRun(chTypeIn, positionIn, inX, inY, &
-                      &inZ, gPIn, reRun)
-                 if (rerun == 0) exit
-
-              end do
-              if (i>=recursionLimit) trapped = trapped+1
+              call energyPacketRun(chType=chTypeD, xp=inX, & 
+                   & yp=inY, zp=inZ, gp=gpLoc)
 
            else
 
@@ -253,18 +193,7 @@ module photon_mod
                                         & inZ(1) = inZ(1)+1                                   
                                 end if
 
-                                chTypeIn = chTypeD
-                                positionIn = posVector
-                                gPIn = igrid
-                                reRun = 0
-
-                                do i = 1, recursionLimit        
-                                   call energyPacketRun(chTypeIn, positionIn, inX, inY, &
-                                        &inZ, gPIn, reRun)
-                                   if (rerun == 0) exit
-
-                                end do
-                                if (i>=recursionLimit) trapped = trapped+1
+                                call energyPacketRun(chType=chTypeD, position=posVector,xP=inX,yP=inY,zP=inZ,gP=igrid)
 
                              end do
                           end if
@@ -282,7 +211,6 @@ module photon_mod
 
 
         if (iStar>0) print*, 'Qphot = ', Qphot
-        print*, 'Packets trapped = ', trapped, taskid
 
         ! evaluate Jste and Jdif
         ! NOTE : deltaE is in units of [E36 erg/s] however we also need a factor of
@@ -300,158 +228,146 @@ module photon_mod
 
         contains
 
-
-          subroutine energyPacketRun(chType, position, xP, yP, zP, gP, rR)
+        recursive subroutine energyPacketRun(chType, position, xP, yP, zP, gP)
             implicit none
 
-            type(vector),intent(inout) :: position         ! the position of the photon
+            character(len=7), intent(in)     :: chType           ! stellar or diffuse?
 
-            real :: number 
-            real, save :: ionPhot = 0.       
-
-            integer, dimension(2), intent(inout)    :: xP, yP, &
+            integer, optional, dimension(2), intent(in)    :: xP, yP, &
                  & zP                                            ! cartesian axes indeces 
                                                                  ! 1= mother; 2=sub
 
             
-            integer, intent(inout) :: rR               ! rerun?
-            integer, intent(inout) :: gP               ! grid index
+            integer, optional, intent(inout) :: gP               ! grid index
             integer                          :: igpr             ! grid pointer 1= mother 2=sub
             integer                          :: difSourceL(3)    ! cell indeces
+
+            type(vector),intent(in), optional:: position         ! the position of the photon
+        
+            ! local variables
+
+            type(photon_packet)              :: enPacket         ! the energu packet
 
             integer                          :: err              ! allocation error status
             integer                          :: i, j             ! counters  
             integer                          :: idirP, idirT     ! direction cosines
-            integer                          :: nP
 
-            type(photon_packet)              :: enPacket         ! the energu packet
+            real :: number 
+            real, save :: ionPhot = 0.       
 
-            character(len=7), intent(inout)     :: chType           ! stellar or diffuse?
-        
-!            countRecursive = countRecursive+1
-!            if (countRecursive > recursionLimit) then
-!               trapped = trapped+1
-!               return               
-!            end if
-
-            rR = 0
-
-            if (gP==1) then
-               igpr = 1
-            else if (gP>1) then
-               igpr = 2
-            else
-               print*,  "! energyPacketRun: insane grid index"
-               stop
+            if (present(gP)) then
+               if (gP==1) then
+                  igpr = 1
+               else if (gP>1) then
+                  igpr = 2
+               else
+                  print*,  "! energyPacketRun: insane grid index"
+                  stop
+               end if
+            else 
+               igpr=1
             end if
-
 
             ! create a new photon packet
             select case (chType)
 
             ! if the energy packet is stellar
             case ("stellar")
-               ! check for errors in the sources position
-               if( position /= starPosition(iStar) ) then
-                  print*, "! energyPacketRun: stellar energy packet must&
-                       & start at the stellar position"
-                  stop
-               end if
-               
-               ! create the packet        
-               enPacket = newPhotonPacket(chType,position, xp, yp, zp, gp, noCellLoc)
-
-               if (nP == 1) then
-
-                   ! the packet escapes without further interaction
-                   
-                   idirT = int(acos(enPacket%direction%z)/dTheta)+1
-                   if (idirT>totangleBinsTheta) then
-                      idirT=totangleBinsTheta
-                   end if
-                   if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                      print*, '! energyPacketRun: error in theta direction cosine assignment',&
-                           &  idirT, enPacket, dTheta, totAngleBinsTheta
-                      stop
-                   end if
-
-                   if (enPacket%direction%x<1.e-35) then
-                      idirP = 0
-                   else
-                      idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
-                   end if
-                   if (idirP<0) idirP=totAngleBinsPhi+idirP
-                   idirP=idirP+1
-                   if (idirP>totangleBinsPhi) then
-                      idirP=totangleBinsPhi
-                   end if
-                   
-                   if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                      print*, '! energyPacketRun: error in Phi direction cosine assignment',&
-                           &  idirP, enPacket, dPhi, totAngleBinsPhi
-                      stop
-                   end if
-
-               
-                   if (nAngleBins>0) then
-                      if ( (totangleBinsPhi>1 .and. viewPointPtheta(idirT) == viewPointPphi(idirP)) .or. &            
-                           & (totangleBinsPhi==1 .and. viewPointPtheta(idirT)>0) ) then
-                         grid(1)%escapedPackets(1, enPacket%nuP,&
-                              & viewPointPtheta(idirT)) = &
-                              &grid(1)%escapedPackets(1, &
-                              & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
-                         grid(1)%escapedPackets(1, enPacket%nuP,0)=&
-                              &grid(1)%escapedPackets(1, &  
-                              & enPacket%nuP,0) +  deltaE(iStar)
-                      else
-                         grid(1)%escapedPackets(1,enPacket%nuP,0) = &
-                              & grid(1)%escapedPackets(1, &
-                              & enPacket%nuP,0) +  deltaE(iStar)
-                      end if
-                   else                              
-                      grid(1)%escapedPackets(1, & 
-                           enPacket%nuP,0) = &
-                           & grid(1)%escapedPackets(1, &
-                           & enPacket%nuP,0) +  deltaE(iStar)
-                      
-                   end if
-                   
-                   
-                   return
+                ! check for errors in the sources position
+                if (present(position) ) then
+                    if( position /= starPosition(iStar) ) then
+                        print*, "! energyPacketRun: stellar energy packet must&
+                             & start at the stellar position"
+                        stop
+                    end if
                 end if
 
+                ! create the packet        
+                enPacket = newPhotonPacket(chType)
 
             ! if the photon is from an extra source of diffuse radiation
              case ("diffExt")
+
+                ! check that the grid and cell have been specified
+                if (.not.(present(gp).and.present(xP).and.present(yP).and.present(zP))) then
+                    print*, "! energyPacketRun: gp and xp,yp and zp must be specified if iStar=0"
+                    stop
+                end if
 
                 difSourceL(1) = xP(igpr)
                 difSourceL(2) = yP(igpr)
                 difSourceL(3) = zP(igpr)
 
                 
-                enPacket = newPhotonPacket(chType, position, xp, yp, zp, gP, difSourceL)
+                ! create the packet        
+                if (.not.present(gP)) gP=1
+
+                enPacket = newPhotonPacket(chType=chType, gP=gP, difSource=difSourceL)
 
             ! if the photon is diffuse
 
             case ("diffuse")
 
+                ! check that the position has been specified
+                if (.not.present(position)) then
+                    print*, "! energyPacketRun: position of the new diffuse&
+                         & energy packet has not been specified"
+                    stop
+                end if
+
+                ! check also that axes indeces have been carried through (save time)
+                if (.not.(present(xP).and.present(yP).and.present(zP))) then
+                    print*, "! energyPacketRun: cartesian axes indeces of the new diffuse &
+                         & energy packet has not been specified"
+                    stop
+                end if
+                ! check also that grid index have been carried through 
+                if (.not.(present(gP))) then
+                    print*, "! energyPacketRun: cartesian axes indeces of the new diffuse &
+                         & energy packet has not been specified"
+                    stop
+                end if
+
                 ! create the packet
 
-                enPacket = newPhotonPacket(chType=chType, position=position, xP=xP, yP=yP, &
-                     & zP=zP, gP=gP, difSource=noCellLoc)
+                enPacket = newPhotonPacket(chType, position, xP, yP, zP, gP)
 
             case ("dustEmi")
 
-                ! crate the packet
-                enPacket = newPhotonPacket(chType=chType, position=position, xP=xP, yP=yP, &
-                     &zP=zP, gP=gP, difSource = noCellLoc)
+                 ! check that the position has been specified
+                if (.not.present(position)) then
+                    print*, "! energyPacketRun: position of the new dust emitted &
+                         & energy packet has not been specified"
+                    stop
+                end if
+
+                ! check also that axes indeces have been carried through (save time)
+                if (.not.(present(xP).and.present(yP).and.present(zP))) then
+                    print*, "! energyPacketRun: cartesian axes indeces of the new dust emitted &
+                         &energy packet has not been specified"
+                    stop
+                end if
+                ! check also that grud index have been carried through
+                if (.not.(present(gP))) then
+                    print*, "! energyPacketRun: cartesian axes indeces of the new dust emitted &
+                         &energy packet has not been specified"
+                    stop
+                end if
+
+                ! crenPacketeate the packet
+                enPacket = newPhotonPacket(chType=chType, position=position, xP=xP, yP=yP, zP=zP, gP=gP)
 
             end select 
 
             if (.not.lgDust .and. enPacket%nu < ionEdge(1) .and. .not.enPacket%lgLine) then
 
                ! the packet escapes without further interaction
-               idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               if (lgSymmetricXYZ) then
+                  idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+               else
+                  idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               end if
+
                if (idirT>totangleBinsTheta) then
                   idirT=totangleBinsTheta
                end if
@@ -462,12 +378,17 @@ module photon_mod
                end if
               
 
-               if (enPacket%direction%x<1.e-35) then
+               if (abs(enPacket%direction%x)<1.e-35) then
                   idirP = 0
                else
-                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                  if (lgSymmetricXYZ) then
+                     idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                  else
+                     idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                  end if
                end if
                if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                idirP=idirP+1
 
                if (idirP>totangleBinsPhi) then
@@ -477,35 +398,59 @@ module photon_mod
                end if
              
                if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                  print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                  print*, '! energyPacketRun: error in phi direction cosine assignment -1',&
                        &  idirP, enPacket, dPhi, totAngleBinsPhi
                   stop
                end if
 
-
                if (nAngleBins>0) then
-                  if ( (totangleBinsPhi>1 .and. viewPointPtheta(idirT) == viewPointPphi(idirP)) .or. &            
-                       & (totangleBinsPhi==1 .and. viewPointPtheta(idirT)>0) ) then
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,&                   
-                          & viewPointPtheta(idirT)) = &                                                           
-                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &                          
-                          & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)                                    
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,0) = &
-                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &                          
-                          & enPacket%nuP,0) +  deltaE(iStar)                                    
+                  if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) +  deltaE(iStar)
+
+                  elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                       & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                       & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)
+                     if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) +  deltaE(iStar)
 
                   else
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2),enPacket%nuP,0) = &
-                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &  
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,0) +  deltaE(iStar)
 
                   end if
-               else                              
+
+               else
+
+                  if (enPacket%origin(1) == 0) then 
+                     print*, '! energyPacketRun: enPacket%origin(1) ==0'
+                     stop
+                  end if
+                  if (enPacket%origin(2) < 0) then 
+                     print*, '! energyPacketRun: enPacket%origin(2) < 0'
+                     stop
+                  end if
+
                   grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                        & enPacket%nuP,0) = &
                        & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                        & enPacket%nuP,0) +  deltaE(iStar)
-
+                  
                end if
 
                return
@@ -526,13 +471,11 @@ module photon_mod
                     & grid(gP)%linePackets(grid(gP)%active(enPacket%xP(igpr), &
                     & enPacket%yP(igpr), enPacket%zP(igpr)), enPacket%nuP) = &
                     & grid(gP)%linePackets(grid(gP)%active(enPacket%xP(igpr), &
-                    & enPacket%yP(igpr), enPacket%zP(igpr)), enPacket%nuP) +deltaE(iStar)
-
+                    & enPacket%yP(igpr), enPacket%zP(igpr)), enPacket%nuP) + deltaE(iStar)
 
             end if
 
         end subroutine energyPacketRun
-
 
         ! this function initializes a photon packet
         function initPhotonPacket(nuP,  position, direction, lgLine, lgStellar, xP, yP, zP, gP, lgHg)
@@ -812,22 +755,26 @@ module photon_mod
 
             integer                            :: nuP            ! the frequency index of the photon packet
             integer, dimension(2)         :: orX,orY,orZ    ! dummy
-            integer, dimension(2), intent(in) :: xP, yP, & 
+            integer, optional, dimension(2),intent(in) :: xP, yP, & 
                  & zP                                            ! cartesian axes indeces    
-            integer, intent(in)      :: difSource(3)  ! grid and cell indeces
-            integer, intent(inout)   :: gP
+            integer, optional, intent(in)      :: difSource(3)  ! grid and cell indeces
+            integer, optional, intent(inout)   :: gP
             integer                            :: igpn           ! grid pointe 1=motehr, 2=sub
             logical                            :: lgLine_loc=.false.! line photon?
 
             real                               :: random         ! random number
 
-            if (gP==1) then
+            if (present(gP)) then
+               if (gP==1) then
+                  igpn = 1
+               else if (gp>1) then
+                  igpn = 2
+               else
+                  print*,  "! newPhotonPacket: insane grid pointer"
+                  stop
+               end if
+            else 
                igpn = 1
-            else if (gp>1) then
-               igpn = 2
-            else
-               print*,  "! newPhotonPacket: insane grid pointer"
-               stop
             end if
 
             select case (chType)
@@ -836,12 +783,13 @@ module photon_mod
             case ("stellar")
 
                 ! check for errors in the sources position
-               if( position /= starPosition(iStar) ) then
-                  print*, "! newPhotonPacket: stellar photon packet must&
-                       & start at the stellar position"
-                  stop
-               end if
-
+                if (present(position) ) then
+                    if( position /= starPosition(iStar) ) then
+                        print*, "! newPhotonPacket: stellar photon packet must&
+                             & start at the stellar position"
+                        stop
+                    end if
+                end if 
 
 !                gP = starIndeces(iStar,4)
 
@@ -876,26 +824,44 @@ module photon_mod
                 orY(igpn) = starIndeces(iStar,2)
                 orZ(igpn) = starIndeces(iStar,3)
 
-                
-                if (grid(starIndeces(iStar,4))%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
-                   print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -1-" 
-                   print*, "chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp"
-                   print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp
-                   stop
-                end if
+!                if (present(gP)) then
+                   if (grid(starIndeces(iStar,4))%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
+                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -1-" 
+                      print*, "chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp"
+                      print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp
+                      stop
+                   end if
 
-                newPhotonPacket = initPhotonPacket(nuP, &
-                     &starPosition(iStar), nullUnitVector,.false., .true., &
-                     & orX,orY,orZ, &
-                     & starIndeces(iStar,4), .false.)
+                   newPhotonPacket = initPhotonPacket(nuP, &
+                        &starPosition(iStar), nullUnitVector,.false., .true., &
+                        & orX,orY,orZ, &
+                        & starIndeces(iStar,4), .false.)
 
 
+!                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, starIndeces(iStar,4))
+
+!                else
+!                   if (grid(1)%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
+!                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -2- "
+!                      print*, "chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp"
+!                      print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, '1'
+!                      stop
+!                   end if
+!                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, 1)
+!                end if
                 if (newPhotonPacket%nu>1.) then
                    Qphot = Qphot + deltaE(iStar)/(2.1799153e-11*newPhotonPacket%nu)
                 end if
 
                 ! if the photon is from an extra diffuse source
              case ("diffExt")
+
+                ! check that the grid and cell indeces have been specified
+                if (.not.(present(gp).and.present(difSource))) then
+                    print*, "! newPhotonPacket: grid and cell indeces of the new extra diffuse &
+                         & photon packet have not been specified"
+                    stop
+                end if
 
                 call getNu2(inSpectrumProbDen(0,1:nbins), nuP)
 
@@ -946,6 +912,26 @@ module photon_mod
                    stop
                 end if
 
+                ! check that the position has been specified
+                if (.not.present(position)) then
+                    print*, "! newPhotonPacket: position of the new diffuse &
+                         & photon packet has not been specified"
+                    stop
+                end if
+            
+                ! check that the position indeces have been specified
+                if (.not.(present(xP).and.present(yP).and.present(zP))) then
+                    print*, "! newPhotonPacket: position indeces of the new diffuse &
+                         & photon packet have not been specified"
+                    stop
+                end if
+                ! check that the grid indeces have been specified
+                if (.not.(present(gP))) then
+                    print*, "! newPhotonPacket: grid index of the new diffuse &
+                         & photon packet has not been specified"
+                    stop
+                end if
+ 
                 ! check that the position is not inside the inner region
                 if (grid(gP)%active(xP(igPn),yP(igPn),zP(igPn))<= 0) then                   
                     print*, "! newPhotonPacket: position of the new diffuse &
@@ -1037,6 +1023,26 @@ module photon_mod
                if (lgGas) then
                   print*, "! newPhotonPacket: dustEmi-type packet should be created in a &
                        & grid containing gas."
+                  stop
+               end if
+
+               ! check that the position has been specified
+               if (.not.present(position)) then
+                  print*, "! newPhotonPacket: position of the new dust emitted &
+                       &photon packet has not been specified"
+                  stop
+               end if
+
+               ! check that the position indeces have been specified
+               if (.not.(present(xP).and.present(yP).and.present(zP))) then
+                  print*, "! newPhotonPacket: position indeces of the new dust emitted &
+                       &photon packet have not been specified"
+                  stop
+               end if
+               ! check that the position indeces have been specified
+               if (.not.(present(gP))) then
+                  print*, "! newPhotonPacket: grid index of the new dust emitted &
+                       &photon packet has not been specified"
                   stop
                end if
 
@@ -1140,17 +1146,8 @@ module photon_mod
 
           ! check that the input position is not outside the grid
           if ( (enPacket%iG <= 0).or.(enPacket%iG > nGrids) ) then   
-             print*, "! pathSegment: starting position not in any defined grids"
-             print*, 'iPhot                 ', iPhot
-             print*, 'enPacket%nuP          ', enPacket%nuP          
-             print*, 'enPacket%iG           ', enPacket%iG           
-             print*, 'enPacket%xP           ', enPacket%xP           
-             print*, 'enPacket%yP           ', enPacket%yP           
-             print*, 'enPacket%zP           ', enPacket%zP           
-             print*, 'enPacket%lgStellar    ', enPacket%lgStellar    
-             print*, 'enPacket%lgLine       ', enPacket%lgLine       
-             print*, 'enPacket%position     ', enPacket%position     
-             print*, 'enPacket%direction    ', enPacket%direction    
+             print*, "! pathSegment: starting position not in any defined gridhses",&
+                  & enPacket
              stop
           else if ( (enPacket%xP(igpp) <= 0).or.&
                &(enPacket%xP(igpp) > grid(enPacket%iG)%nx) ) then
@@ -1190,7 +1187,7 @@ module photon_mod
                   &                               (rVec%z/1.e10)*(rVec%z/1.e10))
              call locate(grid(1)%xAxis, radius, xP)
              if (nGrids > 1 .or. gP >1) then
-                print*, " ! pathSegment: multiple grids are not allowed in a 1D simulation"
+                print*, " ! energyPacketRun: multiple grids are not allowed in a 1D simulation"
                 stop
              end if
           end if
@@ -1281,7 +1278,7 @@ module photon_mod
                    end if
                 end if
 
-                if (vHat%x>1.e-10) then
+                if (vHat%x>0.) then
                    if (xP<grid(gP)%nx) then
 
                       dSx = ( (grid(gP)%xAxis(xP+1)+grid(gP)%xAxis(xP))/2.-rVec%x)/vHat%x
@@ -1297,7 +1294,7 @@ module photon_mod
                          if (.not.lgPlaneIonization .and. gP==1) return
                       end if
                    end if
-                else if (vHat%x<-1.e-10) then
+                else if (vHat%x<0.) then
                    if (xP>1) then
                       dSx = ( (grid(gP)%xAxis(xP)+grid(gP)%xAxis(xP-1))/2.-rVec%x)/vHat%x
                       if (abs(dSx)<1.e-10) then             
@@ -1310,19 +1307,13 @@ module photon_mod
                          rVec%x=grid(gP)%xAxis(1)
                       end if
                    end if
-                else
+                else if (vHat%x==0.) then
 !                   dSx = grid(gP)%xAxis(grid(gP)%nx)
                    dSx =1.e35
                 end if
                 
-                if (.not. (dSx >= 0. .or. dSx <0.)) then
-                   print*, '! pathSegment: insane dSx [dSx, xP, grid(gP)%xAxis(xP), rVec%x, vHat%x]'
-                   print*, dSx, xP, grid(gP)%xAxis(xP), rVec%x, vHat%x
-                   stop
-                end if
-
                 if (.not.lg1D) then 
-                   if (vHat%y>1.e-10) then
+                   if (vHat%y>0.) then
                       if (yP<grid(gP)%ny) then
                          dSy = ( (grid(gP)%yAxis(yP+1)+grid(gP)%yAxis(yP))/2.-rVec%y)/vHat%y
                          if (abs(dSy)<1.e-10) then
@@ -1336,7 +1327,7 @@ module photon_mod
                             if(gP==1) return
                          end if
                       end if
-                   else if (vHat%y<-1.e-10) then
+                   else if (vHat%y<0.) then
                       if (yP>1) then
                          dSy = ( (grid(gP)%yAxis(yP)+grid(gP)%yAxis(yP-1))/2.-rVec%y)/vHat%y
                          if (abs(dSy)<1.e-10) then             
@@ -1349,19 +1340,12 @@ module photon_mod
                             rVec%y=grid(gP)%yAxis(1)
                          end if
                       end if
-                   else 
+                   else if (vHat%y==0.) then
 !                      dSy = grid(gP)%yAxis(grid(gP)%ny)
                       dSy = 1.e35
                    end if
 
-                   if (.not. (dSy >= 0. .or. dSy <0.)) then
-                      print*, '! pathSegment: insane dSy [dSy, yP, grid(gP)%yAxis(yP), rVec%y, vHat%y]'
-                      print*, dSy, yP, grid(gP)%yAxis(yP), rVec%y, vHat%y
-                      stop
-                   end if
-
-
-                   if (vHat%z>1.e-10) then
+                   if (vHat%z>0.) then
                       if (zP<grid(gP)%nz) then
                          dSz = ( (grid(gP)%zAxis(zP+1)+grid(gP)%zAxis(zP))/2.-rVec%z)/vHat%z
                          if (abs(dSz)<1.e-10) then
@@ -1375,7 +1359,7 @@ module photon_mod
                             if (.not.lgPlaneIonization .and. gP==1) return
                          end if
                       end if
-                   else if (vHat%z<-1.e-10) then
+                   else if (vHat%z<0.) then
                       if (zP>1) then             
                          dSz = ( (grid(gP)%zAxis(zP)+grid(gP)%zAxis(zP-1))/2.-rVec%z)/vHat%z
                          if (abs(dSz)<1.e-10) then             
@@ -1388,15 +1372,9 @@ module photon_mod
                             rVec%z=grid(gP)%zAxis(1)
                          end if
                       end if
-                   else 
+                   else if (vHat%z==0.) then
 !                      dSz = grid(gP)%zAxis(grid(gP)%nz)
                       dSz = 1.e35
-                   end if
-
-                   if (.not. (dSz >= 0. .or. dSz <0.)) then
-                      print*, '! pathSegment: insane dSz [dSz, zP, grid(gP)%zAxis(zP), rVec%z, vHat%z]'
-                      print*, dSz, zP, grid(gP)%zAxis(zP), rVec%z, vHat%z
-                      stop
                    end if
                    
                    if (xP > grid(gP)%nx .or. xP < 1 .or. &
@@ -1535,34 +1513,15 @@ module photon_mod
              end if
 
              ! check if the packet interacts within this cell
-             if ((absTau+tauCell > passProb) .and. (grid(gP)%active(xP,yP,zP)>0) .and. &
-                  & grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP) > 1.e-10) then
+             if ((absTau+tauCell > passProb) .and. (grid(gP)%active(xP,yP,zP)>0)) then
 
                 ! packet interacts
                 
                 ! calculate where within this cell the packet is absorbed
-                dlLoc = (passProb-absTau)/grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP)                
+                dlLoc = (passProb-absTau)/grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP)
 
                 ! update packet's position
                 rVec = rVec + dlLoc*vHat
-                
-                if (.not. (rVec%x >= 0. .or. rVec%x < 0)) then
-                   print*, '! pathSegment: insane rVec%x [rVec%x, dlLoc, vHat%x]'
-                   print*, rVec%x, dlLoc, vHat%x
-                   stop
-                end if
-
-                if (.not. (rVec%y >= 0. .or. rVec%y < 0)) then
-                   print*, '! pathSegment: insane rVec%y [rVec%y, dlLoc, vHat%y]'
-                   print*, rVec%y, dlLoc, vHat%y
-                   stop
-                end if
-
-                if (.not. (rVec%z >= 0. .or. rVec%z < 0)) then
-                   print*, '! pathSegment: insane rVec%z [rVec%z, dlLoc, vHat%z]'
-                   print*, rVec%z, dlLoc, vHat%z
-                   stop
-                end if
 
                 if (lgSymmetricXYZ .and. gP==1) then
                    if ( rVec%x <= grid(gP)%xAxis(1) ) then
@@ -1609,7 +1568,7 @@ module photon_mod
                       idirT=totangleBinsTheta
                    end if
                    if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                      print*, '! pathSegment: error in theta direction cosine assignment',&
+                      print*, '! energyPacketRun: error in theta direction cosine assignment',&
                            &  idirT, enPacket, dTheta, totAngleBinsTheta
                       stop
                    end if
@@ -1640,7 +1599,7 @@ module photon_mod
                    end if
                    
                    if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                      print*, '! pathSegment: error in Phi direction cosine assignment -2',&
+                      print*, '! energyPacketRun: error in Phi direction cosine assignment -2',&
                            &  idirP, enPacket, dPhi, totAngleBinsPhi
                       stop
                    end if
@@ -2108,7 +2067,7 @@ module photon_mod
                          idirT=totangleBinsTheta
                       end if
                       if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                         print*, '! pathSegment: error in theta direction cosine assignment',&
+                         print*, '! energyPacketRun: error in theta direction cosine assignment',&
                               &  idirT, enPacket, dTheta, totAngleBinsTheta
                          stop
                       end if
@@ -2138,7 +2097,7 @@ module photon_mod
                          idirP=totangleBinsPhi
                       end if
                       if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                         print*, '! pathSegment: error in phi direction cosine assignment -3',&
+                         print*, '! energyPacketRun: error in phi direction cosine assignment -3',&
                               &  idirP, enPacket, dPhi, totAngleBinsPhi
                          stop
                       end if
@@ -2327,7 +2286,7 @@ module photon_mod
                          idirT=totangleBinsTheta
                       end if
                       if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                         print*, '! pathSegment: error in theta direction cosine assignment',&
+                         print*, '! energyPacketRun: error in theta direction cosine assignment',&
                               &  idirT, enPacket, dTheta, totAngleBinsTheta
                          stop
                       end if
@@ -2358,7 +2317,7 @@ module photon_mod
                          idirP=totangleBinsPhi
                       end if
                       if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                         print*, '! pathSegment: error in phi direction cosine assignment -4',&
+                         print*, '! energyPacketRun: error in phi direction cosine assignment -4',&
                               &  idirP, enPacket, dPhi, totAngleBinsPhi
                          stop
                       end if
@@ -2453,7 +2412,7 @@ module photon_mod
                         idirT=totangleBinsTheta
                      end if
                      if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                        print*, '! pathSegment: error in theta direction cosine assignment',&
+                        print*, '! energyPacketRun: error in theta direction cosine assignment',&
                              &  idirT, enPacket, dTheta, totAngleBinsTheta
                         stop
                      end if
@@ -2484,7 +2443,7 @@ module photon_mod
                      end if
                      
                      if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                        print*, '! pathSegment: error in phi direction cosine assignment -5',&
+                        print*, '! energyPacketRun: error in phi direction cosine assignment -5',&
                              &  idirP, enPacket, dPhi, totAngleBinsPhi
                         stop
                      end if
@@ -2585,7 +2544,7 @@ module photon_mod
                            idirT=totangleBinsTheta
                         end if
                         if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                           print*, '! pathSegment: error in theta direction cosine assignment',&
+                           print*, '! energyPacketRun: error in theta direction cosine assignment',&
                                 &  idirT, enPacket, dTheta, totAngleBinsTheta
                            stop
                         end if
@@ -2617,7 +2576,7 @@ module photon_mod
                         end if
                      
                         if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                           print*, '! pathSegment: error in phi direction cosine assignment -6',&
+                           print*, '! energyPacketRun: error in phi direction cosine assignment -6',&
                                 &  idirP, enPacket, dPhi, totAngleBinsPhi
                            stop
                         end if
@@ -2749,7 +2708,7 @@ module photon_mod
                idirT=totangleBinsTheta
             end if
             if (idirT<1 .or. idirT>totAngleBinsTheta) then
-               print*, '! pathSegment: error in theta direction cosine assignment',&
+               print*, '! energyPacketRun: error in theta direction cosine assignment',&
                     &  idirT, enPacket, dTheta, totAngleBinsTheta
                stop
             end if
@@ -2779,7 +2738,7 @@ module photon_mod
             end if
             
             if (idirP<1 .or. idirP>totAngleBinsPhi) then
-               print*, '! pathSegment: error in phi direction cosine assignment -7',&
+               print*, '! energyPacketRun: error in phi direction cosine assignment -7',&
                     &  idirP, enPacket, dPhi, totAngleBinsPhi
                stop
             end if
@@ -2858,18 +2817,13 @@ module photon_mod
       enPacket%yP(igpp) = yP
       enPacket%zP(igpp) = zP   
       
-      ! the energy packet has beenid absorbed - reemit a new packet from this position
-
-      chTypeIn = packetType
-      positionIn = rVec
-      inX =  enPacket%xP(1:2)
-      inY =  enPacket%yP(1:2)
-      inZ =  enPacket%zP(1:2)
-      gPIn = gP
-      reRun = 1  
-      return
+   ! the energy packet has beenid absorbed - reemit a new packet from this position
+   call energyPacketRun(chType=packetType, position=rVec, xP=enPacket%xP(1:2), yP=enPacket%yP(1:2), &
+        & zP=enPacket%zP(1:2), gP=gP)
    
-    end subroutine pathSegment
+   return
+   
+ end subroutine pathSegment
  
 
  subroutine hg(inpacket)

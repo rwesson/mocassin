@@ -502,7 +502,7 @@ module update_mod
                     end if
 
                     
-                    print*, "! iterateT: [warning] no convergence after ", &
+                    if (lgTalk) print*, "! iterateT: [warning] no convergence after ", &
                          & nIterateT, " steps. (cell, T)", cellP,xP,yP,zP,TeUsed
 
                     grid%noTeBal = grid%noTeBal+1.
@@ -1601,7 +1601,7 @@ module update_mod
 
             NeUsed = NeUsed * grid%Hden(cellP)
 
-            if (NeUsed==0.) print*, '! ionBalance [warning]: cell ', xP,yP,zP, &
+            if (NeUsed==0. .and.lgTalk) print*, '! ionBalance [warning]: cell ', xP,yP,zP, &
                  &'; NeUsed = ',  NeUsed
 
             if (NeUsed == 0.) then
@@ -1966,7 +1966,7 @@ module update_mod
 
                   call locate(dustEmIntegral(nS,ai,:), dustAbsIntegral, iT)
                   
-                  if (iT<=0) then
+                  if (iT<=0 .and. lgTalk) then
                      print*, "getDustT: [warning] temperature of grain = 0. K!!!!"
                      print*, cellP
                      print*, nS, dustAbsIntegral

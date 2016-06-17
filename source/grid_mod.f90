@@ -1594,7 +1594,7 @@ module grid_mod
                           else
                              nsp = 1
                           end if
-print*, nsp, 'here!'
+!print*, nsp, 'here!'
                           do nspec = 1, nSpeciesPart(nsp)
                              do ai = 1, nSizes
                                 denominator = denominator + &

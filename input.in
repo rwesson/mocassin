@@ -1,0 +1,17 @@
+home '/Users/besug001/lib/mocassin/'
+inclination 1 0.0 -1
+getEquivalentTau
+autoPackets 0.2 2. 900000000
+contShape  blackbody
+nebComposition noGas
+maxIterateMC  20 95.
+nPhotons 1000000
+TStellar 10000.
+Ndust file 'input/e7.9_32d.grid'
+dustFile 'input/sn_grainspecies.dat.mix70-30' 'input/mrn.dat'
+writeGrid 10. 
+convLimit 0.01
+LStar 78200000
+Rin 0.
+echo 1300. 1400. 1.
+continuumCube 0.1 500.  

@@ -108,6 +108,9 @@ module common_mod
 
     integer :: nAuger(30,30,10)                ! max number of auger electrons freed
     
+    integer :: noGpLoc = -1
+    integer, dimension(3) :: noCellLoc=-1
+
     integer, dimension(nElements, nElements, 7, 3) &
          &:: elementP                          ! first dim is atomic number of element,
                                                ! second dimension is ion stage, 1 for atom

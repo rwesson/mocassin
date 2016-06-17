@@ -26,9 +26,9 @@ source4  = source/infnan.f90 source/constants_mod.f90 source/vector_mod.f90 sour
 	source/update_mod.f90 \
 	source/output_mod.f90 source/iteration_mod.f90 source/mocassinPlot.f90 
  
-F90  = mpif90
+F90  = openmpif90
 LIBS =	-lm
-OPT1 = -fno-range-check
+OPT1 = 
 OPT2 = -CB -g -traceback
 
 mocassin:
