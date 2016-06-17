@@ -23,7 +23,7 @@ module photon_mod
 
     contains
 
-    subroutine energyPacketDriver(iStar, n, grid, plot, gpLoc, cellLoc)
+    subroutine energyPacketDriver(iStar, n, grid, gpLoc, cellLoc)
         implicit none
         
         integer, intent(in)            :: n           ! number of energy packets 
@@ -34,8 +34,6 @@ module photon_mod
         integer, intent(inout), optional &
              & :: cellLoc(3)                          ! local cell (only used for extra diffuse sources)
        
-        type(plot_type), intent(inout), optional &
-             & :: plot                                ! only used in the mocassinPlot version
         type(grid_type), dimension(:), intent(inout) :: grid        ! the grid(s)
         
         type(vector)                   :: posDiff     ! initial position vector for diff ext

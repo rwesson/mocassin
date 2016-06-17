@@ -2035,11 +2035,11 @@ module output_mod
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
 
-        call hlinex(4,2,TeUsed,NeUsed,fh,2)
+        call hlinex(4,2,TeUsed,NeUsed,fh)
         hb = fh
         do ilow = 2, 8
            do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)              
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh)              
               HIRecLines(iup, ilow) = (fh/hb)*Hbeta
            enddo
         enddo
@@ -2160,7 +2160,7 @@ module output_mod
     !  Interpolate in density/temperature for specified line emissivity (iopt=1)
     !  or 2s recombination coefficient (iopt=2)
     ! authors Wang Wei and Yu Pei (PKU)
-    subroutine hlinex(nu,nl,xt,xd,fh,iopt)
+    subroutine hlinex(nu,nl,xt,xd,fh)
       implicit real*8(a-h,o-z)
       integer                    :: nu         ! upper level
       integer                    :: nl         ! lower level
@@ -2176,8 +2176,7 @@ module output_mod
       real                       :: xt         ! temperature used
       real                       :: xd         ! density used
       real                       :: fh         ! H atomic data
-      integer                    :: iopt         ! switch
-      
+
       real, dimension(15)              :: densx
       real, dimension(15)              :: tempx
       real, dimension(5000,15,15)      :: ex

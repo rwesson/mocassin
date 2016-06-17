@@ -21,7 +21,6 @@ program MoCaSSiNoutput
     type(grid_type) :: grid3D(maxGrids) ! the 3D Cartesian  grid
 
     integer         :: iGrid
-    integer         :: err            ! allocation error status
 
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)

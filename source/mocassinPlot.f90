@@ -26,11 +26,6 @@ program MoCaSSiNplot
     real(kind=8),pointer    :: flinePlotLarge(:,:)
     real, pointer   :: image(:,:,:,:)    
 
-    real, pointer   :: linePDFTemp(:,:)
-    real, pointer   :: opacityTemp(:,:)  
-    real, pointer   :: recPDFTemp(:,:)
-    real, pointer   :: totalLinesTemp(:)
-    
     ! filter transmission stuff
     real            :: frequency(5000), frequencyTemp(5000),tranCoeff(5000),tranCoeffTemp(5000)
     Real, pointer   :: coeff(:)
@@ -45,7 +40,7 @@ program MoCaSSiNplot
     integer         :: abFileIndexUsed
     integer         :: err            ! allocation error statu
     integer         :: elem, ion      ! element ion counters
-    integer         :: i,j,k,n,freq,iG! counters
+    integer         :: i,j,k,iG       ! counters
     integer         :: iCount         ! cell index
     integer         :: iLine          ! line counter
     integer         :: iup, ilow, l   ! energy levels pointerst
@@ -53,7 +48,6 @@ program MoCaSSiNplot
     integer         :: nxMax,nyMax,nzMax ! 
     integer         :: maxCells       ! maxCells
     integer         :: plotNum        ! counter
-    integer         :: size,load,rest ! mpi stuff
     integer         :: tranP          ! transmnission coeff index
     integer         :: tranMaxP       ! maximum tran coeff index 
     integer         :: contP          ! continuum index counter 
@@ -475,7 +469,6 @@ program MoCaSSiNplot
         real                      :: freq        ! cont freq
 
         character(len=10)         :: lineORcont  ! line or continuum ?
-        character(len=10)         :: anOrMC      ! analytical or MC?
         character(len=10)         :: filter      ! filter?
 
 
@@ -696,9 +689,6 @@ program MoCaSSiNplot
 &                                      iup        ! pointer to upper level
         integer                    :: denint
 
-        real                       :: A4471, A4922! HeI reference lines 
-        real                       :: aFit        ! general interpolation coeff
-        real                       :: C5876, C6678! collition exc. corrections
         real                       :: Hbeta       ! Hbeta emission
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
@@ -723,12 +713,12 @@ program MoCaSSiNplot
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*grid3D(iG)%elemAbun(abFileIndexUsed,1)
 
-        call hlinex(4,2,TeUsed,NeUsed,fh,2)
+        call hlinex(4,2,TeUsed,NeUsed,fh)
         hb = fh
 
         do ilow = 2, 8
            do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)              
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh)              
               HIRecLines(iup, ilow) = (fh/hb)*Hbeta
 
            enddo

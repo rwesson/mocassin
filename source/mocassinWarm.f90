@@ -21,7 +21,6 @@ program MoCaSSiNwarm
 
     type(grid_type) :: grid3D(maxGrids) ! the 3D Cartesian  grid
 
-    integer         :: err              ! allocation error status
     integer         :: iGrid            ! 
 
     real            :: etime

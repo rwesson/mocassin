@@ -548,13 +548,13 @@ module update_mod
              grainPotOld = grainPot(isp,ai)
              lgGCBConv = .true.
              grainEmiOld = getGrainEmission(grainPot(isp,ai), isp, ai)
-             grainRecOld = getGrainRecombination(grainPot(isp,ai), isp)
+             grainRecOld = getGrainRecombination(grainPot(isp,ai))
              grainPot(isp,ai) = grainPotOld+0.05             
           end if
 
           threshold = max(grainVn(isp)+grainPot(isp,ai),grainVn(isp))
           grainEmi = getGrainEmission(grainPot(isp,ai), isp, ai)
-          grainRec = getGrainRecombination(grainPot(isp,ai), isp)
+          grainRec = getGrainRecombination(grainPot(isp,ai))
           delta = grainEmi-grainRec
 
           delta1 = abs(delta/(0.5*max(1.e-35, grainEmi+grainRec)))
@@ -654,7 +654,7 @@ module update_mod
         ! calculate the grain recombination 
         ! using eqn 23 etcof Baldwin et al. (1991)
         ! cellFactor is dependant on the physical conditions of the gas, 
-        function getGrainRecombination(Vg, isp)
+        function getGrainRecombination(Vg)
           implicit none
 
           real :: getGrainRecombination
@@ -668,8 +668,6 @@ module update_mod
           real :: S     ! sticking coefficient 
           real :: vmean ! colliding particle mean velocity
           real :: Z     ! colliding particle charge
-          
-          integer, intent(in) :: isp ! species identifier 
           
           integer :: istage
           
