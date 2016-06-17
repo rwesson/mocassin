@@ -35,6 +35,7 @@ module common_mod
     logical         :: lgGrainSpiking = .true.  ! temperature spiking for small grains
     logical         :: lgEcho = .false.         ! light time travel included?
     logical         :: lgNosource = .false.     ! exclude sources from SED?
+    logical         :: lginputDustMass = .false.! user sets input dust mass?
 
     real, pointer :: gSca(:)                 ! gSca(freq)
 
@@ -65,6 +66,7 @@ module common_mod
     real            :: nu0                     ! 
     real            :: nu0Add                  !
     real            :: totalDustMass 
+    real            :: inputDustMass           ! for when user sets desired dust mass in input
     real            :: convPercent=0.          ! total convergence percentage
     real            :: pwlIndex = 0.           ! power law input spectrum index
     real            :: pwlMin=0.               ! power law lower cutoff [Ryd]

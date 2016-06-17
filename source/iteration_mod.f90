@@ -476,15 +476,16 @@ module iteration_mod
 
            totalEscaped = 0.
 
+           do iG = 1, nGrids
+              grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins) = 0.
+           end do
+
            do iStar = 1, nStars
               if(taskid==0) print*, 'iterateMC: Starting transfer for ionising source ', iStar
               
               load = int(nPhotons(iStar)/numtasks)
               rest = mod(nPhotons(iStar), numtasks)           
            
-              do iG = 1, nGrids
-                 grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins) = 0.
-              end do
 
               if (lgPlaneIonization) then
                  planeIonDistribution = 0
@@ -533,7 +534,7 @@ module iteration_mod
 
                              load = int(nPhotonsDiffuseLoc/numtasks)
                              rest = mod(nPhotonsDiffuseLoc, numtasks)           
-                               
+
               
                              ! send the photons through and evaluate the MC 
                              ! estimators of Jste and Jdif at every grid cell
@@ -1095,23 +1096,30 @@ module iteration_mod
                  if (taskid==0) &
                       & print*, "! iterateMC: [talk] Total number of energy packets &
                       &increased to ", nPhotons
-              end if
-              
+
+                 if (Ldiffuse>0.) then
+                    nPhotonsDiffuseLoc = nPhotonsDiffuseLoc*nPhotIncrease
+                    if (taskid==0) &
+                         & print*, "! iterateMC: [talk] number of diffuse energy packets &
+                         &per cell increased to ", nPhotonsDiffuseLoc
+                 end if              
+
+              end if              
            end if
 
 
-           if (Ldiffuse>0. .and. nIterateMC > 1 .and. totPercent < 95. .and. lgAutoPackets & 
-                &  .and. totPercentOld > 0.) then
-
-              if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
-                 nPhotonsDiffuseLoc = nPhotonsDiffuseLoc*nPhotIncrease
-
-                 if (taskid==0) &
-                      & print*, "! iterateMC: [talk] number of diffuse energy packets &
-                      &per cell increased to ", nPhotonsDiffuseLoc
-              end if
-              
-           end if
+!           if (Ldiffuse>0. .and. nIterateMC > 1 .and. totPercent < 95. .and. lgAutoPackets & 
+!                &  .and. totPercentOld > 0.) then
+!
+!              if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
+!                 nPhotonsDiffuseLoc = nPhotonsDiffuseLoc*nPhotIncrease
+!
+!                 if (taskid==0) &
+!                      & print*, "! iterateMC: [talk] number of diffuse energy packets &
+!                      &per cell increased to ", nPhotonsDiffuseLoc
+!              end if
+!              
+!           end if
 
 
            totPercentOld = totPercent

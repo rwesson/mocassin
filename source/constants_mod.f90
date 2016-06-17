@@ -42,7 +42,7 @@ module constants_mod
     real, parameter :: radToDeg = 180./pi
 
     ! hard limits
-    integer, parameter :: maxGrids = 668            ! limit to the number of grids to be used 
+    integer, parameter :: maxGrids = 2000           ! limit to the number of grids to be used 
     integer, parameter :: maxTau = 10000000         ! limit to the optical depth arrays
     integer, parameter :: nElements = 30            ! number of elements
     integer, parameter :: nForLevels = 15           ! number of levels
