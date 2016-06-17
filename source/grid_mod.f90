@@ -1723,9 +1723,11 @@ module grid_mod
               print*, 'Mothergrid :'
               if (lgGas) then
                  print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
+                 print*, '                                         [Msol]   : ', totalMass*5.025e11
               end if
               if (lgDust) then
                  print*, 'Total dust mass of ionized region by mass [1.e45 g]: ', totalDustMass
+                 print*, '                                          [Msol]   : ', totalDustMass*5.025e11
               end if
               print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
               if (lgEcho) then 
@@ -2566,6 +2568,7 @@ module grid_mod
                  print*, 'Sub Grid: ', iG                    
                  if (lgGas) &
                     &print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
+                     print*, '                                         [Msol]   : ', totalMass*5.025e11
 
 
                  print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
