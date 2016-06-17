@@ -1,0 +1,3 @@
+           1  number of photon sources
+ 'blackbody'   40000.00       3076.787         8000000   0.000000       0.000000       0.000000     blackbody   0.000000    
+ (contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position, spID, tstep)

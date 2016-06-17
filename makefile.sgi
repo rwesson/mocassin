@@ -1,0 +1,45 @@
+ 
+COBJ=	constants_mod.o vector_mod.o common_mod.o interpolation_mod.o \
+        set_input_mod.o hydro_mod.o ph_mod.o composition_mod.o continuum_mod.o \
+        ionization_mod.o pathIntegration_mod.o grid_mod.o dust_mod.o\
+        emission_mod.o photon_mod.o  update_mod.o output_mod.o iteration_mod.o mocassin.o
+        
+COBJ1=	constants_mod.o vector_mod.o common_mod.o interpolation_mod.o \
+        set_input_mod.o hydro_mod.o ph_mod.o composition_mod.o continuum_mod.o \
+        ionization_mod.o pathIntegration_mod.o grid_mod.o dust_mod.o \
+        emission_mod.o photon_mod.o  update_mod.o output_mod.o iteration_mod.o mocassinWarm.o
+ 
+
+COBJ2=	constants_mod.o vector_mod.o common_mod.o interpolation_mod.o \
+        set_input_mod.o hydro_mod.o ph_mod.o composition_mod.o continuum_mod.o \
+        ionization_mod.o pathIntegration_mod.o grid_mod.o dust_mod.o \
+        emission_mod.o photon_mod.o  update_mod.o output_mod.o iteration_mod.o mocassinPlot.o
+ 
+
+fort90=    f90 -64 -C -mpio -OPT:Olimit=3495 -O3  
+
+.f90.o:
+	$(fort90) -c $source/*.f90
+
+LIBS=   -lmpi
+
+mocassin: $(COBJ)
+	  $(fort90)  -o $@ \
+	  $(COBJ) $(LIBS) 
+
+mocassinWarm: $(COBJ1)
+	  $(fort90)  -o $@ \
+	  $(COBJ1) $(LIBS) 
+
+
+mocassinPlot: $(COBJ2)
+	  $(fort90)  -o $@ \
+	  $(COBJ2) $(LIBS) 
+
+clean:
+	/bin/rm *.o *~ *.mod
+
+
+
+
+

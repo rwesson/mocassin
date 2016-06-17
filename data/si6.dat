@@ -1,0 +1,81 @@
+ 26
+** Atomic data from version 7 of the CHIANTI database **
+%Observed energy levels (n=2): Edlen, B. 1983, Physica Scripta, 28, 51
+%Observed energy levels (n=3): Artru, M.-C., & W.-U. L. Brillet, 1977, Physica Scripta, 16, 93
+%Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%   E. Landi - May 2007
+%filename: si_6.wgfa
+%Observed energy levels (n=2): Edlen, B. 1983, Physica Scripta, 28, 51
+%Observed energy levels (n=3): Artru, M.-C., & W.-U. L. Brillet, 1977, Physica Scripta, 16, 93
+%Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%Radiative data: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi - May 2007
+
+%filename: si_6.splups
+%Oscillator strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%Effective collision strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%comment: effective collision strengths are published for temperatures in the range  3.9 < Log T <  7.7
+%comment: effective collision strengths are USED for temperatures in the range  4.5 < Log T <  7.1
+%comment: data at very high or very low temperatures were sometimes discarded to improve the fit. At these
+     temperatures the Si VI abundance is negligible under equilibrium.
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi - Mar 2007
+ 2 23
+  1  2s2.2p5 2P3/2
+  2  2s2.2p5 2P1/2
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+  1  2   1.79e-01
+  0  0   1.79e-01
+  0  0   1.80e-01
+  0  0   1.81e-01
+  0  0   1.82e-01
+  0  0   1.84e-01
+  0  0   1.88e-01
+  0  0   1.93e-01
+  0  0   2.02e-01
+  0  0   2.15e-01
+  0  0   2.36e-01
+  0  0   2.68e-01
+  0  0   3.14e-01
+  0  0   3.73e-01
+  0  0   4.33e-01
+  0  0   4.62e-01
+  0  0   4.59e-01
+  0  0   4.45e-01
+  0  0   4.25e-01
+  0  0   4.01e-01
+  0  0   3.61e-01
+  0  0   3.16e-01
+  0  0   2.66e-01
+ 0 0 0
+  1  2   2.960e+00
+  1  4        0.0
+  2  2     5094.2

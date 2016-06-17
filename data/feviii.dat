@@ -1,0 +1,91 @@
+ 36
+** Atomic data from version 7 of the CHIANTI database **
+%Experimental energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1999,
+    NIST Database for Atomic Spectroscopy, Version 2.0, NIST Standard Reference Database 61
+%Experimental energy levels (3p6.4d levels - 51,52): Ekberg, J.O. & Feldman U., 2003, ApJ, 595, 517
+%Experimental energy levels (3,4,5,6): Young & Landi 2009, ApJ, 707, 173 and Del Zanna 2009, A&A, 508, 513
+%Experimental energy levels (21): Landi & Young 2010, ApJ, 713, 205 
+%Theoretical energies from Griffin, Pindzola  and Badnell, 2000 A&ASS 142, 217.
+%Theoretical energy levels (n=5,6,7): Czyzak,S.J., Krueger,T.K., 1966, ApJ, 144, 381
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  G. Del Zanna and E. Landi - Jul 2011
+%filename: fe_8.wgfa
+%Experimental energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1999,
+    NIST Database for Atomic Spectroscopy, Version 2.0, NIST Standard Reference Database 61
+%Experimental energy levels (3p6.4d levels - 51,52): Ekberg, J.O. & Feldman U., 2003, ApJ, 595, 517
+%Experimental energy levels (3,4,5,6): Young & Landi 2009, ApJ, 707, 173 and Del Zanna 2009, A&A, 508, 513
+%Experimental energy levels (21): Landi & Young 2010, ApJ, 713, 205
+%Theoretical energies from Griffin, Pindzola  and Badnell, 2000 A&ASS 142, 217.
+%Theoretical energy levels (n=5,6,7): Czyzak,S.J., Krueger,T.K., 1966, ApJ, 144, 381
+%A values and oscillator strengths: Del Zanna 2009, A&A, 508, 513
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  G. Del Zanna and E. Landi - Nov 2010
+
+%filename: fe_8.splups
+%Oscillator strengths (1-77): Griffin, Pindzola & Badnell  2000 A&AS, 142, 217
+%Oscillator strengths (78-83): Czyzak & Krueger 1966, ApJ, 144, 381
+%Effective collision strengths (1-77): Griffin, Pindzola & Badnell  2000 A&AS, 142, 217 and  Del Zanna (2009 A&A, 508, 513)
+%Collision strengths (78-83):  Czyzak & Krueger 1966, ApJ, 144, 381
+%Comment: In order to improve the Griffin et al.  ata, the collision strengths of the   
+          dipole-allowed transitions have been scaled according to the ratio of the gf 
+          values (and energies) in the Griffin et al. and a much larger calculation,
+          as described by Del Zanna 2009.
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  G. Del Zanna and E. Landi - Sep 2009
+ 2 23
+  1  3p6.3d 2D3/2
+  2  3p6.3d 2D5/2
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+  1  2   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   1.00e-22
+  0  0   6.20e-04
+  0  0   1.52e-02
+  0  0   1.02e-01
+  0  0   2.94e-01
+  0  0   4.85e-01
+  0  0   6.28e-01
+  0  0   6.56e-01
+  0  0   5.86e-01
+  0  0   4.98e-01
+ 0 0 0
+  1  2   7.829e-02
+  1  4        0.0
+  2  6     1836.0

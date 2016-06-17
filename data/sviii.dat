@@ -1,0 +1,87 @@
+ 32
+** Atomic data from version 7 of the CHIANTI database **
+%Observed energy levels (n=2): Edlen, B., 1983, Physica Scripta, 28, 51
+%Observed energy levels (4-10,24,39,41,44-49,52-53,55-60,64-65,67,69-70,82,95,105,114,117,125,131,147-151):
+       Fawcett, B.C., Hayes, R.W. 1987, Physica Scripta, 36, 80
+%Observed energy levels (11-18,21-22,25-29,35,38,43,50-51,54,123-124,129,134,136-137,155,157,162,188-189):
+       Bengtsson, P., Jupen, C., Engstrom, L., Redfors, A., Westerlind, M, 1993, Phys. Scr., 48,413
+%Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%   E. Landi - Feb 2007
+%filename: s_8.wgfa
+%Observed energy levels (n=2): Edlen, B., 1983, Physica Scripta, 28, 51
+%Observed energy levels (4-10,24,39,41,44-49,52-53,55-60,64-65,67,69-70,82,95,105,114,117,125,131,147-151):
+       Fawcett, B.C., Hayes, R.W. 1987, Physica Scripta, 36, 80
+%Observed energy levels (11-18,21-22,25-29,35,38,43,50-51,54,123-124,129,134,136-137,155,157,162,188-189):
+       Bengtsson, P., Jupen, C., Engstrom, L., Redfors, A., Westerlind, M, 1993, Phys. Scr., 48,413
+%Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%Radiative data: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%   E. Landi - Feb 2007
+
+%filename: s_8.splups
+%Oscillator strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%Effective collision strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%comment: effective collision strengths are published for temperatures in the range  4.1 < Log T <  8.1
+%comment: effective collision strengths are USED for temperatures in the range  4.5 < Log T <  7.3
+%comment: data at very high or very low temperatures were sometimes discarded to improve the fit. At these
+     temperatures the S VIII abundance is negligible under equilibrium.
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi - Feb 2007
+ 2 23
+  1  2s2.2p5 2P3/2
+  2  2s2.2p5 2P1/2
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+  1  2   1.61e-01
+  0  0   1.61e-01
+  0  0   1.61e-01
+  0  0   1.61e-01
+  0  0   1.62e-01
+  0  0   1.62e-01
+  0  0   1.63e-01
+  0  0   1.64e-01
+  0  0   1.66e-01
+  0  0   1.69e-01
+  0  0   1.74e-01
+  0  0   1.81e-01
+  0  0   1.93e-01
+  0  0   2.10e-01
+  0  0   2.35e-01
+  0  0   2.65e-01
+  0  0   2.91e-01
+  0  0   3.05e-01
+  0  0   3.09e-01
+  0  0   3.08e-01
+  0  0   3.00e-01
+  0  0   2.76e-01
+  0  0   2.39e-01
+ 0 0 0
+  1  2   2.200e+01
+  1  4        0.0
+  2  2    10084.0

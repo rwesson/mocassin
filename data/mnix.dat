@@ -1,0 +1,75 @@
+ 20
+** Atomic data from version 7 of the CHIANTI database **
+%Observed energy levels: Shirai, T., Sugar, J., Musgrove, A., & Wiese, W.L. 2000, J.Phys.Chem.Ref.Data, Monograph 8
+%Theoretical energy levels: Landi & Young 2009, ApJ, in press
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% Enrico Landi - Nov 2008
+%filename: mn_9.wgfa
+%Observed energy levels: Shirai, T., Sugar, J., Musgrove, A., & Wiese, W.L. 2000, J.Phys.Chem.Ref.Data, Monograph 8
+%Theoretical energy levels: Landi & Young 2009, ApJ, in press
+%A and gf values: Landi & Young 2009, ApJ, in press
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% Enrico Landi - Nov 2008
+
+%filename: mn_9.splups
+%gf values: Landi & Young 2009, ApJ, in press
+%Collision strengths: Landi & Young 2009, ApJ, in press
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% Enrico Landi - Nov 2008
+ 2 23
+  1  3s2.3p5 2P3/2
+  2  3s2.3p5 2P1/2
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+  1  2   3.37e-01
+  0  0   3.37e-01
+  0  0   3.37e-01
+  0  0   3.37e-01
+  0  0   3.37e-01
+  0  0   3.37e-01
+  0  0   3.36e-01
+  0  0   3.36e-01
+  0  0   3.36e-01
+  0  0   3.36e-01
+  0  0   3.36e-01
+  0  0   3.35e-01
+  0  0   3.34e-01
+  0  0   3.33e-01
+  0  0   3.31e-01
+  0  0   3.28e-01
+  0  0   3.24e-01
+  0  0   3.18e-01
+  0  0   3.09e-01
+  0  0   2.99e-01
+  0  0   2.88e-01
+  0  0   2.77e-01
+  0  0   2.66e-01
+ 0 0 0
+  1  2   3.433e+01
+  1  4        0.0
+  2  2    12546.0

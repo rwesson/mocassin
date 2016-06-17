@@ -1,0 +1,136 @@
+ ! iterateMC: [Summary] Iteration            1 ;            0 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            1 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            1 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            1 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            1 ; Total:     0.000000     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            1 ;     10000000  energy packets used
+ T(H+)    7083.833      componenet            0
+ T(H+)    7083.833      componenet            1
+ ! iterateMC: [Summary] Iteration            2 ;           20 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            2 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            2 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            2 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            2 ; Total:     20.53045     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            2 ;     10000000  energy packets used
+ T(H+)    7152.298      componenet            0
+ T(H+)    7152.298      componenet            1
+ ! iterateMC: [Summary] Iteration            3 ;           47 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            3 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            3 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            3 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            3 ; Total:     47.74067     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            3 ;     10000000  energy packets used
+ T(H+)    7251.718      componenet            0
+ T(H+)    7251.718      componenet            1
+ ! iterateMC: [Summary] Iteration            4 ;           60 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            4 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            4 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            4 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            4 ; Total:     60.60904     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            4 ;     10000000  energy packets used
+ T(H+)    7229.921      componenet            0
+ T(H+)    7229.921      componenet            1
+ ! iterateMC: [Summary] Iteration            5 ;           68 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            5 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            5 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            5 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            5 ; Total:     68.07465     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            5 ;     10000000  energy packets used
+ T(H+)    7132.543      componenet            0
+ T(H+)    7132.543      componenet            1
+ ! iterateMC: [Summary] Iteration            6 ;           72 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            6 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            6 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            6 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            6 ; Total:     72.00393     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            6 ;     20000000  energy packets used
+ T(H+)    7019.368      componenet            0
+ T(H+)    7019.368      componenet            1
+ ! iterateMC: [Summary] Iteration            7 ;           73 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            7 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            7 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            7 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            7 ; Total:     73.37917     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            7 ;     40000000  energy packets used
+ T(H+)    6950.941      componenet            0
+ T(H+)    6950.941      componenet            1
+ ! iterateMC: [Summary] Iteration            8 ;           77 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            8 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            8 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            8 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            8 ; Total:     77.79961     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            8 ;     80000000  energy packets used
+ T(H+)    6905.984      componenet            0
+ T(H+)    6905.984      componenet            1
+ ! iterateMC: [Summary] Iteration            9 ;           83 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration            9 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration            9 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration            9 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration            9 ; Total:     83.20235     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration            9 ;    160000000  energy packets used
+ T(H+)    6879.370      componenet            0
+ T(H+)    6879.370      componenet            1
+ ! iterateMC: [Summary] Iteration           10 ;           86 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           10 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           10 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           10 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           10 ; Total:     86.93517     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           10 ;    320000000  energy packets used
+ T(H+)    6864.713      componenet            0
+ T(H+)    6864.713      componenet            1
+ ! iterateMC: [Summary] Iteration           11 ;           89 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           11 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           11 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           11 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           11 ; Total:     89.58743     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           11 ;    640000000  energy packets used
+ T(H+)    6854.739      componenet            0
+ T(H+)    6854.739      componenet            1
+ ! iterateMC: [Summary] Iteration           12 ;           92 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           12 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           12 ;            0 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           12 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           12 ; Total:     92.63261     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           12 ;    640000000  energy packets used
+ T(H+)    6846.505      componenet            0
+ T(H+)    6846.505      componenet            1
+ ! iterateMC: [Summary] Iteration           13 ;           94 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           13 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           13 ;            1 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           13 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           13 ; Total:     94.00786     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           13 ;    640000000  energy packets used
+ T(H+)    6842.376      componenet            0
+ T(H+)    6842.376      componenet            1
+ ! iterateMC: [Summary] Iteration           14 ;           96 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           14 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           14 ;            1 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           14 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           14 ; Total:     96.56189     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           14 ;    640000000  energy packets used
+ T(H+)    6839.039      componenet            0
+ T(H+)    6839.039      componenet            1
+ ! iterateMC: [Summary] Iteration           15 ;           98 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           15 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           15 ;            1 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           15 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           15 ; Total:     98.82122     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           15 ;    640000000  energy packets used
+ T(H+)    6836.196      componenet            0
+ T(H+)    6836.196      componenet            1
+ ! iterateMC: [Summary] Iteration           16 ;           99 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           16 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           16 ;            1 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           16 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           16 ; Total:     99.80354     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           16 ;    640000000  energy packets used
+ T(H+)    6834.619      componenet            0
+ T(H+)    6834.619      componenet            1
+ ! iterateMC: [Summary] Iteration           17 ;          100 % conveged cells in grid            1
+ ! iterateMC: [Summary] Iteration           17 ;            0 % no hit cells in grid            1
+ ! iterateMC: [Summary] Iteration           17 ;            1 % Ion balance not reached in grid            1
+ ! iterateMC: [Summary] Iteration           17 ;            0 % Te balance not reached in grid           1
+ ! iterateMC: [Summary] Iteration           17 ; Total:     100.0000     % converged cells over all grids
+ ! iterateMC: [Summary] Iteration           17 ;    640000000  energy packets used
+ T(H+)    6832.662      componenet            0
+ T(H+)    6832.662      componenet            1

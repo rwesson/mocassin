@@ -1,0 +1,17 @@
+autoPackets 0.20 2. 1000000000
+output
+contShape  blackbody
+nebComposition 'input/abunHII40.in'
+maxIterateMC  30 95.
+nPhotons 10000000
+nx 10
+ny 10
+nz 10
+planeIonization 3.0
+Rin 0.
+Rout 2.1e19 
+TStellar 45000.
+writeGrid 5. 
+convLimit 0.03
+densityFile 'input/cubenew.dat'
+multiGrids 2 'input/subGrids.in'

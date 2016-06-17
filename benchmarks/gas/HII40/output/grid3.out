@@ -1,0 +1,32 @@
+           1
+  0.0000000E+00  convWriteGrid
+ T  0.2000000       2.000000        10000000  lgAutoPackets
+ T  lgSymmetricXYZ
+ F  lgTalk
+ F  lg1D
+ "blackbody" contShape
+     8000000  nPhotons
+         600  nbins
+  5.0000001E-02  nuStepSize
+   15.00000      nuMax
+  1.0010000E-05  nuMin
+  2.9999999E+18  R_in
+   40000.00      TStellar
+  5.0000001E-02  XHIlimit
+          20   95.00000      maxIterateMC
+   2979.716      LStar
+ F  lgDebug
+ F  lgPlaneIonization
+           1  "input/abunHII40.in"  nAbComponents
+ T  lgOutput
+  0.0000000E+00  0.0000000E+00  dxSlit,dySlit
+ F F  lgDust, lgDustConstant
+ "none" dustFile
+ "none" dustFile
+ T  lgGas
+ F  lgRecombination
+           0           0 nSpecies, nSizes
+   101.0000     resLinesTransfer
+ T lgDustScattering
+           0  nAngleBins
+  inclination

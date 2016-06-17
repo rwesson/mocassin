@@ -1,0 +1,46 @@
+autoPackets 0.20 2. 10000000
+TStellar 150000.
+output 
+talk
+symmetricXYZ
+Hdensity 3000.
+TeStart 12000.
+contShape  blackbody
+nebComposition "input/abunPN150.in"
+maxIterateMC  20 95.
+nPhotons 120000
+nx 13
+ny 13
+nz 13
+nbins 700
+LPhot 5.42e11
+nuMax 24.
+nuMin 1.001e-5
+Rin 1.e17
+Rout 4.07e17
+edges 3.888e17 3.888e17 3.888e17
+convLimit 0.05
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
