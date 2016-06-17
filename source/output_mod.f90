@@ -283,8 +283,8 @@ module output_mod
         ! calculate analytical emissivities first
 
         ! sum over all cells
-	do iG = 1, nGrids
-	
+        do iG = 1, nGrids
+
            if (lg2D) then
               yPloc = 1
            else
