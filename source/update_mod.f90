@@ -138,9 +138,11 @@ module update_mod
 
             if (lgTalk) print*, "! updateCell [talk]: no photon hits, &
                  &returning...", xP,yP,zP
-            
-            TdustTemp(:,:,cellP)       = grid%Tdust(:,:,cellP)
-            
+
+            if (lgDust) then
+               TdustTemp(:,:,cellP)       = grid%Tdust(:,:,cellP)
+            end if
+
             if (lgGas) then
                ! the grid values stay the same
                TeTemp(cellP)         = grid%Te(cellP)

@@ -1219,13 +1219,13 @@ module emission_mod
 
                     if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
                          & convPercent>minConvQheat .and. nIterateMC>1) then
-
+!print*, 'a'
                        tg =  grid%Tdust(nS,ai,cellPused)
                        Tspike=0.
                        Pspike=0.
-
+!print*, 'b'
                        call qHeat(nS, ai,tg,Tspike,Pspike)                                                          
-
+!print*, 'c'
                        if (lgWritePss .and. taskid==0) then
                           write(89, *) '              ix iy iz cellp nSpecies aRadius Teq'
                           write(89, *)  ix, iy, iz, cellpUsed, ns, grainRadius(ai), tg
@@ -1236,7 +1236,7 @@ module emission_mod
                           write(89, *) 'Tmean: ', tg
                           write(89, *) ' '
                        end if
-
+!print*, 'd'
                        do freq = 1, nbins 
                           do iT=1,nTbins
                              treal = Tspike(iT)
@@ -1495,14 +1495,20 @@ module emission_mod
             if (grid%Tdust(n,ai,cellPUsed) >0. .and. & 
                  & grid%Tdust(n,ai,cellPused)<TdustSublime(dcp-1+n)) then
             
-               do i = 1, nbins
    
-                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
-                       & convPercent>minConvQheat.and. nIterateMC>1) then
+               if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
+                    & convPercent>minConvQheat.and. nIterateMC>1) then
+!print*, 'a1'
+                  tg =  grid%Tdust(n,ai,cellPused)
 
-                     tg =  grid%Tdust(n,ai,cellPused)
-                     call qHeat(n, ai,tg,Tspike,Pspike)                                    
-                  
+                  Tspike=0.
+                  Pspike=0.
+
+                  call qHeat(n, ai,tg,Tspike,Pspike)                                    
+
+!print*, 'b1'     
+
+                  do i = 1, nbins                  
                      do iT = 1, nTbins
                         treal = Tspike(iT)
                         bb = getFlux(nuArray(i), treal, cShapeLoc)
@@ -1511,16 +1517,18 @@ module emission_mod
                              & grainWeight(ai)*&
                              & grainAbun(nspE, n)*Pspike(iT)                     
                      end do
-                     
-                  else
+                  end do
+
+               else
                   
+                  do i = 1, nbins
                      treal = grid%Tdust(n,ai,cellPused)
                      bb = getFlux(nuArray(i), treal, cShapeLoc)
                      grid%dustPDF(cellPused, i) = grid%dustPDF(cellPused, i)+&
                           & xSecArray(dustAbsXsecP(n+dcp-1,ai)+i-1)*bb*widFlx(i)*&
                           & grainWeight(ai)*grainAbun(nspE, n)
-                  end if
-               end do
+                  end do
+               end if
                
             end if
          end do
@@ -1595,6 +1603,8 @@ module emission_mod
       end do
       
 
+!print*, '1'
+
       const1 = (hPlanck*fr1Ryd)
       hc = hPlanck*c
 
@@ -1612,6 +1622,7 @@ module emission_mod
       pss  = 0.
             
       sorc = grainLabel(ns)
+!print*, '2'
 
       select case(sorc)
       case ('S') ! silicates
@@ -1634,8 +1645,10 @@ module emission_mod
          return               
       end select
 
+!print*, '3'
       ! find enthalpy bins
       call getTmin(ns,na,temp(1))
+!print*, '4'
 
       tbase=tg
       U(1) = enthalpy(temp(1),natom,na,sorc)
@@ -1655,6 +1668,7 @@ module emission_mod
          dU(i) = 0.5*(U(i+1)-U(i-1))
       end do
       dU(nTbins) = 0.5*(U(nTbins)-U(nTbins-1))
+!print*, '5'
 
       ! discrete heating term:
       ! grain heated from state ii to higher state if
@@ -1747,6 +1761,7 @@ module emission_mod
 
          A(nTbins,ii) = A(nTbins,ii)+qint
       end do
+!print*, '6'
 
       ! Work out the cooling terms
       do if = 1, nTbins-1 
@@ -1765,6 +1780,8 @@ module emission_mod
          end if
 
       end do
+
+!print*, '7'
 
       if (A(2,1) == 0.) A(2,1) = 2.*A(1,2)
 
@@ -1801,6 +1818,7 @@ module emission_mod
             end do
          end if
       end do
+!print*, '8'
 
       do j=1,nTbins 
          sumx = sumx+x(j)
@@ -1821,6 +1839,7 @@ module emission_mod
 
       tg=qHeatTemp
 
+!print*, '9'
     end  subroutine qHeat
 
                   

@@ -190,6 +190,7 @@ module ionization_mod
     ! factors.
     ! D.G.Hummer, Jila, May 1987. ApJ 327, 477
     ! modified with correct limits, J Ferguson, July 94
+    ! modified for MOCASSIN by B Ercolano (Ercolano et al 2003, MNRAS 340, 1136) 
     subroutine getGauntFF(z, log10Te, xlf, g, iflag)
         implicit none
 

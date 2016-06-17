@@ -296,7 +296,6 @@ module iteration_mod
               do i = 1, grid(iG)%nx
                  do j = 1, yTop
                     do k = 1, grid(iG)%nz
-
                        iCell = iCell+1
                        if (mod(iCell-(taskid+1),numtasks)==0) &
                             & call emissionDriver(grid,i,j,k,iG)
