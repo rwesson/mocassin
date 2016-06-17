@@ -390,7 +390,6 @@ module common_mod
     character(len=50)  :: dustFile(2)      ! dust files
     character(len=50)  :: MdMgFile         ! name of MdMg file
     character(len=50)  :: NdustFile        ! name of Ndust file    
-    character(len=50)  :: home=''          ! home directory if specified    
     character(len=50)  :: Qfile            ! name of Qfile 
     character(len=30),pointer       :: grainLabel(:)    ! name of this species
 

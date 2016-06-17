@@ -144,9 +144,6 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
-            case ("home")
-               backspace 10
-               read(unit=10,fmt=*, iostat=ios) keyword, home
             case ("TDust")           ! BEKS2010
                backspace 10
                read(unit=10,fmt=*, iostat=ios) keyword, forceTDust

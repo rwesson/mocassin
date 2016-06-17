@@ -782,7 +782,7 @@ module emission_mod
         
         ! read in rates from data/HeI2phot.dat
         close(93)
-        open(unit = 93,  action="read", file = trim(home)//"data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 93,  action="read", file = "/usr/share/mocassin/data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! HeI2phot: can't open file: data/HeI2phot.dat"
             stop
@@ -879,7 +879,7 @@ module emission_mod
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(94)
-        open(unit = 94,  action="read", file = trim(home)//"data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 94,  action="read", file = "/usr/share/mocassin/data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
             stop
@@ -914,7 +914,7 @@ module emission_mod
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95,  action="read", file = trim(home)//"data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = "/usr/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -1168,7 +1168,7 @@ module emission_mod
         ! read in HeII Lyman line ratios up to level n=5 [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(98)
-        open(unit = 98,  action="read", file = trim(home)//"data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 98,  action="read", file = "/usr/share/mocassin/data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! setDiffusePDF: can't open file: data/r2a0100.dat"
             stop
@@ -2154,7 +2154,7 @@ module emission_mod
 
     ! open file containing atomic data
     close(11)
-    open(unit=11,  action="read", file = trim(home)//file_name, status="old", position="rewind", &
+    open(unit=11,  action="read", file = "/usr/share/mocassin/"//file_name, status="old", position="rewind", &
          & iostat = ios)
 
     if (ios /= 0) then
@@ -2617,7 +2617,7 @@ module emission_mod
     
     ! open file containing atomic data
     close(11)
-    open(unit=11,  action="read", file = trim(home)//file_name, status="old", position="rewind", &
+    open(unit=11,  action="read", file = "/usr/share/mocassin/"//file_name, status="old", position="rewind", &
          & iostat = ios)
     if (ios /= 0) then
        print*, "! equilibrium: can't open file: ", file_name
@@ -3050,7 +3050,7 @@ module emission_mod
       integer :: nResLinesFile
       integer :: safeLimit = 1e6 !
 
-      open(unit=19, action="read", file=trim(home)//"data/resLines.dat", status="old", position="rewind", iostat=ios)
+      open(unit=19, action="read", file="/usr/share/mocassin/data/resLines.dat", status="old", position="rewind", iostat=ios)
       if (ios /= 0) then
          print*, "! initResLines: can't open file: data/resLines"
          stop

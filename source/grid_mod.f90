@@ -182,10 +182,10 @@ module grid_mod
 
             if ( (lgDust) .and. (.not.lgGas) ) then 
                close(72)
-               open (unit= 72,  action="read", file=trim(home)//"dustData/nuDustRyd.dat", status = "old", position = "rewind", &
+               open (unit= 72,  action="read", file="/usr/share/mocassin/dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
                if (ios /= 0) then
-                  print*, "! initCartesianGrid: can't open dust nu grid file - ",trim(home),"dustData/nuDustRyd.dat"
+                  print*, "! initCartesianGrid: can't open dust nu grid file - ","/usr/share/mocassin/dustData/nuDustRyd.dat"
                   stop
                end if
 
@@ -298,10 +298,10 @@ module grid_mod
                
                ! dust data points
                close(72)
-               open (unit= 72,  action="read", file=trim(home)//"dustData/nuDustRyd.dat", status = "old", position = "rewind", &
+               open (unit= 72,  action="read", file="/usr/share/mocassin/dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
                if (ios /= 0) then
-                  print*, "! initCartesianGrid: can't open dust nu grid file - ",trim(home),"nuDustGrid.dat"
+                  print*, "! initCartesianGrid: can't open dust nu grid file - ","/usr/share/mocassin/nuDustGrid.dat"
                   stop
                end if
 
@@ -2881,7 +2881,6 @@ module grid_mod
         write(40, *) nstages, ' emittingGrid'
         write(40, *) lgMultistars, ' lgMultiStars'
         write(40,*)  lg2D, ' 2D geometry?'
-        write(40,*) "'",trim(home),"' home()"
         write(40,*) lgEcho, echot1, echot2, echoTemp," Echo on/off"
         write(40,*) lgNosource," NoSourceSED"
         ! close file
@@ -3135,7 +3134,6 @@ module grid_mod
       read(77, *) nstages
       read(77, *) lgMultistars
       read(77, *) lg2D
-      read(77, *) home
       read(77, *) lgEcho, echot1, echot2, echoTemp
       read(77,*) lgNosource
         
@@ -3184,7 +3182,6 @@ module grid_mod
          print*,  nstages, ' nstages'
          print*,  lgMultistars, ' lgMultiStars'
          print*,  lg2D, ' lg2D'
-         print*,  "'",trim(home),"' home"
          print*,  lgEcho, echot1, echot2, echoTemp
          print*,  lgNosource," NoSourceSED"
       end if

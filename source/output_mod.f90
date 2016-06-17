@@ -261,7 +261,7 @@ module output_mod
 
            close(19)
 
-           open(unit=20, status='old', position='rewind', file=trim(home)//'data/flambda.dat',  action="read",iostat=ios)
+           open(unit=20, status='old', position='rewind', file='/usr/share/mocassin/data/flambda.dat',  action="read",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for reading, data/flambda.dat"
               stop
@@ -1393,7 +1393,7 @@ module output_mod
                &        a,b,c,d,logne,aeff,br(3,500),em
           integer       :: i,g2(500)
 
-          open(file=trim(home)//"data/Roii.dat",unit=41,status="old", action="read",position="rewind")
+          open(file="/usr/share/mocassin/data/Roii.dat",unit=41,status="old", action="read",position="rewind")
           do i=1,415
              read(41,*) lamb(i),g2(i),&
                   &br(1,i),br(2,i),br(3,i)
@@ -1752,7 +1752,7 @@ module output_mod
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
          emhb=1.98648E-08/4861.33*ahb
-         open(unit=50,file=trim(home)//'data/Rneii.dat',status='old', action="read",position='rewind')
+         open(unit=50,file='/usr/share/mocassin/data/Rneii.dat',status='old', action="read",position='rewind')
          do i=1,426
           read(50,*) a,b,c,d,f,lamb(i),br
           aeff=1.e-14*a*te**(f)
@@ -1799,7 +1799,7 @@ module output_mod
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
          emhb=1.98648E-08/4861.33*ahb
-         open(unit=51,file=trim(home)//'data/Rcii.dat',status='old', position='rewind',action="read")
+         open(unit=51,file='/usr/share/mocassin/data/Rcii.dat',status='old', position='rewind',action="read")
          do i=1,159
           read(51,*) a,b,c,d,f,lamb(i),br
           aeff=1.e-14*a*te**(f)
@@ -1823,7 +1823,7 @@ module output_mod
           y=logden-4.
           ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
           emhb=1.98648E-08/4861.33*ahb
-          open(unit=52,file=trim(home)//'data/Rnii.dat',status='old', action="read",position='rewind')
+          open(unit=52,file='/usr/share/mocassin/data/Rnii.dat',status='old', action="read",position='rewind')
           do i=1,115
            read(52,*) a,b,c,d,f,u,v,lamb(i),br
            aeff=1.e-14*a*te**(f)
@@ -1850,8 +1850,8 @@ module output_mod
           te=tk/10000.d0
           ahb=6.68e-14*te**(-0.507)/(1.+1.221*te**0.653)
           emhb=1.98648E-08/4861.33*ahb
-          open(unit=61,file=trim(home)//"data/Rniiold.dat",status='old', action="read",position='rewind')
-          open(unit=62,file=trim(home)//"data/Rnii_aeff.dat",status='old', action="read",position='rewind')
+          open(unit=61,file="/usr/share/mocassin/data/Rniiold.dat",status='old', action="read",position='rewind')
+          open(unit=62,file="/usr/share/mocassin/data/Rnii_aeff.dat",status='old', action="read",position='rewind')
           do i=1,51
            read(62,*) a(i),b(i),c(i)
           end do
@@ -2067,7 +2067,7 @@ module output_mod
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95,  action="read", file = trim(home)//"data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = "/usr/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -2146,7 +2146,7 @@ module output_mod
       real, dimension(5000,15,15)      :: ex
       common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu      
       close(337)
-      open(unit =337, file = trim(home)//"data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
+      open(unit =337, file = "/usr/share/mocassin/data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
         if (ios /= 0) then
              print*, "! hdatax: can't open  data/e1bx.d"
              stop
