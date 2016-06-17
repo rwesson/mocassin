@@ -1,12 +1,12 @@
-FC  = mpif90
-LIBS =	-lm
-FFLAGS = -fno-range-check -Jsource/ -ffree-line-length-0
+FC = mpif90
+LD = mpif90
+FFLAGS += -fno-range-check -Jsource/ -ffree-line-length-0 -lm
 MANDIR=${DESTDIR}/usr/share/man/man1
-SOURCES = source/infnan.f90 source/constants_mod.f90 source/vector_mod.f90 source/common_mod.f90 source/interpolation_mod.f90 \
-	source/set_input_mod.f90 source/hydro_mod.f90 source/ph_mod.f90 source/composition_mod.f90 \
-	source/continuum_mod.f90 source/ionization_mod.f90 source/pathIntegration_mod.f90 \
-	source/grid_mod.f90 source/dust_mod.f90 source/emission_mod.f90 source/photon_mod.f90  \
-	source/update_mod.f90 source/output_mod.f90 source/iteration_mod.f90
+SOURCES = source/infnan.o source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
+	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
+	source/continuum_mod.o source/ionization_mod.o source/pathIntegration_mod.o \
+	source/grid_mod.o source/dust_mod.o source/emission_mod.o source/photon_mod.o  \
+	source/update_mod.o source/output_mod.o source/iteration_mod.o
 
 ifeq ($(CO),debug) #to show all compiler warnings
   FFLAGS += -fbounds-check -Wall -Wuninitialized #-ffpe-trap=zero,overflow,invalid,underflow,denormal
@@ -20,17 +20,20 @@ all: mocassin mocassinWarm mocassinOutput mocassinPlot
 
 new: clean all
 
-mocassin:
-	$(FC) $(FFLAGS) -o mocassin $(SOURCES) source/mocassin.f90 $(LIBS)
+%.o: %.f90
+	$(FC) $(FFLAGS) $< -c -o $@
 
-mocassinWarm:
-	$(FC) $(FFLAGS) -o mocassinWarm $(SOURCES) source/mocassinWarm.f90 $(LIBS)
+mocassin: $(SOURCES) source/mocassin.o
+	$(LD) $(LDFLAGS) $(FFLAGS) -o $@ $^
 
-mocassinOutput:
-	$(FC) $(FFLAGS) -o mocassinOutput $(SOURCES) source/mocassinOutput.f90 $(LIBS)
+mocassinWarm: $(SOURCES) source/mocassinWarm.o
+	$(LD) $(LDFLAGS) $(FFLAGS) -o $@ $^
 
-mocassinPlot:
-	$(FC) $(FFLAGS) -o mocassinPlot $(SOURCES) source/mocassinPlot.f90 $(LIBS)
+mocassinOutput: $(SOURCES) source/mocassinOutput.o
+	$(LD) $(LDFLAGS) $(FFLAGS) -o $@ $^
+
+mocassinPlot: $(SOURCES) source/mocassinPlot.o
+	$(LD) $(LDFLAGS) $(FFLAGS) -o $@ $^
 
 clean:
 	/bin/rm -f source/*.o *~ source/*.mod mocassin mocassinWarm mocassinOutput mocassinPlot
