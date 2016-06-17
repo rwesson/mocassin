@@ -1,18 +1,19 @@
- 20
-** Atomic data from version 5.2 of the CHIANTI database **
+ 21
+** Atomic data from version 7 of the CHIANTI database **
 %observed energy levels:  Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 %theoretical energy levels: interpolated using Ne II, Mg IV, Si VI, S VIII.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
+%filename: na_3.wgfa
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 % A values: Froese Fischer, C., Tachiev, G., 2005, ADNDT, 87, 1
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-%   Enrico Landi 1997
-% Peter Young, 17-Jul-2006, updated with Tachiev & Froese Fischer data.
+%   Peter Young  -  17-Jul-2006
+
 %filename: na_3.splups
 %oscillator strengths: interpolated using Ne II, Mg IV, Si VI, S VIII
 %effective collision strengths: interpolated using Ne II, Mg IV, Si VI, S VIII

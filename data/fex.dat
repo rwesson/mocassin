@@ -1,5 +1,5 @@
- 45
-** Atomic data from version 5.2 of the CHIANTI database **
+ 50
+** Atomic data from version 7 of the CHIANTI database **
 %Observed and Theoretical energies (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
 %Observed energy levels (55-172): NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard 
    Reference Database 61, 1995
@@ -10,6 +10,7 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   Giulio Del Zanna and Peter Young - July 20, 2005 
+%filename: fe_10.wgfa
 %Observed and Theoretical energies (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
 %Observed energy levels (55-172): NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard
    Reference Database 61, 1995
@@ -20,14 +21,17 @@
 %A values (levels 55-172): A SSTRUCT run performed by P.R.Young.
 %comment: the A values for transitions between levels 55-172 have been calculated using a
     configuration model of Fe X in SSTRUCT. The configurations included were:
+
     3s2 3p5,  3s 3p6,  3s2 3p4 3d,  3s 3p5 3d,  3p6 3d
     3s2 3p3 3d2,  3s 3p4 3d2
     3s2 3p4 4s,  3s2 3p4 4p,  3s2 3p4 4d
     3s2 3p4 4f,  3s2 3p4 5s,  3s2 3p4 5p
     3s 3p5 4s,   3s 3p5 4p,   3s 3p5 5s
+
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   Giulio Del Zanna and Peter Young - July 20, 2005
+
 %filename: fe_10.splups
 %Oscillator strengths (levels 1-54): Del Zanna,  Berrington, Mason, 2004, A&A, 422, 731 (scattering calculation)
 %Collision data for transitions to the first three levels: Pelan, Berrington, A&A 2001, 365, 258
@@ -38,6 +42,7 @@
      were gf values available, they have been fitted as Type 2
      transitions. This is because, as Type 1 transitions they were often
      difficult to fit (the 1-89 transition is a typical example).
+
      Some of the 4s transitions (levels 55-62) showed unusual shapes
      in the omega structure (e.g., 2-56, 1-58). I'm not sure how
      trustworthy this data is.

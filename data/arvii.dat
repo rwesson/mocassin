@@ -1,21 +1,29 @@
- 23
-** Atomic data from version 5.2 of the CHIANTI database **
-%energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
-   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
+ 31
+** Atomic data from version 7 of the CHIANTI database **
+%energy levels: Phillips, L.W., & Parker, W.L. 1941, Phys. Rev., 60, 301
+%energy levels (6,13,14,16): Ralchenko, Y. et al., NIST Atomic Spectra Database, Version 3.0
 %theoretical energy levels: Pradhan, Ph.Rev.A, 34, 4704, 1986
+%comment: Energies of triplet levels from Phillips & Parker have been scaled relative to the
+          ground level using the wavelength of the 3s.3p 3P1-3s2 1S0 transition reported
+          in the SUMER solar disk atlas (877.92 A - Curdt et al. 2001, A&A, 375, 591).
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% E. Landi 1995
+% E. Landi - Nov 2006
+%filename: ar_7.wgfa
+%energy levels: Phillips, L.W., & Parker, W.L. 1941, Phys. Rev., 60, 301
+%energy levels (6,13,14,16): Ralchenko, Y. et al., NIST Atomic Spectra Database, Version 3.0
 %oscillator strengths: Christensen et al, 1986, Ph.Rev.A, 4704, 34
-%energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
-   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 % A values (3:4): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 % A values (1:4): Calculated using SUPERSTRUCTURE and the same atomic model adopted
    by Christensen, Norcross, Pradhan, 1986, Ph.Rev.A, 34, 4704,
+%comment: Energies of triplet levels from Phillips & Parker have been scaled relative to the
+          ground level using the wavelength of the 3s.3p 3P1-3s2 1S0 transition reported
+          in the SUMER solar disk atlas (877.92 A - Curdt et al. 2001, A&A, 375, 591).
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% E. Landi 2000
+% E. Landi - Nov 2006
+
 %filename: ar_7.splups
 %oscillator strengths: Christensen et al, 1986, Ph.Rev.A, 4704, 34
 %collision strengths: Pradhan, 1986, Ph.Rev.A, 4704, 34
@@ -294,7 +302,7 @@
   3  5   0.000e+00
   4  5   0.000e+00
   1  1        0.0
-  2  1   112119.0
-  3  3   112924.0
-  4  5   114605.0
+  2  1   113101.0
+  3  3   113906.0
+  4  5   115587.0
   5  3   170720.0

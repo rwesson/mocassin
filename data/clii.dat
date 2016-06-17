@@ -1,26 +1,31 @@
- 32
-** Atomic data from version 5.2 of the CHIANTI database **
+ 37
+** Atomic data from version 7 of the CHIANTI database **
 %observed energy levels: Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %theoretical energy levels: Wilson, N.J., Bell, K.L. 2002, MNRAS 331, 389
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  P.R. Young - 20-May-02
+%filename: cl_2.wgfa
 %observed energy levels: Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %A-values: From SSTRUCT calculation. See comments below.
 %comments: The A-values were derived using the code SSTRUCT, with a model of the 
    Cl II ion that contained the following 14 configurations:
+
    3s2.3p4
    3s.3p5
    3s2.3p3.3d
    3s2.3p3.4l  (l=s,p,d,f)
    3s2.3p3.5l  (l=s,p,d,f,g)
    3s2.3p3.6l  (l=s,p)
+
    Note that SSTRUCT is not best suited to ions with low charges, and 
    the derived A-values may not be good. However, there are no other values 
    in the literature.
+
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  P.R. Young - 11-Jun-2002
+
 %filename: cl_2.splups
 %theoretical energy levels: Wilson, N.J., Bell, K.L. 2002, MNRAS 331, 389
 %effective collision strengths: Wilson, N.J., Bell, K.L. 2002, MNRAS 331, 389 and MNRAS 338, 544
