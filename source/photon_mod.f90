@@ -535,6 +535,13 @@ module photon_mod
 
             initPhotonPacket%direction = direction
 
+            if (.not. (direction%x >= 0. .or. direction%x < 0)) then
+               print*, '! initPhotonPacket: [0] insane direction%x [direction%x]'
+               print*, direction%x
+               stop
+            end if
+
+
             initPhotonPacket%position = position
 
             initPhotonPacket%iG  = gP
@@ -663,6 +670,13 @@ module photon_mod
                   do irepeat = 1, 1000000
                      ! get a random direction
                      initPhotonPacket%direction = randomUnitVector()
+
+                     if (.not. (initPhotonPacket%direction%x >= 0. .or. initPhotonPacket%direction%x < 0)) then
+                        print*, '! initPhotonPacket: [1] insane initPhotonPacket%direction%x [initPhotonPacket%direction%x]'
+                        print*, initPhotonPacket%direction%x
+                        stop
+                     end if
+
                      if (initPhotonPacket%direction%x/=0. .and. & 
                           & initPhotonPacket%direction%y/=0. .and. & 
                           & initPhotonPacket%direction%z/=0.) exit
@@ -1087,7 +1101,7 @@ module photon_mod
           real                            :: random   ! random number
           real                            :: tauCell  ! local tau
 
-          integer                         :: icomp
+          integer                         :: icomp, iierr, ihg
           integer                         :: idirT,idirP ! direction cosine counters
           integer                         :: i, j, nS ! counter
           integer                         :: xP,yP,zP ! cartesian axes indeces
@@ -1145,6 +1159,19 @@ module photon_mod
           ! define vHat and rVec
           rVec = enPacket%position
           vHat = enPacket%direction
+
+                
+          if (.not. (rVec%x >= 0. .or. rVec%x < 0)) then
+             print*, '! pathSegment: [0] insane rVec%x [rVec%x, dlLoc, vHat%x]'
+             print*, rVec%x, dlLoc, vHat%x
+             stop
+          end if
+          if (.not. (vHat%x >= 0. .or. vHat%x < 0)) then
+             print*, '! pathSegment: [0] insane vHat%x [rVec%x, dlLoc, vHat%x]'
+             print*, rVec%x, dlLoc, vHat%x
+             stop
+          end if
+
 
           ! initialize xP, yP,zP
           xP = enPacket%xP(igpp)
@@ -1753,14 +1780,29 @@ module photon_mod
                       enPacket = initPhotonPacket(enPacket%nuP, rVec, enPacket%direction, .false., .false., enPacket%xP(1:2), &
                            & enPacket%yP(1:2), enPacket%zP(1:2), gP, .true.)
                       
-                      if (.not.lgIsotropic .and. .not.enPacket%lgStellar) &
-                           &call hg(enPacket)
-                      
+                      if (.not.lgIsotropic .and. .not.enPacket%lgStellar) then
+                         do ihg = 1,1000
+                            call hg(enPacket,iierr)
+                            if(iierr==0) exit
+                         end do
+                         if (ihg >=1000) then
+                            print*, '! pathSegment: problem with hg [enPacket]', enPacket
+                            stop
+                         end if
+                      end if
                       
                       vHat%x = enPacket%direction%x
                       vHat%y = enPacket%direction%y
                       vHat%z = enPacket%direction%z
                       
+
+                      if (.not. (enPacket%direction%x >= 0. .or. enPacket%direction%x < 0)) then
+                         print*, '! pathSegment: [1] insane direction%x [direction%x]'
+                         print*, enPacket%direction%x
+                         stop
+                      end if
+
+
                       ! initialize optical depth
                       absTau = 0.
                       
@@ -2846,7 +2888,7 @@ module photon_mod
     end subroutine pathSegment
  
 
- subroutine hg(inpacket)
+ subroutine hg(inpacket,ierr)
  
    implicit none
  
@@ -2861,6 +2903,10 @@ module photon_mod
    real :: random, vin(3), vout(3), s, denom
    real :: hgg, g2
    
+   integer :: ierr
+
+   ierr = 0
+
 ! BEKS 2010
    vin(1) = inpacket%direction%x
    vin(2) = inpacket%direction%y
@@ -2897,9 +2943,19 @@ module photon_mod
       endif
    endif
 
-   inpacket%direction%x =  vout(1)
-   inpacket%direction%y =  vout(2)
-   inpacket%direction%z =  vout(3)
+
+   if ( (vout(1) >= 0. .or. vout(1) < 0.) .and. &
+        & (vout(2) >= 0. .or. vout(2) < 0.) .and. & 
+        & (vout(3) >= 0. .or. vout(3) < 0.)) then
+
+      inpacket%direction%x =  vout(1)
+      inpacket%direction%y =  vout(2)
+      inpacket%direction%z =  vout(3)
+      
+      ierr = 0
+   else
+      ierr = 1
+   end if
 
    return
 
@@ -2908,7 +2964,7 @@ module photon_mod
 
 ! OLD
 !   bmu= ((1.+g2)-((1.-g2)/(1.-hgg+2.*hgg*random))**2)/(2.*hgg)
-!
+!ßpathSe
 !   cosb2=bmu**2
 !   b=cosb2-1.
 ! 
