@@ -52,6 +52,7 @@ module set_input_mod
         lg1D          = .false.
         lgDustScattering = .true.
         lgSymmetricXYZ= .false.
+        lgEcho        = .false.
 
         nPhotonsDiffuse = 0        
         nStars        = 0
@@ -142,6 +143,13 @@ print*, lgDust, 'lgdust'
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case ("echo")
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, echot1, echot2
+               print "(1X,A4,1X,F4.2,1X,F4.2)",keyword,echot1,echot2
+               echot1 = echot1 * 2.59020684e15
+               echot2 = echot2 * 2.59020684e15
+               lgEcho = .true.                 
             case("isotropicScattering")
                lgIsotropic = .true.
                print*, keyword, lgIsotropic
@@ -480,13 +488,13 @@ print*, lgDust, 'lgdust'
                        & viewing angles.'
                   stop
                end if
-               allocate(viewPointTheta(1:nAngleBins), stat=err)
+               allocate(viewPointTheta(0:nAngleBins), stat=err)
                if (err /= 0) then
                   print*, '! readInput: allocation error for viewPointTheta pointer'
                   stop
                end if
                viewPointTheta=0.
-               allocate(viewPointPhi(1:nAngleBins), stat=err)
+               allocate(viewPointPhi(0:nAngleBins), stat=err)
                if (err /= 0) then
                   print*, '! readInput: allocation error for viewPointPhi pointer'
                   stop

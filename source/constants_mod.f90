@@ -45,7 +45,7 @@ module constants_mod
     integer, parameter :: maxGrids = 668            ! limit to the number of grids to be used 
     integer, parameter :: maxTau = 10000000         ! limit to the optical depth arrays
     integer, parameter :: nElements = 30            ! number of elements
-    integer, parameter :: nForLevels = 10           ! number of levels
+    integer, parameter :: nForLevels = 15           ! number of levels
     integer, parameter :: nForLevelsLarge = 142     ! number of levels for FeII 
     integer, parameter :: nHlevel =  10             ! number of levels in the H atom 
     integer, parameter :: nHeIlevel = 9             ! number of levels in the HeI singlets 

@@ -1,0 +1,63 @@
+ 36
+** Atomic data from version 5.2 of the CHIANTI database **
+%energy levels (3,5,17,23,27,31,33,35,37,55,70): Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 
+    1999, NIST Database for Atomic Spectroscopy, Version 2.0, NIST Standard Reference Database 61.
+%energy levels (4,7-10,13,14,19-22,24-26,44,52): Crance,M., 1973, Atomic Data, 5, 185
+%energy levels (59,60): Fawcett,B.C., Bromage,G.E., Hayes,R.W., 1979, MNRAS, 186, 113
+%energy levels (11,50,53,54,58,62): Kastner,S.O., Behring, W.E., Cohen,L., 1975, ApJ, 199, 777
+%Theoretical energy levels: Zhang, H. et al., ADNDT, 1987, 37, 17
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi 2000
+%observed energy levels (3,5,17,23,27,31,33,35,37,55,70): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R.,
+    1999, NIST Database for Atomic Spectroscopy, Version 2.0, NIST Standard Reference Database 61
+%observed energy levels (4,7-10,13,14,19-22,24-26,44,52): Crance, M., 1973, Atomic Data, 5, 185
+%observed energy levels (59,60): Fawcett, B.C., Bromage, G.E., Hayes, R.W., 1979, MNRAS, 186, 113
+%observed energy levels (11,50,53,54,58,62): Kastner, S.O., Behring, W.E., Cohen, L., 1975, ApJ, 199, 777
+%theoretical energy levels: Zhang, H. et al., ADNDT, 1987, 37, 17
+%oscillator strengths transitions involving the ground level: Zhang, H. et al., ADNDT, 1987, 37, 17
+%oscillator strengths transitions among the 2p53l configurations: Hibbert, Le Dourneuf, Mohan, ADNDT, 1993, 53, 23
+% All other radiative data: SSTRUCT calculation, with a 15 configuration model including:
+            2s2.2p6,
+            2s2.2p5{3s, 3p, 3d}, 2s.2p6{3s, 3p, 3d}
+            2s2.2p5{4s, 4p, 4d, 4f}, 2s.2p6{4s, 4p, 4d, 4f}
+%comment: SSTRUCT radiative data have been corrected for the differences between experimental
+          and theoretical energy levels, where possible.
+%comment: negative wavelengths have been computed using theoretical energy levels.
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi 2000
+%filename: ca_11.splups
+%oscillator strengths transitions involving the ground level: Zhang, H. et al., ADNDT, 1987, 37, 17
+%oscillator strengths transitions among the 2p53l configurations: Hibbert, Le Dourneuf, Mohan, ADNDT, 1993, 53, 23
+% All other oscillator strengths: SSTRUCT calculation, with a 15 configuration model (see file ca_11.wgfa)
+%collision strengths: Zhang, H. et al., ADNDT, 1987, 37, 17
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi 2000
+ 0 23
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+ 0 0 0

@@ -1,20 +1,22 @@
- 19
-** Atomic data from version 5.2 of the CHIANTI database **
+ 21
+** Atomic data from version 6 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
-%Theoretical energy levels: Sampson, D.H., Zhang, H.L., Fontes, C.J., 1990, ADNDT, 44, 209.
+%Theoretical energy levels: Zhang, H.L. & Sampson, D.H., 1990, ADNDT, 44, 209.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
+%filename: p_5.wgfa
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 %Allowed transitions oscillator strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 209
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %Enrico Landi - 1997
+
 %filename: p_5.splups
-%oscillator strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 209
-%collision strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 209
+%oscillator strengths: Zhang, & Sampson 1990, ADNDT, 44, 209
+%collision strengths: Zhang & Sampson 1990, ADNDT, 44, 209
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997

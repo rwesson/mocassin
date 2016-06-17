@@ -1,15 +1,17 @@
- 17
-** Atomic data from version 5.2 of the CHIANTI database **
+ 19
+** Atomic data from version 6 of the CHIANTI database **
 %observed energy levels: Edlen, B., 1983, Phys.Scr., 28, 51
 %theoretical energy levels: Bhatia, A.K., 1982, J.Appl.Phys., 53, 59
 % Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1999
+%filename: mn_17.wgfa
 %observed energy levels: Edlen, B., 1983, Phys.Scr., 28, 51
 % A values: Bhatia, A.K., 1982, J.Appl.Phys., 53, 59
 % Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1999
+
 %filename: mn_17.splups
 %oscillator strengths: Bhatia, A.K., 1982, J.Appl.Phys., 53, 59
 %collision strengths: Bhatia, A.K., 1982, J.Appl.Phys., 53, 59

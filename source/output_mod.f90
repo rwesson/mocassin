@@ -31,6 +31,7 @@ module output_mod
         integer                     :: nTau, err, imul
         integer                     :: totLinePackets    ! total number of line packets
         integer                     :: totEscapedPackets ! total number of esc packets
+        integer                     :: ypLoc
 
 
         real, pointer               :: cMap(:)           ! local c-value
@@ -50,13 +51,7 @@ module output_mod
         real                        :: sumMC    ! sum of the relative MC intensities
         real                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
         real, parameter             :: hcryd = 2.1799153e-11!
-
-        real, pointer               :: absTau(:), lambda(:)
-
-
-
-
-
+        real                        :: radius, dz, dr
 
         ! lexingotn
         !        real, pointer :: denominatorIon(:,:,:) ! denominator for IonVol calculations
@@ -299,10 +294,18 @@ module output_mod
         ! sum over all cells
 	do iG = 1, nGrids
 	
+           if (lg2D) then
+              yPloc = 1
+           else
+              yPloc = grid(iG)%ny                           
+           end if
+
+
            outer: do i = 1, grid(iG)%nx
-              do j = 1, grid(iG)%ny
+              do j = 1, yploc
                  do k = 1, grid(iG)%nz
 
+!print*, i, j,k
                     ! temporary arrangement
                     if (lg1D ) then
                        if (grid(iG)%ionDen(grid(iG)%active(i,j,k),elementXref(1),1) > 0.95) then 
@@ -322,7 +325,7 @@ module output_mod
                     else
                        lgInSlit = .true.
                     end if
-
+!print*, grid(iG)%active(i, j, k)
                     ! check this cell is in the ionized region
                     if ((grid(iG)%active(i, j, k)>0)) then
                        if (grid(iG)%lgBlack(grid(iG)%active(i,j,k))<1 .and. lgInSlit ) then
@@ -426,11 +429,47 @@ module output_mod
                           
                        end if
 
-                       dV = getVolume(grid(iG), i,j,k)
+!                       dV = getVolume(grid(iG), i,j,k)
+
+
+                       if (lg2D .and. lgSymmetricXYZ) then
+                          radius = sqrt((grid(iG)%xAxis(i)/1.e15)*&
+                               &(grid(iG)%xAxis(i)/1.e15) + (grid(iG)%yAxis(j)/1.e15)*&
+                               &(grid(iG)%yAxis(j)/1.e15))
+                          if (i == 1) then
+                             dr = (grid(iG)%xAxis(2)-grid(iG)%xAxis(1))/2.
+                          elseif (i == grid(iG)%nx) then
+                             dr = (grid(iG)%xAxis(grid(iG)%nx)-&
+                                  &grid(iG)%xAxis(grid(ig)%nx-1))
+                          else
+                             dr = (grid(iG)%xAxis(i+1)-grid(iG)%xAxis(i-1))/2.
+                          end if
+                          dr = dr/1.e15
+                          if (k == 1) then
+                             dz = (grid(iG)%zAxis(2)-grid(iG)%zAxis(1))/2.
+                          elseif (k == grid(iG)%nz) then
+                             dz = (grid(iG)%zAxis(grid(iG)%nz)-&
+                                  &grid(iG)%zAxis(grid(ig)%nz-1))
+                          else
+                             dz = (grid(iG)%zAxis(k+1)-grid(iG)%zAxis(k-1))/2.
+                          end if
+                          dz = dz/1.e15
+                          dV = 2.*Pi*radius*dr*dz
+!                          dV = getVolume(grid(iG), i,j,k)*scale2d
+                       else if (lg2D .and. .not.lgSymmetricXYZ) then
+                          print*, "! outputGas: a 2d grid must be symmetric"
+                          stop
+                       else if (.not. lg2D) then
+                          dV = getVolume(grid(iG), i,j,k)
+                       end if
+
+ 
+
 
 
                        ! Hbeta
                        HbetaVol(abFileUsed) = HbetaVol(abFileUsed) + HIRecLines(4,2)*HdenUsed*dV
+
                        HbetaVol(0) = HbetaVol(0) + HIRecLines(4,2)*HdenUsed*dV
 
 
@@ -870,8 +909,15 @@ module output_mod
            HbetaVol(iAb) = HbetaVol(iAb)*1.e-16         
 
            ! correct for symmetry case
-           if (lgSymmetricXYZ) then
+!           if (lgSymmetricXYZ ) then
+!              HbetaVol(iAb)        = 8.*HbetaVol(iAb)
+!           end if
+
+           ! correct for symmetry case
+           if (lgSymmetricXYZ .and. .not.lg2D) then
               HbetaVol(iAb)        = 8.*HbetaVol(iAb)
+           elseif (lgSymmetricXYZ .and. lg2D) then
+              HbetaVol(iAb)        = 2.*HbetaVol(iAb)
            end if
 
            ! calculate Hbeta in units of [E36 erg/sec]
@@ -1305,185 +1351,6 @@ module output_mod
         close(30)
         close(60)
              
-        ! find the run of the optical depths from the illuminated
-        ! surface to the edge of the nebula 
-        
-        ! polar direction
-        
-        ! define initial position
-        aVec%x = 0.
-        aVec%y = 0.
-        aVec%z = 0.
-          
-        ! define direction
-        uHat%x = 0.
-        uHat%y = 0.
-        uHat%z = 1.
-        
-        ! allocate space for temporary optical depth arrays
-        allocate (absTau(1:maxTau), stat = err)
-        if (err /= 0) then
-           print*, "! adjustGrid: can't allocate array memory"
-           stop
-        end if
-        allocate (lambda(1:maxTau), stat = err)
-        if (err /= 0) then
-           print*, "! adjustGrid: can't allocate array memory"
-           stop
-        end if
-        
-        open(unit=70, file='output/tau.out', status='unknown', position='rewind',action="write", iostat = ios)
-             
-        
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        nTau   = 0
-
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
-          
-        
-        write(70, *) " Optical depth from the centre to the edge of the nubula "
-        
-        write(70,*) " Polar direction "
-
-        write(70,*) " tau(H) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-             
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
-        
-        write(70,*) " tau(He) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-        
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
-        
-        write(70,*) " tau(He+) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-        
-        ! equatorial direction (along y axis)
-        
-        ! define initial position
-        aVec%x = 0.
-        aVec%y = 0.
-        aVec%z = 0.
-        
-        ! define direction
-        uHat%x = 0.
-        uHat%y = 1.
-        uHat%z = 0.
-
-
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-          
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
-        
-        write(70,*) " Equatorial Direction (along y-axis) "
-        
-        write(70,*) " tau(H) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-        
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
-          
-        write(70,*) " tau(He) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-          
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
-          
-        write(70,*) " tau(He+) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-          
-        ! equatorial (x-axis)
-        
-        ! define initial position
-        aVec%x = 0.
-        aVec%y = 0.
-        aVec%z = 0.
-        
-        ! define direction
-        uHat%x = 1.
-        uHat%y = 0.
-        uHat%z = 0.
-          
-
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-          
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
-          
-        write(70,*) " Equatorial Direction (along x-axis) "
-        
-        write(70,*) " tau(H) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-          
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
-        
-        write(70,*) " tau(He) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-        
-        ! initialize arrays with zero
-        absTau = 0.
-        lambda = 0.
-        
-        ! find the optical depth
-        call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
-          
-        write(70,*) " tau(He+) "
-        do i = 1, nTau
-           write(70, *) lambda(i), absTau(i)
-        end do
-        
-        close (70)
-        
-        ! free the space allocated to the temp arrays
-        if (associated(absTau)) deallocate(absTau)
-        if (associated(lambda)) deallocate(lambda)
         if (associated(HIVol)) deallocate(HIVol)
         if (associated(HeIVol)) deallocate(HeIVol)
         if (associated(HeIIVol)) deallocate(HeIIVol)
@@ -2478,159 +2345,20 @@ module output_mod
 !        return
       end subroutine hlinex
 
-
-    subroutine writeTau(grid)
-      implicit none
-
-      type(grid_type), intent(in) :: grid(*)
-
-      type(vector) :: aVec, uHat        
-      
-      real, pointer :: outTau(:), lambda(:)
-      real          :: nuR
-
-      integer :: nTau, err, i, ios
-
-      ! find the run of the optical depths from the illuminated
-      ! surface to the edge of the nebula
-            
-      ! allocate space for temporary optical depth arrays
-      allocate (outTau(1:maxTau), stat = err)
-      if (err /= 0) then
-         print*, "! adjustGrid: can't allocate array memory"
-         stop
-      end if
-      allocate (lambda(1:maxTau), stat = err)
-      if (err /= 0) then
-         print*, "! adjustGrid: can't allocate array memory"
-         stop
-      end if
-      
-      close(73)
-      open(unit=73, file='output/tau.out', status='unknown', position='rewind', iostat = ios, action="write")
-
-      aVec%x = 0.
-      aVec%y = 0.
-      aVec%z = 0.      
-
-      uHat%x = 1.
-      uHat%y = 0.
-      uHat%z = 0.
-
-      ! initialize arrays with zero
-      outTau = 0.
-      lambda = 0.
-      nTau   = 0
-
-      ! 0.55um = 0.165690899
-      ! 1.00um = 0.0912 
-      nuR = 0.16569
-!      nuR = 0.0912
-      
-
-      ! find the optical depth
-      call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
- 
-     
-      write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 1,0,0 - nu = 0.166 Ryd -> lambda = 0.55 um"
-      
-      do i = 1, nTau
-         write(73, *) lambda(i), outTau(i)
-      end do
-
-      write(73,*) ' '
-
-      aVec%x = 0.
-      aVec%y = 0.
-      aVec%z = 0.
-
-      uHat%x = 1./sqrt(3.)
-      uHat%y = 1./sqrt(3.)
-      uHat%z = 1./sqrt(3.)
-
-      ! initialize arrays with zero
-      outTau = 0.
-      lambda = 0.
-      nTau   = 0
-
-      ! find the optical depth
-      call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
- 
-     
-      write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 1,1,1 -  nu = 0.166 Ryd -> lambda = 0.55 um"
-      
-      do i = 1, nTau
-         write(73, *) lambda(i), outTau(i)
-      end do
-
-      write(73,*) ' '
-
-      uHat%x = 0.
-      uHat%y = 1.
-      uHat%z = 0.
-
-      ! initialize arrays with zero
-      outTau = 0.
-      lambda = 0.
-      nTau   = 0
-
-      ! find the optical depth
-      call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
-      
-      write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 0,1,0 -  nu = 0.166 Ryd -> lambda = 0.55 um"
-      
-      
-      do i = 1, nTau
-         write(73, *) lambda(i), outTau(i)
-      end do
-
-      write(73,*) ' '
-
-      
-      uHat%x = 0.
-      uHat%y = 0.
-      uHat%z = 1.
-
-      ! initialize arrays with zero
-      outTau = 0.
-      lambda = 0.
-      nTau   = 0
-
-      ! 0.55um = 0.165690899
-
-      ! find the optical depth
-      call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
-      
-      write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 0,0,1 -  nu = 0.166 Ryd -> lambda = 0.55 um"
-      
-      
-      do i = 1, nTau
-         write(73, *) lambda(i), outTau(i)
-      end do      
-
-      close(73)
-      
-      if(associated(lambda)) deallocate(lambda)
-      if(associated(outTau)) deallocate(outTau)
-
-    end subroutine writeTau
-
     subroutine writeSED(grid)
       implicit none
 
       type(grid_type), intent(in) :: grid(*)     !
 
       integer :: ios, err                        ! I/O error status
-      integer :: i, freq, imu, iG                 ! counters
+      integer :: i, j,k,freq, imu, iG                 ! counters
       
       real, pointer :: SED(:,:)                  ! SED array
 
+      real          :: theta1, theta2, phi1, phi2
       real          :: lambda                    ! lambda [cm]
       real          :: totalE                    ! total energy [erg/sec]
+      real          :: echod1, echod2            ! light echo distances
 
       print*, 'in writeSED'      
 
@@ -2653,41 +2381,105 @@ module output_mod
 
       write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
       write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
-      write(16,*) '   nu [Ryd]        lambda [um]        nu*F(nu)            '
-      write(16,*) '                                  [erg/sec/cm^2/str]              '
+      write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            '
+      write(16,*) '                                       [Jy * pc^2]              '
 
       totalE=0.
 
       do iG = 1, nGrids
          do freq=1,nbins
 
-            do i = 0, grid(iG)%nCells
-               do imu = 0, nAngleBins
-                  SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
+
+            if (.not.lgEcho) then
+               do i = 0, grid(iG)%nCells
+                  do imu = 0, nAngleBins
+                     SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
+                  end do
                end do
-            end do
+               
+            else
+ 
+               do i = 1, grid(iG)%nx
+                  do j = 1, grid(iG)%ny
+                     do k = 1, grid(iG)%nz
+                        
+                        if (grid(iG)%active(i,j,k) > 0) then
+ 
+                           ! only get SED from region defined by light travel time considerations. 
+                           if (echot1 .eq. 0) then
+                              echod1 = 1.e29
+                           else
+                              echod1 = (grid(iG)%xaxis(i)**2 + grid(iG)%yaxis(j)**2)/(2*echot1) &
+                                   & - (echot1/2)
+                           endif
+                           echod2 = (grid(iG)%xaxis(i)**2 + grid(iG)%yaxis(j)**2)/(2*echot2) - &
+                                & (echot2/2)
+                           
+                           if (grid(iG)%zaxis(k) <= echod1 .and. grid(iG)%zaxis(k) >= echod2) then
+                              
+                              do imu = 0, nAngleBins
+                                 SED(freq,imu)=SED(freq,imu)+&
+                                      & grid(iG)%escapedPackets(grid(iG)%active(i,j,k),freq,imu)
+                              end do
+                           end if
+                        end if
+                        
+                     end do
+                  end do
+               end do
+               
+            endif
+
+
+
+!            do i = 0, grid(iG)%nCells
+!               do imu = 0, nAngleBins
+!                  SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
+!               end do
+!            end do
 
          end do
       end do
 
       do freq = 1, nbins
-         do imu = 1, nAngleBins
-            if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
-            if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
-         end do
+!         do imu = 1, nAngleBins
+!            if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
+!            if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
+!         end do
 
          lambda = c/(nuArray(freq)*fr1Ryd)
             
          
-         if (lgSymmetricXYZ) SED(freq,0) = SED(freq,0)*8.
+         if (lgSymmetricXYZ) then
+            SED(freq,0) = SED(freq,0)*8.
+            SED(freq,1:nanglebins) = SED(freq,1:nanglebins)*4.
+         endif
+
 
          totalE = totalE +  SED(freq,0)
             
-         SED(freq,0) = SED(freq,0)/(Pi)
-            
+         SED(freq,0) = SED(freq,0)/(4.*Pi*3.08*3.08) ! dilute - user must still divide by D^2 in pc
+                                                     ! the 1.e18 is absorbed later
+         SED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15*widflx(freq))
+           
 
-         write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu)*&
-              & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
+         do imu = 1, nAngleBins
+
+            ! find theta1 and theta2
+            theta1 = int(viewPointTheta(imu)/dTheta)*dTheta
+            theta2 = theta1+dTheta
+            ! find phi1 and phi2
+            phi1 = int(viewPointPhi(imu)/dPhi)*dPhi
+            phi2 = phi1+dPhi
+
+!            SED(freq, imu) = SED(freq, imu)/(2.*Pi*3.08*3.08*abs(cos(theta1)-cos(theta2)))
+            SED(freq, imu) = SED(freq, imu)/(dPhi*3.08*3.08*abs(cos(theta1)-cos(theta2)))
+
+            SED(freq, imu) = 1.e23*SED(freq, imu)/(3.2898e15*widflx(freq))
+
+         end do
+
+         write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu), imu=0,nAngleBins )
 
       end do
 
@@ -2718,8 +2510,12 @@ module output_mod
       write(16,*) ' '
       write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE
       print*, 'Total energy radiated out of the nebula [e36 erg/s]:', totalE, Lstar, nphotons
-      write(16,*) 'All SEDs given per unit direction'
-      write(16,*) 'To obtain total emission over all directions must multiply by Pi'
+!      write(16,*) 'All SEDs given per unit direction'
+!      write(16,*) 'To obtain total emission over all directions must multiply by Pi'
+
+      write(16,*) 'dTheta: ', dTheta
+      write(16,*) 'dPhi: ', dPhi
+      
 
       write(16,*) ' '
       if (nuArray(1)<radio4p9GHzP) then

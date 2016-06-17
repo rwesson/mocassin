@@ -1,11 +1,11 @@
            1
-  0.0000000E+00  convWriteGrid
+   0.000000      convWriteGrid
  T  0.2000000       2.000000        10000000  lgAutoPackets
  T  lgSymmetricXYZ
  F  lgTalk
  F  lg1D
          600  nbins
-  7.5000003E-02  nuStepSize
+  1.3483969E-02  nuStepSize
    15.00000      nuMax
   1.0010000E-05  nuMin
   2.9999999E+18  R_in
@@ -16,21 +16,26 @@
            1  nAbComponents
  "input/abunHII40.in                                "
  T  lgOutput
-  0.0000000E+00  0.0000000E+00  dxSlit,dySlit
+   0.000000       0.000000      dxSlit,dySlit
  F F  lgDust, lgDustConstant
- "none" dustFile
+ F           1  lgMultiDustChemistry, nDustComponents
+ none dustFile
  "none" dustFile
  T  lgGas
  F  lgRecombination
-           0           0 nSpecies, nSizes
+           1           1           1  nSpeciesMax, nSpecies, nSizes
+           1  Partial nspecies
    101.0000     resLinesTransfer
  T lgDustScattering
            0  nAngleBins
   -1.000000      -1.000000      continuumCube
  T  lgPhotoelectric
  F  lgTraceHeating
-  0.0000000E+00  Ldiffuse
-  0.0000000E+00  Tdiffuse
+   0.000000      Ldiffuse
+   0.000000      Tdiffuse
  none                                               shapeDiffuse
            0 nPhotonsDiffuse
            0  emittingGrid
+           7  emittingGrid
+ F  lgMultiStars
+ F  2D geometry?

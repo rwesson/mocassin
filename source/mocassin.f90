@@ -122,11 +122,6 @@ program MoCaSSiN
     call MCIterationDriver(grid3D(1:nGrids))
     if (taskid==0) print*, '! mocassin: MCIterationDriver done'    
 
-    if (taskid ==  0) then
-        ! determine final statistics
-        if (lgGas) call outputGas(grid3D(1:nGrids))
-    end if
-
     call mpi_barrier(mpi_comm_world, ierr)
 
     ! free all space allocated to the 3D grid

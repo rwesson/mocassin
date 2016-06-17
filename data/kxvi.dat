@@ -1,16 +1,18 @@
- 19
-** Atomic data from version 5.2 of the CHIANTI database **
+ 21
+** Atomic data from version 6 of the CHIANTI database **
 %Experimental energy levels: Edlen, B., 1983, Phys. Scripta, 28, 51.
 %Theoretical energy levels: Zhang, Sampson, ADNDT, 1992 , 52, 143
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
+%filename: k_16.wgfa
 %Experimental energy levels: Edlen, B., 1983, Phys. Scripta, 28, 51
 %Allowed transitions oscillator strengths: Zhang, Sampson, ADNDT, 1992 , 52, 143
 %oscillator strengths: forbidden transitions: Muhlethaler, Nussbaumer, 1976, A&A, 48, 109
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %    Enrico Landi 1997
+
 %filename: k_16.splups
 %oscillator strengths: Zhang, Sampson, 1992, ADNDT, 52, 143
 %effective collision strengths: Keenan, F.P., 1988, Phys.Scripta, 37, 57
