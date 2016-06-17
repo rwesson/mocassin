@@ -28,7 +28,7 @@ source4  = source/infnan.f90 source/constants_mod.f90 source/vector_mod.f90 sour
  
 F90  = mpif90
 LIBS =	-lm
-OPT1 =
+OPT1 = -fno-range-check
 OPT2 = -g
 
 mocassin:
