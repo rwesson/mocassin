@@ -42,6 +42,7 @@ install:
 	cp -r data/ ${DESTDIR}/usr/share/mocassin
 	cp -r dustData/ ${DESTDIR}/usr/share/mocassin
 	cp -r benchmarks/ ${DESTDIR}/usr/share/mocassin
+	cp -r examples/ ${DESTDIR}/usr/share/mocassin
 	install -g 0 -o 0 -m 644 man/mocassin.1 ${MANDIR}
 	gzip -f ${MANDIR}/mocassin.1
 	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinWarm.1.gz
