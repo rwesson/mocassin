@@ -1,19 +1,17 @@
- 21
-** Atomic data from version 6 of the CHIANTI database **
+ 19
+** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 % theoretical energy levels: extrapolated using S VIII, Ca XII, Fe XVIII, Ni XX.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
-%filename: cr_16.wgfa
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 % A values: interpolated using S VIII, Ca XII, Fe XVIII, Ni XX.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
-
 %filename: cr_16.splups
 %oscillator strengths: interpolated using S VIII, Ca XII, Fe XVIII, Ni XX
 %effective collision strengths: interpolated using S VIII, Ca XII, Fe XVIII, Ni XX

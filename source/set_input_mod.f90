@@ -150,6 +150,10 @@ print*, lgDust, 'lgdust'
                echot1 = echot1 * 2.59020684e15
                echot2 = echot2 * 2.59020684e15
                lgEcho = .true.                 
+            case("distance")
+               backspace 10
+               read(unit=10,fmt=*,iostat=ios) keyword, distance
+               print "(1X,A8,1X,F7.2)",keyword,distance
             case("isotropicScattering")
                lgIsotropic = .true.
                print*, keyword, lgIsotropic

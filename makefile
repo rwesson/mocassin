@@ -30,7 +30,7 @@ F90  = mpif90
 LIBS =	-lm
 OPT1 = -ipo
 OPT2 = -CB -g 
-XTRA = -I/usr/include/mpich2 -L/usr/lib64/mpich2
+XTRA = -I/usr/include/mpich2-x86_64/ -L/usr/lib64/mpich2
 
 mocassin:
 	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS) $(XTRA)

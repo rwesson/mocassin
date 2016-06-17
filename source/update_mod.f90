@@ -402,7 +402,7 @@ module update_mod
 
             ! calculate thResidual = heatInt - coolInt
             thResidual = heatInt - coolInt
-
+!print*, cellp, thresidual, heatint, coolint
             if ( abs(thResidual) >= thLimit*heatInt ) then ! start convergence condition
             
                 if ( nIterateT < maxIterateT ) then ! start nIterateT condition
