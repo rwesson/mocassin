@@ -37,19 +37,19 @@ module xSec_mod
       print*, 'in initGammaCont'
 
       close(21)
-      open(file='data/gammaHI.dat', unit=21, status='old', iostat = err)
+      open(file='data/gammaHI.dat', unit=21, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHI"
          stop
       end if
       close(22)
-      open(file='data/gammaHeI.dat', unit=22, status='old', iostat = err)
+      open(file='data/gammaHeI.dat', unit=22, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeI"
          stop
       end if
       close(23)
-      open(file='data/gammaHeII.dat', unit=23, status='old', iostat = err)
+      open(file='data/gammaHeII.dat', unit=23, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeII"
          stop
@@ -109,11 +109,11 @@ module xSec_mod
          stop
       end if 
 
+
+
       read (21,*) (tkGamma(i), i=1,ntkgamma)
       read (22,*) (tkGamma(i), i=1,ntkgamma)
       read (23,*) (tkGamma(i), i=1,ntkgamma)
-
-
 
       ! allocate logGammaHI, logGammaHeI, logGammaHeII
       allocate(logGammaHI(nTkGamma, nlimGammaHI), stat=err)
@@ -210,7 +210,8 @@ module xSec_mod
         integer :: n                          ! principle QN
        
 
-        real :: thomson = 6.65e-25            ! thomson x section
+        real :: alpha, beta, dx
+        real :: thom
         real :: thres                         ! energy threshold [eV]
         real :: xSec                          ! x Section
         real :: x                             ! log10(W/W0) (for use in phFitHIon)
@@ -218,6 +219,8 @@ module xSec_mod
 
         print*, 'in initXSecArray'  
         
+
+
         ! allocate memory for xSecArrayTemp
         allocate (xSecArrayTemp(1:1000000), stat = err)
         if (err /= 0) then
@@ -236,10 +239,62 @@ module xSec_mod
 
            ! Hydrogen Lyman continuum
 
-           HlevXSecP(1) = xSecTop + 1                    ! set pointer to the Lyman continuum        
+           HlevXSecP(1) = xSecTop + 1 ! set pointer to the Lyman continuum        
 
            ! set pointers on the energy array nuArray
            call setPointers()
+
+           call makeCollIonData()
+
+           call makeAugerData()
+
+           ! Compton XSecs
+           if (lgCompton) then
+              ! set up Klein-Nishina X-sec arrays
+              call setCompton()
+
+              allocate(comXSecC(nbins), stat=err)
+              if (err /= 0) then
+                 print*, "! initXSecArray: Cannot allocate grid array"
+                 stop
+              end if
+              allocate(comXSecH(nbins), stat=err)
+              if (err /= 0) then
+                 print*, "! initXSecArray: Cannot allocate grid array"
+                 stop
+              end if
+              allocate(xSecRecoil(nbins), stat=err)
+              if (err /= 0) then
+                 print*, "! initXSecArray: Cannot allocate grid array"
+                 stop
+              end if
+              comXSecC=0.
+              comXSecH=0.
+              xSecRecoil=0.
+
+              ! thomson scattering up to 20.6Ryd xrayP
+              thom = 6.65e-25
+
+              do i = 1, nbins
+                 ! Compton exchange factors from Tarter
+                 alpha = 1./ ( 1. + nuArray(i)* ( 1.1792e-4 + 7.084e-10*nuArray(i) ) )
+                 beta = (1. - alpha * nuArray(i)*(1.1792e-4+2.*7.084e-10*nuArray(i))/4.)
+                 
+                 comXSecH(i) = alpha * nuArray(i)*nuArray(i) * 3.858e-25
+                 comXSecC(i) = alpha * beta * nuArray(i) * 3.858e-25
+                 
+                 if (i<=xrayP) then
+                    xSecRecoil(i) = thom
+                 else
+                    dx = nuArray(i)/3.7573e4
+                    xSecRecoil(i)=thom * 3./4.*( (1.+dx)/dx**3 * (2.*dx*(1.+dx)/(1.+2.*dx) - &
+                         & log( 1.+2.*dx ) ) + 1./2./dx*log(1.+2.*dx) - &
+                         & (1.+3.*dx)/(1.+2.*dx)**3 )
+                 end if
+
+              end do
+
+           end if
 
            do i = HlevNuP(1), nbins
               thres = max(nuArray(i)*RydToeV, ph1(1, 1, 1, 1)) 
@@ -250,7 +305,7 @@ module xSec_mod
 
            ! Balmer, Paschen etc. continua (up to n= 10)
            do n = 2, nHlevel        
-              HlevXSecP(n) = xSecTop + 1               ! set the pointers to the various continua
+              HlevXSecP(n) = xSecTop + 1 ! set the pointers to the various continua
               do i = HlevNuP(n), HlevNuP(1)
                  x = log10(nuArray(i)) - log10(nuArray(HlevNuP(n)))           
                  xSecArrayTemp(i-HlevNuP(n) + HlevXSecP(n)) = phFitHIon(x, n, 1.)
@@ -267,7 +322,7 @@ module xSec_mod
               xSecArrayTemp(i-1+bremsXSecP) = 1.03680e-18/(nuArray(i)**3)
            end do
            xSecTop = xSecTop + nbins -1 +1
-        
+
            ! HeI singlet neutral Helium ground
            HeISingXSecP(1) = xSecTop + 1
            do i = HeIlevNuP(1), nbins
@@ -275,7 +330,7 @@ module xSec_mod
               xSecArrayTemp(i-HeIlevNuP(1)+HeISingXSecP(1)) = xSec*1e-18
            end do
            xSecTop = xSecTop + nbins - HeIlevNuP(1) + 1      
-           
+
            ! HeI neutral He 21S from StewartJPhysB 11, L431
            call powLawXSec(HeIlevNuP(2), HeIlevNuP(1), 0.4*8.7e-18, 1.5, HeISingXSecP(2))
 
@@ -285,7 +340,7 @@ module xSec_mod
               xSec = 7.906e-18*float(n) / (z*z)
               call powLawXSec(HeIlevNuP(n), HeIlevNuP(1), xSec, 3.0, HeISingXSecP(n))
            end do
-           
+
            ! HeII ionized Helium bound free ground state
            HeIIXSecP(1)  = xSecTop + 1
            do i = HeIIlevNuP(1), nbins
@@ -294,7 +349,7 @@ module xSec_mod
               xSecArrayTemp(i-HeIIlevNuP(1)+HeIIXSecP(1)) = xSec*1e-18
            end do
            xSecTop = xSecTop + nbins - HeIIlevNuP(1) +1
-           
+
            ! HeII ionized Helium bound free excited state
            z = 2.
            do n = 2, nHeIIlevel
@@ -308,9 +363,10 @@ module xSec_mod
            end do
 
            do i = 3, nElements
+
               if (lgElementOn(i)) call makeOpacity(i)
            end do
-           
+
            ! set up dust constants and calculate dust extinction cross-sections
            if (lgDust) call makeDustXsec()
 
@@ -352,7 +408,7 @@ module xSec_mod
        subroutine phInit()
        
          ! local variables 
-         integer :: ios             ! I/O error status
+         integer :: ios,nt          ! I/O error status
          integer :: i, j, k , l     ! counters
 
          ! initialise arrays
@@ -362,9 +418,11 @@ module xSec_mod
          nTot  = (/1,1,2,2,3,3,3,3,3,3,4,4, &
               &  5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,7,7/)
 
+
          ! open data/ph1.dat file and check for errors in opening 
          close(10)
-         open(unit = 10, file = "data/ph1.dat", status = "old", position = "rewind", iostat = ios)
+         open(unit = 10, file = "data/ph1.dat", status = "old",&
+              &  position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph1.dat"
             stop
@@ -372,25 +430,33 @@ module xSec_mod
 
          ! open data/ph2.dat file and check for errors in opening  
          close(20)
-         open(unit = 20, file = "data/ph2.dat", status = "old", position = "rewind", iostat = ios)
+         open(unit = 20, file = "data/ph2.dat", status = "old",&
+              &  position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph2.dat"
             stop
          end if
 
          ! read data/ph1.dat file and check for errors in reading
-         do l = 1, 7
-            do k = 1, 30
-               do j = 1, 30
-                  read(unit = 10, fmt = *) (ph1(i, j, k, l), i=1, 6)
+         do j = 1, 30
+               do k = 1, min(j,30)
+                  nt = nTot(k)
+                  if (j==k .and.k>18) nt = 7
+                  if (j==k+1 .and. &
+                       &(j==20.or.j==21.or.j==22.or.j==25.or.j==26)) nt = 7
+                  do l = 1, nt
+                     read(unit = 10, fmt = *) (ph1(i, j, k, l), i=1, 6)
                end do
             end do
          end do
 
          ! read data/ph2.dat file and check for errors in reading    
          do k = 1, 30
-            do j = 1, 30 
-               read(unit = 20, fmt = *)  (ph2(i, j, k), i=1, 7)
+            do j = 1, min(k,30)
+               if (k /= 15 .and. k /= 17 .and. k /= 19 .and. &
+                    &(k<=20 .or. k==26) ) then
+                  read(unit = 20, fmt = *)  (ph2(i, k,j), i=1, 7)
+               end if
             end do
          end do
 
@@ -428,22 +494,27 @@ module xSec_mod
     
          ! xSec = 0.0 if atomic number < 1 or > 30
          if( (nz < 1) .or. (nz > 30) ) return
+
          ! xSec = 0.0 if # of electrons  < 1 or > than atomic number
          if( (ne < 1) .or. (ne > nz) ) return         
 
          ! set outer shell number
          nOut = nTot(ne)
+
          if ( (nz == ne) .and. (nz > 18) ) nOut = 7 
+
          if ( (nz == (ne+1)) .and. ( (nz == 20) .or. (nz == 21) .or. &
 &             (nz == 22) .or. (nz == 25) .or. (nz == 26) ) ) nOut = 7
+
          if ( shell > nOut) return
-         if ( (shell == 6) .and. ( (nz == 20) .or. (nz == 19) ) .and. &
-&             (ne >= 19) ) return
+!         if ( (shell == 6) .and. ( (nz == 20) .or. (nz == 19) ) .and. &
+!&             (ne >= 19) ) return
+
          if ( photEn < ph1(1, nz, ne, shell) ) return
 
          ! set internal shell number
          nInt = nInn(ne)
-    
+
          ! set eInn
          if ( (nz == 15) .or. (nz == 17) .or. (nz == 19) .or. &
 &             ( (nz > 20) .and. (nz /= 26) ) ) then 
@@ -457,29 +528,34 @@ module xSec_mod
          end if
 
          ! calculate the cross section
+         if( (shell < nOut) .and. (shell > nInt) .and. &
+         &(photEn < eInn) ) return
          if( (shell <= nInt) .or. (photEn >= eInn) ) then
             p1 = -ph1(5, nz, ne, shell)
             y = photEn / ph1(2, nz, ne, shell)
             q = -0.5*p1 - level(shell) - 5.5
-            a = ph1(3, nz, ne, shell) * ( (y-1.0)**2 + ph1(6, nz, nz, shell)**2 )
+            a = ph1(3, nz, ne, shell) * &
+                 &( (y-1.0)**2 + ph1(6, nz, ne, shell)**2 )
             b = sqrt(y/ph1(4, nz, ne, shell)) + 1.
             xSec = a * y**q * b**p1
          else
-            if( (shell < nOut) .and. (shell > nInt) .and. (photEn < eInn) ) return
             p1 = -ph2(4, nz, ne)
             q = -0.5*p1 - 5.5
             x = photEn / ph2(1, nz, ne) - ph2(6, nz, ne)
             z = sqrt(x*x + ph2(7, nz, ne)*ph2(7, nz, ne))
-            a = ph2(2, nz, ne) * ((x-1.)*(x-1.) + ph2(5, nz, ne)*ph2(5, nz, ne)) 
+            a = ph2(2, nz, ne) * ((x-1.)*(x-1.) + &
+                 &ph2(5, nz, ne)*ph2(5, nz, ne)) 
             b = sqrt(z/ph2(3, nz, ne)) + 1.
             xSec = a * z**q * b**p1
+
          end if
-    
        end subroutine phFitEl
 
 
-       ! this function calculates photoionisation cross sections for hydrogenic ions
-       ! routine was adapted from cloudy and originally obtained from Anil Pradhan, Nov90
+       ! this function calculates photoionisation 
+       ! cross sections for hydrogenic ions
+       ! routine was adapted from cloudy and originally 
+       ! obtained from Anil Pradhan, Nov90
        ! W = photon energy ; W0 = threshold photon energy
        function phFitHIon(x, n, z)
          implicit none
@@ -494,22 +570,22 @@ module xSec_mod
          ! local variables
 
          real, dimension(10) ::  a, &   ! fit parameters
-&             b, c, d, e, f                               
+              &b, c, d, e, f                               
 
          ! assign the the fit parameters
 
          a = (/-17.2004,-16.8584,-16.6670,-16.5339,-16.4319,-16.3491, &
-&              -16.2795,-16.2194,-16.1666,-16.1195/)
+              &-16.2795,-16.2194,-16.1666,-16.1195/)
          b = (/-2.6671, -2.8068, -2.8549, -2.8812, -2.8983, -2.9103, &
-&              -2.9193, -2.9264, -2.9321, -2.9369/)
+              &-2.9193, -2.9264, -2.9321, -2.9369/)
          c = (/-0.3228, -0.1323, -0.0931, -0.0735, -0.0612, -0.0527, &
-&              -0.0465, -0.0418, -0.0380, -0.0350/)
+              &-0.0465, -0.0418, -0.0380, -0.0350/)
          d = (/ 0.0608,  0.0224,  0.0224,  0.0204,  0.0181,  0.0163, &
-&               0.0147,  0.0135,  0.0125,  0.0117/)
+              &0.0147,  0.0135,  0.0125,  0.0117/)
          e = (/-16.9991,-16.7709,-16.6188,-16.5012,-16.4069,-16.3289, &
-&              -16.2624,-16.2046,-16.1536,-16.1078/)
+              &-16.2624,-16.2046,-16.1536,-16.1078/)
          f = (/-3.1304, -3.0041, -2.9738, -2.9671, -2.9662, -2.9669, &
-&              -2.9681, -2.9694, -2.9707, -2.9719/)
+              &-2.9681, -2.9694, -2.9707, -2.9719/)
 
          ! check n is within the range [1-10]
          if ( (n > 10) .or. (n<1) ) then
@@ -542,12 +618,12 @@ module xSec_mod
 
          ! better than 1% fit for n>=30
          h0 = (1.3962688e-10 + 2.7479352e-9 * sqrt(float(n)) ) * &
-&             (1.3962688e-10 + 2.7479352e-9 * sqrt(float(n)) ) 
+              &(1.3962688e-10 + 2.7479352e-9 * sqrt(float(n)) ) 
 
          ! better than 1% fit for n>=30
          if(n<1000) then
             pow = 2.99377 + 1.11784e-5*n - 0.3382905/n - &
-&            6.72051e-9*n*n
+                 &6.72051e-9*n*n
          else
             pow = 3.
          end if
@@ -564,10 +640,10 @@ module xSec_mod
          integer :: i, ixSec, j                            ! counters
          integer :: nPairs                                 ! # of data pair
          
-         real ::  slope 				          ! slope for linear interpolation
+         real ::  slope                            ! slope for linear interpolation
          real, dimension(nData) :: H2plusAr
-         real, dimension(nData/2) :: enerData,  &          ! energy and cross 
-&                                    xSecData              ! section arrays
+         real, dimension(nData/2) :: enerData,  &  ! energy and cross 
+              &xSecData                            ! section arrays
 
          opP = xSecTop + 1
          nPairs = nData/2
@@ -576,7 +652,7 @@ module xSec_mod
          ! the first is the energy in eV and the second is the cross
          ! section in Mb
          H2plusAr = (/6.75,0.24 , 8.68,2.5, 10.54,7.1, 12.46,6.0, &
-&                      14.28,2.7/)
+              &14.28,2.7/)
  
          do i = 1, nPairs
             enerData(i) = H2plusAr( (i-1)*2 + 1) / 13.6
@@ -585,7 +661,7 @@ module xSec_mod
 
          if ( enerData(1) > nuArray(low) ) then
             print*, "! H2plusOp: the entered opacity energy bandwidth &
-&                       is not largee enough [low]"
+                 &is not largee enough [low]"
             stop
         end if
         
@@ -596,25 +672,25 @@ module xSec_mod
         ! fill in the opacities. use linear interpolation
         do i = low, high
            if ( (nuArray(i) > enerData(ixSec)) .and. &
-&                 (nuArray(i) <= enerData(ixSec+1)) ) then
+                &(nuArray(i) <= enerData(ixSec+1)) ) then
               xSecArrayTemp(i - low + opP) = xSecData(ixSec) + &
-&                                           slope * (nuArray(i) - enerData(ixSec))
+                   &slope * (nuArray(i) - enerData(ixSec))
            else
               ixSec = ixSec + 1
               if (ixSec + 1 > nPairs) then
                  print*, " H2plusOp: the entered opacity energy bandwidth &
-&                              is not large enough [high]"
+                      &is not large enough [high]"
                  stop
               end if
               slope = ( xSecData(ixSec+1) - xSecData(ixSec) ) / &
-&                         ( enerData(ixSec+1) - enerData(ixSec) )
+                   &( enerData(ixSec+1) - enerData(ixSec) )
               if ( (nuArray(i) > enerData(ixSec)) .and. &
-&                     (nuArray(i) <= enerData(ixSec+1)) ) then
+                   &(nuArray(i) <= enerData(ixSec+1)) ) then
                  xSecArrayTemp(i - low + opP) = xSecData(ixSec) + &
-&                                               slope * (nuArray(i) - enerData(ixSec))
+                      &slope * (nuArray(i) - enerData(ixSec))
               else
                  print*, "! H2plusOp: internal logical error.&
-&                               the desired energy is not within the next energy bound"
+                      &the desired energy is not within the next energy bound"
                  stop
               end if
            end if
@@ -691,7 +767,6 @@ module xSec_mod
               ! find how many cont bins are needed to store opacity
               binsNeed = elementP(nElem,nIon , shell, 2) - &
 &                           elementP(nElem,nIon , shell, 1) + 1
-
               ! check that there are enough cells left in xSecArrayTemp to store opacities
               if ( (xSecTop + binsNeed) > xSecMax) then
                  print*, "! makeOpacity: xSecMax exceeded"
@@ -703,22 +778,25 @@ module xSec_mod
 &                     .not.(elementP(nElem,nIon , shell, 2)==1) ) ) then
 
                  print*, "! makeOpacity: upper energy limit for this shell is smaller &
-&                              than threshold [elem,ion,shell, highlim,thres]", nElem,nIon, &
-&                              shell,nuArray(elementP(nElem,nIon,shell,2)),&
-&                              nuArray(elementP(nElem,nIon,shell,1))
+                      & than threshold [elem,ion,shell, highlim,thres]", nElem,nIon, &
+                      & shell,nuArray(elementP(nElem,nIon,shell,2)),&
+                      & nuArray(elementP(nElem,nIon,shell,1))
                  stop
               end if
 
               do i = elementP(nElem,nIon , shell, 1), elementP(nElem,nIon , shell, 2)
+
+!print*, nelem, nion, nelec, shell, i, i-elementP(nElem,nIon , shell, 1)+ elementP(nElem,nIon , shell, 3), elementP(nElem,nIon , shell, 1), elementP(nElem,nIon , shell, 3)
+
                  energy = max( nuArray(i)*RydToeV, ph1(1, nElem, nElec, shell) )
                  call phFitEl(nElem, nElec, shell, energy, xSec)
                  xSecArrayTemp(i-elementP(nElem,nIon , shell, 1)+&
-&                                  elementP(nElem,nIon , shell, 3)) = xSec*1e-18
+                      &elementP(nElem,nIon , shell, 3)) = xSec*1e-18
               end do
 
               if (binsneed>=1) then       
                  xSecTop = xSecTop + elementP(nElem,nIon , shell, 2) - &
-&                               elementP(nElem,nIon , shell, 1) +1
+                      &elementP(nElem,nIon , shell, 1) +1
               end if
 
            end do
@@ -761,7 +839,8 @@ module xSec_mod
 
         print*, 'in makeDustXSec'
 
-        open (unit=10, file=dustFile(1), iostat = ios, status = 'old', position = 'rewind')
+        open (unit=10, file=dustFile(1), iostat = ios, status = &
+             &'old', position = 'rewind', action="read")
         if(ios/=0) then
            print*, '! makeDustXSec: cannot open file for reading ', dustFile(1)
            stop
@@ -818,7 +897,8 @@ module xSec_mod
         end if
         TdustSublime=0.        
 
-        open (unit=11, file=dustFile(2), iostat = ios, status = 'old', position = 'rewind')
+        open (unit=11, file=dustFile(2), iostat = ios, status = 'old', &
+             &position = 'rewind', action="read")
         if(ios/=0) then
            print*, '! makeDustXSec: cannot open file for reading ', dustFile(2)
            stop
@@ -901,9 +981,11 @@ module xSec_mod
            
            read(10, *) extinctionFile, grainAbun(nSpec)
            
-           open (unit=20, file=extinctionFile, iostat = ios, status = 'old', position = 'rewind')
+           open (unit=20, file=extinctionFile, iostat = ios, &
+                &status = 'old', position = 'rewind', action="read")
            if(ios/=0) then
-              print*, '! makeDustXSec: cannot open file for reading ', extinctionFile
+              print*, '! makeDustXSec: cannot open file for&
+                   & reading ', extinctionFile
               stop
            end if
 
@@ -930,22 +1012,26 @@ module xSec_mod
 
               allocate (wav(1:nWav), stat=err)
               if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for wav array"
+                 print*, "! makeDustXsec: error allocation &
+                      &memory for wav array"
                  stop
               end if
               allocate (tmp1(1:nWav), stat=err)
               if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp1 array"
+                 print*, "! makeDustXsec: error allocation memory for &
+                      &tmp1 array"
                  stop
               end if
               allocate (tmp2(1:nWav), stat=err)
               if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp2 array"
+                 print*, "! makeDustXsec: error allocation memory for &
+                      &tmp2 array"
                  stop
               end if
               allocate (tmp3(1:nWav), stat=err)
               if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp3 array"
+                 print*, "! makeDustXsec: error allocation memory for &
+                      &tmp3 array"
                  stop
               end if
            
@@ -1052,7 +1138,13 @@ module xSec_mod
               
            case ('Q')
 
-              read (unit=20, fmt=*, iostat=ios) textString
+              ! read (unit=20, fmt=*, iostat=ios) textString
+
+              rewind(20)
+              read(20, *) dustFileType
+              read(20, *) grainLabel(nSpec), TdustSublime(nSpec), &
+                   &rho(nSpec), grainVn(nSpec), MsurfAtom(nSpec)
+              
               do i = 1, 2 
                  read(20,*) textString
               end do
@@ -1188,7 +1280,7 @@ module xSec_mod
 
                  call linearMap(QaTemp, wav, nwav, temp1nbins(i,:), nuArray, nbins)
                  call linearMap(QsTemp, wav, nwav, temp2nbins(i,:), nuArray, nbins)
-                 call linearMap(gTemp, wav, nwav, temp3nbins(i,:), nuArray, nbins)                 
+                 call linearMap(gTemp, wav, nwav, temp3nbins(i,:), nuArray, nbins) 
 
               end do
 
@@ -1335,7 +1427,8 @@ module xSec_mod
         do n = 1, nSpecies
            do i = 1, nbins
               do ai = 1, nSizes
-                 absOpacSpecies(n, i) = absOpacSpecies(n, i) + xSecArrayTemp(dustAbsXsecP(n,ai)+i-1)*&
+                 absOpacSpecies(n, i) = absOpacSpecies(n, i) &
+                      & + xSecArrayTemp(dustAbsXsecP(n,ai)+i-1)*&
                       & grainWeight(ai)
 
 
@@ -1411,11 +1504,11 @@ module xSec_mod
              &chi1,apsi0,apsi1,apsi,fn,chi,p,t
         
         integer              :: nang,j,nstop,nmx,i,n,nn,rn,jj
-        
+
         nang = 2
         dx=x
         y=x*refrel
-        
+
         ! series terminated after nstop terms
         ! ___________________________________________________________________
         xstop=x+4.*x**.3333 +2.0
@@ -1426,7 +1519,10 @@ module xSec_mod
         do j = 1,nang
            theta(j)= (float(j)-1.)*dang
            amu(j)=cos(theta(j))
+
         end do
+
+
         ! __________________________________________________________________
         ! logarithmic derivative d(j) calculated by downward recurrence
         ! beginning with initial value 0.0 + i*0.0 at j = nmx
@@ -1436,6 +1532,7 @@ module xSec_mod
         do n=1,nn
            rn=nmx-n+1
            d(nmx-n)=(rn/y)-(1./(d(nmx-n+1)+rn/y))
+
         end do
         do j=1,nang
            pi0(j)=0.0
@@ -1465,27 +1562,39 @@ module xSec_mod
       do 
          dn=n
          rn=n
+
          fn=(2.*rn+1.)/(rn*(rn+1.))
          psi=(2.*dn-1.)*psi1/dx-psi0
          apsi=psi
          chi=(2.*rn-1.)*chi1/x -  chi0
          xi = cmplx(apsi,-chi)
+
+
          an=(d(n)/refrel+rn/x)*apsi - apsi1
+
          an=an/((d(n)/refrel+rn/x)*xi - xi1)
+
          bn=(refrel *d(n)+rn/x)*apsi - apsi1
+
          bn=bn/((refrel*d(n)+rn/x)*xi - xi1)
+
          qsca=qsca+(2.*rn+1.)*(cabs(an)*cabs(an)+cabs(bn)*cabs(bn))
+
          do j=1,nang
+
             jj=2*nang-j
             pii(j)=pi1(j)
             tau(j)=rn*amu(j)*pii(j) - (rn+1.)*pi0(j)
+
             p=(-1.)**(n-1)
             s1(j)=s1(j)+fn*(an*pii(j)+bn*tau(j))
             t=(-1.)**n
             s2(j)=s2(j) + fn*(an*tau(j)+bn*pii(j))
+
             if (j == jj) exit
             s1(jj)=s1(jj) + fn*(an*pii(j)*p + bn*tau(j)*t)
             s2(jj)=s2(jj) + fn*(an*tau(j)*t + bn*pii(j)*p)
+
          end do
          psi0=psi1
          psi1=psi
@@ -1493,6 +1602,7 @@ module xSec_mod
          chi0=chi1
          chi1=chi
          xi1=cmplx(apsi1,-chi1)
+
          n=n+1
          rn=n
          do j=1,nang
@@ -1500,6 +1610,7 @@ module xSec_mod
             pi1(j)=pi1(j) - rn*pi0(j)/(rn-1.)
             pi0(j) = pii(j)
          end do
+
          if (n-1-nstop>=0) exit
       end do
 
@@ -1508,6 +1619,89 @@ module xSec_mod
       qback=(4./(x*x))*cabs(s1(2*nang -1))*cabs(s1(2*nang -1))
 
     end subroutine BHmie
+
+    ! sets up Compton X-Sections and PDFs using the Klein Nishina formula
+    subroutine setCompton()
+      implicit none
+
+      real    :: P           ! ratio of incoming to outgoing photon energy      
+
+      integer :: i,j         ! counters
+      integer :: nangles=180 ! # of theta bins 
+
+      allocate(KNsigmaT(nbins))
+      allocate(KNsigmaArray(nbins,nangles))
+      allocate(PcompArray(nbins,nangles))
+
+      KNsigmaT=0.
+      KNsigmaArray=0.
+      PcompArray=0.
+
+      do i = 1, nbins
+         do j = 1, nangles
+        
+            P = Pcomp(nuArray(i),real(j))
+            PcompArray(i,j) = P
+            KNsigmaArray(i,j) = KNsigma(P,real(j))        
+            KNsigmaT(i) = KNsigmaT(i) + KNsigmaArray(i,j)*&
+                 &2.*Pi*Sin(j*Pi/180.)*Pi/180.
+         end do
+      end do
+      
+      ! now calculate PDFs 
+      do i = 1, nbins
+         KNsigmaArray(i,1) = KNsigmaArray(i,1)*2.*Pi*Sin(Pi/180.)*Pi/180.
+         do j = 2, nangles
+            KNsigmaArray(i,j) = KNsigmaArray(i,j-1)+KNsigmaArray(i,j)*&
+                 &2.*Pi*Sin(j*Pi/180.)*Pi/180.
+         end do
+         KNsigmaArray(i,:) = KNsigmaArray(i,:)/KNsigmaT(i)
+         KNsigmaArray(i,nangles) = 1.
+      end do
+
+      
+    end subroutine setCompton
+
+    ! calculates the ratio of incoming photon energy to 
+    ! outgoing photon energy
+    real function Pcomp(E,theta)
+      implicit none
+      
+      real, intent(in) :: E, theta ! E is in [ryd] theta in deg
+      
+      real             :: const, thetarad
+      
+      ! const = m_e*c^2 * erg2ryd = 37557.99001
+      const = 37557.66267
+      
+      thetarad = theta*Pi/180.
+      
+      Pcomp = 1./(1. + (E/const)*(1.-cos(thetarad)))    
+      
+    end function Pcomp
+
+    ! calculates the probability that a photon will scatter
+    ! into the solid angle dOmega=2 Pi Sin(theta) dtheta
+    ! according to the Klein-Nishina formula
+    ! dsigma/dOmega = 0.5 r_e^2 (P(E,theta)-
+    ! P(E,theta)^2 Sin(theta)^2 + P(E,theta)^3)
+    ! r_e = classical electron radius 
+    ! m_e = mass of electron
+    real function KNsigma(P,theta)
+      implicit none
+
+      real, intent(in) :: P, theta ! theta in deg
+      real             :: const, thetarad
+
+      ! const = 0.5 r_e^2
+      const = 3.970393838e-26
+
+      thetarad = theta*Pi/180.
+
+      KNsigma = const*(P-(P**2)*(sin(thetarad)**2)+P**3)
+
+    end function KNsigma
+
 
 end module xSec_mod
        

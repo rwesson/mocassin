@@ -5,13 +5,25 @@ module common_mod
     use constants_mod
     use vector_mod
     implicit none
-    save
+
+
+    ! fluorescence variables
+    integer          :: nFluo ! # of fluorescent lines to be transfered
+    integer          :: nVP   ! # of fluorescent viewing angles
+
+    character(len=4), pointer :: fluorescenceLabel(:) ! ID labels of fluorescent transitions
+
+    real, pointer    :: fluorescenceVP(:,:) ! viewing angles for fluorescence cube &
+                                            ! (for the first dimension 1=theta;2=phi)
 
     ! MPI variables
     integer, pointer :: lgConvergedTemp(:)  ! temporary converged? flag
     integer, pointer :: lgBlackTemp(:)      ! temporary converged? flag
 
+    logical             :: lgMultiStars=.false.
+    logical         :: lgEquivalentTau          ! calculate equivalent tau?
     logical         :: lgWarm=.false.           ! warm started?
+    logical         :: lgFluorescence=.false.   ! fluorescence run?
     logical         :: lgNeInput=.false.        ! Ne distribution entered
     logical         :: lgResLinesFirst = .true. ! first time the res lines transfer proc is called? 
     logical         :: lgPhotoelectric = .true. ! photoelectric effect on
@@ -25,7 +37,10 @@ module common_mod
     real, pointer   :: ionDenTemp(:,:,:)    ! temporary ion density array    
     real, pointer   :: NeTemp(:)            ! temporary electron density array
     real, pointer   :: TeTemp(:)            ! temporary electron Temperature array    
-   
+    real            :: HeIrecLineCoeff(34,3,4)
+    real, pointer   :: KNsigmaArray(:,:)    ! Klein Nishina calc PDFs (nbins,180)
+    real, pointer   :: KNsigmaT(:)          ! Klein Nishina cross-sections integrated over the solid angle
+    real, pointer   :: PcompArray (:,:) 
 
     integer         :: radio4p9GHzP   ! 
       
@@ -35,15 +50,25 @@ module common_mod
     real            :: starttime      ! start time [sec]
 
     real            :: endtime        ! end time [sec]    
+    real            :: absInt         ! total number of absorption events
+    real            :: scaInt         ! total number of scattering events
 
     real            :: dTheta                  ! 
     real            :: dPhi                    ! 
+    real            :: nu0                     ! 
+    real            :: nu0Add                  !
     real            :: totalDustMass 
     real            :: convPercent=0.          ! total convergence percentage
+    real            :: pwlIndex = 0.           ! power law input spectrum index
+    real            :: pwlMin=0.               ! power law lower cutoff [Ryd]
+    real            :: pwlMax=0.               ! power law higher cutoff [Ryd]
     real            :: totPercent=0.           ! 
     real            :: minaQHeat = 0.          ! min radius for Q Heat in [um]
     real            :: NeUsed, TeUsed, HdenUsed ! local properties of the gas
     real            :: Tmax                    ! max temp for qheat
+    real            :: auger(30,30,10,10)      ! auger yields
+
+
 
     integer, pointer  :: HINuEdgeP(:)     ! pointers to the HI, HeI and HeII 
     integer, pointer  :: HeINuEdgeP(:)    ! series edges in nuArray
@@ -63,10 +88,17 @@ module common_mod
 
     ! stack pointers
 
+    integer :: KshellLimitP                    ! KshellLimitP
+    integer :: FeKaColdP                       ! pointer to 6.4keV in nuArray
+    integer :: secIonP
+    integer :: cRecoilP                        ! pointer to compton recoil (194.Ryd) in nuArray
     integer :: xrayP                           ! pointer to carbon k-shell ionization in nuArray
+    integer :: cRecoilHP, cRecoilHeP           ! recoil pointers
 
     integer :: BjumpP                          ! pointer to balmer jump
 
+    integer :: nAuger(30,30,10)                ! max number of auger electrons freed
+    
     integer, dimension(nElements, nElements, 7, 3) &
          &:: elementP                          ! first dim is atomic number of element,
                                                ! second dimension is ion stage, 1 for atom
@@ -92,8 +124,8 @@ module common_mod
          & :: HeIIlevNuP = 0.  ! pointer to the nth HeII level in nuArray
 
    
-    logical, dimension(3:nElements, 1:nstages) :: &
-         & lgDataAvailable! is the atomic data available for this species?
+    logical, pointer :: &
+         & lgDataAvailable(:,:)! is the atomic data available for this species?
 
     character(len=20), dimension(3:nElements, 1:10) :: &
          & dataFile       ! name of the file containing the atomic data for this species
@@ -114,6 +146,8 @@ module common_mod
     real :: dySlit = 0.
 
     ! photoionization data 
+    real, dimension(5,30,30) :: CF=0.
+    real, dimension(30,30)   :: cionTherm = 0.
     real, dimension(6, 30, 30, 7) :: ph1
     real, dimension(7, 30, 30) :: ph2
     real, dimension(nElements) :: aWeight
@@ -128,6 +162,13 @@ module common_mod
     real, pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
     real, pointer :: rho(:)                 ! intrinsic density (nspecies)    
     real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
+    real, pointer :: SEDnoExt(:)            ! SED no extinction
+    real, pointer :: equivalentTau(:)       ! SED no extinction
+
+    double precision, save,pointer::&
+          & forbiddenLines(:,:,:,:)                                 ! emissivity from heavies  rec lines
+    double precision, save,pointer::&
+          & forbiddenLinesLarge(:,:) 
 
     ! linear increments
     real, pointer :: dl(:)
@@ -162,7 +203,16 @@ module common_mod
 
     real, pointer :: xSecArray(:)            ! x Section array calculated in xSec_mod
 
+    real, pointer :: xSecRecoil(:)           ! compton recoil xSec
+
+    real, pointer :: comXSecH(:)             ! compton Xsec Heat array
+
+    real, pointer :: comXSecC(:)             ! compton Xsec Cool array
+
     real, pointer :: widFlx(:)               ! widFlx array
+
+    real, pointer :: photoRateFluo(:,:)      ! photoionisation rate (nfluo, nstages) [sec^-1]
+
 
     integer, pointer :: planeIonDistribution(:,:) ! initial distribution of ionising photons 
 
@@ -185,7 +235,9 @@ module common_mod
         integer, pointer :: abFileIndex(:,:,:)      ! abundance file index axxay
         integer, pointer :: lgConverged(:)          ! has the model converged at this grid cell?
         integer, pointer :: lgBlack(:)              ! is this to remain a black cell?
-        
+
+        integer, pointer :: active(:,:,:)           ! point to active cell in 1d array; 
+                                                    ! returns 0 for inactive cells        
 
         real    :: geoCorrX,geoCorrY,geoCorrZ       ! geometric correction
         real    :: noHit                            ! cells not sampled by rad field
@@ -193,13 +245,11 @@ module common_mod
         real    :: noTeBal                          ! Te Balance not reached
 
 
-        integer, pointer :: active(:,:,:)           ! point to active cell in 1d array; 
-                                                    ! returns 0 for inactive cells
-
         real, pointer :: absOpac(:,:)               ! dust absorption opacity 
         real, pointer :: scaOpac(:,:)               ! dust scattering opacity 
         real, pointer :: dustPDF(:,:)               ! dust emission PDF 
         real, pointer :: fEscapeResPhotons(:,:)     ! frac of res line photons escaping (cell,resline)
+        real, pointer :: fluorescenceCube(:,:,:)    ! escaped fluorescence packets (ncell,nFluo,nVP)
         real, pointer :: Hden(:)                    ! density of H [1/cm^3]
         real, pointer :: Ne(:)                      ! electron density [1/cm^3]
         real, pointer :: Te(:)                      ! electron temperature [K]
@@ -210,6 +260,8 @@ module common_mod
         real, pointer :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
         real, pointer :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
         real, pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
+        real, pointer :: LFluorescence(:,:)         ! local fluorescence luminosity of cell [e36 erg/sec]
+        real, pointer :: LdiffuseLoc(:)             ! loc luminosity of diffuse source [e36 erg/sec]
         real, pointer :: Ndust(:)                   ! number density for dust
 
         real, pointer :: xAxis(:)                   ! x-axis
@@ -233,8 +285,8 @@ module common_mod
     type photon_packet
 
         integer       :: nuP       ! pointer
-        integer, dimension(maxGrids) & 
-             & :: xP,yP,zP         ! grids position indeces
+        integer, dimension(2) & 
+             & :: xP,yP,zP         ! grids position indeces 1= mother 2=sub
         integer, dimension(2) :: origin ! 1=ig, 2=icell
         integer       :: iG        ! grid index 
 
@@ -285,7 +337,7 @@ module common_mod
 
     type(vector), pointer :: starPosition(:) ! ionising source(s) position
 
-    logical            :: lg3DextinctionMap! is 3D extinction to be accounted for?
+    logical            :: lgCompton        ! evaluate Compton energy exchange?
     logical            :: lgAutoPackets    ! automatic increase of packets on the fly? 
     logical            :: lgTalk           ! talk on?
     logical            :: lgDfile          ! use an external density file?
@@ -307,18 +359,19 @@ module common_mod
 
     character(len=50)  :: gridList ! grid list file name
     character(len=50), pointer  :: abundanceFIle(:) ! abundance file names
+    character(len=50)           :: contDiffuse      ! shape of the diffuse ionising spectrum
     character(len=50), pointer  :: contShape(:)     ! continuumShape
     character(len=50), pointer  :: contShapeIn(:)   ! continuumShape
     character(len=50), pointer  :: spID(:)          ! input spectrum generator ID
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
-    character(len=50)  :: extMapFile       ! name of 3D extinction map file
     character(len=50)  :: MdMgFile         ! name of MdMg file
     character(len=50)  :: NdustFile        ! name of Ndust file    
     character(len=50)  :: Qfile            ! name of Qfile 
     character(len=30),pointer       :: grainLabel(:)    ! name of this species
 
     integer,pointer    :: viewPointPtheta(:), viewPointPphi(:)       ! viewing angles
+
     integer            :: nAngleBins=0     ! number of viewing angles for SED
     integer            :: TotAngleBinsTheta=180 ! total # of theta angle bins for SED
     integer            :: TotAngleBinsPhi=360 ! total # of phi angle bins for SED
@@ -330,12 +383,19 @@ module common_mod
     integer            :: nElementsUsed    ! actual number of elements used
     integer, pointer   :: nPhotons(:)      ! # of packets to be used in the sim
     integer            :: nPhotonsTot      ! # of packets to be used in the sim
+    integer            :: nPhotonsDiffuse  ! # of packets to be used by the diffuse ionisation source
+    integer            :: nPhotonsDiffuseLoc! # of packets to be used by the diffuse ionisation source
+    integer            :: nPacketsFluo     ! # of packets to be used for each fluorescent transition 
+    integer            :: nPacketsFluoLoc  ! # of packets to be used for each fluorescent trans in one cell
     integer, dimension(maxGrids) &
                       &:: nxIn,nyIn, nzIn  ! x, y and z dimensions of the grids
     integer            :: nStars           ! number of ionising sources
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
-    integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z
+    integer            :: emittingGrid     ! grid emiting illuminating radiation [0 for all]
+    integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z, 4=gp
+    integer            :: nstages          ! # of ionisation stages to be included
 
+    real               :: fluoCubeMineV, fluoCubeMaxeV ! limits of the fluorescence cube band
     real               :: fillingFactor    ! filling factor epsilon
     real               :: contCube(2)      ! continuum cube
     real               :: convIncPercent   ! percentage by  which conv must increase
@@ -349,9 +409,11 @@ module common_mod
     real               :: Hdensity         ! constant H density values (cm-^3)
     real               :: H0Start          ! initial guess at X(H0) for regions I and II
     real               :: Lphot            ! L of ionizing source [e36 phot/sec]
+    real               :: Ldiffuse         ! total luminosity of diffuse source [e36 erg/sec]
     real,pointer       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
     real               :: meanField        ! mean ionizing field to be used with plane parallel 
                                            ! geometry [erg/sec/cm^2]
+    real               :: meanFieldin
     real               :: minConvergence   ! stop when this level of convergence has been reached  
     real               :: minConvQHeat     ! min convergence level for Qheat routines to run
     real               :: NeStart          ! initial guess at Ne
@@ -367,11 +429,12 @@ module common_mod
     real               :: SEDfreq(2)       ! 
     real               :: TeStart          ! initial guess at Te for regions I and II
     real, pointer      :: deltaE(:)        ! energy carried by a single photon
-    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]
+    real               :: Tdiffuse         ! energy of diffuse ionising source [K]
+    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]    
     real, pointer      :: tStep(:)         ! time step for sb99 inputs [yrs]
     real               :: XHILimit         ! convergence limit on X(HI)
     
-
+    integer             :: lymanP                  ! frequency pointer to Lyman limit
     ! dust parameters
     integer            :: nSizes           ! number of grain sizes
     integer            :: nSpecies         ! number of grain species

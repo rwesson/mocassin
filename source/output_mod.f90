@@ -50,10 +50,10 @@ module output_mod
         real                        :: sumMC    ! sum of the relative MC intensities
         real                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
         real, parameter             :: hcryd = 2.1799153e-11!
-        real                        :: lamS(9)     ! wav in A of singlets
-        real                        :: lamT(11)    ! wav in A of triplets
 
         real, pointer               :: absTau(:), lambda(:)
+
+
 
 
 
@@ -71,14 +71,15 @@ module output_mod
         real, pointer         :: resLinesVol(:,:)    ! resonance lines volume emission
         real, pointer         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
         real, pointer         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
-        real, pointer         :: HeISVol(:,:)        ! analytical HeI singlets volume emissivity
-        real, pointer         :: HeITVol(:,:)        ! analytical HeI triplets volume emissivity
+        real, pointer         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
         real, pointer         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
         real, pointer         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
         real, pointer         :: lineLuminosity(:,:) ! MC luminosity in a given line
 
         double precision, dimension(nElements,nstages,nForLevels,nForLevels) :: wav           
-        real, pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivity
+        double precision, dimension(nForLevelsLarge,nForLevelsLarge) :: wavLarge
+        real, pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
+        real, pointer         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
         real, pointer         :: TeVol(:,:,:)      ! mean Temperature for a given ion
 
         ! recombination lines stuff (1=Oii, 2=mgii,3=neii,4=cii,5=n33ii,6=n34ii)
@@ -106,6 +107,7 @@ module output_mod
 
         ! allocate and initialize arrays and variables
 
+        
         if (convPercent >= resLinesTransfer .and. lgDust) then
            allocate(resLinesVol(0:nAbComponents, 1:nResLines), stat=err)
            if (err /= 0) then
@@ -120,19 +122,14 @@ module output_mod
            end if
            resLinesVolCorr = 0.
         end if
-        allocate(HIVol(0:nAbComponents, 3:15, 2:8), stat=err)
+        allocate(HIVol(0:nAbComponents, 3:30, 2:8), stat=err)
         if (err /= 0) then
            print*, "! output mod: can't allocate array HIVol memory"
            stop
         end if
-        allocate(HeISVol(0:nAbComponents, 1:9), stat=err)
+        allocate(HeIVol(0:nAbComponents, 1:34), stat=err)
         if (err /= 0) then
-           print*, "! output mod: can't allocate array HeISVol memory"
-           stop
-        end if
-        allocate(HeITVol(0:nAbComponents, 1:11), stat=err)
-        if (err /= 0) then
-           print*, "! output mod: can't allocate array HeITVol memory"
+           print*, "! output mod: can't allocate array HeIVol memory"
            stop
         end if
         allocate(HeIIVol(0:nAbComponents, 3:30, 2:16), stat=err)
@@ -146,6 +143,11 @@ module output_mod
            stop
         end if
         allocate(forbVol(0:nAbComponents, 1:nElements, 1:nstages, nForLevels,nForLevels), stat=err)
+        if (err /= 0) then
+           print*, "! output mod: can't allocate array forbVol memory"
+           stop
+        end if
+        allocate(forbVolLarge(0:nAbComponents, nForLevelsLarge,nForLevelsLarge), stat=err)
         if (err /= 0) then
            print*, "! output mod: can't allocate array forbVol memory"
            stop
@@ -204,8 +206,7 @@ module output_mod
         g               = 0.
         HbetaVol        = 0.
         HIVol           = 0.
-        HeISVol         = 0.
-        HeITVol         = 0.
+        HeIVol         = 0.
         HeIIVol         = 0.
         elemAbundanceUsed = 0.
         ionDenUsed      = 0.
@@ -213,7 +214,9 @@ module output_mod
         LtotAn          = 0.
         LtotMC          = 0.
         wav             = 0.
+        wavLarge        = 0.
         forbVol         = 0.
+        forbVolLarge    = 0.
         recLinesLambda  = 0.
         recLambdaOII    = 0.
         recLambdaMgII   = 0.
@@ -244,7 +247,7 @@ module output_mod
 
            cMap=0.
 
-           open(unit=19, status='old', position='rewind', file=extMap, iostat=ios)
+           open(unit=19, status='old', position='rewind', file=extMap,  action="read",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for reading, ", extMap
               stop
@@ -254,7 +257,7 @@ module output_mod
               do j = 1, grid(1)%ny
                  do k = 1, grid(1)%nz         
                     if (grid(1)%active(i,j,k)>0) then
-                       read(19, *) cMap(grid(1)%active(i,j,k))
+                       read(19, *) l,l,l, cMap(grid(1)%active(i,j,k))
                     else
                        read(19, *) 
                     end if
@@ -264,7 +267,7 @@ module output_mod
 
            close(19)
 
-           open(unit=20, status='old', position='rewind', file='data/flambda.dat', iostat=ios)
+           open(unit=20, status='old', position='rewind', file='data/flambda.dat',  action="read",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for reading, data/flambda.dat"
               stop
@@ -288,10 +291,14 @@ module output_mod
 
         end if
 
+        ! read in data file for higher level H transitions
+        call hdatx
+
         ! calculate analytical emissivities first
 
         ! sum over all cells
-	do iG = 1, nGrids	
+	do iG = 1, nGrids
+	
            outer: do i = 1, grid(iG)%nx
               do j = 1, grid(iG)%ny
                  do k = 1, grid(iG)%nz
@@ -356,9 +363,8 @@ module output_mod
                           iCount = 1
 
                           ! H recombination lines
-                          do iup = 15, 3, -1
+                          do iup = 30, ilow+1, -1
                              do ilow = 2, min0(8, iup-1)
-
                                 HIRecLines(iup, ilow) = &
                                      & HIRecLines(iup, ilow)*10.**(-(cMap(grid(1)%active(i,j,k))*flam(iCount)&
                                      & +cMap(grid(1)%active(i,j,k))))
@@ -368,16 +374,8 @@ module output_mod
                           end do
 
                           ! He I recombination lines
-                          ! HeI singlets
-                          do l = 1, 9
-                             HeIRecLinesS(l) = HeIRecLinesS(l)*10.**& 
-                                  & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
-                             iCount = iCount + 1
-                          end do
-
-                          ! HeI triplets
-                          do l = 1, 11
-                             HeIRecLinesT(l) = HeIRecLinesT(l)*10.**&
+                          do l = 1, 34
+                             HeIRecLines(l) = HeIRecLines(l)*10.**& 
                                   & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
                              iCount = iCount + 1
                           end do
@@ -398,19 +396,34 @@ module output_mod
                                 if (.not.lgElementOn(elem)) exit
 
                                 if (lgDataAvailable(elem, ion)) then
-                                   do iup = 1,nForLevels
-                                      do ilow = 1, nForLevels
-                                         forbiddenLines(elem,ion,iup,ilow) = &
-                                              & forbiddenLines(elem,ion,iup,ilow)*10.**&
-                                              & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
-                                         iCount = iCount+1
+                                   if (elem == 26 .and. ion == 2) then
+                                      do iup = 1,nForLevelsLarge
+                                         do ilow = 1, nForLevelsLarge
+                                            forbiddenLinesLarge(iup,ilow) = &
+                                                 & forbiddenLinesLarge(iup,ilow)*10.**&
+                                                 & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+&
+                                                 & cMap(grid(1)%active(i,j,k))))
+                                            iCount = iCount+1
+                                         end do
                                       end do
-                                   end do
+
+                                   else
+                                      do iup = 1,nForLevels
+                                         do ilow = 1, nForLevels
+                                            forbiddenLines(elem,ion,iup,ilow) = &
+                                                 & forbiddenLines(elem,ion,iup,ilow)*10.**&
+                                                 & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+&
+                                                 & cMap(grid(1)%active(i,j,k))))
+                                            iCount = iCount+1
+                                         end do
+                                      end do
+                                   end if
+
                                 end if
 
                              end do
                           end do
-
+                          
                        end if
 
                        dV = getVolume(grid(iG), i,j,k)
@@ -422,8 +435,8 @@ module output_mod
 
 
                        ! HI rec lines
-                       do iup = 3, 15
-                          do ilow = 2, min0(8,iup-1)
+                       do ilow = 2, 8
+                          do iup = ilow+1, 30
                              HIVol(abFileUsed,iup,ilow) = HIVol(abFileUsed,iup,ilow) + &
                                   & HIRecLines(iup,ilow)*HdenUsed*dV
                              HIVol(0,iup,ilow) = HIVol(0,iup,ilow) + &
@@ -431,14 +444,9 @@ module output_mod
                           end do
                        end do
 
-                       ! HeI singlets
-                       HeISVol(abFileUsed,:) = HeISVol(abFileUsed,:) + HeIRecLinesS(:)*HdenUsed*dV
-                       HeISVol(0,:) = HeISVol(0,:) + HeIRecLinesS(:)*HdenUsed*dV
-
-
-                       ! HeI triplets
-                       HeITVol(abFileUsed,:) = HeITVol(abFileUsed,:) + HeIRecLinesT(:)*HdenUsed*dV
-                       HeITVol(0,:) = HeITVol(0,:) + HeIRecLinesT(:)*HdenUsed*dV
+                       ! HeI recombination lines
+                       HeIVol(abFileUsed,:) = HeIVol(abFileUsed,:) + HeIRecLines(:)*HdenUsed*dV
+                       HeIVol(0,:) = HeIVol(0,:) + HeIRecLines(:)*HdenUsed*dV
 
 
                        ! HeII rec lines
@@ -454,16 +462,30 @@ module output_mod
                        ! Heavy elements forbidden lines
                        do elem = 3, nElements
                           do ion = 1, min(elem+1, nstages)                             
-                             do iup = 1, nForLevels
-                                do ilow = 1, nForLevels
-                                   forbVol(abFileUsed,elem,ion,iup,ilow) = &
-                                        & forbVol(abFileUsed,elem,ion,iup,ilow) + &
-                                        & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
-                                   forbVol(0,elem,ion,iup,ilow) = &
-                                        & forbVol(0,elem,ion,iup,ilow) + &
-                                        & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+
+                             if (elem == 26 .and. ion == 2) then
+                                do iup = 1, nForLevelsLarge
+                                   do ilow = 1, nForLevelsLarge
+                                      forbVolLarge(abFileUsed,iup,ilow) = &
+                                           & forbVolLarge(abFileUsed,iup,ilow) + &
+                                           & forbiddenLinesLarge(iup,ilow)*HdenUsed*dV
+                                      forbVolLarge(0,iup,ilow) = &
+                                           & forbVolLarge(0,iup,ilow) + &
+                                           & forbiddenLinesLarge(iup,ilow)*HdenUsed*dV
+                                   end do
                                 end do
-                             end do
+                             else
+                                do iup = 1, nForLevels
+                                   do ilow = 1, nForLevels
+                                      forbVol(abFileUsed,elem,ion,iup,ilow) = &
+                                           & forbVol(abFileUsed,elem,ion,iup,ilow) + &
+                                           & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+                                      forbVol(0,elem,ion,iup,ilow) = &
+                                           & forbVol(0,elem,ion,iup,ilow) + &
+                                           & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+                                   end do
+                                end do
+                             end if
                           end do
                        end do
                        
@@ -784,17 +806,15 @@ module output_mod
            else
 
               ! HI rec lines
-              do iup = 3, 15
-                 do ilow = 2, min0(8,iup-1)
+              do ilow = 2, 8 
+                 do iup = ilow+1, 30
                     HIVol(iAb,iup,ilow) = HIVol(iAb,iup,ilow) /HbetaVol(iAb)
                  end do
               end do
 
-              ! HeI singlets
-              HeISVol(iAb,:) = HeISVol(iAb,:) / HbetaVol(iAb)
+              ! HeI 
+              HeIVol(iAb,:) = HeIVol(iAb,:) / HbetaVol(iAb)
 
-              ! HeI triplets
-              HeITVol(iAb,:) = HeITVol(iAb,:) / HbetaVol(iAb)
 
               ! HeII rec lines
               do iup = 3, 30
@@ -804,15 +824,16 @@ module output_mod
               end do
 
               ! Heavy elements forbidden lines
-              do elem = 3, nElements
-                 do ion = 1, min(elem+1, nstages)
-                    do iup = 1, nForLevels
-                       do ilow = 1, nForLevels
-                          forbVol(iAb,elem, ion, iup, ilow) = forbVol(iAb,elem, ion,iup,ilow) / HbetaVol(iAb)
-                       end do
-                    end do
-                 end do
-              end do
+!              do elem = 3, nElements
+!                 do ion = 1, min(elem+1, nstages)
+!                    do iup = 1, nForLevels
+!                       do ilow = 1, nForLevels
+              forbVol(iAb,:,:,:,:) = forbVol(iAb,:,:,:,:) / HbetaVol(iAb)
+              forbVolLarge(iAb,:,:) = forbVolLarge(iAb,:,:) / HbetaVol(iAb)
+!                       end do
+!                    end do
+!                 end do
+!              end do
 
               if (lgDust .and. convPercent>resLinesTransfer) then
                  do iRes = 1, nResLines
@@ -859,13 +880,13 @@ module output_mod
 
         ! write the lineFlux.out file          
         if (present(extMap)) then
-           open(unit=10, status='unknown', position='rewind', file='output/lineFlux.ext', iostat=ios)
+           open(unit=10, status='unknown', position='rewind', file='output/lineFlux.ext', action="write", iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for writing: lineFlux.out"
               stop
            end if
         else
-           open(unit=10, status='unknown', position='rewind', file='output/lineFlux.out', iostat=ios)
+           open(unit=10, status='unknown', position='rewind', file='output/lineFlux.out', action="write",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for writing: lineFlux.out"
               stop
@@ -883,12 +904,10 @@ module output_mod
            write(10, *) "Line Ratios (Hbeta=1.) :               Analytical"
            write(10, *) "Hbeta [E36 erg/s]:     ",  HbetaVol(iAb)
            write(10, *)
-           write(10, *) "HeI 4471", HeITVol(iAb,6)
-           write(10, *) "HeI 4922", HeISVol(iAb,5)
-           write(10, *) "HeI 5876", HeITVol(iAb,8)
-           write(10, *) "HeI 6678", HeISVol(iAb,8)
-           write(10, *) "HeI 7065", HeITVol(iAb,9)
-           write(10, *)
+           write(10, *) "HeI"
+           do i = 1, 34
+              write(10, *) HeIrecLineCoeff(i,1,4), HeIVol(iAb,i)
+           end do
            write(10, *) "HeII 4686", HeIIVol(iAb,4,3)
            if (lgElementOn(7) .and. lgDataAvailable(7,2)) then
               write(10, *) 
@@ -968,9 +987,6 @@ module output_mod
            if (lgElementOn(8) .and. lgDataAvailable(8,3)) &
                 & write(10, *) "[OIII] (4959+5007)/4363 ", (forbVol(iAb,8,3,2,4)+forbVol(iAb,8,3,3,4))/&
                 &forbVol(iAb,8,3,4,5)
-           write(10, *) "HeI 5876/4471 ", HeITVol(iAb,8)/HeITVol(iAb,6)
-           write(10, *) "HeI 6678/4471 ", HeISVol(iAb,8)/HeITVol(iAb,6)
-           write(10, *)
 
            write(10, *)
            write(10, *)
@@ -1007,8 +1023,8 @@ module output_mod
            write(10, *) "HI recombination lines:"
            write(10, *)
            iLine = 1
-           do iup = 3, 15
-              do ilow = 2, min(8,iup-1)
+           do ilow = 2, 8
+              do iup = ilow+1, 30
 
                  if (lgDebug) then
                     if (lineLuminosity(iAb,iLine) > 0. ) then
@@ -1027,43 +1043,25 @@ module output_mod
            end do
 
            write(10, *)
-           write(10, *) "HeI singlets"
+           write(10, *) "HeI "
            write(10, *)
-           do l = 1, 9
+           do l = 1, 34
 
               if (lgDebug) then
                  if (lineLuminosity(iAb,iLine) > 0. ) then
-                    write(10, *) l,"            ", lamS(l), HeISVol(iAb,l), lineLuminosity(iAb,iLine), &
-                         & HeISVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
-                    sumAn = sumAn + HeISVol(iAb,l)
+                    write(10, *) l,"            ",  HeIVol(iAb,l),  lineLuminosity(iAb,iLine), &
+                         & HeIVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
+                    sumAn = sumAn + HeIVol(iAb,l)
                     sumMC = sumMC + lineLuminosity(iAb,iLine) 
                  else
-                    write(10, *) l,"            ", lamS(l), HeISVol(iAb,l), iLine
+                    write(10, *) l,"            ", HeIVol(iAb,l), iLine
                  end if
               else
-                 write(10, *) l,"            ", lamS(l), HeISVol(iAb,l), iLine
+                 write(10, *) l,"            ",  HeIVol(iAb,l), iLine
               end if
               iLine = iLine + 1
            end do
 
-           write(10, *)
-           write(10, *) "HeI triplets:"
-           do l = 1, 11
-
-              if (lgDebug) then
-                 if ( lineLuminosity(iAb,iLine) > 0. ) then
-                    write(10, *) l,"            ", lamT(l), HeITVol(iAb,l), lineLuminosity(iAb,iLine),&
-                         & HeITVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
-                    sumAn = sumAn + HeITVol(iAb,l)
-                    sumMC = sumMC + lineLuminosity(iAb,iLine)
-                 else
-                    write(10, *) l,"            ", lamT(l), HeITVol(iAb,l), iLine
-                 end if
-              else
-                 write(10, *) l,"            ", lamT(l), HeITVol(iAb,l), iLine
-              end if
-              iLine = iLine + 1
-           end do
               
            write(10, *)
            write(10, *) "HeII recombination lines:"
@@ -1095,31 +1093,49 @@ module output_mod
               do ion = 1, min(elem+1, nstages)
                  if (.not.lgElementOn(elem)) exit
                  if (lgDataAvailable(elem,ion)) then
-                    do iup = 1, nForLevels
-                       do ilow = 1, nForLevels
-                          
-                          if (forbVol(iAb,elem,ion, iup, ilow) > 0.) then
-                             if (lgDebug) then
-                                if (lineLuminosity(iAb,iLine) > 0. ) then
-                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
-                                        & forbVol(iAb,elem,ion, iup, ilow), lineLuminosity(iAb,iLine), &
-                                        & forbVol(iAb,elem, ion, iup, ilow)/lineLuminosity(iAb,iLine), iLine
-                                   sumAn = sumAn + forbVol(iAb,elem,ion,iup,ilow)
-                                   sumMC = sumMC + lineLuminosity(iAb,iLine)
+                    if (elem==26 .and.  ion==2) then
+
+                       do iup = 1, nForLevelsLarge
+                          do ilow = 1, nForLevelsLarge                                                   
+                             if (forbVolLarge(iAb,iup, ilow) > 0.) then
+                                write(10, *) ' 26', ' 2 ', iup, ilow, wavLarge(iup, ilow), &
+                                     & forbVolLarge(iAb,iup,ilow), iLine
+                             end if
+                             
+                             iLine = iLine + 1
+                             
+                          end do
+                       end do
+
+                    else
+
+                       do iup = 1, nForLevels
+                          do ilow = 1, nForLevels                                                    
+                             if (forbVol(iAb,elem,ion, iup, ilow) > 0.) then
+                                if (lgDebug) then
+                                   if (lineLuminosity(iAb,iLine) > 0. ) then
+                                      write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
+                                           & forbVol(iAb,elem,ion, iup, ilow), &
+                                           &lineLuminosity(iAb,iLine), &
+                                           & forbVol(iAb,elem, ion, iup, ilow)/&
+                                           &lineLuminosity(iAb,iLine), iLine
+                                      sumAn = sumAn + forbVol(iAb,elem,ion,iup,ilow)
+                                      sumMC = sumMC + lineLuminosity(iAb,iLine)
+                                   else
+                                      write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
+                                           & forbVol(iAb,elem,ion,iup,ilow), iLine
+                                   end if
                                 else
-                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
+                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), & 
                                         & forbVol(iAb,elem,ion,iup,ilow), iLine
                                 end if
-                             else
-                                write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), & 
-                                     & forbVol(iAb,elem,ion,iup,ilow), iLine
                              end if
-                          end if
+                             
+                             iLine = iLine + 1
                           
-                          iLine = iLine + 1
-                          
+                          end do
                        end do
-                    end do
+                    end if
                  end if
               end do
            end do
@@ -1181,13 +1197,13 @@ module output_mod
         close(10)
         
         ! write the temperature.out file
-        open(unit=20, status='unknown', position='rewind', file='output/temperature.out', iostat=ios)
+        open(unit=20, status='unknown', position='rewind', file='output/temperature.out', action="write",iostat=ios)
         if (ios /= 0) then
            print*, "! outputGas: can't open file for writing: temperature.out"
            stop
         end if
         
-        open(unit=27, status='unknown', position='append', file='output/summary.out', iostat=ios)
+        open(unit=27, status='unknown', position='append', file='output/summary.out', action="write",iostat=ios)
         if (ios /= 0) then
            print*, "! iterationMC: can't open file for writing, summary.out"
            stop
@@ -1195,7 +1211,7 @@ module output_mod
 
         
         ! write ionratio.out file
-        open(unit=30, status='unknown', position='rewind', file='output/ionratio.out', iostat=ios)
+        open(unit=30, status='unknown', position='rewind', file='output/ionratio.out', action="write",iostat=ios)
         if (ios /= 0) then
            print*, "! outputGas: can't open file for writing: ionratio.out"
            stop
@@ -1203,7 +1219,7 @@ module output_mod
         
         if (lgDebug) then
            
-           open(unit=60, status='unknown', position='rewind', file='output/ionDen.out', iostat=ios)
+           open(unit=60, status='unknown', position='rewind', file='output/ionDen.out', action="write",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for writing: ionDen.out"
               stop
@@ -1316,7 +1332,7 @@ module output_mod
            stop
         end if
         
-        open(unit=70, file='output/tau.out', status='unknown', position='rewind', iostat = ios)
+        open(unit=70, file='output/tau.out', status='unknown', position='rewind',action="write", iostat = ios)
              
         
         ! initialize arrays with zero
@@ -1469,14 +1485,14 @@ module output_mod
         if (associated(absTau)) deallocate(absTau)
         if (associated(lambda)) deallocate(lambda)
         if (associated(HIVol)) deallocate(HIVol)
-        if (associated(HeISVol)) deallocate(HeISVol)
-        if (associated(HeITVol)) deallocate(HeITVol)
+        if (associated(HeIVol)) deallocate(HeIVol)
         if (associated(HeIIVol)) deallocate(HeIIVol)
         if (associated(ionDenVol)) deallocate(ionDenVol)
         if (lgDebug) then
            if (associated(lineLuminosity)) deallocate(lineLuminosity)
         end if
         if (associated(forbVol)) deallocate(forbVol)
+        if (associated(forbVolLarge)) deallocate(forbVolLarge)
         if (associated(TeVol)) deallocate(TeVol)
         if (associated(recLinesFlux)) deallocate(recLinesFlux)
         if (associated(denominatorIon)) deallocate(denominatorIon)
@@ -1507,7 +1523,7 @@ module output_mod
                &        a,b,c,d,logne,aeff,br(3,500),em
           integer       :: i,g2(500)
 
-          open(file="data/Roii.dat",unit=41,status="old", position="rewind")
+          open(file="data/Roii.dat",unit=41,status="old", action="read",position="rewind")
           do i=1,415
              read(41,*) lamb(i),g2(i),&
                   &br(1,i),br(2,i),br(3,i)
@@ -1866,7 +1882,7 @@ module output_mod
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
          emhb=1.98648E-08/4861.33*ahb
-         open(unit=50,file='data/Rneii.dat',status='old', position='rewind')
+         open(unit=50,file='data/Rneii.dat',status='old', action="read",position='rewind')
          do i=1,426
           read(50,*) a,b,c,d,f,lamb(i),br
           aeff=1.e-14*a*te**(f)
@@ -1913,7 +1929,7 @@ module output_mod
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
          emhb=1.98648E-08/4861.33*ahb
-         open(unit=51,file='data/Rcii.dat',status='old', position='rewind')
+         open(unit=51,file='data/Rcii.dat',status='old', position='rewind',action="read")
          do i=1,159
           read(51,*) a,b,c,d,f,lamb(i),br
           aeff=1.e-14*a*te**(f)
@@ -1937,7 +1953,7 @@ module output_mod
           y=logden-4.
           ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
           emhb=1.98648E-08/4861.33*ahb
-          open(unit=52,file='data/Rnii.dat',status='old', position='rewind')
+          open(unit=52,file='data/Rnii.dat',status='old', action="read",position='rewind')
           do i=1,115
            read(52,*) a,b,c,d,f,u,v,lamb(i),br
            aeff=1.e-14*a*te**(f)
@@ -1964,8 +1980,8 @@ module output_mod
           te=tk/10000.d0
           ahb=6.68e-14*te**(-0.507)/(1.+1.221*te**0.653)
           emhb=1.98648E-08/4861.33*ahb
-          open(unit=61,file="data/Rniiold.dat",status='old', position='rewind')
-          open(unit=62,file="data/Rnii_aeff.dat",status='old', position='rewind')
+          open(unit=61,file="data/Rniiold.dat",status='old', action="read",position='rewind')
+          open(unit=62,file="data/Rnii_aeff.dat",status='old', action="read",position='rewind')
           do i=1,51
            read(62,*) a(i),b(i),c(i)
           end do
@@ -2044,19 +2060,42 @@ module output_mod
               if (.not.lgElementOn(elem)) exit
 
               if (lgDataAvailable(elem, ion)) then
+                 
+                 if (elem == 26 .and. ion == 2) then
+                    if (nstages>2) then
+                       call equilibrium(dataFile(elem, ion), &
+                            & ionDenUsed(elementXref(elem),ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), &
+                            & TeUsed, NeUsed, forbiddenLinesLarge(:,:), &
+                            & wavLarge(:,:))
+                    else
+                       call equilibrium(dataFile(elem, ion), &
+                            &0., &
+                            & TeUsed, NeUsed, forbiddenLinesLarge(:,:), &
+                            & wavLarge(:,:))
+                    end if
 
-                 if (ion<nstages) then
-                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem),ion+1), &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), wav(elem,ion,:,:))
+                    forbiddenLinesLarge(:, :) =forbiddenLinesLarge(:, :)&
+                         *elemAbundanceUsed(elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
+
                  else
-                    call equilibrium(dataFile(elem, ion), 0., &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), wav(elem,ion,:,:))
+                    if (ion<nstages) then
+                       call equilibrium(dataFile(elem, ion), &
+                            & ionDenUsed(elementXref(elem),ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), &
+                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), &
+                            & wav(elem,ion,:,:))
+                    else
+                       call equilibrium(dataFile(elem, ion), 0., &
+                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), &
+                            wav(elem,ion,:,:))
+                    end if
+
+                    forbiddenLines(elem, ion, :, :) =forbiddenLines(elem, ion, :, :)&
+                         *elemAbundanceUsed(elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
                  end if
-
-
-                 forbiddenLines(elem, ion, :, :) =forbiddenLines(elem, ion, :, :)*elemAbundanceUsed(elem)*&
-                      & ionDenUsed(elementXref(elem), ion)
-
               end if
 
            end do
@@ -2080,6 +2119,7 @@ module output_mod
         integer                    :: i           ! counters
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
+        integer                    :: denint
 
         real                       :: A4471, A4922! HeI reference lines 
         real                       :: aFit        ! general interpolation coeff
@@ -2088,50 +2128,43 @@ module output_mod
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
         real                       :: T4          ! TeUsed/10000.
+        real                       :: x1,x2
+        real                       :: hb          ! emissivity of H 4->2
+        real                       :: fh          ! emissivity of H
 
-        real, dimension(9,3)       :: HeISingRead ! array reader for HeI sing rec lines
-        real, dimension(11,3)       :: HeITripRead ! array reader for HeI trip  rec lines  
-
-        ! do hydrogenic ions first
-
-        ! read in HI recombination lines [e-25 ergs*cm^3/s] 
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        close(94)
-        open(unit = 94, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
-            stop
+        ! calculate Hbeta
+        if (TeUsed > 26000.) then
+           print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
+                & calculations may be uncertain"
         end if
-        do iup = 15, 3, -1
-            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
-        end do
-
-        close(94)
-
-        ! calculate Hbeta 
         Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+
         ! fits to Storey and Hummer MNRAS 272(1995)41
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
 
-        ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
-        do iup = 15, 3, -1
-            do ilow = 2, min0(8, iup-1)
-                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
-            end do
-        end do    
+        call hlinex(4,2,TeUsed,NeUsed,fh,2)
+        hb = fh
+        do ilow = 2, 8
+           do iup = 30, ilow+1, -1
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)              
+              HIRecLines(iup, ilow) = (fh/hb)*Hbeta
+           enddo
+        enddo
+
 
         ! add contribution of Lyman alpha 
         ! fits to Storey and Hummer MNRAS 272(1995)41
         Lalpha = 10**(-0.897*log10Te + 5.05) 
-        HIRecLines(15, 8) =HIRecLines(15, 8) + elemAbundanceUsed(1)*ionDenUsed(elementXref(1),2)*&
+        HIRecLines(30, 8) =HIRecLines(30, 8) + elemAbundanceUsed(1)*&
+             & ionDenUsed(elementXref(1),2)*&
              & NeUsed*Lalpha 
         
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95, file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -2141,7 +2174,6 @@ module output_mod
         end do
 
         close(95)
-
 
         ! calculate HeII 4686 [E-25 ergs*cm^3/s]
         HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)
@@ -2154,74 +2186,270 @@ module output_mod
             end do
         end do    
 
-
         ! now do HeI
         
-        ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(96)
-        open(unit = 96, file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
-            stop
+        if (NeUsed <= 100.) then
+           denint=0
+        elseif (NeUsed > 100. .and. NeUsed <= 1.e4) then
+           denint=1
+        elseif (NeUsed > 1.e4 .and. NeUsed < 1.e6) then
+            denint=2
+        elseif (NeUsed >= 1.e6) then
+           denint=3
         end if
-        do i = 1, 9
-            read(96, fmt=*) HeISingRead(i, :), lamS(i)
 
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 1)
-            else if (TeUsed >= 20000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) ) 
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
 
-        close(96)
-        
-        ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(97)
-        open(unit = 97, file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
-            stop
+        ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        T4 = TeUsed / 10000.
+        if (T4 < 0.5) T4=0.5
+        if (T4 > 2.0) T4=2.0
+
+        if (denint>0.and.denint<3) then
+           do i =1, 34
+              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
+              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+           end do
+        elseif(denint==0) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
+        elseif(denint==3) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
         end if
-        do i = 1, 11
-            read(97, fmt=*) HeITripRead(i, :), lamT(i)
+        HeIRecLines=HeIRecLines*NeUsed*elemAbundanceUsed(2)*ionDenUsed(elementXref(2),2)
 
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesT(i) = HeITripRead(i, 1)
-            else if (TeUsed >= 20000) then
-                HeIRecLinesT(i) = HeITripRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) )
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
-
-        close(97)
-
-        HeIRecLinesS = HeIRecLinesS*NeUsed*elemAbundanceUsed(2)*ionDenUsed(elementXref(2),2)
-        HeIRecLinesT = HeIRecLinesT*NeUsed*elemAbundanceUsed(2)*ionDenUsed(elementXref(2),2)
-
-                                                   
     end subroutine RecLinesEmission
 
     end subroutine outputGas
+
+        
+    ! read atomic data for higher level H transitions. 
+    ! authors: Wang Wei, Yu Pei (PKU) 
+    subroutine hdatx
+      implicit none
+      integer                    :: ios         ! I/O error status
+      integer                    :: ia         ! upper level
+      integer                    :: ib         ! lower level
+      integer                    :: ntempx     ! number of temperature
+      integer                    :: ndensx     ! number of density
+      integer                    :: ntop       ! top level
+      integer                    :: nll        ! lower level
+      integer                    :: nlu        ! upper level
+      integer                    :: ne         ! level
+      integer                    :: ndum       ! level
+      integer                    :: i          ! integer
+      integer                    :: j          ! integer
+
+      real, dimension(15)              :: densx
+      real, dimension(15)              :: tempx
+      real, dimension(5000,15,15)      :: ex
+      common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu      
+      close(337)
+      open(unit =337, file = "data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
+        if (ios /= 0) then
+             print*, "! hdatax: can't open  data/e1bx.d"
+             stop
+        end if
+
+      read(337,*) ntempx,ndensx
+        do ia=1,ntempx
+           do ib=1,ndensx
+                read(337,25) densx(ib),tempx(ia),ntop,ndum,nlu,nll 
+25              format(1x,e10.3,5x,e10.3,5x,4i5)
+                ne=(2*ntop-nlu-nll)*(nlu-nll+1)/2
+                read(337,30) (ex(j,ia,ib),j=1,ne)
+30              format((8e10.3))
+           enddo
+        enddo
+      close(337)
+      
+    end subroutine hdatx
+
+
+
+    !  Interpolate in density/temperature for specified line emissivity
+    !  Interpolate in density/temperature for specified line emissivity (iopt=1)
+    !  or 2s recombination coefficient (iopt=2)
+    ! authors Wang Wei and Yu Pei (PKU)
+    subroutine hlinex(nu,nl,xt,xd,fh,iopt)
+      implicit real*8(a-h,o-z)
+      integer                    :: nu         ! upper level
+      integer                    :: nl         ! lower level
+      integer                    :: ntempx     ! number of temperature
+      integer                    :: ndensx     ! number of density
+      integer                    :: ntop       ! top level
+      integer                    :: nll        ! lower level
+      integer                    :: nlu        ! upper level
+      integer                    :: id, it, nt, j, i0, k, nls, nus, ncut
+      integer                    :: ks, j0, ip, kp, jp, ky, kx, js
+      integer                    :: int, max, ns, nint1, nint, is
+      real                       :: nof
+      real                       :: xt         ! temperature used
+      real                       :: xd         ! density used
+      real                       :: fh         ! H atomic data
+      integer                    :: iopt         ! switch
+      
+      real, dimension(15)              :: densx
+      real, dimension(15)              :: tempx
+      real, dimension(5000,15,15)      :: ex
+      real, dimension(15,15)           :: r
+      real, dimension(15)               :: x
+      real, dimension(15)               :: y
+      real, dimension(5)               :: ni
+      real, dimension(5)               :: cx
+      real, dimension(5)               :: cy
+      real, dimension(5)               :: ri
+      real, dimension(2,15)            :: f
+      common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu
+      data max/4/ni/2,3,4,5,6/       ! interpolation parameters
+!          interpolation variables
+        do i=1,ndensx
+            x(i)=log10(densx(i))
+        enddo
+        do i=1,ntempx
+            y(i)=sqrt(tempx(i))
+            f(1,i)=1.0          ! f is emissivity smoothing function in temp
+            f(2,i)=y(i)
+        enddo
+            nus=0
+            nls=0
+!          set keys to locate transitions of interest
+        if((nus+nls).eq.0) then
+             ns=2
+             ks=999
+        else
+             ns=1
+             ks=(((ncut-nus)*(ncut+nus-1))/2)+nls
+        endif
+             k=(2*ntop-nll-nl+1)*(nl-nll)/2+ntop-nu+1
+
+        do it=1,ntempx
+           do id=1,ndensx
+                if(ns.eq.1) then
+                     r(it,id)=ex(k,it,id)/ex(ks,it,id)
+                else
+                     r(it,id)=ex(k,it,id)
+                endif
+           enddo
+        enddo
+!          interpolate in r-table
+        nt=1
+
+        xp=log10(xd)           ! interpolate in log(dens)
+        yp=sqrt(xt)             ! interpolate in temp**0.5
+!          find interpolation box
+        i=1
+        if(xp.lt.x(i)) then
+                goto 88
+        endif
+86      if(xp.ge.x(i).and.xp.le.x(i+1)) then
+                goto 88
+        else
+            i=i+1
+            if(i.eq.ndensx) then
+                  i = ndensx - 1
+!                     stop 'dens overflow'
+            endif
+                goto 86
+        endif
+88      i0=i
+        j=1
+        if(yp.lt.y(j)) then
+                goto 92
+        endif
+90      if(yp.ge.y(j).and.yp.le.y(j+1)) then
+                goto 92
+        else
+           j = j+1
+           if(j.eq.ntempx) then
+           j = ntempx - 1
+                goto 92
+!              stop 'temp overflow'
+           endif
+                goto 90
+        endif
+92      j0=j
+        int=max
+        nint=ni(int)             ! interpolation order
+        nint1=nint-1
+        nof=nint1/2
+!          shift i0 to nearest box boundary in each direction if nint is odd
+        if(nint.eq.3.or.nint.eq.5.or.nint.eq.7) then  ! note ODD order
+            if((xp-x(i0)).gt.(x(i0+1)-xp)) then
+                is=i0+1-nof
+            else
+                is=i0-nof
+            endif
+            if((yp-y(j0)).gt.(y(j0+1)-yp)) then
+                js=j0+1-nof
+            else
+                js=j0-nof
+            endif
+        else
+            is=i0-nof
+            js=j0-nof
+        endif
+!          ensure that interpolation box lies in table
+        if(is.lt.1) then
+            is=1
+        endif
+        if((is+nint1).gt.ndensx) then
+            is=ndensx-nint1
+        endif
+        if(js.lt.1) then
+            js=1
+        endif
+        if((js+nint1).gt.ntempx) then
+            js=ntempx-nint1
+        endif
+        do k=1,nint
+             i=is+k-1
+             cx(k)=1.0
+           do kp=1,nint
+              if(kp.ne.k) then
+                 ip=is+kp-1
+                 cx(k)=cx(k)*(xp-x(ip))/(x(i)-x(ip))
+              endif
+           enddo
+        enddo
+        do k=1,nint
+            j=js+k-1
+            cy(k)=1.0
+           do kp=1,nint
+              if(kp.ne.k) then
+                 jp=js+kp-1
+                 cy(k)=cy(k)*(yp-y(jp))/(y(j)-y(jp))
+              endif
+           enddo
+        enddo
+          rint=0.0
+        do kx=1,nint
+           do ky=1,nint
+             if((js+ky-1).gt.ntempx.or.(is+kx-1).gt.ndensx) then
+                stop 'final loop error'
+             endif
+                rrr=r(js+ky-1,is+kx-1)*f(ns,js+ky-1) ! smoothing ftn
+             if(nt.ne.0) then
+                rrr=log(rrr)
+             endif
+             rint=rint+cx(kx)*cy(ky)*rrr
+           enddo
+        enddo
+
+        ri(int)=rint
+        if(nt.ne.0) then
+           ri(int)=exp(ri(int))
+        endif
+        if(ns.eq.2) then
+           ri(int)=ri(int)/yp ! remove smoothing function = temp**.5
+        endif
+        fh=ri(max)
+!        return
+      end subroutine hlinex
+
 
     subroutine writeTau(grid)
       implicit none
@@ -2251,7 +2479,7 @@ module output_mod
       end if
       
       close(73)
-      open(unit=73, file='output/tau.out', status='unknown', position='rewind', iostat = ios)
+      open(unit=73, file='output/tau.out', status='unknown', position='rewind', iostat = ios, action="write")
 
       aVec%x = 0.
       aVec%y = 0.
@@ -2268,7 +2496,7 @@ module output_mod
 
       ! 0.55um = 0.165690899
       ! 1.00um = 0.0912 
-      nuR = 0.0912
+      nuR = 0.16569
 !      nuR = 0.0912
       
 
@@ -2277,7 +2505,7 @@ module output_mod
  
      
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 1,0,0 - nu = 0.0912 Ryd -> lambda = 1.0 um"
+      write(73, *) " direction: 1,0,0 - nu = 0.166 Ryd -> lambda = 0.55 um"
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2303,7 +2531,7 @@ module output_mod
  
      
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 1,1,1 - nu = 0.0911 Ryd -> lambda = 1.0 um"
+      write(73, *) " direction: 1,1,1 -  nu = 0.166 Ryd -> lambda = 0.55 um"
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2324,7 +2552,8 @@ module output_mod
       call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
       
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 0,1,0 - lambda = 1.00 um"
+      write(73, *) " direction: 0,1,0 -  nu = 0.166 Ryd -> lambda = 0.55 um"
+      
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2348,7 +2577,8 @@ module output_mod
       call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
       
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 0,0,1 - nu = 0.0911 => lambda = 1.00 um"
+      write(73, *) " direction: 0,0,1 -  nu = 0.166 Ryd -> lambda = 0.55 um"
+      
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2378,7 +2608,7 @@ module output_mod
 
       close(16)
 
-      open(unit=16,file='output/SED.out',status='unknown', position='rewind',iostat=ios)              
+      open(unit=16,file='output/SED.out',status='unknown', position='rewind',iostat=ios, action="write")              
       if (ios /= 0) then
          print*, "! writeSED: Cannot open file for writing"
          stop
@@ -2408,27 +2638,54 @@ module output_mod
                   SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
                end do
             end do
-            
-            do imu = 1, nAngleBins
-               if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
-               if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
-            end do
-
-            lambda = c/(nuArray(freq)*fr1Ryd)
-            
-         
-            if (lgSymmetricXYZ) SED(freq,0) = SED(freq,0)*8.
-
-            totalE = totalE +  SED(freq,0)
-            
-            SED(freq,0) = SED(freq,0)/(Pi)
-            
-
-            write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu)*&
-                 & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
 
          end do
       end do
+
+      do freq = 1, nbins
+         do imu = 1, nAngleBins
+            if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
+            if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
+         end do
+
+         lambda = c/(nuArray(freq)*fr1Ryd)
+            
+         
+         if (lgSymmetricXYZ) SED(freq,0) = SED(freq,0)*8.
+
+         totalE = totalE +  SED(freq,0)
+            
+         SED(freq,0) = SED(freq,0)/(Pi)
+            
+
+         write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu)*&
+              & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
+
+      end do
+
+      if (lgEquivalentTau .and. nIterateMC==1) then
+         SEDnoExt = SED(:,0)
+      elseif (lgEquivalentTau .and. nIterateMC>1) then
+
+         open (unit=74,file='output/equivalentTau.out',action='write', position='rewind',&
+              & iostat=ios, status='unknown')
+
+         do freq = 1, nbins
+            if (SEDnoExt(freq)>0. .and. SED(freq,0)>0.) then
+               equivalentTau(freq) = log(SEDnoExt(freq)/SED(freq,0))
+            else
+               equivalentTau(freq) = -1
+            end if
+
+            write(74,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, equivalentTau(freq), SEDnoExt(freq)
+            
+         end do
+
+         close(74)
+
+
+      end if
+
 
       write(16,*) ' '
       write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE
@@ -2469,7 +2726,7 @@ module output_mod
 
       close(19)
 
-      open(unit=19,file='output/contCube.out',status='unknown', position='rewind',iostat=ios)              
+      open(unit=19,file='output/contCube.out',status='unknown', position='rewind',iostat=ios, action="write")       
       if (ios /= 0) then
          print*, "! writeContCube: Cannot open file for writing"
          stop

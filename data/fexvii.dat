@@ -1,0 +1,61 @@
+ 34
+** Atomic data from version 5.2 of the CHIANTI database **
+%Observed energy levels: from the line list of Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L.,2000, J.Phys.Chem.Ref.Data, Monograph 8
+%Observed energy levels (level 4): from the line list of Feldman et al., 1998, ApJ, 503, 467
+%Observed energy levels (6,7,8): from the line list of Thomas & Neupert, 1994, ApJS, 91, 461
+%Observed energy levels (level 9): from the line list of Young, Landi & Thomas, 1998, A&A, 329, 291
+%Observed energy levels (level 15): from the line list of Brosius, Davila & Thomas, 1998, ApJS, 119, 255
+%Observed energy levels (level 37): from the line list of Landi & Phillips, 2005, ApJ, in press
+%Theoretical energy levels: Landi & Gu, 2005, ApJ, in press
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% Enrico Landi - Nov 2003
+%Observed energy levels: from the line list of Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L.,2000, J.Phys.Chem.Ref.Data, Monograph 8
+%Observed energy levels (level 4): from the line list of Feldman et al., 1998, ApJ, 503, 467
+%Observed energy levels (6,7,8): from the line list of Thomas & Neupert, 1994, ApJS, 91, 461
+%Observed energy levels (level 9): from the line list of Young, Landi & Thomas, 1998, A&A, 329, 291
+%Observed energy levels (level 15): from the line list of Brosius, Davila & Thomas, 1998, ApJS, 119, 255
+%Observed energy levels (level 37): from the line list of Landi & Phillips 2005, ApJ, in press
+%Theoretical energy levels: Landi & Gu, 2005, ApJ, in press
+%A and gf values: Landi & Gu, 2005, ApJ, in press
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% Enrico Landi - Nov 2003
+
+%filename: fe_17.splups
+%oscillator strengths: Landi & Gu, 2005, ApJ, in press
+%Collision strengths (from the ground level): Landi & Gu, 2005, ApJ, in press
+%Effective collision strengths (from the ground level to n=3 levels): Gu, M.F., 2003, ApJ, 582, 1241
+%collision strengths (lowest 37 levels, not from the ground level): Bhatia and Doschek, 1992, ADNDT, 52, 1
+%Comment: effective collision strengths from Gu (2003) have been summed to the distorted-wave
+   collision strengths from Landi \& Gu (2005).
+%Comment: effective collision strengths are given in the temperature range 1.16e6 < T < 5.8e7
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  Enrico Landi - Feb 2006
+ 0 23
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+ 0 0 0

@@ -1,0 +1,59 @@
+ 32
+** Atomic data from version 5.2 of the CHIANTI database **
+%observed energy levels: Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L., 2000, J.Phys.Chem.Ref.Data, Monograph 8
+%observed energy (level 34):  Martin,W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
+     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
+%theoretical energy levels: Sampson, D.H., Goett, S.J., Clark, R.E.H., 1983, ADNDT, 29, 467
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% K.P.Dere and E.Landi 2000
+%observed energy levels: Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L., 2000, J.Phys.Chem.Ref.Data, Monograph 8
+%observed energy (level 34): Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 1995, NIST Database, Version 1.0, 
+    NIST Standard Reference Database 61
+%theoretical energy levels: Sampson,D.H., Goett, S.J., Clark, R.E.H., 1983, ADNDT, 29, 467
+%A values (1-2,5,6,7; 2-4,5,6,7): Palmeri, P., Mendoza, C., Kallman, T.R., Bautista, M.A. 2003, A&A, 403, 1175
+%A values (1-3, 2-phot): Drake, G.W.F., Phys Rev A, 1986, 34, 2871
+%oscillator strengths and A values: Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 1995, NIST Database, Version 1.0, NIST Standard Reference Database 61
+%oscillator strengths: Sampson,D.H., Goett,S.J., Clark,R.E.H., 1983, ADNDT, 29, 467, Hydrogenic values
+%oscillator strengths: Wiese,W.L., Smith,M.W., Glennon,B.M., 1966, Atomic Transition Probabilities, NSRDS-NBS-4.
+%comment: Wiese's f values are hydrogenic
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% K.P.Dere and E.Landi - Jan 2005
+
+%filename: fe_25.splups
+%oscillator strengths and A values: Wiese W.L., Fuhr J.R., 1995, NIST Database, Version 1.0, NIST Standard Reference Database 61
+%oscillator strengths: Sampson,D.H., Goett,S.J., Clark,R.E.H., 1983, ADNDT, 29, 467,  Hydrogenic values
+%oscillator strengths: Wiese,W.L., Smith,M.W., Glennon,B.M., 1966, Atomic Transition Probabilities, NSRDS-NBS-4
+%collison strengths: Sampson, D.H., Goett, S.J., Clark, R.E.H.  1983, ADNDT, 29, 467,  Hydrogenic values
+%Effective collision strengths: Zhang, H., Sampson, D.H., 1987, ApJSS, 63, 487
+%comment: effective collision strengths were provided in the temperature range 6.85 < Log T < 8.25
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% K.P. Dere and E. Landi 1998
+ 0 23
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+ 0 0 0

@@ -6,6 +6,7 @@ module grid_mod
     use common_mod             ! common variablesesca
     use composition_mod        ! cemical abundances 
     use constants_mod          ! physical constants
+    use continuum_mod          ! ionising field
     use elements_mod           ! hydrogen data 
     use interpolation_mod      ! interpolation maths
     use pathIntegration_mod    ! path integration
@@ -39,12 +40,13 @@ module grid_mod
         logical, save :: lgFirst=.true.
         logical       :: lgAssigned
 
-        integer, parameter :: maxLim = 1000
+        integer, parameter :: maxLim = 10000
         integer, parameter :: nSeries = 17
 
         real, dimension(450) :: ordered
         real, dimension(17)  :: seriesEdge
-        
+
+        real                 :: nuMinArray, nuMaxArray        
         real                 :: dradio
         real                 :: nuStepSizeLoc
 
@@ -71,12 +73,24 @@ module grid_mod
            print*, "! initCartesianGrid: can't allocate grid memory"
             stop
         end if
+        grid%elemAbun=0.
 
         if (lgFirst) then  
 
            if (lgGas) then
               ! set chemical abundances according to the grid%composition
               ! variable  given 
+              allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
+              if (err /= 0) then
+                 print*, "! emissionDriver: can't allocate array memory"
+                 stop
+              end if
+              allocate(forbiddenLinesLarge(nForLevelsLarge,nForLevelsLarge), stat=err)
+              if (err /= 0) then
+                 print*, "! emissionDriver: can't allocate array memory"
+                 stop
+              end if
+
               call setComposition(grid)
 
            else
@@ -134,7 +148,6 @@ module grid_mod
                          
                         ! get threshold energy
                         ionEdge(nEdges) = ph1(1,elem, nElec, outShell)/RydtoEv
-
                      else if (elem == 1) then ! HI
             
                         ionEdge(nEdges) = 0.999434
@@ -157,30 +170,14 @@ module grid_mod
 
                nEdges = nEdges -1
 
-               ! initialise ordering array
-               ordered  = 1.e20
-            
-               do i = 1, nEdges
-                  if (i == 1) then
-                     do j = 1, nEdges
-                        if (ionEdge(j) < ordered(1)) ordered(1) = ionEdge(j)
-                     end do
-                  else
-                     do j = 1, nEdges
-                        if ( (ionEdge(j) < ordered(i)) .and. (ionEdge(j) > ordered(i-1)) ) &
-                             & ordered(i) = ionEdge(j)
-                     end do
-                  end if
-               end do
-            
-               ionEdge = ordered
+               call sortUp(ionEdge(1:nEdges))
 
             end if
 
 
             if ( (lgDust) .and. (.not.lgGas) ) then 
                close(72)
-               open (unit= 72, file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
+               open (unit= 72,  action="read", file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
                if (ios /= 0) then
                   print*, "! initCartesianGrid: can't open dust nu grid file - dustData/nuDustRyd.dat"
@@ -211,118 +208,92 @@ module grid_mod
                nuArray = nuTemp
                if (associated(nuTemp)) deallocate(nuTemp)
 
-
-
             else if (lgGas .and. (.not.lgDust)) then
 
-               iCount         = 1
-               nuArray(1)     = nuMin
-               nuCount        = 1
+               ! first count how many edge, thresholds etc
+               if (nuMin<radio4p9GHz) then
+                  nuArray(1)     = radio4p9GHz
+                  nuCount = 2
+               else
+                  nuCount = 1
+               end if
 
-               nradio         = nbins/70
-               dradio         = abs((log10(nuMin+nuStepSize/8.)-log10(nuMin)) /real(nradio-1.))
-
-
-               lgAssigned=.false.
-               do i = 1, nradio
-                  nuCount = nuCount+1
-                  nuArray(nuCount) = 10.**(log10(nuArray(nuCount-1))+dradio)
-
-                  if (.not.lgAssigned .and. nuArray(1) < radio4p9GHz .and. &
-                       & nuArray(nuCount)>radio4p9GHz) then
-                     nuArray(nuCount) = radio4p9GHz
-                     lgAssigned = .true.
+               nuMinArray = nuMin
+               nuMaxArray = nuMax
+               ! H series edges 
+               do i = 1, nSeries 
+                  nuArray(nuCount) = seriesEdge(i)
+                  nuArray(nuCount+1) = seriesEdge(i)- 0.0003
+                  nuArray(nuCount+2) = seriesEdge(i)+ 0.0003
+                  if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
+                  if ( nuArray(nuCount) > nuMaxArray ) then
+                     nuMaxArray= nuArray(nuCount)
+                     print*, 'initCartesianGrid [warning]: H series - nuMaxArray increased to ', nuMaxArray, i
                   end if
-
-                  if (nuArray(nuCount)>nuStepSize/8.) then
-                     if (nuCount > 1) then
-                        nuCount = nuCount-1
-                        exit
-                     else 
-                        exit
-                     end if
-                  end if
+                  nuCount = nuCount+3
 
                end do
-              
-               do i = 1, maxLim
-                  if (iCount <= nSeries) then
-                      if (seriesEdge(iCount) > nuArray(nuCount)) then
-                        if (seriesEdge(iCount) >= nuArray(nuCount)+nuStepSize/4.) then
-                           nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/8.
-                           nuCount = nuCount+1
-                        else
-                           nuArray(nuCount+1) = seriesEdge(iCount) - 0.0003
-                           nuCount = nuCount+1
-                           if (nuCount >= nbins) then
-                              print*, '! initCartesianGrid [warning]: energy of series #',  iCount, &
-                                   &                                       ' is too high'
-                              exit
-                           else 
-                              nuArray(nuCount+1) = seriesEdge(iCount)
-                              nuCount = nuCount+1
-                              iCount = iCount+1
-                           end if
-                        end if
-                     else
-                        print*, '! initCartesianGrid [warning]: energy of series #', iCount, &
-                             &                                ' is too low'
-                        iCount = iCount+1
-                     end if
-                  else
-                     do j = 1, maxLim
-                        nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/2.
-                        nuCount = nuCount+1
-                        if (nuArray(nuCount) >= (ionEdge(1)-0.05) ) exit
-                     end do
-                     exit
+               ! IP Thresholds
+               do i = 1, nEdges
+                  if (ionEdge(i) < nuMaxArray) then
+                     nuArray(nuCount) = ionEdge(i)
+                     nuArray(nuCount+1) = ionEdge(i)- 0.0003
+                     nuArray(nuCount+2) = ionEdge(i)+ 0.0003
+                     if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
+                     nuCount = nuCount+3
                   end if
                end do
-               
-             
-               iCount = 1  ! ionization edges counter
 
-               do i = 1, maxLim
-                  
-                  if (nuCount >= nbins) exit
-                  
-                  if (iCount < nEdges) then
-                     
-                     if (ionEdge(iCount) > nuArray(nuCount)) then
-                        if (ionEdge(iCount) >= (nuArray(nuCount)+ nuStepSize)) then
-                           nuArray(nuCount+1) = nuArray(nuCount) + nuStepSize/2.
-                           nuCount = nuCount+1
-                        else
-                           nuArray(nuCount+1) = ionEdge(iCount) - 0.0003
-                           nuCount = nuCount+1
-                           if (nuCount >= maxLim) then
-                              print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount,&
-                                   &                                        ' is too high'
-                           else
-                              nuArray(nuCount+1) = ionEdge(iCount)
-                              nuCount = nuCount+1
-                              iCount  = iCount+1
-                           end if
-                        end if
-                     else
-                        print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount, &
-                             &                                ' is too low'
-                        iCount = iCount+1
-                     end if
-                  else
-                     
-                     nuStepSizeLoc = (nuMax-nuArray(nuCount))/(nbins-nuCount)
-                     do j = nuCount+1, nbins                         
-                        nuArray(j) = nuArray(j-1) + nuStepSizeLoc
-                        
-                     end do
-                  end if
-               end do
-               
+               ! build the log energy mesh
+               iCount = nbins-nuCount+1
+               nuStepSize = (log10(nuMaxArray)-log10(nuMinArray))/(iCount-1)
+               nuArray(nuCount) = nuMinArray
+               do i = nuCount+1, nbins                  
+                  nuArray(i) = 10.**(log10(nuArray(i-1))+nuStepSize)
+               enddo
+
+               ! now sort in ascending order
+               call sortUp(nuArray)
+
             else if (lgDust .and. lgGas) then
 
+               ! first count how many edge, thresholds etc
+               if (nuMin<radio4p9GHz) then
+                  nuArray(1)     = radio4p9GHz
+                  nuCount = 2
+               else
+                  nuCount = 1
+               end if
+
+               nuMinArray = nuMin
+               nuMaxArray = nuMax
+               ! H series edges 
+               do i = 1, nSeries 
+                  nuArray(nuCount) = seriesEdge(i)
+                  nuArray(nuCount+1) = seriesEdge(i)- 0.0003
+                  nuArray(nuCount+2) = seriesEdge(i)+ 0.0003
+                  if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
+                  if ( nuArray(nuCount) > nuMaxArray ) then
+                     nuMaxArray= nuArray(nuCount)
+                     print*, 'initCartesianGrid [warning]: H series - nuMaxArray increased to ', nuMaxArray, i
+                  end if
+                  nuCount = nuCount+3
+
+               end do
+               ! IP Thresholds
+               do i = 1, nEdges
+                  if (ionEdge(i) < nuMaxArray) then
+                     nuArray(nuCount) = ionEdge(i)
+                     nuArray(nuCount+1) = ionEdge(i)- 0.0003
+                     nuArray(nuCount+2) = ionEdge(i)+ 0.0003
+                     if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
+                     nuCount = nuCount+3
+                  end if
+               end do
+               
+               ! dust data points
                close(72)
-               open (unit= 72, file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
+               open (unit= 72,  action="read", file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
                if (ios /= 0) then
                   print*, "! initCartesianGrid: can't open dust nu grid file - nuDustGrid.dat"
@@ -331,7 +302,8 @@ module grid_mod
 
                do i = 1, 10000000
                   if (i<=nbins) then
-                     read(unit=72,fmt=*,iostat=ios) nuArray(i)
+                     read(unit=72,fmt=*,iostat=ios) nuArray(nuCount)
+                     nuCount = nuCount+1
                      if (ios < 0) exit ! end of file reached
                      if (nuArray(i)>= seriesEdge(1)) exit
                   else
@@ -343,88 +315,23 @@ module grid_mod
 
                close(72)
 
-               iCount         = 1
-               nuCount        = i-3
+               ! build the log energy mesh
+               iCount = nbins-nuCount+1
+               nuStepSize = (log10(nuMaxArray)-log10(nuMinArray))/(iCount-1)
+               nuArray(nuCount) = nuMinArray
+               do i = nuCount+1, nbins                  
+                  nuArray(i) = 10.**(log10(nuArray(i-1))+nuStepSize)
+               enddo
 
-               do i = 1, maxLim
-                  if (iCount <= nSeries) then
-                     if (seriesEdge(iCount) > nuArray(nuCount)) then
-                        if (seriesEdge(iCount) >= nuArray(nuCount)+nuStepSize/4.) then
-                           nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/8.
-                           nuCount = nuCount+1
-                        else
-                           nuArray(nuCount+1) = seriesEdge(iCount) - 0.0003
-                           nuCount = nuCount+1
-                           if (nuCount >= nbins) then
-                              print*, '! initCartesianGrid [warning]: energy of series #',  iCount, &
-                                   &                                       ' is too high'
-                              exit
-                           else 
-                              nuArray(nuCount+1) = seriesEdge(iCount)
-                              nuCount = nuCount+1
-                              iCount = iCount+1
-                           end if
-                        end if
-                     else
-                        print*, '! initCartesianGrid [warning]: energy of series #', iCount, &
-                             &                                ' is too low'
-                        iCount = iCount+1
-                     end if
-                  else
-                     do j = 1, maxLim
-                        nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/2.
-                        nuCount = nuCount+1
-                        if (nuArray(nuCount) >= (ionEdge(1)-0.05) ) exit
-                     end do
-                     exit
-                  end if
-               end do
-               
-             
-               iCount = 1  ! ionization edges counter
-
-               do i = 1, maxLim
-                  
-                  if (nuCount >= nbins) exit
-                  
-                  if (iCount < nEdges) then
-                     
-                     if (ionEdge(iCount) > nuArray(nuCount)) then
-                        if (ionEdge(iCount) >= (nuArray(nuCount)+ nuStepSize)) then
-                           nuArray(nuCount+1) = nuArray(nuCount) + nuStepSize/2.
-                           nuCount = nuCount+1
-                        else
-                           nuArray(nuCount+1) = ionEdge(iCount) - 0.0003
-                           nuCount = nuCount+1
-                           if (nuCount >= maxLim) then
-                              print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount,&
-                                   &                                        ' is too high'
-                           else
-                              nuArray(nuCount+1) = ionEdge(iCount)
-                              nuCount = nuCount+1
-                              iCount  = iCount+1
-                           end if
-                        end if
-                     else
-                        print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount, &
-                             &                                ' is too low'
-                        iCount = iCount+1
-                     end if
-                  else
-                     
-                     nuStepSizeLoc = (nuMax-nuArray(nuCount))/(nbins-nuCount)
-                     do j = nuCount+1, nbins                         
-                        nuArray(j) = nuArray(j-1) + nuStepSizeLoc
-                        
-                     end do
-                  end if
-               end do
+               ! now sort in ascending order
+               call sortUp(nuArray)               
 
             end if
 
             widFlx(1) = nuArray(2)-nuArray(1)
             do i = 2, nbins-1
                widFlx(i) = (nuArray(i+1)-nuArray(i-1))/2.
+               print*, i, nuArray(i), widFlx(i)
             end do
             widFlx(nbins) =  nuArray(nbins)-nuArray(nbins-1)
             
@@ -542,9 +449,9 @@ module grid_mod
             viewPointPphi(int(viewPointPhi(i)/dPhi)+1) = i
          end do
          
-         print*, viewpointptheta
-         print*, ' '
-         print*, viewpointpphi
+!         print*, viewpointptheta
+!         print*, ' '
+!         print*, viewpointpphi
 
          print*, 'dTheta : ', dTheta
          print*, 'dPhi : ', dPhi
@@ -569,6 +476,7 @@ module grid_mod
         integer :: i, j, k, l, m, n, elem, ion, iG, jG    ! counters
         integer :: ios                                    ! I/O status
         integer :: err                                    ! memory allocation status
+        integer :: ngridsloc
         integer, parameter :: max_points = 10000          ! safety limit
 
         character(len=30)            :: in_file
@@ -583,6 +491,8 @@ module grid_mod
         integer :: nEdges  
         integer :: nElec
         integer :: outshell
+        integer :: totCells
+        integer :: totCellsLoc=0
 
         integer, parameter :: maxLim = 10000
         integer, parameter :: nSeries = 17
@@ -594,7 +504,7 @@ module grid_mod
         if (lg1D) lgSymmetricXYZ = .false.
 
         if (lgPlaneIonization) then
-           allocate(planeIonDistribution(grid(1)%nx,grid(1)%ny), stat = err)
+           allocate(planeIonDistribution(grid(1)%nx,grid(1)%nz), stat = err)
            if (err /= 0) then
               print*, "! setMotherGrid: can't allocate dl memory"
               stop
@@ -694,6 +604,44 @@ module grid_mod
            ! set the subGrids
            if (nGrids>1) call setSubGrids(grid(1:nGrids))
 
+           totCells = 0       
+           totcellsloc=0
+           if (emittingGrid>0) then
+              nGridsloc = emittingGrid
+           else
+              nGridsloc = ngrids
+           end if
+
+           do i = 1, nGrids
+              totCells = totCells+grid(i)%nCells
+           end do
+           do i = 1, nGridsloc
+              totCellsloc = totCellsloc+grid(i)%nCells
+           end do
+
+           if (taskid==0) print*, '! fillGrid: total number of active cells over all grids: ', totCells
+              
+           if (lgDust) then
+              if (lgSymmetricXYZ) totalDustMass=totalDustMass*8.
+              print*, 'Total dust mass [1.e45 g]: ', totalDustMass
+              print*, 'Total dust mass [Msol]: ', totalDustMass*5.028e11                
+           end if           
+
+           if (nPhotonsDiffuse > 0 .and. nPhotonsDiffuse < totCellsloc) then
+              print*, '! fillGrid: total number of active cells is larger than the &
+                   &total number of packets to be used in the simulation please enlarge nPhotonsDiffuse,&
+                   &[nPhotonsDiffuse, totcellsloc]', nPhotonsDiffuse, totcellsloc
+              stop
+           end if
+
+           if (totCellsloc<=0) then
+              print*, '! setSubGrids: totCellsloc <=0'
+              stop
+           end if
+
+           nPhotonsDiffuseLoc = nPhotonsDiffuse/totCellsloc
+           if (taskid==0) print*, '! setSubGrids: number of diffuse packets per active cell: ', nPhotonsDiffuseLoc
+
         else
 
            print*, '! fillGrid: only neutral option availale &
@@ -776,14 +724,41 @@ module grid_mod
                  
                        do jG = 2, nGrids
                           if (jG /= iG) then
-                              if ( (grid(iG)%xAxis(i)>=grid(jG)%xAxis(1) .and. &
-                                   &grid(iG)%xAxis(i)<=grid(jG)%xAxis(grid(jG)%nx)) .and.&
-                                   & (grid(iG)%yAxis(j)>=grid(jG)%yAxis(1) .and. & 
-                                   & grid(iG)%yAxis(j)<=grid(jG)%yAxis(grid(jG)%ny)) .and. &
-                                   & (grid(iG)%zAxis(k)>=grid(jG)%zAxis(1) .and. & 
-                                   & grid(iG)%zAxis(k)<=grid(jG)%zAxis(grid(jG)%nz)) ) then
-                                grid(iG)%active(i,j,k) = -jG
+                             if (lgSymmetricXYZ) then                               
+
+                                if ( ( &
+                                     & (grid(iG)%xAxis(i) > grid(jG)%xAxis(1)) .or.&
+                                     & (grid(iG)%xAxis(i) >= grid(jG)%xAxis(1) .and. grid(jG)%xAxis(1)==0.) & 
+                                     & ) .and. &
+                                     & grid(iG)%xAxis(i)<grid(jG)%xAxis(grid(jG)%nx) .and.&
+                                     & ( & 
+                                     & (grid(iG)%yAxis(j) > grid(jG)%yAxis(1)) .or. & 
+                                     & (grid(iG)%yAxis(j) >= grid(jG)%yAxis(1) .and. grid(jG)%yAxis(1)==0. ) & 
+                                     & ) .and. &
+                                     & grid(iG)%yAxis(j)<grid(jG)%yAxis(grid(jG)%ny) .and. &
+                                     & ( & 
+                                     & (grid(iG)%zAxis(k) > grid(jG)%zAxis(1)) .or.& 
+                                     & (grid(iG)%zAxis(k) >= grid(jG)%zAxis(1) .and. grid(jG)%zAxis(1)==0. ) & 
+                                     & ) .and. &
+                                     & grid(iG)%zAxis(k)<grid(jG)%zAxis(grid(jG)%nz) ) then
+                                   grid(iG)%active(i,j,k) = -jG
+
+                                end if
+
+
+
+                          else
+                                if ( (grid(iG)%xAxis(i) > grid(jG)%xAxis(1) .and. &
+                                     &grid(iG)%xAxis(i)<grid(jG)%xAxis(grid(jG)%nx)) .and.&
+                                     & (grid(iG)%yAxis(j)>grid(jG)%yAxis(1) .and. & 
+                                     & grid(iG)%yAxis(j)<grid(jG)%yAxis(grid(jG)%ny)) .and. &
+                                     & (grid(iG)%zAxis(k)>grid(jG)%zAxis(1) .and. & 
+                                     & grid(iG)%zAxis(k)<grid(jG)%zAxis(grid(jG)%nz)) ) then
+                                   grid(iG)%active(i,j,k) = -jG
+                                end if
+
                              end if
+
                           end if
                        end do
 
@@ -795,7 +770,6 @@ module grid_mod
 
         end if
 
-        call setStarPosition(grid(1)%xAxis,grid(1)%yAxis,grid(1)%zAxis)
 
         print*, "out fillGrid"
         
@@ -817,6 +791,7 @@ module grid_mod
         real                           :: H0in         ! estimated H0 at the inner radius for regionI
         real, pointer                  :: MdMg(:,:,:)  ! Md/Mg
         real                           :: MhMg         ! mass oh hydrogen over mass of gas
+        real                           :: norm, scale  ! normalisation and scaling for meanField
         real                           :: radius       ! distance from the origin
         real                           :: random       ! random nmumber 
         real                           :: readReal     ! real number reader
@@ -837,6 +812,7 @@ module grid_mod
         integer                        :: ios, err     ! I/O and allocation error status
         integer                        :: elem, ion    ! counters
         integer                        :: nspec, ai    ! counters
+        integer                        :: nu0P         ! 
         integer                        :: RinP         ! pointer to the inner radius intercept  
                                                        ! with one of the axes
         character(len=40)              :: readChar, extFile ! character string readers
@@ -857,7 +833,7 @@ module grid_mod
            HdenTemp = 0.        
         
            if (lgDfile) then
-              open (unit= 77, file=densityFile, status = "old", position = "rewind", &
+              open (unit= 77,  action="read", file=densityFile, status = "old", position = "rewind", &
                    & iostat = ios)
               if (ios /= 0) then
                  print*, "! setMotherGrid: can't open density file"
@@ -951,7 +927,7 @@ module grid_mod
               ! set grains mass density [g/cm^3]
 
               close(13)
-              open(file = dustFile(1), unit=13, position="rewind",status="old", iostat = ios)
+              open(file =   dustFile(1), action="read",unit=13, position="rewind",status="old", iostat = ios)
               if (ios /= 0 ) then
                  print*, "! setMotherGrid: can't open file ", dustFile(1)
                  stop
@@ -978,7 +954,7 @@ module grid_mod
 
               do i = 1, nSpecies
                  read(13,*) extFile
-                 open(file=extFile,unit=14, position="rewind",status="old", iostat = ios)
+                 open(file=extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
                  if (ios /= 0 ) then
                     print*, "! setMotherGrid: can't open file ", extFile
                     stop
@@ -1002,7 +978,7 @@ module grid_mod
                     MdMg = MdMgValue
                  else
                     close(20)
-                    open(unit=20, file=MdMgFile, position="rewind",status="old", iostat = ios)
+                    open(unit=20, file=MdMgFile,  action="read", position="rewind",status="old", iostat = ios)
                     if (ios /= 0 ) then
                        print*, "! setMotherGrid: can't open MdMgFile file ", MdMgFile
                        stop
@@ -1029,7 +1005,7 @@ module grid_mod
                     NdustTemp = NdustValue
                  else
                     close(20)
-                    open(unit=20, file=NdustFile, position="rewind",status="old", iostat = ios)
+                    open(unit=20, file=NdustFile,  action="read", position="rewind",status="old", iostat = ios)
                     if (ios /= 0 ) then
                        print*, "! setMotherGrid: can't open NdustFile file ", NdustFile
                        stop
@@ -1115,6 +1091,10 @@ module grid_mod
              end do
           end do
 
+          print*, '! setMotherGrid: active cells :', grid%nCells
+
+
+
           ! allocate grid arrays
           if (lgGas .and. lgDust .and. lgPhotoelectric) then
              allocate(grid%JPEots(1:grid%nCells, 1:nbins), stat = err)
@@ -1175,6 +1155,16 @@ module grid_mod
              
           end if
 
+          if (Ldiffuse>0.) then
+             allocate(grid%LdiffuseLoc(0:grid%nCells), stat = err)
+             if (err /= 0) then
+                print*, "! setMotherGrid: can't allocate grid memory : LdiffuseLoc "
+                stop
+             end if
+             grid%LdiffuseLoc=0.
+          end if
+
+
           allocate(grid%opacity(0:grid%nCells, 1:nbins), stat = err)
           if (err /= 0) then
              print*, "! setMotherGrid: can't allocate grid memory : opacity "
@@ -1190,6 +1180,21 @@ module grid_mod
           if (err /= 0) then
              print*, "! setMotherGrid: can't allocate grid memory : Jste"
              stop
+          end if
+
+          if (lgEquivalentTau) then
+
+             allocate(SEDnoExt(1:nbins), stat = err)
+             if (err /= 0) then
+                print*, "! setMotherGrid: can't allocate grid memory : SEDnoExt"
+                stop
+             end if
+             allocate(equivalentTau(1:nbins), stat = err)
+             if (err /= 0) then
+                print*, "! setMotherGrid: can't allocate grid memory : equivalentTau"
+                stop
+             end if
+
           end if
 
           if (lgDust) then
@@ -1422,6 +1427,7 @@ module grid_mod
                                 totalDustMass = totalDustMass + &
                                      &(1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*rho(nspec)*grainWeight(ai)*&
                                      & grainAbun(nspec))*grid%Ndust(grid%active(i,j,k))*dV
+
                              end do
                           end do
                        end if
@@ -1441,20 +1447,42 @@ module grid_mod
               end if
               print*, 'Total volume  of the active region [e45 cm^3]: ', totalVolume
 
-              if (lgDust) then
-                 if (lgSymmetricXYZ) totalDustMass=totalDustMass*8.
-                 print*, 'Total dust mass [1.e45 g]: ', totalDustMass
-                 print*, 'Total dust mass [Msol]: ', totalDustMass*5.028e11                
-              end if
-
            end if
               
            ! if we are using a plane parallel ionization then we must find the luminosity 
            ! of the ionizing plane from the input meanField
-           if (lgPlaneIonization) &
-                & Lstar(1) = (meanField/1.e36)*grid%xAxis(grid%nx)*grid%zAxis(grid%nz)
+           if (lgPlaneIonization) then
 
-           if (taskid == 0) print*, 'Total ionizing flux :', Lstar(1)
+              print*, 'Flux above ', nu0, ' is ', meanField
+
+              if (nu0 > 0.) then
+                 call locate(nuArray, nu0, nu0P) 
+                 if (nu0P >= nbins .or. nu0P <1) then
+                    print*, "! setMotherGrid: insanity in nu0P", nu0P, nuArray(i), nuArray(nbins)
+                    stop
+                 end if
+                 norm = 0.
+                 do i = nu0P, nbins
+                    norm = norm+inSpectrumPhot(i)*widflx(i)
+                 end do
+                 scale  = meanField/norm
+                 norm = 0.
+                 do i = 1, nbins
+                    norm = norm+inSpectrumErg(i)*widFlx(i)
+                 end do
+                 meanField = norm*scale
+              end if
+
+              print*, 'Flux bolometric is ', meanField              
+
+              Lstar(1) = (meanField/1.e36)*grid%xAxis(grid%nx)*grid%zAxis(grid%nz)
+              deltaE(1) = Lstar(1)/nPhotons(1)
+           end if
+                 
+           if (taskid == 0) then
+              print*, 'Total ionizing flux :', Lstar(1)
+              print*, 'deltaE :', deltaE(1)
+           end if
 
            print*, 'out setMotherGrid'
 
@@ -1472,6 +1500,7 @@ module grid_mod
            real                           :: x,y,z        ! x,y,z 
            real                           :: delta        ! displacement for realigning subgrids to mothergrid
            real                           :: denominator   ! denominator
+           real                           :: denfac       ! enhancement factor
            real                           :: dV           ! volume element
            real                           :: expFactor    ! exp factor in density law calculations
            real                           :: expTerm      ! exp term
@@ -1507,7 +1536,7 @@ module grid_mod
 
            ! open grid info file
            close(71)
-           open (unit= 71, file=gridList, status = "old", position = "rewind", &
+           open (unit= 71, file=gridList,  action="read", status = "old", position = "rewind", &
                 & iostat = ios)
            if (ios /= 0) then
               print*, "! setsubGrids: can't open grid list file", gridList
@@ -1515,102 +1544,188 @@ module grid_mod
            end if
 
            do iG = 2, nGrids
-             
+
               ! set the elemental abundances 
               grid(iG)%elemAbun = grid(1)%elemAbun
 
-              read(71, *) grid(iG)%motherP ,  grid(iG)%nx,  grid(iG)%ny,  grid(iG)%nz, dFileRead
+
+              read(71, *) grid(iG)%motherP ,  grid(iG)%nx,  grid(iG)%ny,  grid(iG)%nz, dFileRead, denfac
+
               read(71, *) grid(iG)%xAxis(1), grid(iG)%xAxis(grid(iG)%nx), &
                    & grid(iG)%yAxis(1), grid(iG)%yAxis(grid(iG)%ny), &
                    &grid(iG)%zAxis(1), grid(iG)%zAxis(grid(iG)%nz)
 
               ! realign boundaries with mother grid cell half-way boundaries
+              if (.false.) then
 
               call locate(grid(grid(iG)%motherP)%xAxis, grid(iG)%xAxis(1), edgeP)
 
-              delta = (grid(grid(iG)%motherP)%xAxis(edgeP)+&
-                   & grid(grid(iG)%motherP)%xAxis(edgeP+1))/2. -&
-                   & grid(iG)%xAxis(1)
-              if (taskid==0) then 
-                 print*, 'setSubGrids : Lower x-edge displaced by ', delta, ' for subGrid ', iG
+              if (edgeP>=grid(grid(iG)%motherP)%nx) then
+                 print*, 'setSubGrids : edgeP for lower x boundary equals to nx of the mother grid'
+                 stop
               end if
-              grid(iG)%xAxis(1) = &
-                   & (grid(grid(iG)%motherP)%xAxis(edgeP)+grid(grid(iG)%motherP)%xAxis(edgeP+1))/2.
+              if (edgeP == 1 .and. grid(iG)%xAxis(1) > 1.001*grid(grid(iG)%motherP)%xAxis(1) ) then
+
+                 delta = (grid(grid(iG)%motherP)%xAxis(edgeP)+&
+                      & grid(grid(iG)%motherP)%xAxis(edgeP+1))/2. -&
+                      & grid(iG)%xAxis(1)
+
+                 if (taskid==0) then 
+                    print*, 'setSubGrids : Lower x-edge displaced by ', delta, ' for subGrid ', iG
+                 end if
+                 
+                 grid(iG)%xAxis(1) = &
+                      & (grid(grid(iG)%motherP)%xAxis(edgeP)+grid(grid(iG)%motherP)%xAxis(edgeP+1))/2.
+
+              else
+                 
+                 grid(iG)%xAxis(1) = &
+                      & (grid(grid(iG)%motherP)%xAxis(edgeP))
+
+              end if
 
               call locate(grid(grid(iG)%motherP)%xAxis, grid(iG)%xAxis(grid(iG)%nx), edgeP)
-              delta = (grid(grid(iG)%motherP)%xAxis(edgeP)+grid(grid(iG)%motherP)%xAxis(edgeP+1))/2. -&
+
+              if (edgeP==grid(grid(iG)%motherP)%nx) then
+
+                 delta = grid(grid(iG)%motherP)%xAxis(edgeP)-&
                    & grid(iG)%xAxis(grid(iG)%nx)
+              else
+
+                 delta = (grid(grid(iG)%motherP)%xAxis(edgeP)+grid(grid(iG)%motherP)%xAxis(edgeP+1))/2. -&
+                      & grid(iG)%xAxis(grid(iG)%nx)
+              end if
 
               if (taskid==0) then 
                  print*, 'setSubGrids : Upper x-edge displaced by ', delta, ' for subGrid ', iG
               end if
 
-              grid(iG)%xAxis(grid(iG)%nx) = (grid(grid(iG)%motherP)%xAxis(edgeP)+&
-                   &grid(grid(iG)%motherP)%xAxis(edgeP+1))/2.
+              if (edgeP==grid(grid(iG)%motherP)%nx) then
+                 grid(iG)%xAxis(grid(iG)%nx) = grid(grid(iG)%motherP)%xAxis(edgeP)
+              else
+                 grid(iG)%xAxis(grid(iG)%nx) = (grid(grid(iG)%motherP)%xAxis(edgeP)+&
+                      &grid(grid(iG)%motherP)%xAxis(edgeP+1))/2.
+              end if
 
-              delta = (grid(iG)%xAxis(grid(iG)%nx)-grid(iG)%xAxis(1))/(2.*real(grid(iG)%nx))
-              grid(iG)%xAxis(1) = grid(iG)%xAxis(1)+delta
-              grid(iG)%xAxis(grid(iG)%nx) = grid(iG)%xAxis(grid(iG)%nx)-delta
+              if (taskid==0) then 
+                 print*, 'setSubGrids : x1,x2,iG: ',  grid(iG)%xAxis(1),  grid(iG)%xAxis(grid(iG)%nx), iG
+              end if
 
               call locate(grid(grid(iG)%motherP)%yAxis, grid(iG)%yAxis(1), edgeP)
 
-              delta = (grid(grid(iG)%motherP)%yAxis(edgeP)+&
-                   & grid(grid(iG)%motherP)%yAxis(edgeP+1))/2. -&
-                   & grid(iG)%yAxis(1)
-              if (taskid==0) then 
-                 print*, 'setSubGrids : Lower y-edge displaced by ', delta, ' for subGrid ', iG
+              if (edgeP>=grid(grid(iG)%motherP)%ny) then
+                 print*, 'setSubGrids : edgeP for lower y boundary equals to ny of the mother grid'
+                 stop
               end if
 
-              grid(iG)%yAxis(1) =  (grid(grid(iG)%motherP)%yAxis(edgeP)+&
-                   & grid(grid(iG)%motherP)%yAxis(edgeP+1))/2.
+              if (edgeP == 1 .and. grid(iG)%yAxis(1) > 1.001*grid(grid(iG)%motherP)%yAxis(1) ) then
+
+                 delta = (grid(grid(iG)%motherP)%yAxis(edgeP)+&
+                      & grid(grid(iG)%motherP)%yAxis(edgeP+1))/2. -&
+                      & grid(iG)%yAxis(1)
+ 
+                 if (taskid==0) then 
+                    print*, 'setSubGrids : Lower y-edge displaced by ', delta, ' for subGrid ', iG
+                 end if
+                 
+                 grid(iG)%yAxis(1) =  (grid(grid(iG)%motherP)%yAxis(edgeP)+&
+                         & grid(grid(iG)%motherP)%yAxis(edgeP+1))/2.
+
+
+              else
+                 
+                 grid(iG)%yAxis(1) = &
+                      & (grid(grid(iG)%motherP)%yAxis(edgeP))
+
+              end if
 
               call locate(grid(grid(iG)%motherP)%yAxis, grid(iG)%yAxis(grid(iG)%ny), edgeP)
 
-              delta = (grid(grid(iG)%motherP)%yAxis(edgeP)+&
-                   & grid(grid(iG)%motherP)%yAxis(edgeP+1))/2. -&
+              if (edgeP==grid(grid(iG)%motherP)%ny) then
+
+                 delta = grid(grid(iG)%motherP)%yAxis(edgeP)-&
                    & grid(iG)%yAxis(grid(iG)%ny)
+              else
+                 delta = (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
+                      & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2. -&
+                      & grid(iG)%zAxis(grid(iG)%nz)
+              end if
+
               if (taskid==0) then 
                  print*, 'setSubGrids : Upper y-edge displaced by ', delta, ' for subGrid ', iG
               end if
 
-              grid(iG)%yAxis(grid(iG)%ny) =  (grid(grid(iG)%motherP)%yAxis(edgeP)+&
-                   &grid(grid(iG)%motherP)%yAxis(edgeP+1))/2.
+              if (edgeP==grid(grid(iG)%motherP)%ny) then
+                 grid(iG)%yAxis(grid(iG)%ny) = grid(grid(iG)%motherP)%yAxis(edgeP)
+              else
+                 grid(iG)%yAxis(grid(iG)%ny) =  (grid(grid(iG)%motherP)%yAxis(edgeP)+&
+                      &grid(grid(iG)%motherP)%yAxis(edgeP+1))/2.
+              end if
 
-              delta = (grid(iG)%yAxis(grid(iG)%ny)-grid(iG)%yAxis(1))/(2.*real(grid(iG)%ny))
-              grid(iG)%yAxis(1) = grid(iG)%yAxis(1)+delta
-              grid(iG)%yAxis(grid(iG)%ny) = grid(iG)%yAxis(grid(iG)%ny)-delta
+              if (taskid==0) then 
+                 print*, 'setSubGrids : y1,y2,iG: ',  grid(iG)%yAxis(1),  grid(iG)%yAxis(grid(iG)%ny)
+              end if
 
 
               call locate(grid(grid(iG)%motherP)%zAxis, grid(iG)%zAxis(1), edgeP)
 
-              delta = (grid(grid(iG)%motherP)%zAxis(edgeP)+&
-                   & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2. -&
-                   & grid(iG)%zAxis(1)
-              if (taskid==0) then 
-                 print*, 'setSubGrids : Lower z-edge displaced by ', delta, ' for subGrid ', iG
+              if (edgeP>=grid(grid(iG)%motherP)%nz) then
+                 print*, 'setSubGrids : edgeP for lower z boundary equals to nz of the mother grid'
+                 print*, grid(grid(iG)%motherP)%zAxis, grid(iG)%zAxis(1), edgeP
+                 stop
               end if
 
-              grid(iG)%zAxis(1) =  (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
-                   & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2.
+              if (edgeP == 1 .and. grid(iG)%zAxis(1) > 1.001*grid(grid(iG)%motherP)%zAxis(1) ) then
+
+                 delta = (grid(grid(iG)%motherP)%zAxis(edgeP)+&
+                      & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2. -&
+                      & grid(iG)%zAxis(1)
+
+                 if (taskid==0) then 
+                    print*, 'setSubGrids : Lower z-edge displaced by ', delta, ' for subGrid ', iG
+                 end if
+
+
+                 grid(iG)%zAxis(1) =  (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
+                      & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2.
+
+              else
+                 
+                 grid(iG)%zAxis(1) = &
+                      & (grid(grid(iG)%motherP)%zAxis(edgeP))
+
+              end if
 
               call locate(grid(grid(iG)%motherP)%zAxis, grid(iG)%zAxis(grid(iG)%nz), edgeP)
 
-              delta = (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
-                   & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2. -&
-                   & grid(iG)%zAxis(grid(iG)%nz)
+              if (edgeP==grid(grid(iG)%motherP)%nz) then
+                 delta = grid(grid(iG)%motherP)%zAxis(edgeP) -&
+                      & grid(iG)%zAxis(grid(iG)%nz)
+              else
+                 delta = (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
+                      & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2. -&
+                      & grid(iG)%zAxis(grid(iG)%nz)
+              end if
+
               if (taskid==0) then 
                  print*, 'setSubGrids : Upper z-edge displaced by ', delta, ' for subGrid ', iG
               end if
 
-              grid(iG)%zAxis(grid(iG)%nz) = (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
-                   & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2.
+              if (edgeP==grid(grid(iG)%motherP)%nz) then
+                 grid(iG)%zAxis(grid(iG)%nz) = grid(grid(iG)%motherP)%zAxis(edgeP) 
+              else
+                 grid(iG)%zAxis(grid(iG)%nz) = (grid(grid(iG)%motherP)%zAxis(edgeP)+& 
+                      & grid(grid(iG)%motherP)%zAxis(edgeP+1))/2.
+              end if
 
-              delta = (grid(iG)%zAxis(grid(iG)%nz)-grid(iG)%zAxis(1))/(2.*real(grid(iG)%nz))
-              grid(iG)%zAxis(1) = grid(iG)%zAxis(1)+delta
-              grid(iG)%zAxis(grid(iG)%nz) = grid(iG)%zAxis(grid(iG)%nz)-delta
+              if (taskid==0) then 
+                 print*, 'setSubGrids : z1,z2,iG: ',  grid(iG)%zAxis(1),  grid(iG)%zAxis(grid(iG)%nz)
+              end if
+
+           end if
 
               close(72)
-              open (unit= 72, file=dFileRead, status = "old", position = "rewind", &
+              open (unit= 72, file=dFileRead,  action="read", status = "old", position = "rewind", &
                    & iostat = ios)
               if (ios /= 0) then
                  print*, "! setsubGrids: can't open subgrid density file", dFileRead
@@ -1707,8 +1822,9 @@ module grid_mod
                        grid(iG)%zAxis(iz) = z
 
                        radius = 1.e10*sqrt( (grid(iG)%xAxis(ix)/1.e10)*(grid(iG)%xAxis(ix)/1.e10) + &
-&                                        (grid(iG)%yAxis(iy)/1.e10)*(grid(iG)%yAxis(iy)/1.e10) + &
-&                                        (grid(iG)%zAxis(iz)/1.e10)*(grid(iG)%zAxis(iz)/1.e10) ) 
+                            & (grid(iG)%yAxis(iy)/1.e10)*(grid(iG)%yAxis(iy)/1.e10) + &
+                            & (grid(iG)%zAxis(iz)/1.e10)*(grid(iG)%zAxis(iz)/1.e10) ) 
+
 
                        ! check if this grid point is  valid nebular point
                        if (.not. lgPlaneIonization) then
@@ -1754,11 +1870,12 @@ module grid_mod
                             print*, '! setSubGrids: no gas and no dust? The grid is empty.'
                             stop
                          end if                       
-                    end do
-                 end do
-              end do
+
+                       end do
+                   end do
+                end do
               
-              close(72)
+                close(72)
 
               ! allocate grid arrays
               
@@ -1811,7 +1928,17 @@ module grid_mod
                  grid(iG)%totalLines = 0.
                  
               end if
-              
+
+              if (Ldiffuse>0.) then
+                 allocate(grid(iG)%LdiffuseLoc(0:grid(iG)%nCells), stat = err)
+                 if (err /= 0) then
+                    print*, "! setSubGrid: can't allocate grid memory : LdiffuseLoc "
+                    stop
+                 end if
+              grid(iG)%LdiffuseLoc=0.
+              end if              
+
+
               allocate(grid(iG)%opacity(0:grid(iG)%nCells, 1:nbins), stat = err)
               if (err /= 0) then
                  print*, "! setSubGrid: can't allocate grid memory : opacity "
@@ -1847,7 +1974,7 @@ module grid_mod
                  end if
 
               end if
-        
+
               if (lgDebug) then
                  allocate(grid(iG)%Jdif(0:grid(iG)%nCells, 1:nbins), stat = err)
                  if (err /= 0) then
@@ -1900,7 +2027,6 @@ module grid_mod
                  end if
                  grid(iG)%NeInput = 0.
               end if
-              
 
               grid(iG)%opacity = 0.        
               grid(iG)%Jste = 0.        
@@ -1913,10 +2039,10 @@ module grid_mod
                        if (grid(iG)%active(ix,iy,iz)>0) then
                           
                           if (lgGas) then
-                             grid(iG)%Hden(grid(iG)%active(ix,iy,iz)) = HdenTemp(ix,iy,iz)
+                             grid(iG)%Hden(grid(iG)%active(ix,iy,iz)) = HdenTemp(ix,iy,iz)*denfac
                              grid(iG)%Te(grid(iG)%active(ix,iy,iz)) = TeStart
                           end if
-                          if (lgDust) grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = NdustTemp(ix,iy,iz)
+                          if (lgDust) grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = NdustTemp(ix,iy,iz)*denfac
                           
                        end if
                     end do
@@ -1981,7 +2107,7 @@ module grid_mod
                  if(associated(HdenTemp)) deallocate(HdenTemp)
                  
               end if ! lgGas
-              
+
               if (lgDust) then
                  if(associated(NdustTemp)) deallocate(NdustTemp)
               end if
@@ -2047,6 +2173,19 @@ module grid_mod
                                   & (denominator)
                              
                           end if
+
+                          ! calculate total dust mass
+                          if (lgDust) then
+
+                             do ai = 1, nsizes
+                                do nspec = 1, nspecies
+                                   totalDustMass = totalDustMass + &
+                                        &(1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*rho(nspec)*grainWeight(ai)*&
+                                        & grainAbun(nspec))*grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))*dV
+                                end do
+                             end do
+                          end if
+
                        end if
                     end do
                  end do
@@ -2060,6 +2199,7 @@ module grid_mod
 
 
                  print*, 'Total volume  of the active region [e45 cm^3]: ', totalVolume
+                 print*, '! Number of active cells :', grid(iG)%nCells
               end if           
 
            end do
@@ -2125,7 +2265,7 @@ module grid_mod
            print* , 'in writeGrid'
 
            close(21)
-           open(unit=21, file="output/grid0.out", position="rewind",status="unknown", iostat = ios)
+           open(unit=21, file="output/grid0.out",  action="write", position="rewind",status="unknown", iostat = ios)
            if (ios /= 0 ) then
               print*, "! writeGrid: can't open file for writing - grid1.out"
               stop
@@ -2134,13 +2274,13 @@ module grid_mod
            if (lgGas) then
               ! open files for writing
               close(20)
-              open(unit=20, file="output/grid1.out", position="rewind",status="unknown", iostat = ios)
+              open(unit=20, file="output/grid1.out", action="write",position="rewind",status="unknown", iostat = ios)
               if (ios /= 0 ) then
                  print*, "! writeGrid: can't open file for writing - grid1.out"
                  stop
               end if
               close(30)
-              open(unit=30, file="output/grid2.out", position="rewind",status="unknown", iostat = ios)   
+              open(unit=30, file="output/grid2.out", action="write",position="rewind",status="unknown", iostat = ios)   
               if (ios /= 0 ) then
                  print*, "! writeGrid: can't open file for writing - grid2.out"
                  stop
@@ -2148,7 +2288,7 @@ module grid_mod
            end if
            if (lgDust) then
               close(50)
-              open(unit=50, file="output/dustGrid.out", position="rewind",status="unknown", iostat = ios)
+              open(unit=50, file="output/dustGrid.out", action="write",position="rewind",status="unknown", iostat = ios)
               if (ios /= 0 ) then
                  print*, "! writeGrid: can't open file for writing - dustGrid.out"
                  stop
@@ -2231,7 +2371,7 @@ module grid_mod
 
         ! stellar parameters
         close(42) 
-        open(unit=42, file="output/photoSource.out", position="rewind",status="unknown", iostat = ios)   
+        open(unit=42, file="output/photoSource.out", action="write",position="rewind",status="unknown", iostat = ios)   
         if (ios /= 0 ) then
             print*, "! writeGrid: can't open file for writing - photoSource.out"
             stop
@@ -2245,6 +2385,7 @@ module grid_mod
                 & starPosition(i)%y/grid(1)%yAxis(grid(1)%ny),&
                 & starPosition(i)%z/grid(1)%zAxis(grid(1)%nz),&
                 & trim(spID(i)), tStep(i)
+           if (contShapeIn(i)=='powerlaw') write(42,*) pwlIndex
         end do
 
         write(42, *) '(contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position, spID, tstep)'
@@ -2252,7 +2393,7 @@ module grid_mod
 
         ! general simulation parameters
         close(40)
-        open(unit=40, file="output/grid3.out", position="rewind",status="unknown", iostat = ios)   
+        open(unit=40, file="output/grid3.out", action="write",position="rewind",status="unknown", iostat = ios)   
         if (ios /= 0 ) then
             print*, "! writeGrid: can't open file for writing - grid3.out"
             stop
@@ -2295,8 +2436,13 @@ module grid_mod
         write(40, *) contCube(1),contCube(2), ' continuumCube'
         write(40, *) lgPhotoelectric, ' lgPhotoelectric'
         write(40, *) lgTraceHeating, ' lgTraceHeating'
-        write(40, *) lg3DextinctionMap, extMapFile, ' lg3DextinctionMap, extMapFile'
-
+        write(40, *) Ldiffuse, ' Ldiffuse'
+        write(40, *) Tdiffuse, ' Tdiffuse'
+        write(40, *) shapeDiffuse, ' shapeDiffuse'
+        write(40, *) nPhotonsDiffuse, 'nPhotonsDiffuse'
+        write(40, *) emittingGrid, ' emittingGrid'
+        write(40, *) nstages, ' emittingGrid'
+        write(40, *) lgMultistars, ' lgMultiStars'
         ! close file
         close(40)
      
@@ -2409,12 +2555,14 @@ module grid_mod
       integer                        :: i,j,k ! counters
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
-      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7,p(nstages)                                        
+      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7
+      real, pointer                  :: p(:)                                        
       integer :: iCount, nuCount, iG, ai      ! counters
       integer :: g0,g1
       integer :: nEdges  
       integer :: nElec
       integer :: outshell
+      integer :: totCells, totcellsloc
         
       integer, parameter :: maxLim = 10000
       integer, parameter :: nSeries = 17
@@ -2431,7 +2579,7 @@ module grid_mod
 
       ! read stellar parameters
       close(72) 
-      open(unit=72, file="output/photoSource.out", position="rewind",status="old", iostat = ios)   
+      open(unit=72, file="output/photoSource.out",action="read", position="rewind",status="old", iostat = ios)   
       if (ios /= 0 ) then
          print*, "! writeGrid: can't open file for reading - photoSource.out"
          stop
@@ -2449,21 +2597,24 @@ module grid_mod
        allocate(contShapeIn(nStars))
        allocate(spID(nStars))
        allocate(tStep(nStars))
-       allocate(deltaE(nStars))
+       allocate(deltaE(0:nStars))
 
        do i = 1, nStars
           read(72, *) contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
                &starPosition(i)%z,spID(i), tStep(i)
           contShapeIn(i)=contShape(i)
+          if (contShape(i)=='powerlaw') read(72,*) pwlIndex
           print*, i, contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
                &starPosition(i)%z, spID(i), tStep(i)
+          print*, pwlIndex
           deltaE(i) = Lstar(i)/nPhotons(i)
+          print*, 'deltaE', deltaE(i), i 
        end do
        close(72)
 
       ! read in file containing general simulation parameters
       close(77)
-      open(unit=77, file='output/grid3.out', position='rewind',  &
+      open(unit=77, file='output/grid3.out', action="read",position='rewind',  &
 &          status='old', iostat = err)
       if (err /= 0) then
          print*, "! resetMotherGrid: error opening file grid3.out"
@@ -2519,13 +2670,20 @@ module grid_mod
          end if
          read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
          read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
-         read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
       end if
       read(77, *) contCube(1),contCube(2)
       read(77, *) lgPhotoelectric
       read(77, *) lgTraceHeating
-      read(77, *) lg3DextinctionMap, extMapFile
-      
+      read(77, *) Ldiffuse
+      read(77, *) Tdiffuse
+      read(77, *) shapeDiffuse
+      read(77, *) nPhotonsDiffuse
+      if (Ldiffuse>0. .and. nPhotonsDiffuse>0 ) then
+         deltaE(0) = Ldiffuse/nPhotonsDiffuse
+      end if
+      read(77, *) emittingGrid
+      read(77, *) nstages
+      read(77, *) lgMultistars
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -2560,13 +2718,22 @@ module grid_mod
          print*,  contCube(1),contCube(2), 'continuumCube'
          print*,  lgPhotoelectric, ' lgPhotoelectric'
          print*,  lgTraceHeating, ' lgTraceHeating'
-         print*,  lg3DextinctionMap, extMapFile
-
+         print*,  Ldiffuse, ' Ldiffuse'
+         print*,  Tdiffuse, ' Tdiffuse'
+         print*,  shapeDiffuse, ' shapeDiffuse'
+         print*,  nPhotonsDiffuse, ' nPhotonsDiffuse'
+         print*,  emittingGrid, ' emittingGrid'
+         print*,  nstages, ' nstages'
+         print*,  lgMultistars, ' lgMultiStars'
       end if
       close(77)
-         
+
+      allocate(p(nstages))
+      p=0.
+      allocate(lgDataAvailable(3:nElements, nstages))
+
       close(89)
-      open(unit=89, file='output/grid0.out', position='rewind',  &
+      open(unit=89, file='output/grid0.out',  action="read",position='rewind',  &
            &          status='old', iostat = err)
       if (err /= 0) then
          print*, "! resetGrid: error opening file grid0.out"
@@ -2575,7 +2742,7 @@ module grid_mod
 
       if (lgGas) then
          close(78)
-         open(unit=78, file='output/grid1.out', position='rewind',  &
+         open(unit=78, file='output/grid1.out',  action="read",position='rewind',  &
               &          status='old', iostat = err)
          if (err /= 0) then
             print*, "! resetGrid: error opening file grid1.out"
@@ -2583,7 +2750,7 @@ module grid_mod
          end if
          ! open the grid2.out file for later
          close(79)
-         open(unit=79, file='output/grid2.out', position='rewind',  &
+         open(unit=79, file='output/grid2.out', action="read", position='rewind',  &
               &          status='old', iostat = err)
          if (err /= 0) then
             print*, "! resetGrid: error opening file grid2.out"
@@ -2592,7 +2759,7 @@ module grid_mod
       end if
       if (lgDust) then
          close(88)
-         open(unit=88, file='output/dustGrid.out', position='rewind',  &
+         open(unit=88, file='output/dustGrid.out', action="read", position='rewind',  &
               &          status='old', iostat = err)
          if (err /= 0) then
             print*, "! resetGrid: error opening file dustGrid.out"
@@ -2606,6 +2773,8 @@ module grid_mod
          stop
       end if
 
+      totCells = 0
+      totCellsloc = 0
       do iG = 1, nGrids
          read(89, *) nGrids
          read(89, *) nxIn(iG), nyIn(iG), nzIn(iG), grid(iG)%nCells, grid(iG)%motherP, R_out
@@ -2615,12 +2784,13 @@ module grid_mod
          ! initialize cartesian grid
          call initCartesianGrid(grid(iG),nxIn(iG), nyIn(iG), nzIn(iG)) 
          
+         
          if (iG>1) then
             grid(iG)%elemAbun = grid(1)%elemAbun
          end if
 
          if (lgPlaneIonization .and. iG==1) then
-            allocate(planeIonDistribution(grid(iG)%nx,grid(iG)%ny), stat = err)
+            allocate(planeIonDistribution(grid(iG)%nx,grid(iG)%nz), stat = err)
             if (err /= 0) then
                print*, "! setMotherGrid: can't allocate dl memory"
                stop
@@ -2681,6 +2851,23 @@ module grid_mod
             grid(iG)%totalLines = 0.
             
          end if
+
+         if (Ldiffuse>0.) then
+            allocate(grid(iG)%LdiffuseLoc(0:grid(iG)%nCells), stat = err)
+            if (err /= 0) then
+               print*, "! resetGrid: can't allocate grid memory : LdiffuseLoc "
+               stop
+            end if
+         end if
+         grid(iG)%LdiffuseLoc=0.
+         totCells = totCells + grid(iG)%nCells
+         if (emittingGrid>0 .and. iG<=emittingGrid) then
+            totCellsLoc = totCellsLoc + grid(iG)%nCells
+         elseif (emittingGrid==0) then
+            totCellsLoc = totCellsLoc + grid(iG)%nCells
+         end if
+            
+
 
          allocate(grid(iG)%opacity(0:grid(iG)%nCells, 1:nbins), stat = err)
          if (err /= 0) then
@@ -2863,6 +3050,20 @@ module grid_mod
          
       end do ! closes nGrids loop
          
+      if (emittingGrid>0) then
+         if (totCellsloc<=0) then
+            print*, '! resetGrid: insanity totCellsloc'
+            stop
+         end if
+         nPhotonsDiffuseLoc = nPhotonsDiffuse/totCellsLoc
+      else
+         if (totCells<=0) then
+            print*, '! resetGrid: insanity totCellsloc'
+            stop
+         end if
+         nPhotonsDiffuseLoc = nPhotonsDiffuse/totCells
+      end if
+
       ! close files
       close(89)
       
@@ -2878,15 +3079,17 @@ module grid_mod
       call locate(grid(1)%yAxis, 0., jOrigin)
       call locate(grid(1)%zAxis, 0., kOrigin)
 
-      call setStarPosition(grid(1)%xAxis,grid(1)%yAxis,grid(1)%zAxis)
-      
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
+
+      if (associated(p)) deallocate(p)
 
     end subroutine resetGrid      
 
-    subroutine setStarPosition(xA,yA,zA)
+    subroutine setStarPosition(xA,yA,zA,grid)
       implicit none
       
+      type(grid_type), intent(inout) :: grid(maxGrids)  ! the 3d grids
+
       real, dimension(:) :: xA,yA,zA
       
       Integer :: i, xP,yP,zP, nxA,nyA,nzA
@@ -2895,7 +3098,7 @@ module grid_mod
       nyA = size(yA)
       nzA = size(zA)
 
-      allocate(starIndeces(nStars,3))
+      allocate(starIndeces(nStars,4))
 
       do i = 1, nStars
 
@@ -2904,23 +3107,67 @@ module grid_mod
          starPosition(i)%z = starPosition(i)%z*zA(nzA)
 
          call locate(xA, starPosition(i)%x, xP)
-         if (starPosition(i)%x > & 
-              & (xA(xP)+xA(xP+1))/2.) &
-              xP=xP+1
-         
+         if (xP<nxA) then
+            if (starPosition(i)%x > & 
+                 & (xA(xP)+xA(xP+1))/2.) &
+                 xP=xP+1
+         end if
+
          call locate(yA, starPosition(i)%y, yP)
-         if (starPosition(i)%y > &
-              & (yA(yP)+yA(yP+1))/2.) &
-              yP=yP+1
-         
+         if (yP<nyA) then         
+            if (starPosition(i)%y > &
+                 & (yA(yP)+yA(yP+1))/2.) &
+                 yP=yP+1
+         end if
+
          call locate(zA, starPosition(i)%z, zP)
-         if (starPosition(i)%z > & 
-              & (zA(zP)+zA(zP+1))/2.) &
-              zP=zP+1
+         if (zP<nzA) then   
+            if (starPosition(i)%z > & 
+                 & (zA(zP)+zA(zP+1))/2.) &
+                 zP=zP+1
+         end if
          
-         starIndeces(i,1) = xP
-         starIndeces(i,2) = yP
-         starIndeces(i,3) = zP
+         
+         if (grid(1)%active(xp,yp,zp)>=0) then
+            starIndeces(i,1) = xP
+            starIndeces(i,2) = yP
+            starIndeces(i,3) = zP
+            starIndeces(i,4) = 1
+
+         else
+
+            starIndeces(i,4) = abs(grid(1)%active(xp,yp,zp))
+
+            nxA = grid(starIndeces(i,4))%nx
+            nyA = grid(starIndeces(i,4))%ny
+            nzA = grid(starIndeces(i,4))%nz
+
+            call locate(grid(starIndeces(i,4))%xAxis, starPosition(i)%x, xP)
+            if (xP<nxA) then
+               if (starPosition(i)%x > & 
+                    & (grid(starIndeces(i,4))%xAxis(xP)+grid(starIndeces(i,4))%xAxis(xP+1))/2.) &
+                    xP=xP+1
+            end if
+            
+            call locate(grid(starIndeces(i,4))%yAxis, starPosition(i)%y, yP)
+            if (yP<nyA) then         
+               if (starPosition(i)%y > &
+                    & (grid(starIndeces(i,4))%yAxis(yP)+grid(starIndeces(i,4))%yAxis(yP+1))/2.) &
+                    yP=yP+1
+            end if
+
+            call locate(grid(starIndeces(i,4))%zAxis, starPosition(i)%z, zP)
+            if (zP<nzA) then   
+               if (starPosition(i)%z > & 
+                    & (grid(starIndeces(i,4))%yAxis(zP)+grid(starIndeces(i,4))%yAxis(zP+1))/2.) &
+                    zP=zP+1
+            end if
+
+            starIndeces(i,1) = xP
+            starIndeces(i,2) = yP
+            starIndeces(i,3) = zP
+
+         end if
 
       end do         
 

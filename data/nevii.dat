@@ -1,5 +1,5 @@
- 31
-** Atomic data from version 7 of the CHIANTI database **
+ 30
+** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 %observed energy (level 9): Feldman et al., 1997, ApJS, 113, 195
@@ -8,7 +8,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  K.P. Dere, Jan. 1996
-%filename: ne_7.wgfa
 %energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 %observed energy (level 9): Feldman et al., 1997, ApJS, 113, 195

@@ -15,6 +15,6 @@ TStellar 5800.
 Ndust file 'input/diskDensity100.0.dat'
 dustFile 'input/disk_grainspecies.dat' 'input/disk_grainsizes.dat' 
 writeGrid 5. 
-inclination 2 0.2180000 1.35000
+inclination 2 0.2180000 -1. 1.35000 -1. 
 convLimit 0.03
 

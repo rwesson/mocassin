@@ -22,6 +22,8 @@ program MoCaSSiNplot
 
     type(plot_type) :: plot           ! the plot
 
+    real(kind=8),pointer    :: flinePlot(:,:,:,:)
+    real(kind=8),pointer    :: flinePlotLarge(:,:)
     real, pointer   :: image(:,:,:,:)    
 
     real, pointer   :: linePDFTemp(:,:)
@@ -35,7 +37,7 @@ program MoCaSSiNplot
 
     real            :: dV                     ! volume of local cell [e45 cm^3]
     real            :: freq1,freq2
-
+    real            :: log10TeLoc
 
     character(len=30) :: filename       ! input file
     character(len=30) :: bandFile       ! band transmission coeff file
@@ -70,9 +72,11 @@ program MoCaSSiNplot
 
     filename = 'input/plot.in'
 
+
     ! reset the 3D cartesian grid
     call resetGrid(grid3D)
 
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis,grid3D)      
 
     ! prepare atomica data stuff
     call makeElements()
@@ -81,6 +85,22 @@ program MoCaSSiNplot
     do iG = 1, ngrids
        if (grid3D(iG)%nCElls>maxCElls) maxCElls = grid3D(iG)%nCElls
     end do       
+
+    print*, nstages
+    allocate(flinePlot(nElements,nstages, nForLevels,nForLevels), stat=err)
+    if (err /= 0) then
+       print*, "! emissionDriver: can't allocate array memory"
+       stop
+    end if
+    flinePlot = 0.
+    if (lgElementOn(26) .and. nstages>=2) then
+       allocate(flinePlotLarge(nForLevelsLarge,nForLevelsLarge), stat=err)
+       if (err /= 0) then
+          print*, "! emissionDriver: can't allocate array memory"
+          stop
+       end if
+       flinePlotLarge = 0.
+    end if
 
     ! read the file into the plot variable
     plot = readPlot(filename)
@@ -95,7 +115,7 @@ program MoCaSSiNplot
     end do
 
     if (plot%lgFilter) then
-       open(unit=72, file=bandFile, status='old', position='rewind',iostat=ios)
+       open(unit=72, file=bandFile,  action="read",status='old', position='rewind',iostat=ios)
        if (ios /= 0) then
           print*, "! readPlot: can't open band file for reading: ", bandFile
           stop
@@ -129,18 +149,23 @@ program MoCaSSiNplot
     end if
     
     if (taskid == 0) then
-       open(unit=29, file='output/grid4.out', status='unknown', position='rewind',iostat=ios)
+       open(unit=29, file='output/grid4.out', status='unknown',  action="write",position='rewind',iostat=ios)
        if (ios /= 0) then
           print*, "! readPlot: can't open file for writing: output/grid4.out"
           stop
        end if
     end if
 
+    ! read in data file for higher level H transitions
+    call hdatx
+    ! read in data from benj skil smit 99
+    call readHeIRecLines()
+
     do iG = 1, nGrids
        do i = 1, grid3D(iG)%nx
           do j = 1, grid3D(iG)%ny
              do k = 1, grid3D(iG)%nz
-             
+
                 ! find the volume of this cell 
                 dV = getVolume(grid3D(iG), i,j,k)
 
@@ -155,69 +180,61 @@ program MoCaSSiNplot
                    NeUsed          = grid3D(iG)%Ne(grid3D(iG)%active(i,j,k))
                    TeUsed          = grid3D(iG)%Te(grid3D(iG)%active(i,j,k))
                    abFileIndexUsed = grid3D(iG)%abFileIndex(i,j,k)
+                   log10TeLoc      = log10(TeUsed)
                    
                    ! recalculate line emissivities at this cell 
                    
                    ! calculate the emission due to HI and HeI rec lines
                    call RecLinesEmission()
-                   
+
                    ! calculate the emission due to the heavy elements
                    ! forbidden lines
                    call forLines()
-                   
+
                    ! find the volume of this cell 
                    dV = getVolume(grid3D(iG), i,j,k)
-                   
+
                    do plotNum = 1, plot%nPlots
-                      
+
                       if (plot%lgLine(plotNum)) then
                       
                          ! initialise line number counter
-                         iLine = 0
+                         iLine = 1
 
 
                          ! HI rec lines
-                         do iup = 3, 15
-                            do ilow = 2, min0(8,iup-1)
-                               
-                               iLine = iLine+1
+                         do ilow = 2,8
+                            do iup = ilow+1, 30
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & HIRecLines(iup,ilow)*HdenUsed*dV
+                               iLine = iLine+1
                                
                             end do
                          end do
                       
-                         ! HeI singlets
-                         do l = 1, 9
-                            
+                         do l = 1, 34 
+                            if (plot%lineNumber(plotNum) == iLine) &
+                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
+                                 & HeIRecLines(l)*HdenUsed*dV
+
                             iLine = iLine+1
 
-                            if (plot%lineNumber(plotNum) == iLine) &
-                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
-                                 & HeIRecLinesS(l)*HdenUsed*dV
                          end do
                          
-                         ! HeI triplets
-                         do l = 1, 11
-                            
-                            iLine = iLine+1
-                            
-                            if (plot%lineNumber(plotNum) == iLine) &
-                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
-                                 & HeIRecLinesT(l)*HdenUsed*dV
-                         end do
                          
                          ! HeII rec lines
                          do iup = 3, 30
                             do ilow = 2, min0(16, iup-1)
                                
-                               iLine = iLine+1
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & HeIIRecLines(iup,ilow)*HdenUsed*dV
+
+                               iLine = iLine+1
+
                             end do
                          end do
                          
@@ -228,22 +245,44 @@ program MoCaSSiNplot
                                if (.not.lgElementOn(elem)) exit
                                if (lgDataAvailable(elem,ion)) then
                                   
-                                  
-                                  do iup = 1, 10
-                                     do ilow = 1, 10
-                                        
-                                        iLine = iLine+1
+                                  if (elem == 26 .and. ion ==2) then
 
-                                        if (plot%lineNumber(plotNum) == iLine) then 
-
-                                           print*, forbiddenLines(elem,ion,iup,ilow), elem,ion,iup,ilow
-                                           plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                                                & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+                                     do iup = 1, nforlevelsLarge
+                                        do ilow = 1, nforlevelsLarge
+                                                                                   
+                                           if (plot%lineNumber(plotNum) == iLine) then 
+                                              
+                                              print*, flinePlotLarge(iup,ilow), elem,ion,iup,ilow
+                                              plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
+                                                   & flinePlotLarge(iup,ilow)*HdenUsed*dV
+                                              
+                                           end if
                                            
-                                        end if
-                                        
+                                           iLine = iLine+1
+
+                                        end do
                                      end do
-                                  end do
+
+                                  else
+
+                                     do iup = 1, nforlevels
+                                        do ilow = 1, nforlevels
+                                        
+                                           
+                                           if (plot%lineNumber(plotNum) == iLine) then 
+                                              
+                                              print*, flinePlot(elem,ion,iup,ilow), elem,ion,iup,ilow
+                                              plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
+                                                   & flinePlot(elem,ion,iup,ilow)*HdenUsed*dV
+                                              
+                                           end if
+                                           
+                                           iLine = iLine+1
+
+                                        end do
+                                     end do
+                                     
+                                  end if
                                end if
                             end do
                          end do
@@ -340,7 +379,7 @@ program MoCaSSiNplot
        
     end if
        
-    open(unit=28, file='output/plot.out', status='unknown', position='rewind',iostat=ios)
+    open(unit=28, file='output/plot.out', status='unknown',  action="write",position='rewind',iostat=ios)
     if (ios /= 0) then
        print*, "! readPlot: can't open file for writing: output/plot.out"
        stop
@@ -403,7 +442,7 @@ program MoCaSSiNplot
     call freePlot(plot)
     
     if (associated(ionDenUsed)) deallocate(ionDenUsed)
-       
+    if (associated(fLinePlot)) deallocate(fLinePlot)
     
 
     call mpi_finalize(ierr)
@@ -438,7 +477,7 @@ program MoCaSSiNplot
         
 
         close(77)
-        open(unit=77, file=filename, status='old', position='rewind',iostat=ios)
+        open(unit=77, file=filename, status='old', position='rewind', action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! readPlot: can't open file for reading", filename
            stop
@@ -514,7 +553,7 @@ program MoCaSSiNplot
         freq                  = 0.
         code                  = 0
 
-        open(unit=77, file=filename, status='old', position='rewind',iostat=ios)
+        open(unit=77, file=filename, status='old', position='rewind', action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! readPlot: can't open file for reading", filename
            stop
@@ -554,6 +593,8 @@ program MoCaSSiNplot
         ! close file
         close(77)
 
+        print*, 'out readPlot'
+
       end function readPlot
 
       subroutine freePlot(plot)
@@ -578,7 +619,7 @@ program MoCaSSiNplot
         integer                     :: elem, ion ! counters
           
         ! re-initialize forbiddenLines
-        forbiddenLines = 0.
+        fLinePlot = 0.
         
         do elem = 3, nElements
            do ion = 1, min(elem+1, nstages)
@@ -586,19 +627,39 @@ program MoCaSSiNplot
                 
               if (lgDataAvailable(elem, ion)) then
                  
-                 if (ion<nstages) then
-                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1), &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
-                 else
-                    call equilibrium(dataFile(elem, ion), 0., &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
-                 end if
-                 
-                 forbiddenLines(elem, ion, :, :) =forbiddenLines(elem, ion, :, :)*grid3D(iG)%elemAbun(abFileIndexUsed,elem)*&
-                      & ionDenUsed(elementXref(elem), ion)
-                 
-              end if
+                 if (elem == 26 .and. ion ==2) then
 
+                    if (ion<min(elem+1,nstages)) then
+                       call equilibrium(dataFile(elem, ion), &
+                            &ionDenUsed(elementXref(elem), ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), &
+                            & TeUsed, NeUsed, flinePlotLarge(:,:))
+                    else
+                       call equilibrium(dataFile(elem, ion), 0., &
+                            & TeUsed, NeUsed, flinePlotLarge(:,:))
+                    end if
+
+                    flinePlotLarge(:, :) =flinePlotLarge(:,:)*&
+                         &grid3D(iG)%elemAbun(abFileIndexUsed,elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
+                 else
+
+                    if (ion<min(elem+1,nstages)) then
+                       call equilibrium(dataFile(elem, ion), &
+                            &ionDenUsed(elementXref(elem), ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), &
+                            & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
+                    else
+                       call equilibrium(dataFile(elem, ion), 0., &
+                            & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
+                    end if
+
+                    flinePlot(elem, ion, :, :) =flinePlot(elem,ion,:,:)*&
+                         &grid3D(iG)%elemAbun(abFileIndexUsed,elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
+
+                 end if
+              end if
            end do
         end do
 
@@ -608,131 +669,130 @@ program MoCaSSiNplot
         !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence 
         !          the right units are obtained by multiplying by 1.9865e-16*1e25 
         !          which is 1.9865*1e9 
-        forbiddenLines = forbiddenLines*1.9865e9
+        flinePlot = flinePlot*1.9865e9
+
+        if (lgElementOn(26) .and. ion>=2) flinePlotLarge = flinePlotLarge*1.9865e9
+
 
       end subroutine forLines
     
-
-      subroutine RecLinesEmission()
+    subroutine RecLinesEmission()
         implicit none
-          
+
         ! local variables
         integer                    :: ios         ! I/O error status
         integer                    :: i           ! counters
         integer                    :: ilow,&      ! pointer to lower level
-&                                      iup         ! pointer to upper level
-     
+&                                      iup        ! pointer to upper level
+        integer                    :: denint
+
+        real                       :: A4471, A4922! HeI reference lines 
         real                       :: aFit        ! general interpolation coeff
+        real                       :: C5876, C6678! collition exc. corrections
+        real                       :: Hbeta       ! Hbeta emission
+        real                       :: HeII4686    ! HeII 4686 emission
+        real                       :: Lalpha      ! Lalpha emission
+        real                       :: T4          ! TeUsed/10000.
+        real                       :: x1,x2
+        real                       :: hb          ! emissivity of H 4->2
+        real                       :: fh          ! emissivity of H
 
-        real, dimension(9,3)       :: HeISingRead ! array reader for HeI sing rec lines
-        real, dimension(11,3)      :: HeITripRead ! array reader for HeI trip  rec lines  
-        
+
+        T4 = TeUsed / 10000.
+
         ! do hydrogenic ions first
-
-        ! read in HI recombination lines [e-25 ergs*cm^3/s] 
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        open(unit = 120, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
-           stop
+        
+        ! calculate Hbeta
+        if (TeUsed > 26000.) then
+           print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
+                & calculations may be uncertain"
         end if
-        do iup = 15, 3, -1
-           read(120, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
-        end do
+        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
 
-        ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
-        do iup = 15, 3, -1
-           do ilow = 2, min0(8, iup-1)
+        ! fits to Storey and Hummer MNRAS 272(1995)41
+!        Hbeta = 10**(-0.870*log10Te + 3.57)
+        Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*grid3D(iG)%elemAbun(abFileIndexUsed,1)
 
-              HIRecLines(iup, ilow) = HIRecLines(iup, ilow)* &
-                   & NeUsed*ionDenUsed(elementXref(1),2)*grid3D(iG)%elemAbun(abFileIndexUsed,1)
+        call hlinex(4,2,TeUsed,NeUsed,fh,2)
+        hb = fh
 
-           end do
-        end do
+        do ilow = 2, 8
+           do iup = 30, ilow+1, -1
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)              
+              HIRecLines(iup, ilow) = (fh/hb)*Hbeta
+
+           enddo
+        enddo
+
+
+        ! add contribution of Lyman alpha 
+        ! fits to Storey and Hummer MNRAS 272(1995)41
+        Lalpha = 10**(-0.897*log10TeLoc + 5.05) 
+
+        HIRecLines(30, 8) =HIRecLines(30, 8) + grid3D(iG)%elemAbun(abFileIndexUsed,1)*&
+             & ionDenUsed(elementXref(1),2)*&
+             & NeUsed*Lalpha 
+        
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
-        open(unit = 130, file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        close(95)
+        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
-           stop
+            print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
+            stop
         end if
         do iup = 30, 3, -1
-           read(130, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min0(16, iup-1))
+            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min0(16, iup-1))
         end do
 
-        ! calculate emission due to HeII recombination lines [e-25 ergs/s/cm^3]
+        close(95)
+
+        ! calculate HeII 4686 [E-25 ergs*cm^3/s]
+        HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)
+        HeII4686 = HeII4686*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),3)
+
+        ! calculate emission due to HeI recombination lines [e-25 ergs/s/cm^3]
         do iup = 30, 3, -1
-           do ilow = 2, min0(16, iup-1)
-              HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*&
-                   & NeUsed*ionDenUsed(elementXref(2),3)*grid3D(iG)%elemAbun(abFileIndexUsed,2)
-           end do
-        end do
+            do ilow = 2, min0(16, iup-1)
+                HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
+            end do
+        end do    
 
         ! now do HeI
-          
-        ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        open(unit = 140, file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
-           stop
-        end if
-        do i = 1, 9
-           read(140, fmt=*) HeISingRead(i, :)
-           
-           ! interpolate over temperature (log10-log10 space)
-           if (TeUsed <= 5000.) then
-              HeIRecLinesS(i) = HeISingRead(i, 1)
-           else if (TeUsed >= 20000.) then
-              HeIRecLinesS(i) = HeISingRead(i, 3)
-           else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-              aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
-              HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-                   & aFit*log10(TeUsed/5000.) ) 
-           else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-              aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
-              HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-                   & aFit*log10(TeUsed/10000.) )
-           end if
-        end do
         
-        ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        open(unit = 150, file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
-           stop
+        if (NeUsed <= 100.) then
+           denint=0
+        elseif (NeUsed > 100. .and. NeUsed <= 1.e4) then
+           denint=1
+        elseif (NeUsed > 1.e4 .and. NeUsed < 1.e6) then
+            denint=2
+        elseif (NeUsed >= 1.e6) then
+           denint=3
         end if
-        do i = 1, 11
-           read(150, fmt=*) HeITripRead(i, :)
-             
-           ! interpolate over temperature (log10-log10 space)
-           if (TeUsed <= 5000.) then
-              HeIRecLinesT(i) = HeITripRead(i, 1)
-           else if (TeUsed >= 20000) then
-              HeIRecLinesT(i) = HeITripRead(i, 3)
-           else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-              aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
-              HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-                   & aFit*log10(TeUsed/5000.) )
-           else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-              aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
-              HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-                   & aFit*log10(TeUsed/10000.) )
-           end if
-        end do
 
-        ! close files
-        close(120)
-        close(130)
-        close(140)
-        close(150)
+        ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        if (denint>0.and.denint<3) then
+           do i =1, 34
+              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
 
-        HeIRecLinesS = HeIRecLinesS*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),2)
-        HeIRecLinesT = HeIRecLinesT*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),2)
+              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
 
-      end subroutine RecLinesEmission
+              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+
+
+           end do
+        elseif(denint==0) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
+        elseif(denint==3) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
+        end if
+        HeIRecLines=HeIRecLines*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),2)
+    end subroutine RecLinesEmission
 
 end program MoCaSSiNplot
    

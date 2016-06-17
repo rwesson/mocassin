@@ -46,6 +46,9 @@ program MoCaSSiNoutput
     ! reset the 3D cartesian grid
     call resetGrid(grid3D)
 
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis,grid3D)      
+
+
     ! initialize opacities x sections array
     call initXSecArray()
 
@@ -56,14 +59,8 @@ program MoCaSSiNoutput
     call makeElements()
     
     if (taskid ==  0) then
-       ! determine final statistics
-       if (lgGas) then
-          if (lg3DextinctionMap) then
-             call outputGas(grid3D(1:nGrids), extMapFile) 
-          else
-             call outputGas(grid3D(1:nGrids)) 
-          end if
-       end if
+        ! determine final statistics
+        if (lgGas) call outputGas(grid3D)
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)

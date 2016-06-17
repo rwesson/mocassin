@@ -26,22 +26,24 @@ source4  = source/constants_mod.f90 source/vector_mod.f90 source/common_mod.f90 
 	source/update_mod.f90 \
 	source/output_mod.f90 source/iteration_mod.f90 source/mocassinPlot.f90 
  
-F90  = /moz/mpi/mpich-1.2.5.2/bin/mpif90
-LIBS =	-lm
-OPT1 = -O3
-OPT2 = -CB -g 
+F90  = mpif90
+LIBS = -lm
+OPT1 = -O3 
+OPT2 = -check all -traceback -g
+#OPT2 = -CB -g 
+XTRA =  -I/software/mpich2/include -L/software/mpich2/lib 
 
 mocassin:
-	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS)
+	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS) $(XTRA)
 
 mocassinWarm:
-	$(F90) $(OPT1) -o mocassinWarm $(source2) $(LIBS) 
+	$(F90) $(OPT1) -o mocassinWarm $(source2) $(LIBS) $(XTRA)
 
 mocassinOutput:
-	$(F90) $(OPT1) -o mocassinOutput $(source3) $(LIBS) 
+	$(F90) $(OPT1) -o mocassinOutput $(source3) $(LIBS) $(XTRA)
 
 mocassinPlot:
-	$(F90) $(OPT1) -o mocassinPlot $(source4) $(LIBS) 
+	$(F90) $(OPT2) -o mocassinPlot $(source4) $(LIBS) $(XTRA)
 
 clean:
 	/bin/rm *.o *~ *.mod mocassin mocassinWarm mocassinOutput mocassinPlot

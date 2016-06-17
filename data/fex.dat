@@ -1,5 +1,5 @@
- 50
-** Atomic data from version 7 of the CHIANTI database **
+ 49
+** Atomic data from version 5.2 of the CHIANTI database **
 %Observed and Theoretical energies (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
 %Observed energy levels (55-172): NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard 
    Reference Database 61, 1995
@@ -10,7 +10,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   Giulio Del Zanna and Peter Young - July 20, 2005 
-%filename: fe_10.wgfa
 %Observed and Theoretical energies (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
 %Observed energy levels (55-172): NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard
    Reference Database 61, 1995

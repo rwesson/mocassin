@@ -44,7 +44,8 @@ program MoCaSSiN
 
     type(grid_type) :: grid3D(maxGrids)       ! the 3D Cartesian  grid
 
-    integer         :: iGrid, err             ! allocation error status
+    real            :: test                   ! test
+    integer         :: i, iGrid, err          ! allocation error status
 
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
@@ -76,6 +77,8 @@ program MoCaSSiN
 
     call fillGrid(grid3D(1:nGrids))
 
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
+
     if (taskid==0) then
        do iGrid = 1, nGrids
           print*, 'Grid : ', iGrid 
@@ -90,25 +93,38 @@ program MoCaSSiN
 
     ! if grains are included, calculate the dust opacity     
     if (lgDust) then
+       if (taskid==0) print*, '! mocassin: calling dustDriver'
        do iGrid = 1, nGrids
           call dustDriver(grid3D(iGrid))
        end do
+       if (taskid==0) print*, '! mocassin: dustDriver done'
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)
 
+    ! set local diffuse ionisation field
+    if (Ldiffuse>0.) then
+       if (taskid==0) print*, '! mocassin: calling setLdiffuse'
+       call setLdiffuse(grid3D(1:nGrids))
+       test=0.
+       do iGrid = 1, nGrids
+          do i = 1, grid3D(igrid)%ncells
+             test = test+grid3d(igrid)%LdiffuseLoc(i)
+          end do
+       end do
+       if (taskid==0) then
+          print*, '! mocassin: setLdiffuse done, total Ldiffuse: ', test
+       end if
+    end if
+
+    if (taskid==0) print*, '! mocassin: calling MCIterationDriver'    
     ! start the Monte Carlo simulation
     call MCIterationDriver(grid3D(1:nGrids))
+    if (taskid==0) print*, '! mocassin: MCIterationDriver done'    
 
     if (taskid ==  0) then
-       ! determine final statistics
-       if (lgGas) then
-          if (lg3DextinctionMap) then
-             call outputGas(grid3D(1:nGrids), extMapFile) 
-          else
-             call outputGas(grid3D(1:nGrids)) 
-          end if
-       end if
+        ! determine final statistics
+        if (lgGas) call outputGas(grid3D(1:nGrids))
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)

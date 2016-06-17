@@ -1,12 +1,11 @@
- 22
-** Atomic data from version 7 of the CHIANTI database **
+ 21
+** Atomic data from version 5.2 of the CHIANTI database **
 %experimental energy levels: Fuhr, J.R., et al., NIST Atomic Spectra Database, 
               Version 2.0, March 1999, NIST Physical Reference Data
 %theoretical energy levels: same as the observed energy levels
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 2000
-%filename: fe_6.wgfa
 %experimental energy levels: Fuhr, J.R., et al., NIST Atomic Spectra Database,
    Version 2.0, March 1999, NIST Physical Reference Data
 %radiative data: Chen, G.X., Pradhan, A.K., 2000, A&AS, 147, 111

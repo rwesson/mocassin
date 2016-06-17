@@ -16,11 +16,8 @@ module emission_mod
     double precision, pointer :: emissionHeII(:)                   ! HeII continuum emission coefficient  
 
     ! units are [e-25erg/s/N_gas]
-    double precision, dimension(nElements,nstages, nForLevels,nForLevels)::&
-         & forbiddenLines                                          ! emissivity from heavies  rec lines
-    double precision, dimension(3:15, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
-    double precision, dimension(9)         :: HeIRecLinesS         ! emissivity from HeI sing rec lines
-    double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
+    double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
+    double precision, dimension(34)        :: HeIRecLines          ! emissivity from HeI rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
 
     real                                :: BjumpTemp   ! 
@@ -31,7 +28,7 @@ module emission_mod
 
     integer                             :: abFileUsed  ! abundance file index used
     integer                             :: cellPUsed   !  cell index
-
+        logical,save :: lgFloc=.true.                ! 
     contains
 
     ! this is the subroutine to drive the calculation 
@@ -46,6 +43,7 @@ module emission_mod
         type(grid_type)                :: grid
 
         ! local variables
+
         integer :: ncutoff= 0                ! see clrate
         integer :: err                       ! allocation error status
         integer :: i, n                      ! counters
@@ -75,6 +73,8 @@ module emission_mod
 
         if (.not.lgGas) return
 
+
+
         ! find the physical properties of this cell
         ionDenUsed= grid%ionDen(cellPUsed, :, :)
 
@@ -90,6 +90,7 @@ module emission_mod
         if (NeUsed < 1.e-5) then
              NeUsed = 1.e-5
         end if
+
 
         ! allocate space for emissionHI, emissionHeI and emissionHeII
         allocate(emissionHI(nbins), stat = err)
@@ -628,7 +629,7 @@ module emission_mod
         end do
         
         ! calculate the two photon emission due to HeI
-        call HeI2phot()
+        call HeI2photSub()
     end subroutine twoPhoton
 
 
@@ -746,7 +747,7 @@ module emission_mod
         
     end function hydro2phot
     
-    subroutine HeI2phot()
+    subroutine HeI2photSub()
         implicit none 
 
         ! local variables 
@@ -772,7 +773,7 @@ module emission_mod
         
         ! read in rates from data/HeI2phot.dat
         close(93)
-        open(unit = 93, file = "data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 93,  action="read", file = "data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! HeI2phot: can't open file: data/HeI2phot.dat"
             stop
@@ -803,7 +804,7 @@ module emission_mod
             twoPhotHeI(i) = alphaEff21SHeI*Ay*0.66262*y/A21S11S 
         end do        
         
-    end subroutine HeI2phot
+      end subroutine HeI2photSub
 
     ! this subroutine sets the ff emission coefficients for z=1 (ffCoeff1)
     ! and z=2 (ffCoeff2)            
@@ -847,7 +848,7 @@ module emission_mod
 
         ! local variables
         integer                    :: ios         ! I/O error status
-        integer                    :: i           ! counters
+        integer                    :: i, denint   ! counters
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
 
@@ -858,16 +859,17 @@ module emission_mod
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
         real                       :: T4          ! TeUsed/10000.
+        real                       :: x1, x2
 
-        real, dimension(9,3)       :: HeISingRead ! array reader for HeI sing rec lines
-        real, dimension(11,3)       :: HeITripRead ! array reader for HeI trip  rec lines  
+
 
         ! do hydrogenic ions first
 
+         
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(94)
-        open(unit = 94, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
             stop
@@ -902,7 +904,7 @@ module emission_mod
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95, file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -921,73 +923,45 @@ module emission_mod
         do iup = 30, 3, -1
             do ilow = 2, min0(16, iup-1)
                 HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
-            end do
+             end do
         end do    
 
         ! now do HeI
         
-        ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(96)
-        open(unit = 96, file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
-            stop
+        if (grid%Ne(grid%active(ix,iy,iz)) <= 100.) then
+           denint=0
+        elseif (grid%Ne(grid%active(ix,iy,iz)) > 100. .and. grid%Ne(grid%active(ix,iy,iz)) <= 1.e4) then
+           denint=1
+        elseif (grid%Ne(grid%active(ix,iy,iz)) > 1.e4 .and. grid%Ne(grid%active(ix,iy,iz)) <= 1.e6) then
+            denint=2
+        elseif (grid%Ne(grid%active(ix,iy,iz)) > 1.e6) then
+           denint=3
         end if
-        do i = 1, 9
-            read(96, fmt=*) HeISingRead(i, :)
 
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 1)
-            else if (TeUsed >= 20000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) ) 
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
+        ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        T4 = TeUsed / 10000.
+        if (T4 < 0.5) T4=0.5
+        if (T4 > 2.0) T4=2.0
 
-        close(96)
-        
-        ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(97)
-        open(unit = 97, file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
-            stop
+        if (denint>0.and.denint<3) then
+           do i = 1, 34
+              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
+
+              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+
+           end do
+       elseif(denint==0) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
+        elseif(denint==3) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
         end if
-        do i = 1, 11
-            read(97, fmt=*) HeITripRead(i, :)
+        HeIRecLines=HeIRecLines*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
 
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesT(i) = HeITripRead(i, 1)
-            else if (TeUsed >= 20000) then
-                HeIRecLinesT(i) = HeITripRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) )
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
-
-        close(97)
-
-        HeIRecLinesS = HeIRecLinesS*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
-        HeIRecLinesT = HeIRecLinesT*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
-
-                                                   
     end subroutine RecLinesEmission
 
 
@@ -1007,20 +981,45 @@ module emission_mod
 
               if (lgDataAvailable(elem, ion)) then
 
-                 if (ion<nstages) then
-                    call equilibrium(file_name=dataFile(elem, ion), &
-                         &ionDenUp=ionDenUsed(elementXref(elem),ion+1), Te=TeUsed,&
-                         &Ne=NeUsed, FlineEm=forbiddenLines(elem, ion,1:nForLevels, 1:nForLevels))
+                 if (elem == 26 .and. ion == 2) then
+                    if (nstages > 2) then
+                       call equilibrium(file_name=dataFile(elem, ion), &
+                            &ionDenUp=ionDenUsed(elementXref(elem),ion+1)&
+                            &/ionDenUsed(elementXref(elem),ion), Te=TeUsed,&
+                            &Ne=NeUsed, FlineEm=forbiddenLinesLarge(&
+                            &1:nForLevelsLarge, 1:nForLevelsLarge))
+                    else
+                       call equilibrium(file_name=dataFile(elem, ion), &
+                            &ionDenUp=0., Te=TeUsed,&
+                            &Ne=NeUsed, FlineEm=forbiddenLinesLarge(&
+                            &1:nForLevelsLarge, 1:nForLevelsLarge))
+                    end if
+
+                    forbiddenLinesLarge(:, :) =&
+                         &forbiddenLinesLarge(:, :)*grid%elemAbun(&
+                         &grid%abFileIndex(ix,iy,iz),elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
+
                  else
-                    call equilibrium(file_name=dataFile(elem, ion), &
-                         &ionDenUp=0., Te=TeUsed, Ne=NeUsed, &
-                         &FlineEm=forbiddenLines(elem, ion,1:nForLevels,1:nForLevels))
+                    if (ion<nstages) then
+                       call equilibrium(file_name=dataFile(elem, ion), &
+                            &ionDenUp=ionDenUsed(elementXref(elem),ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), Te=TeUsed,&
+                            &Ne=NeUsed, FlineEm=forbiddenLines(elem, ion,&
+                            &1:nForLevels, 1:nForLevels))
+                    else
+                       call equilibrium(file_name=dataFile(elem, ion), &
+                            &ionDenUp=0., Te=TeUsed, Ne=NeUsed, &
+                            &FlineEm=forbiddenLines(elem, ion,1:nForLevels,&
+                            &1:nForLevels))
+                    end if
+
+                    forbiddenLines(elem, ion, :, :) =&
+                         &forbiddenLines(elem, ion, :, :)*grid%elemAbun(&
+                         &grid%abFileIndex(ix,iy,iz),elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
+
                  end if
-
-                 forbiddenLines(elem, ion, :, :) =&
-                      &forbiddenLines(elem, ion, :, :)*grid%elemAbun(grid%abFileIndex(ix,iy,iz),elem)*&
-                      & ionDenUsed(elementXref(elem), ion)
-
               end if
 
            end do
@@ -1143,6 +1142,9 @@ module emission_mod
         ! calculate effective recombination coefficients to triplet states[e-14 cm^3/s]
         ! Benjamin, SKillman and mits, 1999, ApJ 514, 307
         T4 = TeUsed*1.e-4
+        if (T4 < 0.5) T4=0.5
+        if (T4 > 2.0) T4=2.0
+
         alpha2tS = 27.2*(T4**(-0.678))       
   
         ! calculate correction for partial sums and normalization constant 
@@ -1161,7 +1163,7 @@ module emission_mod
         ! read in HeII Lyman line ratios up to level n=5 [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(98)
-        open(unit = 98, file = "data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 98,  action="read", file = "data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! setDiffusePDF: can't open file: data/r2a0100.dat"
             stop
@@ -1284,12 +1286,8 @@ module emission_mod
             end do
         end do
         ! HeI singlets
-        do i = 1, 9
-            normRec = normRec+HeIRecLinesS(i)
-        end do
-        ! HeI triplets
-        do i = 1, 11
-            normRec = normRec+HeIRecLinesT(i)
+        do i = 1, 34
+            normRec = normRec+HeIRecLines(i)
         end do
 
         ! Sum  up energy in forbidden lines
@@ -1297,13 +1295,23 @@ module emission_mod
         normFor = 0.
         do elem = 3, nElements
            do ion = 1, min(elem+1, nstages)
-              do ilow = 1, nForLevels
-                 do iup = 1, nForLevels
-                    if (forbiddenLines(elem, ion, ilow, iup) > 1.e-35)  then 
-                       normFor = normFor + forbiddenLines(elem, ion, ilow, iup)
-                    end if
+              if (elem ==26 .and. ion==2) then
+                 do ilow = 1, nForLevelsLarge
+                    do iup = 1, nForLevelsLarge
+                       if (forbiddenLinesLarge(ilow, iup) > 1.e-35)  then 
+                          normFor = normFor + forbiddenLinesLarge(ilow, iup)
+                       end if
+                    end do
                  end do
-              end do
+              else
+                 do ilow = 1, nForLevels
+                    do iup = 1, nForLevels
+                       if (forbiddenLines(elem, ion, ilow, iup) > 1.e-35)  then 
+                          normFor = normFor + forbiddenLines(elem, ion, ilow, iup)
+                       end if
+                    end do
+                 end do
+              end if
            end do
         end do
 
@@ -1373,17 +1381,10 @@ module emission_mod
            end do
 
            ! HeI singlet recombination lines
-           do j = 1, 9
+           do j = 1, 34
               grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
-&                           HeIRecLinesS(j) / grid%totalLines(cellPUsed)
+&                           HeIRecLines(j) / grid%totalLines(cellPUsed)
               i = i+1 
-           end do
-
-           ! HeI triplet recombination lines
-           do j = 1, 11
-              grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
-&                           HeIRecLinesT(j) / grid%totalLines(cellPUsed)
-              i = i+1
            end do
 
            ! HeII recombination lines
@@ -1402,18 +1403,36 @@ module emission_mod
 
                  if (.not.lgElementOn(elem)) exit
                  if (lgDataAvailable(elem, ion)) then
-                    do iup = 1, nForLevels
-                       do ilow = 1, nForLevels
-                          grid%linePDF(cellPUsed, i) = grid%linePDF(grid%active(ix, iy&
-                               &, iz), i-1) + forbiddenLines(elem, ion, iup, ilow)&
-                               & / grid%totalLines(grid%active(ix,iy,iz))
-                       
-                          if (grid%linePDF(cellPUsed, i) > 1. ) grid&
-                               &%linePDF(cellPUsed, i) = 1. 
-                          i = i+1
+                    if (elem == 26 .and. ion == 2) then
 
+                       do iup = 1, nForLevelsLarge
+                          do ilow = 1, nForLevelsLarge
+                             grid%linePDF(cellPUsed, i) = grid%linePDF(grid%active(ix, iy&
+                                  &, iz), i-1) + forbiddenLinesLarge(iup, ilow)&
+                                  & / grid%totalLines(grid%active(ix,iy,iz))
+                             
+                             if (grid%linePDF(cellPUsed, i) > 1. ) grid&
+                                  &%linePDF(cellPUsed, i) = 1. 
+                             i = i+1
+
+                          end do
                        end do
-                    end do
+
+                    else
+
+                       do iup = 1, nForLevels
+                          do ilow = 1, nForLevels
+                             grid%linePDF(cellPUsed, i) = grid%linePDF(grid%active(ix, iy&
+                                  &, iz), i-1) + forbiddenLines(elem, ion, iup, ilow)&
+                                  & / grid%totalLines(grid%active(ix,iy,iz))
+                             
+                             if (grid%linePDF(cellPUsed, i) > 1. ) grid&
+                                  &%linePDF(cellPUsed, i) = 1. 
+                             i = i+1
+                          end do
+                       end do
+
+                    end if
                  end if
 
               end do
@@ -1463,65 +1482,72 @@ module emission_mod
 
             if (grid%Tdust(n,ai,cellPUsed) >0. .and. & 
                  & grid%Tdust(n,ai,cellPused)<TdustSublime(n)) then
-               
-               if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
-                    & convPercent>minConvQheat.and. nIterateMC>1) then
+            
+               do i = 1, nbins
+   
+                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
+                       & convPercent>minConvQheat.and. nIterateMC>1) then
                   
-                  tg =  grid%Tdust(n,ai,cellPused)
-                  call qHeat(n, ai,tg,Tspike,Pspike)                                    
+                     tg =  grid%Tdust(n,ai,cellPused)
+                     call qHeat(n, ai,tg,Tspike,Pspike)                                    
                   
-                  do iT = 1, nTbins
-                     treal = Tspike(iT)
-                     bb = getFlux(nuArray(1), treal, cShapeLoc)
-                     grid%dustPDF(cellPUsed, 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
-                          & grainWeight(ai)*grainAbun(n)*Pspike(iT)                     
-                  end do
-                  
-               else
-                  
-                  treal = grid%Tdust(n,ai,cellPused)
-                  bb = getFlux(nuArray(1), treal, cShapeLoc)
-                  grid%dustPDF(cellPused, 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
-                       & grainWeight(ai)*grainAbun(n)
-               end if
-
-
-               do i = 2,nbins
-                  
-                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and.& 
-                    & convPercent>minConvQheat .and. nIterateMC>1) then
-                     
-                     do iT=1,nTbins
+                     do iT = 1, nTbins
                         treal = Tspike(iT)
-                        bb = getFlux(nuArray(i), treal, cShapeLoc)                     
-                        grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
-                             &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*& 
-                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)
+                        bb = getFlux(nuArray(i), treal, cShapeLoc)
+                        grid%dustPDF(cellPUsed, i) = grid%dustPDF(cellPUsed, i)+ & 
+                             & xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*&
+                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)                     
                      end do
-                  
-                  else
                      
+                  else
+                  
                      treal = grid%Tdust(n,ai,cellPused)
                      bb = getFlux(nuArray(i), treal, cShapeLoc)
-                     grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
-                          &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*& 
+                     grid%dustPDF(cellPused, i) = grid%dustPDF(cellPused, i)+&
+                          & xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*&
                           & grainWeight(ai)*grainAbun(n)
-                     
                   end if
-
                end do
+
+!               do i = 2,nbins
+!                  
+!                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and.& 
+!                    & convPercent>minConvQheat .and. nIterateMC>1) then
+!                     
+!                     do iT=1,nTbins
+!                        treal = Tspike(iT)
+!                        bb = getFlux(nuArray(i), treal, cShapeLoc)                     
+!                        grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
+!                             &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i-1)*& 
+!                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)
+!                     end do
+!                  
+!                  else
+!                     
+!                     treal = grid%Tdust(n,ai,cellPused)
+!                     bb = getFlux(nuArray(i), treal, cShapeLoc)
+!                     grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
+!                          &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i-1)*& 
+!                          & grainWeight(ai)*grainAbun(n)
+!                     
+!                  end if
+!
+!               end do
+
                
             end if
          end do
       end do
 
       ! normalise
-      do i = 1, nbins
+      do i = 2, nbins
          
-         if (grid%dustPDF(cellPused,nbins)>0.) grid%dustPDF(cellPused,i) = &
-              & grid%dustPDF(cellPUsed,i)/grid%dustPDF(cellPUsed,nbins)
+         grid%dustPDF(cellPused,i) = &
+              & grid%dustPDF(cellPUsed,i-1)+grid%dustPDF(cellPUsed,i)
          
       end do
+      grid%dustPDF(cellPused,:) = &    
+           grid%dustPDF(cellPused,:)/grid%dustPDF(cellPused,nbins)
 
       grid%dustPDF(cellPused,nbins) = 1.
 
@@ -2046,19 +2072,19 @@ module emission_mod
 
   end subroutine emissionDriver
 
-
+  
 
   subroutine equilibrium(file_name, ionDenUp, Te, Ne, fLineEm, wav)
     implicit none
     
-    double precision, dimension(nForLevels,nForLevels), &
-         & intent(out) :: fLineEm     ! forbidden line emissivity
+    double precision, dimension(:,:), &
+         & intent(inout) :: fLineEm     ! forbidden line emissivity
 
-    double precision, dimension(nForLevels,nForLevels), &
-         & intent(out), optional :: wav         ! wavelength of transition [A]
+    double precision, dimension(:,:), &
+         & intent(inout), optional :: wav         ! wavelength of transition [A]
     
 
-    double precision     :: ax, ex                    ! readers
+    double precision     ::  ax1,ax2,ax3,ax, ex                    ! readers
     double precision     :: constant                  ! calculations constant 
     double precision     :: delTeK                    ! Boltzmann exponent
     double precision     :: expFac                    ! calculations factor
@@ -2080,8 +2106,8 @@ module emission_mod
     double precision, &
          & pointer :: n(:), n2(:) ! level population arrays
 
-    
-    real                 :: alphaTotal(100)           ! maximum 100-level ion
+    real                 :: a_r(4),a_d(5),z,br       !
+    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
     real                 :: a_fit, b_fit              !         
     real                 :: qomInt                    ! interpolated value of qom
     real,    pointer     :: logTemp(:)                ! log10 temperature points array
@@ -2096,6 +2122,7 @@ module emission_mod
     
     integer  :: gx               ! stat weight reader  
     integer  :: i, j, k, l, iT   ! counters/indeces
+    integer  :: i1, j1, k1,i2, j2, k2,i3, j3, k3  ! counters/indeces
     integer  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
     integer  :: ios              ! I/O error status
     integer  :: nLev             ! number of levels in atomic data file
@@ -2104,7 +2131,7 @@ module emission_mod
     integer  :: nTemp            ! number of temperature points in atomic data file        
     integer  :: err              ! allocation error status
     
-    integer, parameter :: safeLim = 10000 ! loop safety limit
+    integer, parameter :: safeLim = 100000 ! loop safety limit
     
     integer, pointer :: g(:)              ! statistical weight array
     
@@ -2122,10 +2149,10 @@ module emission_mod
 
     sqrTe   = sqrt(Te)
     log10Te = log10(Te) 
-    
+
     ! open file containing atomic data
     close(11)
-    open(unit=11, file = file_name, status="old", position="rewind", &
+    open(unit=11,  action="read", file = file_name, status="old", position="rewind", &
          & iostat = ios)
     if (ios /= 0) then
        print*, "! equilibrium: can't open file: ", file_name
@@ -2141,6 +2168,14 @@ module emission_mod
     ! read number of levels and temperature points available
     read(11, *) nLev, nTemp
     
+    if (nLev > size(fLineEm(1,:))) then
+       print*, '! equilibrium: model ion has more levels than &
+            &allowed by nForLevels - please enlarge', nLev, &
+            & size(fLineEm(1,:)),  nForLevels, file_name
+       stop
+    end if
+
+
     ! allocate space for labels array
     allocate(label(nLev), stat = err)
     if (err /= 0) then
@@ -2157,6 +2192,13 @@ module emission_mod
     
     ! allocate space for transition probability  array
     allocate(a(nLev, nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate a array memory"
+       stop
+    end if
+
+    ! allocate space for transition probability  array
+    allocate(alphaTotal(nLev), stat = err)
     if (err /= 0) then 
        print*, "! equilibrium: can't allocate a array memory"
        stop
@@ -2262,7 +2304,450 @@ module emission_mod
     tnij = 0.
     x = 0.d0
     y = 0.
+    ! read labels
+    do i = 1, nLev
+       read(11, '(A20)') label(i)
+       
+    end do
+
+    ! read temperetaure points and get logs
+    do i = 1, nTemp
+       read(11, *) logTemp(i)
+       logTemp(i) = log10(logTemp(i))
+
+    end do
+    
+    ! read iRats
+    read(11, *) iRats
+    
+    k=0
+    if (iRats == 1) then
+       do i = 1, safeLim
+          ! read in data
+          read(11, *) ilow(2), iup(2), (qom(k,ilow(2),iup(2)), k = 1, nTemp)     
+          if (ilow(2)>=nLev-1) then
+!             print*,ilow(2), iup(2), nLev
+!             print*, (qom(k,ilow(2),iup(2)), k = 1, nTemp)
+             exit
+          end if
+       end do
+
+       do k =1 , 2502
+          
+          read(11, *) i, j, ax,  i1, j1, ax1,  i2, j2, ax2,  i3, j3, ax3
+          
+          a(i,j) = ax
+          a(i1,j1) = ax1
+          a(i2,j2) = ax2   
+          a(i3,j3) = ax3
+       end do
+       read(11, *) i, j, ax,  i1, j1, ax1,  i2, j2, ax2
+
+       a(i,j) = ax
+       a(i1,j1) = ax1
+       a(i2,j2) = ax2   
+       
+    else if (iRats == 0) then
+       k=0
+       do i = 1, safeLim
+          ! read in data
+          read(11, *) ilow(2), iup(2), qx
+          
+          ! check if end of qx dat
+          if (qx == 0.d0) exit
+          
+          ! ilow(2) always starts with a non zero value
+          ! so the else condition is true at first and k initialized
+          if (ilow(2) == 0) then
+             ilow(2) = ilow(1)
+             k = k + 1
+          else 
+             ilow(1) = ilow(2)
+             k = 1
+          end if
+          
+          ! the same as above
+          if (iup(2) == 0) then
+             iup(2) = iup(1)                                                  
+          else
+             iup(1) = iup(2)
+          end if
+          
+          qom(k, ilow(2), iup(2)) = qx 
+          
+       end do
+
+
+       ! read in transition probabilities
+       do k = 1, nLev-1
+          do l = k+1, nLev
+             read(11, *) i, j, ax
+          
+             a(j,i) = ax
+          end do
+       end do
+    end if
+
+    ! read statistical weights, energy levels [1/cm]
+    do j = 1, nLev
+       read(11, *) i, gx, ex
+       
+       g(i) = gx
+       e(i) = ex
+    end do
+
+    ! read power law fit coefficients [e-13 cm^3/s]
+    ! and calculate total recombination coefficient
+    ! (direct + cascades)
+    alphaTotal = 0.
+    
+    do j = 2, nLev
+!       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
+       read(unit=11,fmt=*,iostat=ios) br,z,a_r(:),a_d(:) !a_fit, b_fit
+       if (ios<0) then
+          exit
+       else
+          alphaTotal(1) = 1.
+       end if
+                  
+!       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
+       alphaTotal(j)=1.e-13*br*z*a_r(1)*(Te*1.e-4/z**2)**a_r(2)/(1.+a_r(3)*&
+            & (Te*1.e-4/Z**2)**a_r(4))+1.0e-12*br*(a_d(1)& 
+            & /(Te*1.e-4)+a_d(2)+a_d(3)*Te*1.e-4+a_d(4)*(Te*1.e-4)**2)*&
+            & (Te*1.e-4)**(-1.5)*exp(-a_d(5)*1.e4/Te)              
+
+    end do
+
+    ! close atomic data file 
+    close(11)
+    
+    ! form matrices
+    ! set up qeff
+    do i = 2, nLev
+       do j = i, nLev
+          do iT = 1, nTemp
+             qq(iT) = qom(iT, i-1, j)
+          end do
+          
+          if (nTemp == 1) then  
+             ! collisional strength available only for one temperature - assume constant
+             qomInt = qq(1)
+          else if (nTemp == 2) then
+             ! collisional strength available only for one temperature - linear interpolation
+             qomInt = qq(1) + &
+                  (qq(2)-qq(1)) / (logTemp(2)-logTemp(1)) * (log10Te - logTemp(1))
+          else
+             ! set up second derivatives for spline interpolation
+             call spline(logTemp, qq, 1.e30, 1.e30, qq2)
+             
+             ! get interpolated qom for level
+             call splint(logTemp, qq, qq2, log10Te, qomInt)
+          end if
+          
+          ! set collisional strength
+          cs(i-1, j) = qomInt
+          
+          ! the calculation constant here is the energy [erg] 
+                ! associated to unit wavenumber [1/cm] divided by the 
+          ! boltzmann constant k.
+          constant = 1.4388463d0
+          ! exponential factor 
+          delTeK = (e(i-1)-e(j))*constant
+          expFac = exp( delTeK/Te )
+          qeff(i-1, j) = 8.63d-6 * cs(i-1, j) * expFac /&
+               &(g(i-1)*sqrTe)
+          qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
+       end do
+    end do
+    ! set up x
+    do i= 2, nLev
+       do j = 1, nLev
+          
+          x(1,:) = 1.
+!          y = 0.
+          y(1)   = 1.
+          
+          if (j /= i) then
+             x(i, j) = x(i, j) + Ne*qeff(j, i)
+             x(i, i) = x(i, i) - Ne*qeff(i, j)
+             if (j > i) then
+                x(i, j) = x(i, j) + a(j, i)
+             else 
+                x(i, i) = x(i, i) - a(i, j)
+             end if
+          end if
+       end do
+       
+       ! when coefficients are available use the following:
+       y(i) = -Ne*ionDenUp*alphaTotal(i)
+    end do
+
+    call luSlv(x, y, nLev)
+
+    n = y
+    
+    sumN = 0.d0
+    do i = 1, nLev
+       sumN = sumN+n(i)
+    end do
+    do i = 1, nLev           
+       n(i) = n(i)/sumN
+    end do
+    
+    ! now find emissivity and wavelengths
+    do i = 1, nLev-1
+       do j = i+1, nLev
+          if (a(j,i) /= 0.d0) then
+             Eji = (e(j)-e(i))
+             fLineEm(i,j) = a(j,i) * Eji * n(j)
+             if (Eji>0.) then
+                if (present(wav)) wav(i,j) = 1.e8/Eji
+             else
+                if (present(wav)) wav(i,j) = 0.d0
+             end if
+          end if
+       end do
+    end do
+    ! deallocate arrays
+    if( associated(alphaTotal) ) deallocate(alphaTotal)
+    if( associated(label) ) deallocate(label)
+    if( associated(logTemp) ) deallocate(logTemp)
+    if( associated(a) ) deallocate(a)
+    if( associated(cs) ) deallocate(cs)
+    if( associated(n) ) deallocate(n)
+    if( associated(n2) ) deallocate(n2)
+    if( associated(qeff) ) deallocate(qeff) 
+    if( associated(qq) ) deallocate(qq)
+    if( associated(qq2) ) deallocate(qq2)
+    if( associated(tnij) ) deallocate(tnij) 
+    if( associated(x) ) deallocate(x) 
+    if( associated(y) ) deallocate(y) 
+    if( associated(e) ) deallocate(e)
+    if( associated(g) ) deallocate(g)
+    if( associated(qom) ) deallocate(qom)
+  end subroutine equilibrium
+
+  subroutine equilibrium1(file_name, ionDenUp, Te, Ne, fLineEm, wav)
+    implicit none
+    
+    double precision, dimension(:,:), &
+         & intent(inout) :: fLineEm     ! forbidden line emissivity
+
+    double precision, dimension(:,:), &
+         & intent(inout), optional :: wav         ! wavelength of transition [A]
+    
+
+    double precision     :: ax, ex                    ! readers
+    double precision     :: constant                  ! calculations constant 
+    double precision     :: delTeK                    ! Boltzmann exponent
+    double precision     :: expFac                    ! calculations factor
+    double precision     :: Eji                       ! energy between levels j and i
+
+    double precision       :: qx                        ! reader
+    double precision   :: sumN                      ! normalization factor for populations
+    double precision        :: sqrTe                     ! sqrt(Te)
+    double precision    :: value                     ! general calculations value
+    
+    double precision, pointer          :: a(:,:)      ! transition rates array
+    double precision, pointer          :: cs(:,:)     ! collisional strengths array
+    double precision, pointer          :: e(:)        ! energy levels array
+    double precision, pointer          :: qeff(:,:)   ! q eff  array
+    double precision, pointer          :: qom(:,:,:)  ! qom array
+    double precision, pointer          :: tnij(:,:)   ! tnij array
+    double precision, pointer          :: x(:,:)      ! matrix arrays
+    double precision, pointer          :: y(:)        !       
+    double precision, &
+         & pointer :: n(:), n2(:) ! level population arrays
+
+    real                 :: a_r(4),a_d(5),z,br       !
+    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
+    real                 :: a_fit, b_fit              !         
+    real                 :: qomInt                    ! interpolated value of qom
+    real,    pointer     :: logTemp(:)                ! log10 temperature points array
+    real,    pointer     :: qq(:)                     ! qq array
+    real,    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
+
+    real, intent(in) &
+         & :: Te, &    ! electron temperature [K]
+         & Ne, &       ! electron density [cm^-3]
+         & ionDenUp    ! ion density of the upper ion stage 
+
+    
+    integer  :: gx               ! stat weight reader  
+    integer  :: i, j, k, l, iT   ! counters/indeces
+    integer  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
+    integer  :: ios              ! I/O error status
+    integer  :: nLev             ! number of levels in atomic data file
+    integer  :: numLines         ! number of lines for atomic data refernce
+    
+    integer  :: nTemp            ! number of temperature points in atomic data file        
+    integer  :: err              ! allocation error status
+    
+    integer, parameter :: safeLim = 10000 ! loop safety limit
+    
+    integer, pointer :: g(:)              ! statistical weight array
+    
+    integer, dimension(2) :: ilow, &      ! lower index
+         & iup          ! upper index
+
+    character(len = 20), pointer :: &
+         & label(:)! labels array
+
+    character(len = 75) :: text  ! lines of text
+
+    character(len = *), &
+         & intent(in)  :: file_name   ! ionic data file name
+
+
+    sqrTe   = sqrt(Te)
+    log10Te = log10(Te) 
+    
+    ! open file containing atomic data
+    close(11)
+    open(unit=11,  action="read", file = file_name, status="old", position="rewind", &
+         & iostat = ios)
+    if (ios /= 0) then
+       print*, "! equilibrium: can't open file: ", file_name
+       stop
+    end if
+    
+    ! read reference heading
+    read(11, *) numLines
+    do i = 1, numLines
+       read(11, '(78A1)') text
+    end do
+    
+    ! read number of levels and temperature points available
+    read(11, *) nLev, nTemp
+    
+    ! allocate space for labels array
+    allocate(label(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate label array memory"
+       stop
+    end if
+    
+    ! allocate space for tempertaure points array
+    allocate(logTemp(nTemp), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate logTemp array memory"
+       stop
+    end if
+    
+    ! allocate space for transition probability  array
+    allocate(a(nLev, nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate a array memory"
+       stop
+    end if
+
+    ! allocate space for transition probability  array
+    allocate(alphaTotal(nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate a array memory"
+       stop
+    end if
+    
+    ! allocate space for energy levels array
+    allocate(e(nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate e array memory"
+       stop
+    end if
+    
+    ! allocate space for statistical weights array
+    allocate(g(nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate g array memory"
+       stop
+    end if
+    
+    ! allocate space for qom array
+    allocate(qom(nTemp, nLev, nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate qom array memory"
+       stop
+    end if
+    
+    ! allocate space for collisional strengths array
+    allocate(cs(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate cm array memory"
+       stop
+    end if
+    
+    ! allocate space for q eff array
+    allocate(qeff(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate qeff array memory"
+       stop
+    end if
         
+    ! allocate space for tnij array
+    allocate(tnij(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate tnij array memory"
+       stop
+    end if
+
+    ! allocate space for x array
+    allocate(x(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate x array memory"
+       stop
+    end if
+         
+    ! allocate space for y array
+    allocate(y(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate y array memory"
+       stop
+    end if
+    
+    ! allocate space for qq array
+    allocate(qq(nTemp), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate qq array memory"
+       stop
+    end if
+    
+    ! allocate space for qq2 array
+    allocate(qq2(nTemp), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate qq2 array memory"
+       stop
+    end if
+    
+    ! allocate space for n array
+    allocate(n(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate n array memory"
+       stop
+    end if
+    
+    ! allocate space for n2 array
+    allocate(n2(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate n2 array memory"
+       stop
+    end if
+    
+    ! zero out arrays
+    a = 0.
+    cs = 0.
+    e = 0.
+    fLineEm = 0.
+    g = 0
+    n = 0.
+    n2 = 0.
+    qom = 0.
+    qeff = 0.
+    qq = 0.
+    qq2 = 0.
+    logTemp = 0.
+    tnij = 0.
+    x = 0.d0
+    y = 0.
     ! read labels
     do i = 1, nLev
        read(11, '(A20)') label(i)
@@ -2323,29 +2808,27 @@ module emission_mod
        g(i) = gx
        e(i) = ex
     end do
-    
+
     ! read power law fit coefficients [e-13 cm^3/s]
     ! and calculate total recombination coefficient
     ! (direct + cascades)
     alphaTotal = 0.
     
     do j = 2, nLev
-       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
-       
+!       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
+       read(unit=11,fmt=*,iostat=ios) br,z,a_r(:),a_d(:) !a_fit, b_fit
        if (ios<0) then
           exit
        else
           alphaTotal(1) = 1.
        end if
-           
-       if (nLev>100) then
-          print*, '! equilibrium: alphaTotal set to a &
-               &max 100 level atom, please expand'
-          stop
-       end if
-       
-       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
-       
+                  
+!       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
+       alphaTotal(j)=1.e-13*br*z*a_r(1)*(Te*1.e-4/z**2)**a_r(2)/(1.+a_r(3)*&
+            & (Te*1.e-4/Z**2)**a_r(4))+1.0e-12*br*(a_d(1)& 
+            & /(Te*1.e-4)+a_d(2)+a_d(3)*Te*1.e-4+a_d(4)*(Te*1.e-4)**2)*&
+            & (Te*1.e-4)**(-1.5)*exp(-a_d(5)*1.e4/Te)              
+
     end do
 
     ! close atomic data file 
@@ -2389,13 +2872,12 @@ module emission_mod
           qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
        end do
     end do
-    
     ! set up x
     do i= 2, nLev
        do j = 1, nLev
           
           x(1,:) = 1.
-          y = 0.
+!          y = 0.
           y(1)   = 1.
           
           if (j /= i) then
@@ -2439,8 +2921,8 @@ module emission_mod
           end if
        end do
     end do
-    
     ! deallocate arrays
+    if( associated(alphaTotal) ) deallocate(alphaTotal)
     if( associated(label) ) deallocate(label)
     if( associated(logTemp) ) deallocate(logTemp)
     if( associated(a) ) deallocate(a)
@@ -2456,8 +2938,8 @@ module emission_mod
     if( associated(e) ) deallocate(e)
     if( associated(g) ) deallocate(g)
     if( associated(qom) ) deallocate(qom)
-        
-  end subroutine equilibrium
+  end subroutine equilibrium1
+
 
   ! this procedure performs the solution of linear equations
   subroutine luSlv(a, b, n)
@@ -2552,7 +3034,7 @@ module emission_mod
       integer :: nResLinesFile
       integer :: safeLimit = 1e6 !
 
-      open(unit=19,file="data/resLines.dat", status="old", position="rewind", iostat=ios)
+      open(unit=19, action="read", file="data/resLines.dat", status="old", position="rewind", iostat=ios)
       if (ios /= 0) then
          print*, "! initResLines: can't open file: data/resLines"
          stop
@@ -2630,7 +3112,8 @@ module emission_mod
          end if
 
          do j = 1, resLine(nL)%nmul
-            read(unit=19,fmt='(A112,1x,I2,1x,I2)', iostat=ios) reader, resLine(nL)%moclow(j), resLine(nL)%mochigh(j) 
+            read(unit=19,fmt='(A112,1x,I2,1x,I2)', iostat=ios) reader, &
+                 & resLine(nL)%moclow(j), resLine(nL)%mochigh(j) 
             if (ios/=0) then
                print*, "! initResLines: error reading data/resLines.dat file - 2"
                stop
@@ -2691,7 +3174,7 @@ module emission_mod
             print*, "! initResLines: can't allocate array memory, fEscapeResPhotons"
             stop
          end if
-         grid(iGrid)%fEscapeResPhotons=0.
+         grid(iGrid)%fEscapeResPhotons(0:grid(iGrid)%nCells,1:nResLines) = 0. 
 
          ! and the extra packets to be transferred from each location
          allocate(grid(iGrid)%resLinePackets(0:grid(iGrid)%nCells), stat = err)
@@ -2699,7 +3182,7 @@ module emission_mod
             print*, "! initResLines: can't allocate array memory, resLinePackets"
             stop
          end if
-         grid(iGrid)%resLinePackets=0.
+         grid(iGrid)%resLinePackets(0:grid(iGrid)%nCells) = 0.
 
       end do
 

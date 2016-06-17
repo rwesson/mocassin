@@ -11,8 +11,8 @@ module ionization_mod
     real, pointer :: FFOpacity(:)       ! FF opacity
     real, pointer :: log10nuArray(:)    ! log10(nu) at this cell
 
-    real, dimension(nElements, nstages)& 
-         &:: density                    ! abundance*ionDensity*HDen [cm^-3] 
+    real, pointer & 
+         &:: density(:,:)               ! abundance*ionDensity*HDen [cm^-3] 
 
     real, save :: log10Ne               ! log10(Ne) at this cell
     real, save :: log10Te               ! log10(Te) at this cell
@@ -40,6 +40,16 @@ module ionization_mod
 
         ! check whether this cell is outside the nebula
         if (grid%active(ix,iy,iz) <= 0) return
+
+        if (firstLg) then        
+           allocate(density(nElements, nStages), stat=err)
+           if (err /= 0) then
+              print*, "! ionizationDriver: can't allocate grid memory"
+              stop 
+           end if
+        end if
+
+        density=0.
 
         ! find the physical properties of this cell
         ionDenUsed = grid%ionDen(grid%active(ix, iy, iz), :,:)

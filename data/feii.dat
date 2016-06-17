@@ -1,4 +1,4 @@
-10
+11
 Fe II 142 levels ** (allowed transitions of sextets and quartets only) **
    A list of the level no. its term, w, and energy is given in feii_eijs
  NB NB NB!  443 allowed quartet transitions have been set to zero as levels
@@ -9,6 +9,7 @@ Fe II 142 levels ** (allowed transitions of sextets and quartets only) **
 FeII upsilions from Zhang H.L., Pradhan A.K., (A&A,293,953,1995)
   A s for allowed transitions from Nahar,S.N., (A&A 293,967,1994)
   E s from Sugar,J. & Corliss,C. J.Phys.Chem.Ref.Data 14 Sup. 2. 1980
+
 142 20 1 
 3d6  5D  4s  a6D   
 3d6  5D  4s           
