@@ -473,7 +473,6 @@ module photon_mod
                     & grid(gP)%linePackets(grid(gP)%active(enPacket%xP(igpr), &
                     & enPacket%yP(igpr), enPacket%zP(igpr)), enPacket%nuP) + deltaE(iStar)
 
-
             end if
 
         end subroutine energyPacketRun
@@ -1226,6 +1225,7 @@ module photon_mod
                    enPacket%xP(1) = xP
                    enPacket%yP(1) = yP
                    enPacket%zP(1) = zP
+
                    
                    gP = abs(grid(gP)%active(xP,yP,zP))
 
@@ -1722,6 +1722,7 @@ module photon_mod
                       enPacket%xP(igpp) = xP
                       enPacket%yP(igpp) = yP
                       enPacket%zP(igpp) = zP            
+
                       
                       if (grid(gP)%active(enPacket%xp(igpp), enPacket%yp(igpp), enPacket%zp(igpp)) < 0.) then
                          print*, "! pathSegment: new packet cannot be emitted from re-mapped cell -1-"
@@ -1798,7 +1799,10 @@ module photon_mod
 
                    if (enPacket%xP(1) <= 0 .or. & 
                         & enPacket%yP(1) <= 0 .or. & 
-                        & enPacket%zP(1) <= 0 ) then
+                        & enPacket%zP(1) <= 0 .or. & 
+                        & enPacket%xP(1) > grid(grid(gP)%motherP)%nx .or. & 
+                        & enPacket%yP(1) > grid(grid(gP)%motherP)%ny .or. &
+                        & enPacket%zP(1) > grid(grid(gP)%motherP)%nz) then
 
                       ! locate where we are at on the mother grid
                       call locate(grid(grid(gP)%motherP)%xAxis, rvec%x, enPacket%xP(1))
@@ -1822,7 +1826,6 @@ module photon_mod
                               & enPacket%zP(1) = enPacket%zP(1)+1
                       end if                      
 
-                      
                    else
                       
                       if (vHat%x>0.) then
@@ -2575,11 +2578,6 @@ module photon_mod
                            stop
                         end if
                      
-print*, 'e', nanglebins
-print*, enPacket%lgStellar, enPacket%direction
-print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
-print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
-
                         if (nAngleBins>0) then
                            if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
 
@@ -2743,10 +2741,10 @@ print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPoi
             end if
             
 
-print*, 'f', nanglebins
-print*, enPacket%lgStellar, enPacket%direction
-print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
-print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+!print*, 'f', nanglebins
+!print*, enPacket%lgStellar, enPacket%direction
+!print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+!print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
 
             if (nAngleBins>0) then
                if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then

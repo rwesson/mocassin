@@ -57,6 +57,7 @@ program MoCaSSiNplot
     integer         :: tranP          ! transmnission coeff index
     integer         :: tranMaxP       ! maximum tran coeff index 
     integer         :: contP          ! continuum index counter 
+    integer         :: yP             ! 
 
     logical         :: lgContinuum    ! 
 
@@ -147,7 +148,7 @@ program MoCaSSiNplot
        tranCoeff = tranCoeffTemp
 
     end if
-    
+
     if (taskid == 0) then
        open(unit=29, file='output/grid4.out', status='unknown',  action="write",position='rewind',iostat=ios)
        if (ios /= 0) then
@@ -161,9 +162,18 @@ program MoCaSSiNplot
     ! read in data from benj skil smit 99
     call readHeIRecLines()
 
+
     do iG = 1, nGrids
+
+
+       if (lg2D) then 
+          yP = 1
+       else
+          yP = grid3D(iG)%ny
+       end if
+
        do i = 1, grid3D(iG)%nx
-          do j = 1, grid3D(iG)%ny
+          do j = 1, yP
              do k = 1, grid3D(iG)%nz
 
                 ! find the volume of this cell 
@@ -407,7 +417,7 @@ program MoCaSSiNplot
 
     do iG=1, nGrids
        do i = 1, grid3D(iG)%nx
-          do j = 1, grid3D(iG)%ny
+          do j = 1, yP
              do k = 1, grid3D(iG)%nz
                 
                 if (plot%lgFilter) then

@@ -1,0 +1,26 @@
+autoPackets 0.20 2. 10000000
+TStellar 80000.
+contShape  blackbody
+output 
+symmetricXYZ
+densityFile 'input/bipolar_lobes.dat'
+nebComposition "input/abun.in"
+multiGrids 2 'input/subgrid.in'
+TeStart 10000.
+maxIterateMC  20 95.
+nPhotons 1000000
+nx 16
+ny 16
+nz 16
+nstages 7
+nbins 600
+LStar 1.0
+nuMax 15.
+nuMin 1.001e-5
+Rin 1.0e15
+Rout 1.0E+18
+convLimit 0.05
+writeGrid 10.
+dustFile 'input/species.dat' 'input/sizes.dat'
+Ndust file 'input/dustgrid.ndust'
+resLinesTransfer 69.

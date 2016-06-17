@@ -236,6 +236,243 @@ module pathIntegration_mod
 
     end subroutine integratePathTau
 
+
+    ! This subroutine performs the integration of opacities from a position
+    ! aVec to the edge of the nebula in the arbitrary direction uHat
+    subroutine integratePathTauNu(grid, aVec, uHat, freqP, absTau)
+        implicit none
+
+        type(grid_type), intent(in) :: grid(*)        ! grid
+
+        type(vector),  intent(in)   :: uHat           ! direction vector
+        type(vector),  intent(in)   :: aVec           ! starting position vector
+
+        real, intent(out)           :: absTau         ! extinction optical depth
+
+        ! local variables
+
+        type(vector)                :: rVec           ! position vector
+        type(vector)                :: vHat           ! direction vector
+
+        integer, intent(in)         :: freqP           ! the frequency index
+
+        integer                     :: err            ! allocation error status
+        integer                     :: i              ! counter
+        integer                     :: xP, yP, zP     ! x, y, and z axis indeces
+
+        real                        :: dlSmall        ! distance increment
+
+        if (nGrids>1) then
+           print*, 'integratePathTau: tau integration routine still not developed for multiple grids... returning '
+           return
+        end if
+
+        ! locate the starting position in the cartesian grid
+        call locate(grid(1)%xAxis, aVec%x, xP)
+        if ( xP < grid(1)%nx ) then
+            if ( aVec%x >= (grid(1)%xAxis(xP)+ &
+                 & grid(1)%xAxis(xP+1))/2. ) xP = xP+1
+        end if
+        call locate(grid(1)%yAxis, aVec%y, yP)
+        if ( yP < grid(1)%ny ) then
+            if ( aVec%y >= (grid(1)%yAxis(yP)+ &                           
+                 & grid(1)%yAxis(yP+1))/2. ) yP = yP+1 
+        end if
+        call locate(grid(1)%zAxis, aVec%z, zP)
+        if ( zP < grid(1)%nz ) then
+            if ( aVec%z >= (grid(1)%zAxis(zP)+ &                           
+                 & grid(1)%zAxis(zP+1))/2. ) zP = zP+1 
+        end if
+ 
+
+        ! check that the input position is not outside the grid
+        if ( (xP <= 0).or.(xP > grid(1)%nx) ) then
+            print*, "! integratePathTau: starting position in x is outside the grid",xP,yP,zP
+            stop
+        else if ( (yP <= 0).or.(yP > grid(1)%ny) ) then
+            print*, "! integratePathTau: starting position in y is outside the grid",xP,yP,zP
+            stop
+        else if ( (zP <= 0).or.(zP > grid(1)%nz) ) then   
+            print*, "! integratePathTau: starting position in z is outside the grid",xP,yP,zP
+            stop
+        end if
+
+        dlSmall = 0.
+        if (uHat%x > 0.) then
+           ! find linear increment
+           dlSmall =  abs(grid(1)%xAxis(2) - grid(1)%xAxis(1))
+           do i = 2, grid(1)%nx-1
+              dlSmall = min(dlSmall, abs(grid(1)%xAxis(i+1)-grid(1)%xAxis(i)) )
+           end do
+        end if
+
+        if (uHat%y > 0.) then
+           if (dlSmall <= 0.) then
+              ! find linear increment
+              dlSmall =  abs(grid(1)%yAxis(2) - grid(1)%yAxis(1))
+              do i = 2, grid(1)%ny-1
+                 dlSmall = min(dlSmall, abs(grid(1)%yAxis(i+1)-grid(1)%yAxis(i)) )
+              end do
+           else
+              ! find linear increment
+              do i = 1, grid(1)%ny-1
+                 dlSmall = min(dlSmall, abs(grid(1)%yAxis(i+1)-grid(1)%yAxis(i)) )
+              end do
+           end if
+        end if
+
+        if (uHat%z > 0.) then
+           if (dlSmall <= 0.) then
+              ! find linear increment
+              dlSmall =  abs(grid(1)%zAxis(2) - grid(1)%zAxis(1))
+              do i = 2, grid(1)%nz-1
+                 dlSmall = min(dlSmall, abs(grid(1)%zAxis(i+1)-grid(1)%zAxis(i)) )
+              end do
+           else
+              ! find linear increment
+              do i = 1, grid(1)%nz-1
+                 dlSmall = min(dlSmall, abs(grid(1)%zAxis(i+1)-grid(1)%zAxis(i)) )
+              end do
+           end if
+        end if
+        
+        dlSmall = dlSmall/2.
+
+        ! initialize the optical depth arrays
+        absTau = 0.
+
+        ! initialize direction vector
+        vHat = uHat        
+
+        ! the first optical depth are all zero (as displacement is zero)
+        ! these have already been set to zero in the initialization of the arrays
+        ! so add the first displacements vector (dlSmall*vHat)
+        rVec = aVec + dlSmall*vHat
+        
+        ! execute this loop until the edge of the grid is reached
+        do i = 1, maxTau
+
+           ! check if the path is still within the ionized region 
+           if (rVec%x > grid(1)%xAxis(grid(1)%nx)) exit
+
+           if (rVec%y > grid(1)%yAxis(grid(1)%ny)) exit
+           
+           if (rVec%z > grid(1)%zAxis(grid(1)%nz)) exit
+           
+           if ( sqrt( (rvec%x/1.e10)**2. + (rvec%y/1.e10)**2. + (rvec%z/1.e10)**2.)*1.e10 >= R_out &
+                & .and. R_out > 0.) exit
+           
+           
+           if (lgSymmetricXYZ) then
+              if( rVec%x < grid(1)%xAxis(1) ) then
+                 vHat%x = -vHat%x
+                 rVec%x = -rVec%x
+                 call locate(grid(1)%xAxis, rVec%x, xP)
+              end if
+              if( rVec%y < grid(1)%yAxis(1) ) then
+                 vHat%y = -vHat%y
+                 rVec%y = -rVec%y
+                 call locate(grid(1)%yAxis, rVec%y, yP)
+              end if
+              if( rVec%z < grid(1)%zAxis(1) ) then
+                 vHat%z = -vHat%z
+                 rVec%z = -rVec%z
+                 call locate(grid(1)%zAxis, rVec%z, zP)
+              end if
+           end if
+             
+           ! x-axis
+           if (xP < grid(1)%nx) then
+              if ( rVec%x > (grid(1)%xAxis(xP)+grid(1)%xAxis(xP+1))/2. ) then
+                 xP = xP + 1
+              end if
+           else if (xP == grid(1)%nx) then
+              if ( rVec%x > grid(1)%xAxis(xP) ) exit
+           end if
+           if (xP > 1) then
+              if ( rVec%x < (grid(1)%xAxis(xP)+grid(1)%xAxis(xP-1))/2. ) then
+                 xP = xP - 1
+              end if
+           end if
+
+           ! y-axis
+           if (yP < grid(1)%ny) then
+              if ( rVec%y > (grid(1)%yAxis(yP)+grid(1)%yAxis(yP+1))/2. ) then
+                 yP = yP + 1
+              end if
+           else if (yP == grid(1)%ny) then
+              if (rVec%y > grid(1)%yAxis(yP)) exit
+           end if
+           if (yP > 1) then
+              if ( rVec%y < (grid(1)%yAxis(yP)+grid(1)%yAxis(yP-1))/2. ) then
+                 yP = yP - 1
+              end if
+           end if
+           
+           ! z-axis
+            if (zP < grid(1)%nz) then
+               if ( rVec%z > (grid(1)%zAxis(zP)+grid(1)%zAxis(zP+1))/2. ) then
+                  zP = zP + 1
+               end if
+            else if (zP == grid(1)%nz) then
+               if (rVec%z > grid(1)%zAxis(zP)) exit
+            end if
+            if (zP > 1) then
+                if ( rVec%z < (grid(1)%zAxis(zP)+grid(1)%zAxis(zP-1))/2. ) then
+                    zP = zP - 1
+                end if
+            end if
+                
+            if (.not.lgSymmetricXYZ) then
+                if ((xP < 1) .or. (zP < 1) .or. (yP < 1)) exit
+            end if
+
+             ! check if there's any symmetries and if the path must be reflected
+             if (lgSymmetricXYZ) then
+                 if (xP<1) then
+                     vHat%x=-vHat%x
+                     rVec%x=-rVec%x
+                     call locate(grid(1)%xAxis, rVec%x, xP)
+                     if (xP < grid(1)%nx) then
+                         if ( rVec%x > (grid(1)%xAxis(xP)+grid(1)%xAxis(xP+1))/2. ) xP = xP + 1
+                     else if (xP == grid(1)%nx) then
+                         if (rVec%x > grid(1)%xAxis(xP)) exit
+                     end if
+                 end if
+                 if (yP<1) then
+                     vHat%y=-vHat%y
+                     rVec%y=-rVec%y
+                     call locate(grid(1)%yAxis, rVec%y, yP)
+                     if (yP < grid(1)%ny) then
+                         if ( rVec%y > (grid(1)%yAxis(yP)+grid(1)%yAxis(yP+1))/2. ) yP = yP + 1
+                     else if (yP == grid(1)%ny) then
+                         if (rVec%y > grid(1)%yAxis(yP)) exit
+                     end if 
+                 end if
+                 if (zP<1) then
+                     vHat%z=-vHat%z
+                     rVec%z=-rVec%z
+                     call locate(grid(1)%zAxis, rVec%z, zP)
+                     if (zP < grid(1)%nz) then
+                         if ( rVec%z > (grid(1)%zAxis(zP)+grid(1)%zAxis(zP+1))/2. ) zP = zP + 1
+                     else if (zP == grid(1)%nz) then
+                         if (rVec%z > grid(1)%zAxis(zP)) exit
+                     end if 
+                 end if
+             end if                                                                    
+
+             ! add the delta optical depths 
+             absTau = absTau + grid(1)%opacity(grid(1)%active(xP,yP,zP),freqP)*dlSmall 
+
+             ! increment position by adding the displacements vector (dlSmall*vHat)
+             rVec = rVec + dlSmall*vHat
+            
+        end do
+
+    end subroutine integratePathTauNu
+
+
+
 end module pathIntegration_mod       
 
 

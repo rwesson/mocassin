@@ -1,4 +1,5 @@
 \documentclass[11pt]{article}
+\usepackage{epsfig}
 
 \pagestyle{plain}
 \textwidth 17cm
@@ -92,9 +93,8 @@
 
 \noindent{\bf \large 0. What's new}\\
 \\
-\paragraph{from 2.02.53 to 2.02.56} Various atomic data files changed mostly back to Chianti 6. TauNu file reinstated.
-\paragraph{from 2.02.52 to 2.02.53} Updated atomic data to Chianti 6. Also added NiII and CaII from the forthcoming Chianti 7. Changed the SED.out output to give flux in Jy multiplied by D2 where D is in pc (users must divide by D2 to obtain flux in Jy. Reinstated the accessories directory with a
-plotSED.pro idl program included. Echo keyword included - see list of keywords below.
+\paragraph{from 2.02.54 to 2.02.53} Back to old atomic data. (problems with formats)
+\paragraph{from 2.02.52 to 2.02.53} Updated atomic data to Chianti 6. Also added NiII and CaII from the forthcoming Chianti 7. Changed the SED.out output to give flux in Jy multiplied by D$^2$ where D is in pc (users must divide by D$^2$ to obtain flux in Jy. Reinstated the accessories directory with a plotSED.pro idl program included. Echo keyword included - see list of keywords below. 
 \paragraph{from 2.02.51 to 2.02.52} Fixed bug in mocassinWarm and mocassinOutput in grid\_mod and fixed but that affected plane parallel models.
 \paragraph{from 2.02.50 to 2.02.51} Fixed bug in mocassinOutput mocassinWarm
 \paragraph{from 2.02.49 to 2.02.50} 2D option implemented. Does not work with multigrids. 
@@ -507,22 +507,18 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
                      string2 = grain size info file\\
 		     $[$"none", "none"$]$\\
 
-\paragraph    {echo real1 real2} : If one needs to account for light
-                     travel time effects, for example if the source
-                     luminosity is changing, then this keyword will
-                     cause the results in SED.out to be integrated
-                     only over grid cells lying between ellipsoids
-                     corresponding to light travel times of real1 and
-                     real2. real1 and real2 are in light days, and
-                     real1 must be less than real2. The   ellipsoids
-                     open out along the z-axis, and so one should also
-                     specify âinclination 1 0.0 -1â in input.in when
-                     using this keyword. A review of the geometries of
-                     light echoes can be found in Sugerman, 2003, AJ,
-                     126, 1939, and a case of mocassin modelling
-                     including light travel time considerations is
-                     described by Wesson et al (arXiv:0907.0246).\\  
-                     [.false.]\\
+\paragraph{echo real1 real2} : If one needs to account for light travel 
+                     time effects, for example if the source luminosity is changing, then this 
+                     keyword will cause the results in SED.out to be integrated only over grid 
+                     cells lying between ellipsoids corresponding to light travel times of 
+                     real1 and real2.  real1 and real2 are in light days, and real1 must be 
+                     less than real2.  The ellipsoids open out along the z-axis, and so one 
+                     should also specify `inclination 1 0.0 -1' in input.in when using this 
+                     keyword.  A review of the geometries of light echoes can be found in 
+                     Sugerman, 2003, AJ, 126, 1939, and a case of {\sc mocassin} modelling 
+                     including light travel time considerations is described by Wesson et al 
+                     (arXiv:0907.0246).\\
+                     $[$.false.$]$\\
 
 \paragraph    {edges real1 real2 real3 }: Defines the grid edges (only to be used with automatic
                      grids). real1 real2 and real3 are respectively the x, y and z 
@@ -1045,115 +1041,123 @@ The file tauNu.out contains the frequency dependent optical depth tau(nu) [which
    (and accurate) formal solution will only be employed. \\
 
 \noindent{\large   5.2 Running multiple spatial grids}\\
+\noindent{\large   5.2 Running multiple spatial grids}\\
 
-   {\bf WARNING: This section is out of date -- new help is in the process of being 
-   written as we speak -- almost ;-) . Please email me if you want to use multiple grids 
-   and need some help be@star.ucl.ac.uk}\\
-   
-   From Version 2.00 onwards you can choose to run simulations including multiple 
-   spatial sampling. A typical example of when this would be need is for the modelling
-   of knots embedded in a gaseous nebula. The density enhancement in the knot requires
-   a finer spatial grid than one that may be sufficient to model the main nebula. In 
-   such cases the subgrid describing the knot can be modelled simultaneously and 
-   self consistently by MOCASSIN's multigrid routines. The radiation field will be safely 
-   transferred from mother to sub grids with (hopefully) no error being introduced by 
-   the process. The overheads involved only reflect the eventual introduction of extra 
-   grid cells. \\
-   A typical example of how such a model would be set up is briefly described below. All 
-   files mentioned should be included in the examples/multigrid subdirectory.\\
-   The example below shows the input.in file for a plane parallel model consisting of
-   a cubic blob embedded into a cubic grid: \\
-   \\
-\indent  autoPackets 0.20 2. 1000000000\\
-\indent        output\\
-\indent        contShape  blackbody\\
-\indent        nebComposition 'examples/abunHII40.in'\\
-\indent        maxIterateMC  30 95.\\
-\indent        nPhotons 10000000\\
-\indent        nx 10\\
-\indent        ny 10\\
-\indent        nz 10\\
-\indent        planeIonization 3.0\\
-\indent        Rin 0.\\
-\indent        Rout 2.1e19\\
-\indent        TStellar 45000.\\
-\indent        writeGrid 5.\\
-\indent        convLimit 0.03\\
-\indent        densityFile 'examples/cubenew.dat'\\
-\indent        multiGrids 2 'examples/subGrids.in'\\
+   From Version 2.00 onwards you can choose to run simulations including multiple spatial
+   grids. A typical example of when this would be needed is for the modelling of knots
+   embedded in a gaseous nebula. The density enhancement in the knot requires a finer
+   spatial grid than one that may be sufficient to model the main nebula. In such cases
+   the subgrid describing the knot can be modelled simultaneously and self consistently
+   by MOCASSIN's multigrid routines. The radiation field will be safely transferred from
+   mother to subgrids with no error being introduced by the process. The overheads involved
+   only reflect the eventual introduction of extra grid cells. \\
+   An example of how such a model would be set up is briefly described below. This example
+   consists of a large bipolar nebula (similar to those found in bipolar planetary nebulae)
+   combined with a dense circumstellar disk. The combination of a large, diffuse nebula
+   with a small dense disk requires the use of subgrids by modelling the disk in a subgrid
+   at the centre of a large master grid which contains the bipolar lobes. See
+   Figure~\ref{multgridsexample} as an example of how the grids might fit together. The
+   examples/multigrid/ subdirectory give the files for running this model for gas-only
+   and gas + dust models. \\
 \\
-   The density distribution of the mother grid (containing the main nebula) is
-   provided provided by an external file using the densityFile keyword as described in 
-   Section 3.1; e.g.\\
-\indent        densityFile 'examples/cube.dat'\\
-\noindent    MOCASSIN knows that it will have to deal with more than one grid (in this case 2) 
-   thanks to the line\\
-\indent        multiGrids 2 'examples/subGrids.in'\\
-\noindent   the integer after the multiGrid keyword is the total number of grids including the 
-   mother grid; the file 'example/subGrids.in' contains all the information regarding
-   the position of the subgrids and their specification. 
-   This file is created automatically by using the makeSubGrids.f90 program included 
-   in the 'accessories/' directory. \\
-   The makeSubGrids.f90 program reads the makeSubGrids.in input file, that has the 
-   following form\\
+\begin{figure*}
+\includegraphics[width=150pt]{bipolar_model_image1.ps}
+\includegraphics[width=150pt]{bipolar_model_image2.ps}
+\includegraphics[angle=90, width=150pt]{bipolar_model_image3.ps}
+\caption{Visualisations of a model incorporating subgrids. {\it Left:} The master grid,
+containing a pair of bipolar lobes; {\it Centre:} The central subgrid showing a dense
+circumstellar disk; {\it Right:} A side-on view showing the position of the subgrid (blue)
+relative to the entire model.}
+\label{multgridsexample}
+\end{figure*}
 \\
-\indent        1                                            \\
-\indent        cube.dat 10 10 10 1          \\
-\indent        cubenew.dat\\
-\indent        1 9 9 9 knot\_den.in\\
-\indent        7.e18 14.e18 7.e18 14.e18 7.e18 14.e18\\
-\indent        100. -1\\
+   The input file of a model incorporating subgrids uses the multiGrids keyword, as can
+   be seen in this gas-only example :\\
 \\
-\noindent   line 1: number of subgrids to be included\\
-\noindent   line 2: name of mother grid file; its x,y,z dimensions; multiChemistry? (1=no; $>$1=yes)\\
-\noindent   line 3: name of the modified mother grid file (to be created by makeSubGrids.f90)\\
-\noindent   line 4: knot index; its x,y,z extent; name of knot file (to be created by makeSubGrids.f90)\\
-\noindent   line 5: xmin,xmax,ymin,ymax,zmin,zmax in cm, defining the region occupied by knot 1\\
-\noindent   line 6: H number density in [cm$^{-3}$] of knot 1,  abundance index (negative if no multiChemistry)\\
+\indent       autoPackets 0.20 2. 10000000 \\
+\indent       TStellar 80000. \\
+\indent       contShape  blackbody \\
+\indent       output \\
+\indent       symmetricXYZ \\
+\indent       densityFile 'input/bipolar\_lobes.dat' \\
+\indent       nebComposition 'input/abun.in' \\
+\indent       multiGrids 2 'input/subgrid.in' \\
+\indent       TeStart 10000. \\
+\indent       maxIterateMC  20 95. \\
+\indent       nPhotons 1000000 \\
+\indent       nx 16 \\
+\indent       ny 16 \\
+\indent       nz 16 \\
+\indent       nstages 7 \\
+\indent       nbins 600 \\
+\indent       LStar 1.0 \\
+\indent       nuMax 15. \\
+\indent       nuMin 1.001e-5 \\
+\indent       Rin 1.0e15 \\
+\indent       Rout 1.0E+18 \\
+\indent       convLimit 0.05 \\
+\indent       writeGrid 10. \\
 \\
+   Where the number indicates the total number of grids (subgrids and master grid). In the
+   example there is one subgrid, so the total number of grids is two. The density distribution
+   of the mother grid (containing the main nebula, see Figure~\ref{multgridsexample}) is
+   provided in the usual way with the densityFile keyword, as described in Section 3.1. \\
+   The file 'input/subgrid.in' contains all the information regarding the position and details
+   of the subgrids. The file has the format:\\
+\\
+\indent       1 11 11 11 \\
+\indent       'input/subgrid0.dat' 1.0 \\
+\indent       0.0 2.0e+16 0.0 2.0e+16 0.0 2.0e+16 \\
+\\
+   The first line consist of the subgrid number (from 1 upwards) and the size of each axis in the
+   subgrid file, in this case subgrid 1 (the only subgrid) has axis of length 11 in each direction.
+   The second line contains the path to the specific subgrid file, and a numerical factor by which
+   the densities in the subgrid file are to be multiplied. This can be useful if you want to use a 
+   single subgrid file to model multiple small structures (e.g. knots) of different densities, but
+   identical structures.\\
+   The second line indicates the position of the subgrid in the master grid, in the form xmin, xmax,
+   ymin, ymax, zmin, zmax. Since this grid lies in the centre of a symmetricXYZ (1/8th) model, it 
+   sits in the corner of our master grid in cell (0,0,0). This cell extends from 0.0 to 2.0e16cm in each
+   direction. Because it is an edge cell in all three dimensions it is 1/8th the size of a normal cell.\\
+   Additional subgrids are listed by repeating these three lines, as appropriate, for each extra subgrid.
+   For example, if we added another subgrid cell at position (0,0,1) we would add the following three
+   lines to our subgrid.in file:\\
+\\
+\indent       2 11 11 21 \\
+\indent       'input/subgrid1.dat' 1.0 \\
+\indent       0.0 2.0e+16 0.0 2.0e+16 2.0e+16 6.0e16 \\
+\\
+   Note that the subgrid index number has increased, and we are pointing to a different subgrid file.
+   We have also changed the length of the subgrid cell in the Z axis to 21 (doubling the length of the
+   axis), and changing the zmin and zmax. Since we are not at the edge of the Z axis, we now have the full
+   length of the subgrid cell. The details for the X and Y axis haven't changed because we are in
+   effectively the same position for them.\\
    The maximum number of subgrids that may be included in a simulation is controlled by the 
    parameter maxGrids in the source/constants\_mod.f90 module; in the example above only 
-   one subgrid is included, additional subgrids could be included by simply repeating lines 
-   4,5 and 6 for each subgrid. \\
-
-\noindent   The knot\_den.in file above has the following format\\
-\\  
-\indent   0.0000000E+00  0.0000000E+00  0.0000000E+00   100.0000\\
-\indent   0.0000000E+00  0.0000000E+00  0.1250000       100.0000\\
-\indent   0.0000000E+00  0.0000000E+00  0.2500000       100.0000\\
-\indent   0.0000000E+00  0.0000000E+00  0.3750000       100.0000 \\
-\indent   0.0000000E+00  0.0000000E+00  0.5000000       100.0000\\
-\indent   0.0000000E+00  0.0000000E+00  0.6250000       100.0000\\
-\indent   0.0000000E+00  0.0000000E+00  0.7500000       100.0000\\
-\indent   0.0000000E+00  0.0000000E+00  0.8750000       100.0000\\
-\indent   0.0000000E+00  0.0000000E+00   1.000000       100.0000\\
-\indent   0.0000000E+00  0.1250000      0.0000000E+00   100.0000\\
-\indent   0.0000000E+00  0.1250000      0.1250000       100.0000\\
-\indent   etc ........\\
-   \\
-   Columns 1, 2 and 3 contain the x, y, and z positions in the subgrid, 
-   normalised to 1. The fourth column contains the h number density. (when 
-   running a multiChemistry model a fifth column would appear; containing 
-   the abundance file index). \\
-   It is worth noticing that since the x y and z positions
-   in the knot\_den.in files are given normalised to unity, we can include knots 
-   with the same geometry and density at several grid locations without the ]
-   need to create a density file for each knot. this can be done by specifying the 
-   same filename for the knots in the makeSubgrids.in file.  \\
-   The makeSubgrids.f90 file will also process the cube.dat file (which is 
-   the original mother grid density file provided by the user) turning off all 
-   the cells that are to be replaced by subgrids. The new file will be called 
-   cubenew.dat in the above example and this is the file that must be specified
-   in the input.in file of mocassin. \\
-   The makeSubgrids.f90 file can only create subgrids of homogeneous density and 
-   chemical indeces. It should be very easy for the user to customise the grids
-   obtained to included their 'favourite' density/chemistry distribution.\\
-   The output from multigrid models will be summarised in the usual files and an 
-   overall, as well as grid by grid result will be provided. \\
-   Christophe Morisset of UNAM is currently in the process of creating an IDL 
-   visualisation tool that is able to deal with multiGrids and reconstruction 
-   for a quick and efficient analysis of the results. It is intended to distribute 
-   the new tool as soon as it becomes available.\\
+   one subgrid is included. \\
+   The subgrid0.dat file contains a density distribution for the subgrid (which may be scaled in density
+   by the density scale number in the subgrid.in file), which might look like this:\\
+\\
+\indent   0.0 0.0 0.0 0.0 \\
+\indent   0.0 0.0 0.1 0.0 \\
+\indent   0.0 0.0 0.2 0.0 \\
+\indent   0.0 0.0 0.3 0.0 \\
+\indent   0.0 0.0 0.4 0.0 \\
+\indent   0.0 0.0 0.5 0.0 \\
+\indent   0.0 0.0 0.6 0.0 \\
+\indent   0.0 0.0 0.7 500.0 \\
+\indent   0.0 0.0 0.8 1000.0 \\
+\indent   0.0 0.0 0.9 1500.0 \\
+\indent   0.0 0.0 1.0 2000.0 \\
+\indent   0.0 0.1 0.0 0.0 \\
+\indent   0.0 0.1 0.1 0.0 \\
+\indent   0.0 0.1 0.2 0.0 \\
+\indent   0.0 0.1 0.3 0.0 \\
+\\
+   Columns 1, 2 and 3, contain the x, y and z positions in the subgrid, normalised to 1.
+   The fourth column contains the hydrogen number density, in similar form to that of the
+   master grid file (when running a multiChemistry mode a fifth column would appear 
+   containing the abundance file index).\\
 
 \noindent{ \large   5.3 Running models that include dust and gas. }\\
 
@@ -1257,13 +1261,8 @@ Please email (be@star.ucl.ac.uk) me if you would like to include T-spiking effec
    Pure-dust models are less computationally expensive than gas or dust and gas ones
    and reasonably sizes grids can be feasibly run on single processor machines. \\
 
-   {\sc mocassin} was designed for the modelling of the photoionised region of planetary 
-   nebulae and H II regions and it does not, at present, include the high energy 
-   physical processes which are needed, for example,  for the modelling of AGNs. 
-   However the inclusion of processes such as inner shell photoionisation and Compton 
-   heating is straightforward and this is intended to be one of the developments of the near 
-   future.  Moreover, current efforts are geared toward the inclusion of a self-consistent treatment 
-   for PDR processes, this requires the incorporation of a chemical network. \\
+   This version of {\sc mocassin} does not, at present, include high energy 
+   physical processes. These are available in Version 3, which is available from the author upon request (be@ast.cam.ac.uk). \\
 
 
 \end{document}
