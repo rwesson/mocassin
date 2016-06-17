@@ -322,7 +322,6 @@ module photon_mod
             integer                          :: err              ! allocation error status
             integer                          :: i, j             ! counters  
             integer                          :: idirP, idirT     ! direction cosines
-            integer                          :: nP
 
             type(photon_packet)              :: enPacket         ! the energu packet
 
@@ -361,66 +360,6 @@ module photon_mod
                ! create the packet        
                enPacket = newPhotonPacket(chType,position, xp, yp, zp, gp, noCellLoc)
 
-               if (nP == 1) then
-
-                   ! the packet escapes without further interaction
-                   
-                   idirT = int(acos(enPacket%direction%z)/dTheta)+1
-                   if (idirT>totangleBinsTheta) then
-                      idirT=totangleBinsTheta
-                   end if
-                   if (idirT<1 .or. idirT>totAngleBinsTheta) then
-                      print*, '! energyPacketRun: error in theta direction cosine assignment',&
-                           &  idirT, enPacket, dTheta, totAngleBinsTheta
-                      stop
-                   end if
-
-                   if (enPacket%direction%x<1.e-35) then
-                      idirP = 0
-                   else
-                      idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
-                   end if
-                   if (idirP<0) idirP=totAngleBinsPhi+idirP
-                   idirP=idirP+1
-                   if (idirP>totangleBinsPhi) then
-                      idirP=totangleBinsPhi
-                   end if
-                   
-                   if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                      print*, '! energyPacketRun: error in Phi direction cosine assignment',&
-                           &  idirP, enPacket, dPhi, totAngleBinsPhi
-                      stop
-                   end if
-
-               
-                   if (nAngleBins>0) then
-                      if ( (totangleBinsPhi>1 .and. viewPointPtheta(idirT) == viewPointPphi(idirP)) .or. &            
-                           & (totangleBinsPhi==1 .and. viewPointPtheta(idirT)>0) ) then
-                         grid(1)%escapedPackets(1, enPacket%nuP,&
-                              & viewPointPtheta(idirT)) = &
-                              &grid(1)%escapedPackets(1, &
-                              & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
-                         grid(1)%escapedPackets(1, enPacket%nuP,0)=&
-                              &grid(1)%escapedPackets(1, &  
-                              & enPacket%nuP,0) +  deltaE(iStar)
-                      else
-                         grid(1)%escapedPackets(1,enPacket%nuP,0) = &
-                              & grid(1)%escapedPackets(1, &
-                              & enPacket%nuP,0) +  deltaE(iStar)
-                      end if
-                   else                              
-                      grid(1)%escapedPackets(1, & 
-                           enPacket%nuP,0) = &
-                           & grid(1)%escapedPackets(1, &
-                           & enPacket%nuP,0) +  deltaE(iStar)
-                      
-                   end if
-                   
-                   
-                   return
-                end if
-
-
             ! if the photon is from an extra source of diffuse radiation
              case ("diffExt")
 
@@ -451,7 +390,12 @@ module photon_mod
             if (.not.lgDust .and. enPacket%nu < ionEdge(1) .and. .not.enPacket%lgLine) then
 
                ! the packet escapes without further interaction
-               idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               if (lgSymmetricXYZ) then
+                  idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+               else
+                  idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               end if
+
                if (idirT>totangleBinsTheta) then
                   idirT=totangleBinsTheta
                end if
@@ -462,12 +406,17 @@ module photon_mod
                end if
               
 
-               if (enPacket%direction%x<1.e-35) then
+               if (abs(enPacket%direction%x)<1.e-35) then
                   idirP = 0
                else
-                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                  if (lgSymmetricXYZ) then
+                     idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                  else
+                     idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                  end if
                end if
                if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                idirP=idirP+1
 
                if (idirP>totangleBinsPhi) then
@@ -477,35 +426,59 @@ module photon_mod
                end if
              
                if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                  print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                  print*, '! energyPacketRun: error in phi direction cosine assignment -1',&
                        &  idirP, enPacket, dPhi, totAngleBinsPhi
                   stop
                end if
 
-
                if (nAngleBins>0) then
-                  if ( (totangleBinsPhi>1 .and. viewPointPtheta(idirT) == viewPointPphi(idirP)) .or. &            
-                       & (totangleBinsPhi==1 .and. viewPointPtheta(idirT)>0) ) then
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,&                   
-                          & viewPointPtheta(idirT)) = &                                                           
-                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &                          
-                          & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)                                    
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,0) = &
-                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &                          
-                          & enPacket%nuP,0) +  deltaE(iStar)                                    
+                  if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) +  deltaE(iStar)
+
+                  elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                       & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                       & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)
+                     if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) +  deltaE(iStar)
 
                   else
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2),enPacket%nuP,0) = &
-                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &  
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,0) +  deltaE(iStar)
 
                   end if
-               else                              
+
+               else
+
+                  if (enPacket%origin(1) == 0) then 
+                     print*, '! energyPacketRun: enPacket%origin(1) ==0'
+                     stop
+                  end if
+                  if (enPacket%origin(2) < 0) then 
+                     print*, '! energyPacketRun: enPacket%origin(2) < 0'
+                     stop
+                  end if
+
                   grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                        & enPacket%nuP,0) = &
                        & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                        & enPacket%nuP,0) +  deltaE(iStar)
-
+                  
                end if
 
                return
@@ -1535,11 +1508,12 @@ module photon_mod
              end if
 
              ! check if the packet interacts within this cell
-             if ((absTau+tauCell > passProb) .and. (grid(gP)%active(xP,yP,zP)>0) .and. &
-                  & grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP) > 1.e-10) then
+             if ((absTau+tauCell > passProb) .and. (grid(gP)%active(xP,yP,zP)>0)) then
+! .and. &
+!                  & grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP) > 1.e-10) then
 
                 ! packet interacts
-                
+
                 ! calculate where within this cell the packet is absorbed
                 dlLoc = (passProb-absTau)/grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP)                
 
@@ -2884,162 +2858,182 @@ module photon_mod
    real :: bmu,b,ri1,ri3,cosi3,sini3,cosb2,sinbt,sini2,bott,cosdph
    real :: cosi2,sin2i3,sin2i2,cos2i3,cos2i2,sin2,cos2,sin2cos1
    real :: cos2sin1,cosi1,sini1,sin2i1,cos2i1
-   real :: random
+   real :: random, vin(3), vout(3), s, denom
    real :: hgg, g2
    
-   nxp = inpacket%direction%x
-   nyp = inpacket%direction%y
-   nzp = inpacket%direction%z
- 
-   cost = inpacket%direction%z
-   sint = sqrt(1.-cost*cost)
-
-   sinp = inpacket%direction%y/sint
-   cosp = inpacket%direction%x/sint
-   phi  = acos(cosp)
- 
-   costp=cost
-   sintp=sint
-   phip=phi
+! BEKS 2010
+   vin(1) = inpacket%direction%x
+   vin(2) = inpacket%direction%y
+   vin(3) = inpacket%direction%z
  
    hgg = gSca(inpacket%nuP)
-   g2 = hgg*hgg
- 
  
    ! henyey-greenstein 
-   call random_number(random)
+   call random_number(random) ! this is the theta dependence
+   s=2.*random-1.
+   if (hgg.ge.0.01) then
+      cost=0.5/hgg*(1.+hgg**2-((1.-hgg**2)/(1.+hgg*s))**2)
+   else
+      cost=s+1.5*hgg*(1.-s**2)-2*hgg**2*s*(1.-s**2)
+   endif
+   sint=sqrt(1.-cost**2)
 
-   bmu= ((1.+g2)-((1.-g2)/(1.-hgg+2.*hgg*random))**2)/(2.*hgg)
-
-   cosb2=bmu**2
-   b=cosb2-1.
- 
-   if(abs(bmu) > 1.) then
-      if(bmu>1.) then
-         bmu=1.
-         cosb2=1.
-         b=0.
-      else
-         bmu=-1.
-         cosb2=1.
-         b=0.
-      end if
-   end if
-   sinbt=sqrt(1.-cosb2)
-   call random_number(random)
- 
-   ri1=twoPi*random
-   
-
-
-   if(ri1>pi) then
-      ri3=twoPi-ri1
-      cosi3=cos(ri3)
-      sini3=sin(ri3)
-      sin2i3=2.*sini3*cosi3
-      cos2i3=2.*cosi3*cosi3-1.
- 
- 
-      if(abs(bmu)==1.) return
-      
-      cost=costp*bmu+sintp*sinbt*cosi3
-
-      if(abs(cost)<1.) then
-         sint=abs(sqrt(1.-cost*cost))
-         sini2=sini3*sintp/sint
-         bott=sint*sinbt
-         cosi2=costp/bott-cost*bmu/bott
-      else
-         sint=0.
-         sini2=0.
-         if(cost.ge.1.)  cosi2=-1.
-         if(cost.le.-1.) cosi2=1.
-      end if
- 
-      cosdph=-cosi2*cosi3+sini2*sini3*bmu
-      if(abs(cosdph)>1.) then
-         if(cosdph>1.) then
-            cosdph=1.
-         else
-            cosdph=-1.
-         end if
-      end if
-      phi=phip+acos(cosdph)
-      if(phi>twoPi) phi=phi-twoPi
-      if(phi<0.)    phi=phi+twoPi
- 
-      sin2i2=2.*sini2*cosi2
-      cos2i2=2.*cosi2*cosi2-1.
-      sin2=sin2i2*sin2i3
-      cos2=cos2i2*cos2i3
-      sin2cos1=sin2i2*cos2i3
-      cos2sin1=cos2i2*sin2i3
- 
-      
-   else  
- 
-      cosi1=cos(ri1)
-      sini1=sin(ri1)
-      sin2i1=2.*sini1*cosi1
-      cos2i1=2.*cosi1*cosi1-1.
- 
-      if(abs(bmu)==1.) return
- 
-      cost=costp*bmu+sintp*sinbt*cosi1
-
-      if(abs(cost)<1.) then
-         sint=abs(sqrt(1.-cost*cost))
-         sini2=sini1*sintp/sint
-         bott=sint*sinbt
-         cosi2=costp/bott-cost*bmu/bott
-      else
-         sint=0.
-         sini2=0.
-         if(cost.ge.1.)  cosi2=-1.
-         if(cost.le.-1.) cosi2=1.
-      end if
- 
-      cosdph=-cosi1*cosi2+sini1*sini2*bmu
-      if(abs(cosdph)>1.) then
-         if(cosdph>1.) then
-            cosdph=1.
-         else
-            cosdph=-1.
-         end if
-      end if
-      phi=phip-acos(cosdph)
-      if(phi>twoPi) phi=phi-twoPi
-      if(phi<0.)    phi=phi+twoPi
-      
-      sin2i2=2.*sini2*cosi2
-      cos2i2=2.*cosi2*cosi2-1.
-      sin2=sin2i2*sin2i1
-      cos2=cos2i2*cos2i1
-      sin2cos1=sin2i2*cos2i1
-      cos2sin1=cos2i2*sin2i1
- 
-   end if
- 
- 
+   call random_number(random) ! this is the phi dependence 
+   phi = twoPi*random 
    cosp=cos(phi)
    sinp=sin(phi)
-   
-   nxp=sint*cosp
-   nyp=sint*sinp
-   nzp=cost
- 
- 
-   inpacket%direction%x =  nxp 
-   inpacket%direction%y =  nyp 
-   inpacket%direction%z =  nzp 
+   denom=sqrt(1.-vin(3)**2)
+   if (vin(3).lt.0.999) then
+      vout(1)=sint/denom*(vin(1)*vin(3)*cosp-vin(2)*sinp) + vin(1)*cost
+      vout(2)=sint/denom*(vin(2)*vin(3)*cosp+vin(1)*sinp) + vin(2)*cost
+      vout(3)=-sint*cosp*denom+vin(3)*cost
+   else
+      vout(1)=sint*cosp
+      vout(2)=sint*sinp
+      if (vin(3).ge.0.) then
+         vout(3)=cost
+      else
+         vout(3)=-cost
+      endif
+   endif
+
+   inpacket%direction%x =  vout(1)
+   inpacket%direction%y =  vout(2)
+   inpacket%direction%z =  vout(3)
+
+   return
+
+
+
+
+! OLD
+!   bmu= ((1.+g2)-((1.-g2)/(1.-hgg+2.*hgg*random))**2)/(2.*hgg)
+!
+!   cosb2=bmu**2
+!   b=cosb2-1.
+! 
+!   if(abs(bmu) > 1.) then
+!      if(bmu>1.) then
+!         bmu=1.
+!         cosb2=1.
+!         b=0.
+!      else
+!         bmu=-1.
+!         cosb2=1.
+!         b=0.
+!      end if
+!   end if
+!   sinbt=sqrt(1.-cosb2)
+!   call random_number(random)
+! 
+!   ri1=twoPi*random
+!
+!   if(ri1>pi) then
+!      ri3=twoPi-ri1
+!      cosi3=cos(ri3)
+!      sini3=sin(ri3)
+!      sin2i3=2.*sini3*cosi3
+!      cos2i3=2.*cosi3*cosi3-1.
+! 
+! 
+!      if(abs(bmu)==1.) return
+!      
+!      cost=costp*bmu+sintp*sinbt*cosi3
+!
+!      if(abs(cost)<1.) then
+!         sint=abs(sqrt(1.-cost*cost))
+!         sini2=sini3*sintp/sint
+!         bott=sint*sinbt
+!         cosi2=costp/bott-cost*bmu/bott
+!      else
+!         sint=0.
+!         sini2=0.
+!         if(cost.ge.1.)  cosi2=-1.
+!         if(cost.le.-1.) cosi2=1.
+!      end if
+! 
+!      cosdph=-cosi2*cosi3+sini2*sini3*bmu
+!      if(abs(cosdph)>1.) then
+!         if(cosdph>1.) then
+!            cosdph=1.
+!         else
+!            cosdph=-1.
+!         end if
+!      end if
+!      phi=phip+acos(cosdph)
+!      if(phi>twoPi) phi=phi-twoPi
+!      if(phi<0.)    phi=phi+twoPi
+! 
+!      sin2i2=2.*sini2*cosi2
+!      cos2i2=2.*cosi2*cosi2-1.
+!      sin2=sin2i2*sin2i3
+!      cos2=cos2i2*cos2i3
+!      sin2cos1=sin2i2*cos2i3
+!      cos2sin1=cos2i2*sin2i3
+!      
+!   else  
+! 
+!      cosi1=cos(ri1)
+!      sini1=sin(ri1)
+!      sin2i1=2.*sini1*cosi1
+!      cos2i1=2.*cosi1*cosi1-1.
+! 
+!      if(abs(bmu)==1.) return
+! 
+!      cost=costp*bmu+sintp*sinbt*cosi1
+!
+!      if(abs(cost)<1.) then
+!         sint=abs(sqrt(1.-cost*cost))
+!         sini2=sini1*sintp/sint
+!         bott=sint*sinbt
+!         cosi2=costp/bott-cost*bmu/bott
+!      else
+!         sint=0.
+!         sini2=0.
+!         if(cost.ge.1.)  cosi2=-1.
+!         if(cost.le.-1.) cosi2=1.
+!      end if
+! 
+!      cosdph=-cosi1*cosi2+sini1*sini2*bmu
+!      if(abs(cosdph)>1.) then
+!         if(cosdph>1.) then
+!            cosdph=1.
+!         else
+!            cosdph=-1.
+!         end if
+!      end if
+!      phi=phip-acos(cosdph)
+!      if(phi>twoPi) phi=phi-twoPi
+!      if(phi<0.)    phi=phi+twoPi
+!      
+!      sin2i2=2.*sini2*cosi2
+!      cos2i2=2.*cosi2*cosi2-1.
+!      sin2=sin2i2*sin2i1
+!      cos2=cos2i2*cos2i1
+!      sin2cos1=sin2i2*cos2i1
+!      cos2sin1=cos2i2*sin2i1
+! 
+!   end if
+! 
+! 
+!   cosp=cos(phi)
+!   sinp=sin(phi)
+!   
+!   nxp=sint*cosp
+!   nyp=sint*sinp
+!   nzp=cost
+!
+! 
+!   inpacket%direction%x =  nxp 
+!   inpacket%direction%y =  nyp 
+!   inpacket%direction%z =  nzp 
                   
  end subroutine hg
-
-
 
 end subroutine energyPacketDriver
 
          
  end module photon_mod
+
 
 
