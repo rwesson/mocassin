@@ -24,6 +24,13 @@ program MoCaSSiNwarm
     integer         :: err              ! allocation error status
     integer         :: iGrid            ! 
 
+    real            :: etime
+    real, dimension(2) :: tarray,timing        ! cputimer
+    integer         :: nhours, nminutes, nseconds
+ 
+    timing(1)=etime(tarray)/60.0
+ 
+
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
@@ -95,6 +102,15 @@ program MoCaSSiNwarm
 !    if (taskid == 0) then
 !        print*, "time: ", endtime-starttime
 !    end if 
+
+     timing(2) = etime(tarray)/60.0
+     nhours = int((timing(2)-timing(1))/60.)
+     nminutes = int(mod(timing(2)-timing(1),60.))
+     nseconds = nint(60.*((timing(2)-timing(1))-real(nhours*60)-real(nminutes)))
+ 
+     write(6,100)nhours,nminutes,nseconds
+ 100 format('total run time per processor ',1i3.2,':',1i2.2,':',1i2.2' (HMS)')
+ 
 
     call mpi_finalize(ierr)
     stop 'mpi done'

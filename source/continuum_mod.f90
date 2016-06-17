@@ -21,7 +21,7 @@ module continuum_mod
     real                :: correctionPhot
     real,save           :: RStar
                
-    integer, parameter  :: maxLim = 1000000        ! max number of rows in the input spectrum file
+    integer, parameter  :: maxLim = 200000        ! max number of rows in the input spectrum file
     integer             :: nuP                     ! frequency pointer
 
     logical, save       :: lgF=.true.

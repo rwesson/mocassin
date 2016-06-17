@@ -261,7 +261,7 @@ module output_mod
 
            close(19)
 
-           open(unit=20, status='old', position='rewind', file='data/flambda.dat',  action="read",iostat=ios)
+           open(unit=20, status='old', position='rewind', file=trim(home)//'data/flambda.dat',  action="read",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for reading, data/flambda.dat"
               stop
@@ -1389,7 +1389,7 @@ module output_mod
                &        a,b,c,d,logne,aeff,br(3,500),em
           integer       :: i,g2(500)
 
-          open(file="data/Roii.dat",unit=41,status="old", action="read",position="rewind")
+          open(file=trim(home)//"data/Roii.dat",unit=41,status="old", action="read",position="rewind")
           do i=1,415
              read(41,*) lamb(i),g2(i),&
                   &br(1,i),br(2,i),br(3,i)
@@ -1748,7 +1748,7 @@ module output_mod
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
          emhb=1.98648E-08/4861.33*ahb
-         open(unit=50,file='data/Rneii.dat',status='old', action="read",position='rewind')
+         open(unit=50,file=trim(home)//'data/Rneii.dat',status='old', action="read",position='rewind')
          do i=1,426
           read(50,*) a,b,c,d,f,lamb(i),br
           aeff=1.e-14*a*te**(f)
@@ -1795,7 +1795,7 @@ module output_mod
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
          emhb=1.98648E-08/4861.33*ahb
-         open(unit=51,file='data/Rcii.dat',status='old', position='rewind',action="read")
+         open(unit=51,file=trim(home)//'data/Rcii.dat',status='old', position='rewind',action="read")
          do i=1,159
           read(51,*) a,b,c,d,f,lamb(i),br
           aeff=1.e-14*a*te**(f)
@@ -1819,7 +1819,7 @@ module output_mod
           y=logden-4.
           ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
           emhb=1.98648E-08/4861.33*ahb
-          open(unit=52,file='data/Rnii.dat',status='old', action="read",position='rewind')
+          open(unit=52,file=trim(home)//'data/Rnii.dat',status='old', action="read",position='rewind')
           do i=1,115
            read(52,*) a,b,c,d,f,u,v,lamb(i),br
            aeff=1.e-14*a*te**(f)
@@ -1846,8 +1846,8 @@ module output_mod
           te=tk/10000.d0
           ahb=6.68e-14*te**(-0.507)/(1.+1.221*te**0.653)
           emhb=1.98648E-08/4861.33*ahb
-          open(unit=61,file="data/Rniiold.dat",status='old', action="read",position='rewind')
-          open(unit=62,file="data/Rnii_aeff.dat",status='old', action="read",position='rewind')
+          open(unit=61,file=trim(home)//"data/Rniiold.dat",status='old', action="read",position='rewind')
+          open(unit=62,file=trim(home)//"data/Rnii_aeff.dat",status='old', action="read",position='rewind')
           do i=1,51
            read(62,*) a(i),b(i),c(i)
           end do
@@ -2063,7 +2063,7 @@ module output_mod
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = trim(home)//"data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -2142,7 +2142,7 @@ module output_mod
       real, dimension(5000,15,15)      :: ex
       common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu      
       close(337)
-      open(unit =337, file = "data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
+      open(unit =337, file = trim(home)//"data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
         if (ios /= 0) then
              print*, "! hdatax: can't open  data/e1bx.d"
              stop
@@ -2475,9 +2475,9 @@ module output_mod
       type(grid_type), intent(in) :: grid(*)     !
 
       integer :: ios, err                        ! I/O error status
-      integer :: i, j,k,freq, imu, iG                 ! counters
+      integer :: i,j,k,freq, imu, iG, ic, ijk, nuP                 ! counters
       
-      real, pointer :: SED(:,:)                  ! SED array
+      real, pointer :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
 
       real          :: theta1, theta2, phi1, phi2
       real          :: lambda                    ! lambda [cm]
@@ -2495,6 +2495,8 @@ module output_mod
       end if
 
       allocate(SED(1:nbins,0:nAngleBins), stat=err)
+      allocate(sSED(1:nbins,0:nAngleBins), stat=err)
+      allocate(dSED(1:nbins,0:nAngleBins), stat=err)
       if (err /= 0) then
          print*, "! writeSED: can't allocate array memory: SED"
          stop
@@ -2502,68 +2504,61 @@ module output_mod
 
 
       SED=0.
+      sSED=0.
+      dSED=0.
 
       write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
       write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
-      write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            '
-      write(16,*) '                                       [Jy * pc^2]              '
+      write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            ' 
+     write(16,*) '                                       [Jy * pc^2]              '
 
       totalE=0.
 
       do iG = 1, nGrids
-         do freq=1,nbins
-
-
-            if (.not.lgEcho) then
-               do i = 0, grid(iG)%nCells
-                  do imu = 0, nAngleBins
-                     SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
-                  end do
-               end do
-               
-            else
- 
-               do i = 1, grid(iG)%nx
-                  do j = 1, grid(iG)%ny
-                     do k = 1, grid(iG)%nz
-                        
-                        if (grid(iG)%active(i,j,k) > 0) then
- 
-                           ! only get SED from region defined by light travel time considerations. 
-                           if (echot1 .eq. 0) then
-                              echod1 = 1.e29
-                           else
-                              echod1 = (grid(iG)%xaxis(i)**2 + grid(iG)%yaxis(j)**2)/(2*echot1) &
-                                   & - (echot1/2)
-                           endif
-                           echod2 = (grid(iG)%xaxis(i)**2 + grid(iG)%yaxis(j)**2)/(2*echot2) - &
-                                & (echot2/2)
-                           
-                           if (grid(iG)%zaxis(k) <= echod1 .and. grid(iG)%zaxis(k) >= echod2) then
-                              
-                              do imu = 0, nAngleBins
-                                 SED(freq,imu)=SED(freq,imu)+&
-                                      & grid(iG)%escapedPackets(grid(iG)%active(i,j,k),freq,imu)
-                              end do
-                           end if
-                        end if
-                        
-                     end do
-                  end do
-               end do
-               
+       do freq=1,nbins
+          if (.not.lgEcho .and. .not.lgNosource) then
+             do i = 0, grid(iG)%nCells
+                do imu = 0, nAngleBins
+                   SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,&
+                        &imu)
+                end do
+             end do
+          else
+             do i = 1, grid(iG)%nx
+              do j = 1, grid(iG)%ny
+               do k = 1, grid(iG)%nz
+                ijk = grid(iG)%active(i,j,k)
+                if (ijk.gt.0) then 
+                   if (.not.lgEcho) then
+                      if (lgNosource) then ! exclude source if requested
+                         do ic=1,nStars
+                            if (grid(iG)%active(starIndeces(ic,1),&
+                                 &starIndeces(ic,2),starIndeces(ic,3)).ne.ijk)&
+                                 & then
+                               do imu = 0, nAngleBins
+                                  SED(freq,imu)=SED(freq,imu)+&
+                                       &grid(iG)%escapedPackets(ijk,freq,imu)
+                               end do
+                            endif
+                         enddo
+                      end if
+                   else ! only get SED from region defined by light echo
+                      do imu = 0, nAngleBins
+                         SED(freq,imu)=SED(freq,imu)+&
+                              &grid(iG)%escapedPackets(ijk,freq,imu)*&
+                              &grid(iG)%echoVol(i,j,k) 
+! mult by echoVol() corrects for actual percentage of cell that was illuminated
+                      end do
+                   endif
+                endif
+               enddo
+              enddo
+             enddo
             endif
-
-
-
-!            do i = 0, grid(iG)%nCells
-!               do imu = 0, nAngleBins
-!                  SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
-!               end do
-!            end do
-
          end do
       end do
+      
+
 
       do freq = 1, nbins
 !         do imu = 1, nAngleBins
@@ -2583,8 +2578,10 @@ module output_mod
          totalE = totalE +  SED(freq,0)
             
          SED(freq,0) = SED(freq,0)/(4.*Pi*3.08*3.08) ! dilute - user must still divide by D^2 in pc
+!         sSED(freq,0) = sSED(freq,0)/(4.*Pi*3.08*3.08) 
                                                      ! the 1.e18 is absorbed later
          SED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15*widflx(freq))
+!         sSED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15)*1.e-9
            
 
          do imu = 1, nAngleBins
@@ -2604,6 +2601,7 @@ module output_mod
          end do
 
          write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu), imu=0,nAngleBins )
+!         write(6,'(a1,1pg12.4,4es12.4)')"d",c/(nuArray(freq)*fr1Ryd)*1.e4,widflx(freq),SED(freq,0),sSED(freq,0),dSED(freq,0)
 
       end do
 
@@ -2650,10 +2648,11 @@ module output_mod
       end if
 
       close(16)
-            
+
+
       if (associated(SED)) deallocate(SED)
 
-      print*, 'out writeSED'
+      print*, 'out writeSED...'
 
     end subroutine writeSED
 

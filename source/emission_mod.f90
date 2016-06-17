@@ -782,7 +782,7 @@ module emission_mod
         
         ! read in rates from data/HeI2phot.dat
         close(93)
-        open(unit = 93,  action="read", file = "data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 93,  action="read", file = trim(home)//"data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! HeI2phot: can't open file: data/HeI2phot.dat"
             stop
@@ -879,7 +879,7 @@ module emission_mod
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(94)
-        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 94,  action="read", file = trim(home)//"data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
             stop
@@ -914,7 +914,7 @@ module emission_mod
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = trim(home)//"data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -1168,7 +1168,7 @@ module emission_mod
         ! read in HeII Lyman line ratios up to level n=5 [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(98)
-        open(unit = 98,  action="read", file = "data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 98,  action="read", file = trim(home)//"data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! setDiffusePDF: can't open file: data/r2a0100.dat"
             stop
@@ -1219,13 +1219,13 @@ module emission_mod
 
                     if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
                          & convPercent>minConvQheat .and. nIterateMC>1) then
-!print*, 'a'
+
                        tg =  grid%Tdust(nS,ai,cellPused)
                        Tspike=0.
                        Pspike=0.
-!print*, 'b'
+
                        call qHeat(nS, ai,tg,Tspike,Pspike)                                                          
-!print*, 'c'
+
                        if (lgWritePss .and. taskid==0) then
                           write(89, *) '              ix iy iz cellp nSpecies aRadius Teq'
                           write(89, *)  ix, iy, iz, cellpUsed, ns, grainRadius(ai), tg
@@ -1236,7 +1236,7 @@ module emission_mod
                           write(89, *) 'Tmean: ', tg
                           write(89, *) ' '
                        end if
-!print*, 'd'
+
                        do freq = 1, nbins 
                           do iT=1,nTbins
                              treal = Tspike(iT)
@@ -1498,15 +1498,13 @@ module emission_mod
    
                if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
                     & convPercent>minConvQheat.and. nIterateMC>1) then
-!print*, 'a1'
+
                   tg =  grid%Tdust(n,ai,cellPused)
 
                   Tspike=0.
                   Pspike=0.
 
                   call qHeat(n, ai,tg,Tspike,Pspike)                                    
-
-!print*, 'b1'     
 
                   do i = 1, nbins                  
                      do iT = 1, nTbins
@@ -1603,8 +1601,6 @@ module emission_mod
       end do
       
 
-!print*, '1'
-
       const1 = (hPlanck*fr1Ryd)
       hc = hPlanck*c
 
@@ -1621,8 +1617,7 @@ module emission_mod
       temp = 0.
       pss  = 0.
             
-      sorc = grainLabel(ns)
-!print*, '2'
+      sorc = grainLabel(ns)(1:1)
 
       select case(sorc)
       case ('S') ! silicates
@@ -1645,10 +1640,8 @@ module emission_mod
          return               
       end select
 
-!print*, '3'
       ! find enthalpy bins
       call getTmin(ns,na,temp(1))
-!print*, '4'
 
       tbase=tg
       U(1) = enthalpy(temp(1),natom,na,sorc)
@@ -1668,7 +1661,6 @@ module emission_mod
          dU(i) = 0.5*(U(i+1)-U(i-1))
       end do
       dU(nTbins) = 0.5*(U(nTbins)-U(nTbins-1))
-!print*, '5'
 
       ! discrete heating term:
       ! grain heated from state ii to higher state if
@@ -1761,7 +1753,6 @@ module emission_mod
 
          A(nTbins,ii) = A(nTbins,ii)+qint
       end do
-!print*, '6'
 
       ! Work out the cooling terms
       do if = 1, nTbins-1 
@@ -1781,7 +1772,6 @@ module emission_mod
 
       end do
 
-!print*, '7'
 
       if (A(2,1) == 0.) A(2,1) = 2.*A(1,2)
 
@@ -1818,7 +1808,6 @@ module emission_mod
             end do
          end if
       end do
-!print*, '8'
 
       do j=1,nTbins 
          sumx = sumx+x(j)
@@ -1839,7 +1828,6 @@ module emission_mod
 
       tg=qHeatTemp
 
-!print*, '9'
     end  subroutine qHeat
 
                   
@@ -2403,7 +2391,7 @@ module emission_mod
           end do
        end do
     end if
-!print*, 'e'    
+
     ! read statistical weights, energy levels [1/cm]
     do j = 1, nLev
        read(11, *) i, gx, ex
@@ -3062,7 +3050,7 @@ module emission_mod
       integer :: nResLinesFile
       integer :: safeLimit = 1e6 !
 
-      open(unit=19, action="read", file="data/resLines.dat", status="old", position="rewind", iostat=ios)
+      open(unit=19, action="read", file=trim(home)//"data/resLines.dat", status="old", position="rewind", iostat=ios)
       if (ios /= 0) then
          print*, "! initResLines: can't open file: data/resLines"
          stop

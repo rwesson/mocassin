@@ -522,6 +522,8 @@ module photon_mod
            
             initPhotonPacket%lgStellar = lgStellar
 
+
+
             ! check if photon packen is line or continuum photon
             if ( lgLine ) then
                 ! line photon
@@ -1251,11 +1253,13 @@ module photon_mod
                       if (rVec%z >  (grid(gP)%zAxis(zP+1)+grid(gP)%zAxis(zP))/2.) &
                            & zP = zP + 1
                    end if
-                   
-                end if
 
-                enPacket%iG = gP
-                igpp = 2
+
+                   enPacket%iG = gP
+                   igpp = 2
+                   
+                end if ! line 1224
+
 
                 ! find distances from all walls
 
@@ -1508,7 +1512,7 @@ module photon_mod
 
              end if
 
-             ! check if the paintckets interacts within this cell
+             ! check if the packet interacts within this cell
              if ((absTau+tauCell > passProb) .and. (grid(gP)%active(xP,yP,zP)>0)) then
 
                 ! packet interacts
@@ -1716,8 +1720,6 @@ module photon_mod
 
                       ! packet is scattered by the grain                         
                       ! calculate new direction
-                      ! for now assume scattering is isotropic, when phase
-                      ! function is introduced the following must be changed                         
                          
                       enPacket%xP(igpp) = xP
                       enPacket%yP(igpp) = yP
@@ -1731,6 +1733,7 @@ module photon_mod
                          stop
                       end if
 
+!print*, igpp, gp, 'scattered'
 
                       enPacket = initPhotonPacket(enPacket%nuP, rVec, enPacket%direction, .false., .false., enPacket%xP(1:2), &
                            & enPacket%yP(1:2), enPacket%zP(1:2), gP, .true.)

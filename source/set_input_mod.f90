@@ -53,6 +53,7 @@ module set_input_mod
         lgDustScattering = .true.
         lgSymmetricXYZ= .false.
         lgEcho        = .false.
+        lgNosource    = .false.
 
         nPhotonsDiffuse = 0        
         nStars        = 0
@@ -139,17 +140,27 @@ module set_input_mod
 
             ! check if the end of file has been reached
             read(unit=10, fmt=*, iostat=ios) keyword
-print*, lgDust, 'lgdust'
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case ("home")
+               backspace 10
+               read(unit=10,fmt=*, iostat=ios) keyword, home
             case ("echo")
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, echot1, echot2
-               print "(1X,A4,1X,F4.2,1X,F4.2)",keyword,echot1,echot2
-               echot1 = echot1 * 2.59020684e15
-               echot2 = echot2 * 2.59020684e15
+               read(unit=10, fmt=*, iostat=ios) keyword, echot1, echot2, echoTemp
+               print "(1X,A4,1X,3es12.4)",keyword,echot1,echot2,echoTemp
+               print*, '! readInput [Reminder]: Light echo option - is the inclination correctly specified? [see Readme]' 
+               print*, '! readInput [Warning]: Light echo option - '
+               print*, '!   The actual volume of material illuminated by the echo is probably'
+               print*, '!   much smaller than that illuminated in this grid.  Be sure to perform'
+               print*, '!   volume correction. See echo.out file for volume illuminated in this grid.'
+!               echot1 = echot1 * 2.59020684e15 !ct
+!               echot2 = echot2 * 2.59020684e15
                lgEcho = .true.                 
+            case("NoSourceSED")
+               lgNosource = .true.
+               print*, keyword, lgNosource
             case("isotropicScattering")
                lgIsotropic = .true.
                print*, keyword, lgIsotropic
@@ -284,10 +295,18 @@ print*, lgDust, 'lgdust'
                  read(unit=10, fmt=*, iostat=ios) keyword, densityFile
                  lgDfile = .true.
                  print*, keyword, densityFile
+                   open(unit=11,file=densityFile,status='old')
+                   read(unit=11, fmt=*, iostat=ios) keyword
+                   if (keyword=="#") then
+                      backspace 11
+                      read(unit=11,fmt=*, iostat=ios) keyword,nxin(1),nyin(1),nzin(1)
+                      print*,'grid axes read in from file:',trim(densityFile),nxin(1),nyin(1),nzin(1)
+                   endif
+                   close(11)
              case ("dustFile")
                  backspace 10
                  read(unit=10, fmt=*, iostat=ios) keyword, dustFile(1), dustFile(2)
-                 print*, keyword, dustFile(1), dustFile(2)
+                 print*, keyword, trim(dustFile(1))," | ",trim(dustFile(2))," |"
                  allocate(dustSpeciesFile(1:1))
                  allocate(nspeciesPart(1:1))
                  nDustComponents = 1
@@ -433,6 +452,14 @@ print*, lgDust, 'lgdust'
                    read(unit=10, fmt=*, iostat=ios) keyword, keyword, MdMgFile
                    print*, 'MdMg file ', MdMgFile
                    lgDust = .true.
+                   open(unit=11,file=MdMgFile,status='old')
+                   read(unit=11, fmt=*, iostat=ios) keyword
+                   if (keyword=="#") then
+                      backspace 11
+                      read(unit=11,fmt=*, iostat=ios) keyword,nxin(1),nyin(1),nzin(1)
+                      print*,'grid axes read in from file:',trim(MdMgFile),nxin(1),nyin(1),nzin(1)
+                   endif
+                   close(11)
                 else
                    print*, "! readInput: invalid keyword in MdMg field ", keyword
                    stop
@@ -452,6 +479,14 @@ print*, lgDust, 'lgdust'
                    read(unit=10, fmt=*, iostat=ios) keyword, keyword, MdMgFile
                    print*, 'MdMh file ', MdMgFile
                    lgDust = .true.
+                   open(unit=11,file=MdMgFile,status='old')
+                   read(unit=11, fmt=*, iostat=ios) keyword
+                   if (keyword=="#") then
+                      backspace 11
+                      read(unit=11,fmt=*, iostat=ios) keyword,nxin(1),nyin(1),nzin(1)
+                      print*,'grid axes read in from file:',trim(MdMgFile),nxin(1),nyin(1),nzin(1)
+                   endif
+                   close(11)
                 else
                    print*, "! readInput: invalid keyword in MdMh field ", keyword
                    stop
@@ -470,6 +505,15 @@ print*, lgDust, 'lgdust'
                    backspace 10
                    read(unit=10, fmt=*, iostat=ios) keyword, keyword, NdustFile
                    print*, 'Ndust file ', NdustFile
+                   open(unit=11,file=NdustFile,status='old')
+                   read(unit=11, fmt=*, iostat=ios) keyword
+                   if (keyword=="#") then
+                      backspace 11
+                      read(unit=11,fmt=*, iostat=ios) keyword,nxin(1),nyin(1),nzin(1)
+                      print*,'grid axes read in from file:',trim(NdustFile),nxin(1),nyin(1),nzin(1)
+                   endif
+                   close(11)
+                   
                    lgDust = .true.
                 else
                    print*, "! readInput: invalid keyword in Ndust field ", keyword
