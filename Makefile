@@ -1,7 +1,6 @@
 FC  = mpif90
 LIBS =	-lm
 FFLAGS = -fno-range-check -Jsource/ -ffree-line-length-0
-OPT2 = -g
 MANDIR=${DESTDIR}/usr/share/man/man1
 SOURCES = source/infnan.f90 source/constants_mod.f90 source/vector_mod.f90 source/common_mod.f90 source/interpolation_mod.f90 \
 	source/set_input_mod.f90 source/hydro_mod.f90 source/ph_mod.f90 source/composition_mod.f90 \
@@ -39,6 +38,7 @@ clean:
 install:
 	test -e ${DESTDIR}/usr/share/mocassin || mkdir -p ${DESTDIR}/usr/share/mocassin
 	test -e ${DESTDIR}/usr/bin || mkdir -p ${DESTDIR}/usr/bin
+	test -e ${MANDIR} || mkdir -p ${MANDIR}
 	cp -r data/ ${DESTDIR}/usr/share/mocassin
 	cp -r dustData/ ${DESTDIR}/usr/share/mocassin
 	cp -r benchmarks/ ${DESTDIR}/usr/share/mocassin
