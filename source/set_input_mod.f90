@@ -866,7 +866,7 @@ module set_input_mod
         ContShapeIn='none'
         spID='none'
         tStep=0.
-        nPhotons=0.
+        nPhotons=0
 
         do i = 1, nStars
            read(13,*) TStellar(i), Lstar(i), ContShape(i), starPosition(i)%x, starPosition(i)%y, starPosition(i)%z, &

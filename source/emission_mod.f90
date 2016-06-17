@@ -3027,7 +3027,7 @@ module emission_mod
       integer :: nL  ! line counter
       integer :: nmul ! number of multiplets
       integer :: nResLinesFile
-      integer :: safeLimit = 1e6 !
+      integer :: safeLimit = 1000000 !
 
       open(unit=19, action="read", file="/usr/share/mocassin/data/resLines.dat", status="old", position="rewind", iostat=ios)
       if (ios /= 0) then
@@ -3177,7 +3177,7 @@ module emission_mod
             print*, "! initResLines: can't allocate array memory, resLinePackets"
             stop
          end if
-         grid(iGrid)%resLinePackets(0:grid(iGrid)%nCells) = 0.
+         grid(iGrid)%resLinePackets(0:grid(iGrid)%nCells) = 0
 
       end do
 
@@ -3216,7 +3216,7 @@ module emission_mod
       integer             :: gPmother,xPmother,yPmother,zPmother
       integer             :: icount  ! counter
       integer             :: idir, jdir, kdir ! freq counter
-      integer, parameter  :: safeLimit=1e5 ! loop limit
+      integer, parameter  :: safeLimit=100000 ! loop limit
       integer             :: gP ! subgrid counters
       integer             :: cellP   ! cell pointer on active grid array 
       integer             :: compoP  ! pointer to gas component index 

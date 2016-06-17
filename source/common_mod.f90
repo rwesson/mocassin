@@ -131,14 +131,14 @@ module common_mod
 
 
     integer, dimension(nHlevel+1) &
-         & :: HlevNuP = 0.     ! pointer to the nth H level in nuArray
+         & :: HlevNuP = 0      ! pointer to the nth H level in nuArray
 
     integer, dimension(nHeIlevel+1) &
-         & :: HeIlevNuP = 0.   ! pointer to the nth HeI level in nuArray
+         & :: HeIlevNuP = 0    ! pointer to the nth HeI level in nuArray
 
 
     integer, dimension(nHeIIlevel+1) &
-         & :: HeIIlevNuP = 0.  ! pointer to the nth HeII level in nuArray
+         & :: HeIIlevNuP = 0   ! pointer to the nth HeII level in nuArray
 
    
     logical, pointer :: &

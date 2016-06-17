@@ -266,7 +266,7 @@ module iteration_mod
                          & memory:resLinePacketsTemp"
                     stop
                  end if
-                 resLinePacketsTemp = 0.
+                 resLinePacketsTemp = 0
 
               end do
            end if           
@@ -463,7 +463,7 @@ module iteration_mod
            end do
           
 
-           totalEscaped = 0.
+           totalEscaped = 0
 
            do iG = 1, nGrids
               grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins) = 0.
