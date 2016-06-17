@@ -3704,7 +3704,7 @@ module emission_mod
 
                         if (rVec%x <= grids(gP)%xAxis(1) .or. xP<1) then
                            
-                           if (gP==1) then	                       
+                           if (gP==1) then
 !                         rVec%x = -rVec%x 
                               xP=1
                               rVec%x = grids(gP)%xAxis(1)

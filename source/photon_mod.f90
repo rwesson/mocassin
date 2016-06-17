@@ -109,8 +109,7 @@ module photon_mod
 
            if (iStar>=1) then
 
-	      chTypeD = "stellar"
-
+              chTypeD = "stellar"
               if (starIndeces(iStar,4)==1) then
                  igp = 1
               else if (starIndeces(iStar,4)>1) then
@@ -2223,7 +2222,7 @@ module photon_mod
                    if ( rVec%y <= grid(gP)%yAxis(1)-grid(gP)%geoCorrY .or. yP<1) then
                   
                       ! the energy packet escapes this grid
-                      if (gP==1) then	
+                      if (gP==1) then
                          yP=1
                          lgReturn=.true.
                       else if (gP>1) then
@@ -2241,7 +2240,7 @@ module photon_mod
                
                    if (rVec%y > grid(gP)%yAxis(grid(gP)%ny)+grid(gP)%geoCorrY .or. yP>grid(gP)%ny) then
 
-                      if (gP==1) then	
+                      if (gP==1) then
                          ! the energy packet escapes
                          yP = grid(gP)%ny
                          lgReturn=.true.
