@@ -282,7 +282,7 @@ module photon_mod
 
 
         if (iStar>0) print*, 'Qphot = ', Qphot
-        print*, 'Packets trapped = ', trapped, taskid
+        if (lgTalk) print*, 'Packets trapped = ', trapped, taskid
 
         ! evaluate Jste and Jdif
         ! NOTE : deltaE is in units of [E36 erg/s] however we also need a factor of
@@ -1705,8 +1705,16 @@ module photon_mod
                    else if (random <= probSca) then
                       lgScattered = .true.         
                    else
-                      print*, '! pathSegment: insanity occured and scattering/absorption &
+                      print*, '! pathSegment: insanity occured at the scattering/absorption&
                            & decision stage.'
+                      print*,'gP,xP,yP,zP,nuP'
+                      print*,gP,xP,yP,zP,nuP
+                      print*,'scaOpac,opacity,Ndust'
+                      print*,&
+ &grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP),&
+ &grid(gP)%opacity(grid(gP)%active(xP,yP,zP),enPacket%nuP),&
+ &grid(gP)%Ndust(grid(gP)%active(xP,yP,zP))
+                      print*,'random number=',random,'probSca=',probSca
                       stop
                    end if
 
@@ -2898,7 +2906,7 @@ module photon_mod
    real :: cosi2,sin2i3,sin2i2,cos2i3,cos2i2,sin2,cos2,sin2cos1
    real :: cos2sin1,cosi1,sini1,sin2i1,cos2i1
    real :: random, random0, vin(3), vout(3), s, denom
-   real :: hgg, g2
+   real :: hgg, g2, znorm
    
    integer :: ierr
 
@@ -2911,15 +2919,23 @@ module photon_mod
  
    hgg = gSca(inpacket%nuP)
  
-   ! henyey-greenstein 
+   ! henyey-greenstein http://robertoreif.com/Documents/Chapter3.pdf
    call random_number(random0) ! this is the theta dependence
    s=2.*random0-1.
-   if (hgg.ge.0.01) then
+   if (hgg.ge.0.0001) then
       cost=0.5/hgg*(1.+hgg**2-((1.-hgg**2)/(1.+hgg*s))**2)
    else
-      cost=s+1.5*hgg*(1.-s**2)-2*hgg**2*s*(1.-s**2)
+      cost=s !+1.5*hgg*(1.-s**2)-2*hgg**2*s*(1.-s**2)
    endif
-   sint=sqrt(1.-cost**2)
+   if (cost .ge. 1.0) then 
+      cost=1.0
+      sint=0.
+   elseif (cost .lt. -1.0) then 
+      cost=-1.0
+      sint=0.
+   else
+      sint=sqrt(1.-cost**2)
+   endif
 
    call random_number(random) ! this is the phi dependence 
    phi = twoPi*random 
@@ -2927,7 +2943,7 @@ module photon_mod
    sinp=sin(phi)
    denom=sqrt(1.-vin(3)**2)
 
-   if (vin(3).lt.0.999) then
+   if (denom.gt.0.001) then
       vout(1)=sint/denom*(vin(1)*vin(3)*cosp-vin(2)*sinp) + vin(1)*cost
       vout(2)=sint/denom*(vin(2)*vin(3)*cosp+vin(1)*sinp) + vin(2)*cost
       vout(3)=-sint*cosp*denom+vin(3)*cost
@@ -2942,6 +2958,7 @@ module photon_mod
    endif
 
 
+
    if ( ( (abs(vout(1)) <= 1.) .and. (abs(vout(2)) <= 1.) .and. (abs(vout(3)) <= 1.) )&
         & .and. (vout(1) >= 0. .or. vout(1) < 0.) .and. &
         & (vout(2) >= 0. .or. vout(2) < 0.) .and. & 
@@ -2953,8 +2970,19 @@ module photon_mod
             
 
       ierr = 0
+   elseif ((abs(vout(1))>=1.).or.(abs(vout(2))>=1.).or.(abs(vout(3))>=1.)&
+        & .and. (vout(1) >= 0. .or. vout(1) < 0.) .and. &
+        & (vout(2) >= 0. .or. vout(2) < 0.) .and. & 
+        & (vout(3) >= 0. .or. vout(3) < 0.)) then
+      znorm=sqrt(vout(1)**2 + vout(2)**2 + vout(3)**2)
+      vout=vout/znorm
    else
       ierr = 1
+      print*,'FAIL',random0,random,s
+      print*,' ',vin
+      print*,' ',cost,sint
+      print*,' ',cosp,sinp,denom
+      print*,' ',vout
 
       vout(1) = vin(1)
       vout(2) = vin(2)

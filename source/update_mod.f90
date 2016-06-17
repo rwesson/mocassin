@@ -1920,7 +1920,10 @@ module update_mod
 
             ! zero out dust temperature arrays
             grid%Tdust(:,:,cellP) = 0.
-
+            if (lgforceTDust) then ! BEKS2010
+               grid%Tdust(:,:,cellP) = forceTDust
+               return
+            endif
             
             ! calculate absorption integrals for each species
             do nS = 1, nSpeciesPart(nspU)

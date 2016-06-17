@@ -629,8 +629,58 @@ module grid_mod
            ! set the subGrids
            if (nGrids>1) call setSubGrids(grid(1:nGrids))
 
-!BEKS 2010: scale the dust mass here, not later.
+!BEKS 2011: scale the gas mass here to gasMass keyword
+           if (lgGas .and. lginputGasMass) then
+              totalGasMass = 0.
+              do iG = 1, nGrids
+                 do ix = 1, grid(iG)%nx
+                    do iy = 1, grid(iG)%ny
+                       do iz = 1, grid(iG)%nz
+                          if (grid(iG)%active(ix,iy,iz)>0) then
+                             dV = getVolume(grid(iG),ix,iy,iz)
+                             do elem = 1, nElements
+                                totalGasMass = totalGasMass + &
+                                     & grid(iG)%Hden(grid(iG)%active(ix,iy,iz))*dV*&
+                                     & grid(iG)%elemAbun(grid(iG)%abFileIndex(ix,iy,iz),elem)*&
+                                     & aWeight(elem)*amu
+                             end do
+                          endif
+                       enddo
+                    enddo
+                 enddo
+              enddo
+              massFac = inputGasMass / totalGasMass
+              print*,'! fillGrid: Scaling all gas densities by ',massFac
+              if (lgDust .and. (lgMdMg .or. lgMdMh)) &
+                   & print*,'! fillGrid: Scaling all dust densities by ',massFac
+              do iG = 1, nGrids
+                 do ix = 1, grid(iG)%nx
+                    do iy = 1, grid(iG)%ny
+                       do iz = 1, grid(iG)%nz
+                          if (grid(iG)%active(ix,iy,iz)>0) then
+                             grid(iG)%Hden(grid(iG)%active(ix,iy,iz)) = &
+                                  & grid(iG)%Hden(grid(iG)%active(ix,iy,iz)) *  massFac
+                             grid(iG)%Ne(grid(iG)%active(ix,iy,iz)) =  & 
+                                  & grid(iG)%Hden(grid(iG)%active(ix,iy,iz))
+                             if (lgDust .and. (lgMdMg .or. lgMdMh)) &
+                                  &  grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = &
+                                  & grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) *  massFac
+                          endif
+                       enddo
+                    enddo
+                 enddo
+              enddo
+              totalGasMass = inputGasMass
+              totalDustMass = totalDustMass * massFac
+           endif
+
+!BEKS 2010: scale the dust mass here using dustMass keyword.
            if (lgDust .and. lginputDustMass) then
+              if (lgGas .and. (lgMdMh .or. lgMdMg)) then
+                 print*,"grid_mod: you cannot specify dustMass if you are using"
+                 print*,"gas and specify the gas-to-dust ratio"
+                 stop
+              endif
               totalDustMass = 0.
               do iG = 1, nGrids
                  do ix = 1, grid(iG)%nx
@@ -692,10 +742,15 @@ module grid_mod
 
            if (taskid==0) print*, '! fillGrid: total number of active cells over all grids: ', totCells
               
+           if (lgGas) then
+              if (lgSymmetricXYZ) totalGasMass=totalGasMass*8.
+              print*, 'fillGrid: Actual total gas mass [1.e45 g]: ', totalGasMass
+              print*, 'fillGrid: Actual total gas mass [Msol]: ', totalGasMass*5.028e11                
+           end if           
            if (lgDust) then
               if (lgSymmetricXYZ) totalDustMass=totalDustMass*8.
-              print*, 'fillGrid: Total dust mass [1.e45 g]: ', totalDustMass
-              print*, 'fillGrid: Total dust mass [Msol]: ', totalDustMass*5.028e11                
+              print*, 'fillGrid: Actual total dust mass [1.e45 g]: ', totalDustMass
+              print*, 'fillGrid: Actual total dust mass [Msol]: ', totalDustMass*5.028e11                
            end if           
 
            if (nPhotonsDiffuse > 0 .and. nPhotonsDiffuse < totCellsloc) then
@@ -1537,7 +1592,7 @@ module grid_mod
                          end if
                          if (lgElementOn(2)) then
                             grid%ionDen(grid%active(i,j,k),elementXref(2),1) = &
-                                 & grid%ionDen(grid%active(i,j,k),(1),1)
+                                 & grid%ionDen(grid%active(i,j,k),elementXref(1),1)
                             grid%ionDen(grid%active(i,j,k),elementXref(2),2) = &
                                  & (1.-grid%ionDen(grid%active(i,j,k),elementXref(2),1))
                             grid%ionDen(grid%active(i,j,k),elementXref(2),3) = 0.
@@ -1682,16 +1737,6 @@ module grid_mod
               end do
            end do
 
-!           if (lgDust .and. lginputDustMass) then
-!           do i = 1, grid%nx
-!              do j = 1, yTop
-!                 do k = 1, grid%nz
-!             grid%Ndust(grid%active(i,j,k)) = grid%Ndust(grid%active(i,j,k)) * inputDustMass / totalDustMass
-!                 end do
-!              end do
-!           end do
-!           totalDustMass = inputDustMass
-!           end if
 
 
            if(associated(MdMg)) deallocate(MdMg)
@@ -1701,6 +1746,9 @@ module grid_mod
               print*, 'Mothergrid :'
               if (lgGas) then
                  print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
+              end if
+              if (lgDust) then
+                 print*, 'Total dust mass of ionized region by mass [1.e45 g]: ', totalDustMass
               end if
               print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
               if (lgEcho) then 
@@ -2409,7 +2457,7 @@ module grid_mod
                              end if
                              if (lgElementOn(2)) then
                                 grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(2),1) = &
-                                     & grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),(1),1)
+                                     & grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(1),1)
                                 grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(2),2) = &
                                  & (1.-grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(2),1))
                                 grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(2),3) = 0.
@@ -2550,17 +2598,6 @@ module grid_mod
                     end do
                  end do
               end do
-
-!           if (lgDust .and. lginputDustMass) then
-!           do ix = 1, grid(iG)%nx
-!              do iy = 1, grid(iG)%ny
-!                 do iz = 1, grid(iG)%nz
-!        grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) * inputDustMass / totalDustMass
-!                 end do
-!              end do
-!           end do
-!           totalDustMass = inputDustMass
-!           end if
 
               if (taskid == 0) then
               
@@ -3101,7 +3138,7 @@ module grid_mod
       read(77, *) home
       read(77, *) lgEcho, echot1, echot2, echoTemp
       read(77,*) lgNosource
-
+        
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
          print*,  convWriteGrid, ' convWriteGrid'
@@ -3746,7 +3783,6 @@ module grid_mod
 
 
 end module grid_mod
-
 
 
 

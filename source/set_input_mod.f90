@@ -54,6 +54,7 @@ module set_input_mod
         lgSymmetricXYZ= .false.
         lgEcho        = .false.
         lgNosource    = .false.
+        lgforceTDust = .false.
 
         nPhotonsDiffuse = 0        
         nStars        = 0
@@ -146,6 +147,11 @@ module set_input_mod
             case ("home")
                backspace 10
                read(unit=10,fmt=*, iostat=ios) keyword, home
+            case ("TDust")           ! BEKS2010
+               backspace 10
+               read(unit=10,fmt=*, iostat=ios) keyword, forceTDust
+               lgforceTDust = .true.
+               print*,keyword,lgforceTDust,forceTDust
             case ("echo")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, echot1, echot2, echoTemp
@@ -551,6 +557,11 @@ module set_input_mod
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, inputDustMass
                lginputDustMass = .true.  
+            case ("gasMass")
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, inputGasMass
+               lginputGasMass = .true.  
+               print*,"Using gasMass keyword. Be sure to specify gas density file or Hdensity 1.0"
             case default
                 print*, "! readInput: invalid keyword in model parameter input file", &
 &                        in_file, keyword
@@ -574,10 +585,39 @@ module set_input_mod
           end if
         end if
 
+        if (lginputGasMass) then
+          inputGasMass = inputGasMass / 5.028e11
+          if (lgSymmetricXYZ) then
+            inputGasMass = inputGasMass / 8
+          end if
+        end if
+
+        if (lginputDustMass .and. .not.lgDust) then
+           print*,"! readInput: you have asked to scale dustMass but there is no dust"
+           stop
+        endif
+        if (lginputGasMass .and. .not.lgGas) then
+           print*,"! readInput: you have asked to scale gasMass but there is no gas"
+           stop
+        endif
+        
+        if (lginputDustMass .and. lginputGasMass) then
+           if (lgDust .and. lgGas) then
+              if (lgMdMg .or. lgMdMh) then
+                 print*,'! readInput: dust mass is defined by your gas-to-dust ratio'
+                 print*,'! readInput: please remove dustMass keyword from input.in'
+                 stop
+              else
+                 print*,'! readInput: Simulation will scale gas to gasMass and dust to dustMass.'
+                 print*,'! readInput: This will change your gas-to-dust ratio so BE SURE THIS IS WHAT YOU WANT...'
+              endif
+           endif
+        endif
+
         if (lgMultiStars) then
            call setMultiPhotoSources(multiPhotoSources)
         else if (lgMultiStars .and. nStars==1) then
-           print*, '! readInput: multiPhotoSources keyword and Lstar, Tstellar, ContShape are mutually exclusive'
+           print*, '! readInput: multiPhotoSources keyword and Lstar, Tstellar, ContShape are cannot be specified together'
            stop
         else
            allocate(nPhotons(1))
@@ -652,7 +692,7 @@ module set_input_mod
            print*, "! readInput: no elemental abundance file has been specified"
            stop
         else if ((lgMdMh .and. lgMdMg) .and. (NdustFile /= "none" .or. NdustValue /=0) )then
-           print*, "! readInput: MdMg and Ndust are mutually exclusive"
+           print*, "! readInput: MdMg and Ndust cannot be specified together"
            stop
         else if ( (.not.lgDust) .and. (.not.lgGas) )then
            print*, "! readInput: the grid is completely empty. no gas or dust present.",  &
