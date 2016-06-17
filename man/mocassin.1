@@ -1,0 +1,20 @@
+.\" Manpage for neat.
+.TH mocassin 1 "31 Dec 2015" "2.02.70" "mocassin man page"
+.SH NAME
+mocassin \- Monte Carlo Simulations of Ionised Nebulae
+.SH SYNOPSIS
+mocassin, mocassinWarm, mocassinOutput, mocassinPlot
+.SH DESCRIPTION
+\fBmocassin\fR is a fully 3D or 2D photoionisation and dust radiative transfer code which employs a Monte Carlo approach to the transfer of radiation through media of arbitrary geometry and density distribution. It was originally developed for the modelling of photoionised regions like HII regions and planetary nebulae and has since expanded and been applied to a variety of astrophysical problems, including modelling clumpy dusty supernova envelopes, star forming galaxies, protoplanetary disks and inner shell fluorence emission in the photospheres of stars and disk atmospheres. The code can deal with arbitrary Cartesian grids of variable resolution, it has successfully been used to model complex density fields from SPH calculations and can deal with ionising radiation extending from Lyman edge to the X-ray. The dust and gas microphysics is fully coupled both in the radiation transfer and in the thermal balance.
+
+\fBmocassin\fR is the main MOCASSIN driver that is used to start a new simulation.  \fBmocassinWarm\fR resumes an interrupted simulation.  \fBmocassinOutput\fR runs the output routines using the current grid files in the output subdirectory.  \fBmocassinPlot\fR uses the current grid files in the output/ subdirectory to create 3d-emission maps. 
+.PP
+.SH OPTIONS
+.TP
+\fBmocassin\fR takes no command line options.  It reads the specifications of the model to be run from a file located at input/input.in, and writes results to output/.  Benchmark models can be found in /usr/share/mocassin/benchmarks.  Full documentation is available on the mocassin web pages at
+
+http://www.3d-mocassin.net/
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Barbara Ercolano
