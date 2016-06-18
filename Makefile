@@ -2,7 +2,7 @@ FC = mpif90
 LD = mpif90
 FFLAGS += -fno-range-check -Jsource/ -ffree-line-length-0 -lm
 MANDIR=${DESTDIR}/usr/share/man/man1
-SOURCES = source/infnan.o source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
+SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
 	source/continuum_mod.o source/ionization_mod.o source/pathIntegration_mod.o \
 	source/grid_mod.o source/dust_mod.o source/emission_mod.o source/photon_mod.o  \
