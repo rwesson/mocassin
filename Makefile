@@ -1,6 +1,7 @@
 FC = mpif90
 LD = mpif90
-FFLAGS += -fno-range-check -Jsource/ -ffree-line-length-0 -lm
+PREFIX=/usr
+FFLAGS += -cpp -fno-range-check -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\"
 MANDIR=${DESTDIR}/usr/share/man/man1
 SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \

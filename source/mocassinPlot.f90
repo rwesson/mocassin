@@ -737,9 +737,9 @@ program MoCaSSiNplot
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95,  action="read", file = "/usr/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
+            print*, "! RecLinesEmission: can't open file: ",trim(PREFIX),"/share/mocassin/data/r2b0100.dat"
             stop
         end if
         do iup = 30, 3, -1

@@ -1703,7 +1703,7 @@ module update_mod
             ! and the dielectronic recombination data
             if (lgFirst) then
                 close(17)
-                open (unit=17, file='/usr/share/mocassin/data/radrec.dat', status='old',position='rewind', &
+                open (unit=17, file=PREFIX//'/share/mocassin/data/radrec.dat', status='old',position='rewind', &
                      & iostat = ios, action="read")
    
                 do ion = 4, 30
@@ -1807,7 +1807,7 @@ module update_mod
             aldroPequi=0.
 
             close(18)
-            open (unit=18, file='/usr/share/mocassin/data/dielectronic.dat', status='old',position='rewind', &
+            open (unit=18, file=PREFIX//'/share/mocassin/data/dielectronic.dat', status='old',position='rewind', &
                  &iostat = ios, action="read")
             do i = 1, 10000
                read(unit=18, fmt=*, iostat=ios) elem, n, a, b, c, d, f, g
@@ -1836,7 +1836,7 @@ module update_mod
             t = TeUsed
 
             close(17)
-            open (unit=17, file='/usr/share/mocassin/data/aldrovandi.dat', status='old',position='rewind', iostat = ios, action="read")
+            open (unit=17, file=PREFIX//'/share/mocassin/data/aldrovandi.dat', status='old',position='rewind', iostat = ios, action="read")
             if (ios /= 0) then
                print*, "! dielectronic: can't open file data/alrovandi.dat"
                stop

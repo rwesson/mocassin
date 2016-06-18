@@ -37,19 +37,19 @@ module xSec_mod
       print*, 'in initGammaCont'
 
       close(21)
-      open(file='/usr/share/mocassin/data/gammaHI.dat', unit=21, status='old', iostat = err, action="read")
+      open(file=PREFIX//'/share/mocassin/data/gammaHI.dat', unit=21, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHI"
          stop
       end if
       close(22)
-      open(file='/usr/share/mocassin/data/gammaHeI.dat', unit=22, status='old', iostat = err, action="read")
+      open(file=PREFIX//'/share/mocassin/data/gammaHeI.dat', unit=22, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeI"
          stop
       end if
       close(23)
-      open(file='/usr/share/mocassin/data/gammaHeII.dat', unit=23, status='old', iostat = err, action="read")
+      open(file=PREFIX//'/share/mocassin/data/gammaHeII.dat', unit=23, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeII"
          stop
@@ -421,7 +421,7 @@ module xSec_mod
 
          ! open data/ph1.dat file and check for errors in opening 
          close(10)
-         open(unit = 10, file = "/usr/share/mocassin/data/ph1.dat", status = "old",&
+         open(unit = 10, file = PREFIX//"/share/mocassin/data/ph1.dat", status = "old",&
               &  position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph1.dat"
@@ -430,7 +430,7 @@ module xSec_mod
 
          ! open data/ph2.dat file and check for errors in opening  
          close(20)
-         open(unit = 20, file = "/usr/share/mocassin/data/ph2.dat", status = "old",&
+         open(unit = 20, file = PREFIX//"/share/mocassin/data/ph2.dat", status = "old",&
               &  position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph2.dat"
@@ -900,9 +900,9 @@ module xSec_mod
            do i = 1, nSpeciesPart(icomp)
               read(13,*) extFile
               close(14)
-              open(file="/usr/share/mocassin/"//extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
+              open(file=PREFIX//"/share/mocassin/"//extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
               if (ios /= 0 ) then
-                 print*, "! makeDustXsec: can't open file ", "/usr/share/mocassin/"//extFile
+                 print*, "! makeDustXsec: can't open file ", PREFIX,"/share/mocassin/"//extFile
                  stop
               end if
               read(14,*) readChar
@@ -1049,11 +1049,10 @@ module xSec_mod
            
               read(10, *) extinctionFile, grainAbun(icomp, nSpec)
               
-              open (unit=20, file="/usr/share/mocassin/"//extinctionFile, iostat = ios, &
+              open (unit=20, file=PREFIX//"/share/mocassin/"//extinctionFile, iostat = ios, &
                    &status = 'old', position = 'rewind', action="read")
               if(ios/=0) then
-                 print*, '! makeDustXSec: cannot open file for&
-                      & reading ', "/usr/share/mocassin/"//extinctionFile
+                 print*, '! makeDustXSec: cannot open file for reading ', PREFIX,'/share/mocassin/',extinctionFile
                  stop
               end if
               
