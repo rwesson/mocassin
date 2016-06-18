@@ -50,7 +50,7 @@ install:
 	install -g 0 -o 0 -m 644 man/mocassin.1 ${MANDIR}
 	gzip -f ${MANDIR}/mocassin.1
 	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinWarm.1.gz
-	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinOutpot.1.gz
+	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinOutput.1.gz
 	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinPlot.1.gz
 	install mocassin ${DESTDIR}/usr/bin
 	install mocassinWarm ${DESTDIR}/usr/bin
