@@ -23,8 +23,8 @@ program MoCaSSiNwarm
 
     integer         :: iGrid            ! 
 
-    real            :: etime
-    real, dimension(2) :: tarray,timing        ! cputimer
+    real(kind=dp)            :: etime
+    real(kind=sp), dimension(2) :: tarray,timing        ! cputimer
     integer         :: nhours, nminutes, nseconds
  
     timing(1)=etime(tarray)/60.0

@@ -20,8 +20,8 @@ module dust_mod
 
       ! local variables      
 
-      real, pointer :: absOpacTmp(:,:)
-      real, pointer :: scaOpacTmp(:,:)
+      real(kind=dp), pointer :: absOpacTmp(:,:)
+      real(kind=dp), pointer :: scaOpacTmp(:,:)
 
       integer :: err ! allocation error status
       integer :: iP,jP,kP ! counter
@@ -145,7 +145,7 @@ module dust_mod
       subroutine dustEmissionInt()
         implicit none
 
-        real :: bb ! blackbody flux                
+        real(kind=dp) :: bb ! blackbody flux                
 
         integer :: i, nT, nS, ai  ! counters
 
@@ -167,7 +167,7 @@ module dust_mod
               do nT = 1, nTemps
 
                  do i = 1, nbins
-                    bb = getFlux(nuArray(i), real(nT), cShapeLoc)
+                    bb = getFlux(nuArray(i), dble(nT), cShapeLoc)
                     dustEmIntegral(nS,ai,nT) = dustEmIntegral(nS,ai,nT)+& 
                          & xSecArray(dustAbsXsecP(nS,ai)+i-1)*bb*fr1Ryd*widFlx(i)
                  end do

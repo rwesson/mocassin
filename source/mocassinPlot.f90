@@ -22,17 +22,17 @@ program MoCaSSiNplot
 
     type(plot_type) :: plot           ! the plot
 
-    real(kind=8),pointer    :: flinePlot(:,:,:,:)
-    real(kind=8),pointer    :: flinePlotLarge(:,:)
-    real, pointer   :: image(:,:,:,:)    
+    real(kind=dp),pointer    :: flinePlot(:,:,:,:)
+    real(kind=dp),pointer    :: flinePlotLarge(:,:)
+    real(kind=dp), pointer   :: image(:,:,:,:)    
 
     ! filter transmission stuff
-    real            :: frequency(5000), frequencyTemp(5000),tranCoeff(5000),tranCoeffTemp(5000)
+    real(kind=dp)            :: frequency(5000), frequencyTemp(5000),tranCoeff(5000),tranCoeffTemp(5000)
     Real, pointer   :: coeff(:)
 
-    real            :: dV                     ! volume of local cell [e45 cm^3]
-    real            :: freq1,freq2
-    real            :: log10TeLoc
+    real(kind=dp)            :: dV                     ! volume of local cell [e45 cm^3]
+    real(kind=dp)            :: freq1,freq2
+    real(kind=dp)            :: log10TeLoc
 
     character(len=30) :: filename       ! input file
     character(len=30) :: bandFile       ! band transmission coeff file
@@ -466,7 +466,7 @@ program MoCaSSiNplot
 
 
         ! local variables
-        real                      :: freq        ! cont freq
+        real(kind=dp)                      :: freq        ! cont freq
 
         character(len=10)         :: lineORcont  ! line or continuum ?
         character(len=10)         :: filter      ! filter?
@@ -638,7 +638,7 @@ program MoCaSSiNplot
                             &ionDenUsed(elementXref(elem),ion), &
                             & TeUsed, NeUsed, flinePlotLarge(:,:))
                     else
-                       call equilibrium(dataFile(elem, ion), 0., &
+                       call equilibrium(dataFile(elem, ion), 0.d0, &
                             & TeUsed, NeUsed, flinePlotLarge(:,:))
                     end if
 
@@ -653,7 +653,7 @@ program MoCaSSiNplot
                             &ionDenUsed(elementXref(elem),ion), &
                             & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                     else
-                       call equilibrium(dataFile(elem, ion), 0., &
+                       call equilibrium(dataFile(elem, ion), 0.d0, &
                             & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                     end if
 
@@ -689,13 +689,13 @@ program MoCaSSiNplot
 &                                      iup        ! pointer to upper level
         integer                    :: denint
 
-        real                       :: Hbeta       ! Hbeta emission
-        real                       :: HeII4686    ! HeII 4686 emission
-        real                       :: Lalpha      ! Lalpha emission
-        real                       :: T4          ! TeUsed/10000.
-        real                       :: x1,x2
-        real                       :: hb          ! emissivity of H 4->2
-        real                       :: fh          ! emissivity of H
+        real(kind=dp)                       :: Hbeta       ! Hbeta emission
+        real(kind=dp)                       :: HeII4686    ! HeII 4686 emission
+        real(kind=dp)                       :: Lalpha      ! Lalpha emission
+        real(kind=dp)                       :: T4          ! TeUsed/10000.
+        real(kind=dp)                       :: x1,x2
+        real(kind=dp)                       :: hb          ! emissivity of H 4->2
+        real(kind=dp)                       :: fh          ! emissivity of H
 
 
         T4 = TeUsed / 10000.

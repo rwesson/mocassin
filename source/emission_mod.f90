@@ -20,11 +20,11 @@ module emission_mod
     double precision, dimension(34)        :: HeIRecLines          ! emissivity from HeI rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
 
-    real                                :: BjumpTemp   ! 
-    real                                :: HbetaProb   ! probability of Hbeta
-    real                                :: log10Ne     ! log10(Ne) at this cell
-    real                                :: log10Te     ! log10(Te) at this cell
-    real                                :: sqrTeUsed   ! sqr(Te) at this cell
+    real(kind=dp)                                :: BjumpTemp   ! 
+    real(kind=dp)                                :: HbetaProb   ! probability of Hbeta
+    real(kind=dp)                                :: log10Ne     ! log10(Ne) at this cell
+    real(kind=dp)                                :: log10Te     ! log10(Te) at this cell
+    real(kind=dp)                                :: sqrTeUsed   ! sqr(Te) at this cell
 
     integer                             :: abFileUsed  ! abundance file index used
     integer                             :: cellPUsed   !  cell index
@@ -48,7 +48,7 @@ module emission_mod
         integer :: err                       ! allocation error status
         integer :: i                         ! counters
 
-        real    :: dV                        ! volume element        
+        real(kind=dp)    :: dV                        ! volume element        
 
         double precision, pointer :: gammaHI(:)          ! HI fb+ff emission coefficient [e-40 erg*cm^3/s/Hz]
         double precision, pointer :: gammaHeI(:)         ! HeI fb+ff emission coefficient [e-40erg*cm^3/s/Hz]
@@ -266,7 +266,7 @@ module emission_mod
       subroutine initResLinePackets()
         implicit none
         
-        real                :: lineIntensity
+        real(kind=dp)                :: lineIntensity
 
         integer             :: iRes, imul, n, ai
                 
@@ -365,7 +365,7 @@ module emission_mod
         integer            :: xSecP           ! pointer to phot x sec of ion M in xSecArray
 
 
-        real, dimension(3)              :: statW      ! g0/g1 for HI, HeI and HeII
+        real(kind=dp), dimension(3)              :: statW      ! g0/g1 for HI, HeI and HeII
 
         double precision                :: aFit, &    ! general calculations factors
              & factor, &  
@@ -375,7 +375,7 @@ module emission_mod
              & phXSecHeI,&                            ! phot x sec for HeI
              & phXSecHeII,&                           ! phot x sec for HeII 
              & phXSecM                                ! phot x sec for ion M
-        real, pointer :: logGammaHIloc(:), logGammaHeIloc(:), logGammaHeIIloc(:)
+        real(kind=dp), pointer :: logGammaHIloc(:), logGammaHeIloc(:), logGammaHeIIloc(:)
                                                       ! gamma [e-40 erg/Hz] for HI, HeI and HeII
      
         allocate (logGammaHIloc(nlimGammaHI), stat=err)
@@ -647,28 +647,28 @@ module emission_mod
 
         double precision                :: hydro2phot   ! emission coeff for 2-phot cont [e-40 erg/cm^3/s/Hz]
                                             ! for the hydrogenic ion [e-40 erg*cm^3/s/Hz]
-        real, intent(in)    :: nu           ! frequency [Ryd]
+        real(kind=dp), intent(in)    :: nu           ! frequency [Ryd]
 
         integer, intent(in) :: Z            ! nuclear charge
 
         ! local variables
-        real                :: alphaEffH22S ! effective recombination coefficient
+        real(kind=dp)                :: alphaEffH22S ! effective recombination coefficient
                                             ! to the 22S state of HI [e-13 cm^3/s]
-        real                :: alphaEffHeII21S ! effective recombination coefficient
+        real(kind=dp)                :: alphaEffHeII21S ! effective recombination coefficient
                                             ! to the 21S state of HeII [e-13 cm^3/s]
-        real, parameter     :: A22S12S=8.23 ! Einstein A of forbibben LyAlpha [1/s]
-        real, parameter     :: A2qH = 8.2249! total hydrogen 2s->1s 2 photon
+        real(kind=dp), parameter     :: A22S12S=8.23 ! Einstein A of forbibben LyAlpha [1/s]
+        real(kind=dp), parameter     :: A2qH = 8.2249! total hydrogen 2s->1s 2 photon
                                             ! transition probability [1/s]
-        real                :: A2qZ         ! total Z-ion 2s->1s 2 photon
+        real(kind=dp)                :: A2qZ         ! total Z-ion 2s->1s 2 photon
                                             ! transition probability [1/s]
-        real                :: Ay           ! transition probability (nu-dependent)
-        real                :: factor       ! general interpolation factor
-        real                :: gNu          ! spec distribution of 2phot emission
+        real(kind=dp)                :: Ay           ! transition probability (nu-dependent)
+        real(kind=dp)                :: factor       ! general interpolation factor
+        real(kind=dp)                :: gNu          ! spec distribution of 2phot emission
                                             ! [e-27 erg/Hz]
-        real                :: nu0          ! frequencyof the 2s->1s transition
-        real                :: Q22S22P      ! collisional transitional rates
+        real(kind=dp)                :: nu0          ! frequencyof the 2s->1s transition
+        real(kind=dp)                :: Q22S22P      ! collisional transitional rates
                                             ! for HI 22S-22P
-        real                :: y            ! nu/nu0 where nu0is the frequency
+        real(kind=dp)                :: y            ! nu/nu0 where nu0is the frequency
                                             ! of the 2s->1s transition
         ! select the hydrogenic ion
         select case(Z)
@@ -761,18 +761,18 @@ module emission_mod
         integer             :: i, j          ! counters
         integer             :: ios           ! I/O error status
 
-        real, parameter     :: A21S11S=51.3  ! HeI 2q [1/s]
+        real(kind=dp), parameter     :: A21S11S=51.3  ! HeI 2q [1/s]
                                              ! Almog & Netzer, MNRAS 238(1989)57 
-        real, parameter     :: nu0=1.514     ! 21s -> 11s frequency [Ryd] 
+        real(kind=dp), parameter     :: nu0=1.514     ! 21s -> 11s frequency [Ryd] 
 
-        real                :: alphaEff21SHeI! effective rec coeff to HeI 21S [e-14 cm^3/s]
+        real(kind=dp)                :: alphaEff21SHeI! effective rec coeff to HeI 21S [e-14 cm^3/s]
                                              ! Almog & Netzer, MNRAS 238(1989)57 
-        real                :: Ay            ! interpolated rate [1/s]
-        real                :: fit1, fit2    ! interpolation coefficients 
-        real                :: y             ! nu/nu0
+        real(kind=dp)                :: Ay            ! interpolated rate [1/s]
+        real(kind=dp)                :: fit1, fit2    ! interpolation coefficients 
+        real(kind=dp)                :: y             ! nu/nu0
 
-        real, dimension(41) :: Ay_dat        ! data point in Ay (rates) [1/s]
-        real, dimension(41) :: y_dat         ! data point in y (=nu/nu0) 
+        real(kind=dp), dimension(41) :: Ay_dat        ! data point in Ay (rates) [1/s]
+        real(kind=dp), dimension(41) :: y_dat         ! data point in y (=nu/nu0) 
 
         ! assume all HeI singlets finally end up in the 2^1S 
         ! use total recombination cofficient to all singlets Benjamin, Skillman and SMits, ApJ, 1999, 514, 307
@@ -835,14 +835,14 @@ module emission_mod
     function ffCoeff(nu, Z, g)
         implicit none
 
-        real                 :: ffCoeff     ! ff emission coefficient [e-40 erg*cm^3/s.Hz]
-        real, intent(in)     :: g           ! ff gaunt 
-        real, intent(in)     :: nu          ! frequency [Ryd]
+        real(kind=dp)                 :: ffCoeff     ! ff emission coefficient [e-40 erg*cm^3/s.Hz]
+        real(kind=dp), intent(in)     :: g           ! ff gaunt 
+        real(kind=dp), intent(in)     :: nu          ! frequency [Ryd]
 
         integer, intent(in)  :: Z           ! nuclear charge
 
         ! local variables
-        real                 :: expFactor   ! exponential factor
+        real(kind=dp)                 :: expFactor   ! exponential factor
 
         expFactor = exp(-nu*hcRyd_k/TeUsed)
 
@@ -859,11 +859,11 @@ module emission_mod
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
 
-        real                       :: Hbeta       ! Hbeta emission
-        real                       :: HeII4686    ! HeII 4686 emission
-        real                       :: Lalpha      ! Lalpha emission
-        real                       :: T4          ! TeUsed/10000.
-        real                       :: x1, x2
+        real(kind=dp)                       :: Hbeta       ! Hbeta emission
+        real(kind=dp)                       :: HeII4686    ! HeII 4686 emission
+        real(kind=dp)                       :: Lalpha      ! Lalpha emission
+        real(kind=dp)                       :: T4          ! TeUsed/10000.
+        real(kind=dp)                       :: x1, x2
 
 
         T4 = TeUsed / 10000.
@@ -991,7 +991,7 @@ module emission_mod
                             &1:nForLevelsLarge, 1:nForLevelsLarge))
                     else
                        call equilibrium(file_name=dataFile(elem, ion), &
-                            &ionDenUp=0., Te=TeUsed,&
+                            &ionDenUp=0.d0, Te=TeUsed,&
                             &Ne=NeUsed, FlineEm=forbiddenLinesLarge(&
                             &1:nForLevelsLarge, 1:nForLevelsLarge))
                     end if
@@ -1010,7 +1010,7 @@ module emission_mod
                             &1:nForLevels, 1:nForLevels))
                     else
                        call equilibrium(file_name=dataFile(elem, ion), &
-                            &ionDenUp=0., Te=TeUsed, Ne=NeUsed, &
+                            &ionDenUp=0.d0, Te=TeUsed, Ne=NeUsed, &
                             &FlineEm=forbiddenLines(elem, ion,1:nForLevels,&
                             &1:nForLevels))
                     end if
@@ -1041,33 +1041,33 @@ module emission_mod
 
         ! local variables
 
-        real (kind=8)     :: tg
-        real(kind=8),dimension(nTbins) :: Tspike,Pspike
+        real (kind=dp)     :: tg
+        real(kind=dp),dimension(nTbins) :: Tspike,Pspike
 
-        real              :: alpha2tS          ! effective rec coeff to the 2s trip HeI
-        real              :: bb                ! blackbody
-        real              :: const             ! general calculation constant
-        real              :: correction        ! general correction term
-        real              :: normalize         ! normHI+normHeI+normHeII
-        real              :: normDust           ! normalization constant for dust        
-        real              :: normFor           ! normalization constant for lines
-        real              :: normHI            ! normalization constant for HI
-        real              :: normHeI           !                            HeI
-        real              :: normHeII          !                            HeII
-        real              :: normRec           !                            rec. lines
-        real              :: treal
-        real              :: T4                ! TeUsed/10000.
+        real(kind=dp)              :: alpha2tS          ! effective rec coeff to the 2s trip HeI
+        real(kind=dp)              :: bb                ! blackbody
+        real(kind=dp)              :: const             ! general calculation constant
+        real(kind=dp)              :: correction        ! general correction term
+        real(kind=dp)              :: normalize         ! normHI+normHeI+normHeII
+        real(kind=dp)              :: normDust           ! normalization constant for dust        
+        real(kind=dp)              :: normFor           ! normalization constant for lines
+        real(kind=dp)              :: normHI            ! normalization constant for HI
+        real(kind=dp)              :: normHeI           !                            HeI
+        real(kind=dp)              :: normHeII          !                            HeII
+        real(kind=dp)              :: normRec           !                            rec. lines
+        real(kind=dp)              :: treal
+        real(kind=dp)              :: T4                ! TeUsed/10000.
 
         integer, parameter:: NHeIILyman = 4     ! Number of HeII Lym lines included 
-        real, dimension(NHeIILyman) &
+        real(kind=dp), dimension(NHeIILyman) &
 &                          :: HeIILyman         ! HeII Lyman lines em. [e-25ergs*cm^3/s]
-        real, dimension(NHeIILyman) &
+        real(kind=dp), dimension(NHeIILyman) &
 &                          :: HeIILymanNu       ! HeII Lyman lines freq. [Ryd]          
 
-        real, pointer     :: sumDiffuseDust(:) ! summation terms for dust emission
-        real, pointer     :: sumDiffuseHI(:)   ! summation terms for HI emission
-        real, pointer     :: sumDiffuseHeI(:)  ! summation terms for HeI emission   
-        real, pointer     :: sumDiffuseHeII(:) ! summation terms for HeII emission   
+        real(kind=dp), pointer     :: sumDiffuseDust(:) ! summation terms for dust emission
+        real(kind=dp), pointer     :: sumDiffuseHI(:)   ! summation terms for HI emission
+        real(kind=dp), pointer     :: sumDiffuseHeI(:)  ! summation terms for HeI emission   
+        real(kind=dp), pointer     :: sumDiffuseHeII(:) ! summation terms for HeII emission   
 
         integer           :: dcp                ! local dustComPointer
         integer           :: elem, ion          ! counters
@@ -1102,7 +1102,7 @@ module emission_mod
 
 
         ! assign pointers for the He line photons
-        call locate(nuArray, 1.45673, j2TsP)
+        call locate(nuArray, 1.45673d0, j2TsP)
 
         ! calculate normalization constants for the HI, HeI and HeII diffuse probs
 
@@ -1462,9 +1462,9 @@ module emission_mod
     subroutine setDustPDF()
       implicit none
 
-      real :: bb,treal
-      real (kind=8) :: tg
-      real(kind=8),dimension(nTbins) :: Tspike,Pspike
+      real(kind=dp) :: bb,treal
+      real (kind=dp) :: tg
+      real(kind=dp),dimension(nTbins) :: Tspike,Pspike
 
       integer :: i, n, ai, iT, dcp ! counters
 
@@ -1543,25 +1543,25 @@ module emission_mod
     subroutine qHeat(ns,na,tg,temp,pss)
       implicit none
 
-      real ::  tbase
+      real(kind=dp) ::  tbase
       integer, intent(in) :: ns, na
       integer             :: i,j,ii,if, dcp
       integer             :: wlp,wllp,wlsp,natom
       
       character(len=1)    :: sorc
       
-      real(kind=8), dimension(nTbins,nTbins) :: A, B
-      real(kind=8), intent(inout) :: tg
-      real(kind=8), intent(inout) :: temp(nTbins),pss(nTbins) 
-      real(kind=8)                :: lambda(nbins), sQabs(nbins),& 
+      real(kind=dp), dimension(nTbins,nTbins) :: A, B
+      real(kind=dp), intent(inout) :: tg
+      real(kind=dp), intent(inout) :: temp(nTbins),pss(nTbins) 
+      real(kind=dp)                :: lambda(nbins), sQabs(nbins),& 
            & temp1(nbins),temp2(nbins)
-      real(kind=8)                :: U(nTbins),dU(nTbins)
-      real(kind=8)                :: mgrain,mdUdt,ch
-      real(kind=8)                :: const1, radField(nbins),hc,wlim
-      real(kind=8)                :: qHeatTemp,X(nTbins)
-      real(kind=8)                :: UiTrun,sumX, sumBx
-      real(kind=8)                :: wl,wll,wls
-      real(kind=8)                :: qint,qint1,qint2,delwav
+      real(kind=dp)                :: U(nTbins),dU(nTbins)
+      real(kind=dp)                :: mgrain,mdUdt,ch
+      real(kind=dp)                :: const1, radField(nbins),hc,wlim
+      real(kind=dp)                :: qHeatTemp,X(nTbins)
+      real(kind=dp)                :: UiTrun,sumX, sumBx
+      real(kind=dp)                :: wl,wll,wls
+      real(kind=dp)                :: qint,qint1,qint2,delwav
       
       integer :: ifreq
 
@@ -1820,10 +1820,10 @@ module emission_mod
     subroutine getTmin(ns, ai, tmin)
       implicit none
 
-      real(kind=8), intent(out)      :: tmin  ! continuous heating/cooling equilibrium temp
-      real                   :: dustAbsIntegral   ! dust absorption integral
-      real                   :: cutoff            ! lambda=1000um (guhathakurta & draine 89)
-      real, dimension(nbins) :: radField          ! radiation field
+      real(kind=dp), intent(out)      :: tmin  ! continuous heating/cooling equilibrium temp
+      real(kind=dp)                   :: dustAbsIntegral   ! dust absorption integral
+      real(kind=dp)                   :: cutoff            ! lambda=1000um (guhathakurta & draine 89)
+      real(kind=dp), dimension(nbins) :: radField          ! radiation field
       
       integer, intent(in) :: ns, ai ! grain species and size pointers
       integer :: iT,ifreq ! pointer to dust temp in dust temp array
@@ -1886,10 +1886,10 @@ module emission_mod
           function enthalpy(tg,natom,na,sorc)
             implicit none
             
-            real(kind=8) :: enthalpy
-            real(kind=8), intent(in) :: tg
+            real(kind=dp) :: enthalpy
+            real(kind=dp), intent(in) :: tg
 
-            real(kind=8) :: enth1,  enth2,  enth3,  enth4,& 
+            real(kind=dp) :: enth1,  enth2,  enth3,  enth4,& 
                  & enth1_50,  enth2_150,  enth3_500, & 
                  & vg
 
@@ -1939,11 +1939,11 @@ module emission_mod
           ! C2 = h.c/k
           function bbody(lam,tIn)
 
-            real(kind=8)            :: bbody
-            real(kind=8), intent(in):: lam, tIn
-            real(kind=8), parameter :: C1=3.74185e-5
-            real(kind=8), parameter :: C2=1.43883                  
-            real(kind=8)            :: exptest
+            real(kind=dp)            :: bbody
+            real(kind=dp), intent(in):: lam, tIn
+            real(kind=dp), parameter :: C1=3.74185e-5
+            real(kind=dp), parameter :: C2=1.43883                  
+            real(kind=dp)            :: exptest
 
             exptest=C2/(lam*tIn)
             
@@ -1957,11 +1957,11 @@ module emission_mod
           subroutine clrate(tem,lam,fl,sQa,mdudt)
             implicit none
             
-            real(kind=8), intent(out) :: mdudt
+            real(kind=dp), intent(out) :: mdudt
 
-            real(kind=8), intent(in) :: tem,lam(nbins),fl(nbins),sQa(nbins)
+            real(kind=dp), intent(in) :: tem,lam(nbins),fl(nbins),sQa(nbins)
             
-            real(kind=8) :: cutoff, eout(nbins), engin, engout,eomid, & 
+            real(kind=dp) :: cutoff, eout(nbins), engin, engout,eomid, & 
                  & delwav
 
             integer :: k,cutoffP
@@ -1997,9 +1997,9 @@ module emission_mod
           subroutine cheat(it,nTbins,lam,fl,sQa,U,ch)
             implicit none
             
-            real(kind=8), intent(out)   :: ch
-            real(kind=8), intent(in)    :: U(*),lam(nbins),fl(nbins),sQa(nbins)
-            real(kind=8) :: einmax,shwav,cutoff, ein(nbins),engin,&
+            real(kind=dp), intent(out)   :: ch
+            real(kind=dp), intent(in)    :: U(*),lam(nbins),fl(nbins),sQa(nbins)
+            real(kind=dp) :: einmax,shwav,cutoff, ein(nbins),engin,&
                  & eimid,hc,delwav
 
             integer, intent(in) :: it,nTbins
@@ -2090,19 +2090,19 @@ module emission_mod
     double precision, &
          & pointer :: n(:), n2(:) ! level population arrays
 
-    real                 :: a_r(4),a_d(5),z,br       !
-    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
-    real                 :: qomInt                    ! interpolated value of qom
-    real,    pointer     :: logTemp(:)                ! log10 temperature points array
-    real,    pointer     :: qq(:)                     ! qq array
-    real,    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
+    real(kind=dp)                 :: a_r(4),a_d(5),z,br       !
+    real(kind=dp),    pointer     :: alphaTotal(:)             ! maximum 100-level ion
+    real(kind=dp)                 :: qomInt                    ! interpolated value of qom
+    real(kind=dp),    pointer     :: logTemp(:)                ! log10 temperature points array
+    real(kind=dp),    pointer     :: qq(:)                     ! qq array
+    real(kind=dp),    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
 
-    real, intent(in) &
+    real(kind=dp), intent(in) &
          & :: Te, &    ! electron temperature [K]
          & Ne, &       ! electron density [cm^-3]
          & ionDenUp    ! ion density of the upper ion stage 
 
-    real  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats    
+    real(kind=dp)  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats    
     integer  :: gx               ! stat weight reader  
     integer  :: i, j, k, l, iT   ! counters/indeces
     integer  :: i1, j1, i2, j2, i3, j3  ! counters/indeces
@@ -2423,7 +2423,7 @@ module emission_mod
                   (qq(2)-qq(1)) / (logTemp(2)-logTemp(1)) * (log10Te - logTemp(1))
           else
              ! set up second derivatives for spline interpolation
-             call spline(logTemp, qq, 1.e30, 1.e30, qq2)
+             call spline(logTemp, qq, 1.d30, 1.d30, qq2)
              
              ! get interpolated qom for level
              call splint(logTemp, qq, qq2, log10Te, qomInt)
@@ -2552,14 +2552,14 @@ module emission_mod
     double precision, &
          & pointer :: n(:), n2(:) ! level population arrays
 
-    real                 :: a_r(4),a_d(5),z,br       !
-    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
-    real                 :: qomInt                    ! interpolated value of qom
-    real,    pointer     :: logTemp(:)                ! log10 temperature points array
-    real,    pointer     :: qq(:)                     ! qq array
-    real,    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
+    real(kind=dp)                 :: a_r(4),a_d(5),z,br       !
+    real(kind=dp),    pointer     :: alphaTotal(:)             ! maximum 100-level ion
+    real(kind=dp)                 :: qomInt                    ! interpolated value of qom
+    real(kind=dp),    pointer     :: logTemp(:)                ! log10 temperature points array
+    real(kind=dp),    pointer     :: qq(:)                     ! qq array
+    real(kind=dp),    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
 
-    real, intent(in) &
+    real(kind=dp), intent(in) &
          & :: Te, &    ! electron temperature [K]
          & Ne, &       ! electron density [cm^-3]
          & ionDenUp    ! ion density of the upper ion stage 
@@ -2843,7 +2843,7 @@ module emission_mod
                   (qq(2)-qq(1)) / (logTemp(2)-logTemp(1)) * (log10Te - logTemp(1))
           else
              ! set up second derivatives for spline interpolation
-             call spline(logTemp, qq, 1.e30, 1.e30, qq2)
+             call spline(logTemp, qq, 1.d30, 1.d30, qq2)
              
              ! get interpolated qom for level
              call splint(logTemp, qq, qq2, log10Te, qomInt)
@@ -3197,18 +3197,18 @@ module emission_mod
 
       type(vector) :: uHat, rVec ! direction and position vectors
      
-      real    :: a0,DeltaNuD ! line centre xSec [cm^2] and doppler width
-      real    :: bFac
-      real    :: deltax,deltaxloc    !
-      real    :: k_d, k_l  ! dust and line opacities
-      real    :: dSx, dSy, dSz, dS ! distances from walls
-      real    :: I1, I2    ! calculation integrals
-      real    :: Pline     ! prob line
-      real    :: radius    ! radial distance from the centre of the grid
-      real    :: tau_mu    ! optical depth in direction mu at line centre
-      real    :: gasdensity,gastemperature ! properties of the cells along the line of travel
-      real    :: gasdensity0,gastemperature0 ! local cell properties
-      real :: k_dTest=0.5e-20, HdenTest=0.252, ionFracTest=0.5, TeTest=1.e4
+      real(kind=dp)    :: a0,DeltaNuD ! line centre xSec [cm^2] and doppler width
+      real(kind=dp)    :: bFac
+      real(kind=dp)    :: deltax,deltaxloc    !
+      real(kind=dp)    :: k_d, k_l  ! dust and line opacities
+      real(kind=dp)    :: dSx, dSy, dSz, dS ! distances from walls
+      real(kind=dp)    :: I1, I2    ! calculation integrals
+      real(kind=dp)    :: Pline     ! prob line
+      real(kind=dp)    :: radius    ! radial distance from the centre of the grid
+      real(kind=dp)    :: tau_mu    ! optical depth in direction mu at line centre
+      real(kind=dp)    :: gasdensity,gastemperature ! properties of the cells along the line of travel
+      real(kind=dp)    :: gasdensity0,gastemperature0 ! local cell properties
+      real(kind=dp) :: k_dTest=0.5e-20, HdenTest=0.252, ionFracTest=0.5, TeTest=1.e4
 
 
       integer, intent(in) :: xPin,yPin,zPin,gPin ! incoming cell pointers
@@ -3921,10 +3921,10 @@ module emission_mod
 
       type(resLine_type), intent(in) :: lineIn
 
-      real, intent(in)              :: width, tauIn
-      real, intent(in), optional    :: profileIn(nbins)
-      real                          :: getM2_tau
-      real                          :: dx
+      real(kind=dp), intent(in)              :: width, tauIn
+      real(kind=dp), intent(in), optional    :: profileIn(nbins)
+      real(kind=dp)                          :: getM2_tau
+      real(kind=dp)                          :: dx
 
       integer                       :: i
       
@@ -3949,9 +3949,9 @@ module emission_mod
       implicit none
       
       type(resLine_type), intent(in) :: lineIn
-      real              :: profile ! phi(nu)
-      real, intent(in)  :: nuIn ! frequency [Ryd]
-      real, intent(in)  :: widthIn ! 
+      real(kind=dp)              :: profile ! phi(nu)
+      real(kind=dp), intent(in)  :: nuIn ! frequency [Ryd]
+      real(kind=dp), intent(in)  :: widthIn ! 
 
       character(len=7), intent(in) :: profileID ! what type of broadening?
 
@@ -3974,8 +3974,8 @@ module emission_mod
       
       type(resLine_type), intent(inout) :: line
 
-      real, intent(in)         :: width
-      real, intent(out)        :: line_xSec
+      real(kind=dp), intent(in)         :: width
+      real(kind=dp), intent(out)        :: line_xSec
       
 
       if (width<=0.) then
@@ -3999,8 +3999,8 @@ module emission_mod
       
       type(resLine_type), intent(inout) :: line
 
-      real, intent(in)         :: width
-      real, intent(out)        :: line_xSec
+      real(kind=dp), intent(in)         :: width
+      real(kind=dp), intent(out)        :: line_xSec
       
 
       if (width<=0.) then

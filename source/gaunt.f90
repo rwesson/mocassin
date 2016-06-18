@@ -20,25 +20,25 @@
 
         integer, intent(out) :: iflag                ! explanation given in each area        
 
-        real, intent(in) :: log10Te                  ! log10(Te)
-        real, intent(in) ::  z                       ! log10 of nuclear charge
-        real, dimension(:), intent(in) :: xlf        ! array of log10(h*nu/Ryd)
-        real, dimension(size(xlf)), intent(out) :: g ! array of values of g
+        real(kind=dp), intent(in) :: log10Te                  ! log10(Te)
+        real(kind=dp), intent(in) ::  z                       ! log10 of nuclear charge
+        real(kind=dp), dimension(:), intent(in) :: xlf        ! array of log10(h*nu/Ryd)
+        real(kind=dp), dimension(size(xlf)), intent(out) :: g ! array of values of g
 
         ! local variables 
         integer ::  i, ir, j
 
-        real, dimension(11) :: b
-        real, dimension(8) :: c
-        real :: con
-        real(kind=8), dimension(88) :: dd
-        real(kind=8), dimension(8, 11) :: d
-        real :: gamma2                               ! gamma^2 (gams = Z^2 * Ryd / k*T)
-        real :: slope                                ! slope
-        real :: txg                                  ! hummer variable related to gamma^2
-        real :: txu                                  ! hummer variable related to U
-        real :: u                                    ! U = h*nu/k*T
-        real :: xlrkt                                ! log(ryd/kt)
+        real(kind=dp), dimension(11) :: b
+        real(kind=dp), dimension(8) :: c
+        real(kind=dp) :: con
+        real(kind=dp), dimension(88) :: dd
+        real(kind=dp), dimension(8, 11) :: d
+        real(kind=dp) :: gamma2                               ! gamma^2 (gams = Z^2 * Ryd / k*T)
+        real(kind=dp) :: slope                                ! slope
+        real(kind=dp) :: txg                                  ! hummer variable related to gamma^2
+        real(kind=dp) :: txu                                  ! hummer variable related to U
+        real(kind=dp) :: u                                    ! U = h*nu/k*T
+        real(kind=dp) :: xlrkt                                ! log(ryd/kt)
 
         dd = (/8.986940175e+00, -4.009515855e+00,  8.808871266e-01,& 
 &          2.640245111e-02, -4.580645915e-02, -3.568055702e-03,&

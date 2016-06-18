@@ -10,7 +10,7 @@ module xSec_mod
     implicit none
 
         
-    real, private, allocatable, dimension(:) :: xSecArrayTemp ! temporary xSec array
+    real(kind=dp), private, allocatable, dimension(:) :: xSecArrayTemp ! temporary xSec array
 
 
     public
@@ -210,12 +210,12 @@ module xSec_mod
         integer :: n                          ! principle QN
        
 
-        real :: alpha, beta, dx
-        real :: thom
-        real :: thres                         ! energy threshold [eV]
-        real :: xSec                          ! x Section
-        real :: x                             ! log10(W/W0) (for use in phFitHIon)
-        real :: z                             ! Z
+        real(kind=dp) :: alpha, beta, dx
+        real(kind=dp) :: thom
+        real(kind=dp) :: thres                         ! energy threshold [eV]
+        real(kind=dp) :: xSec                          ! x Section
+        real(kind=dp) :: x                             ! log10(W/W0) (for use in phFitHIon)
+        real(kind=dp) :: z                             ! Z
 
         print*, 'in initXSecArray'  
         
@@ -308,7 +308,7 @@ module xSec_mod
               HlevXSecP(n) = xSecTop + 1 ! set the pointers to the various continua
               do i = HlevNuP(n), HlevNuP(1)
                  x = log10(nuArray(i)) - log10(nuArray(HlevNuP(n)))           
-                 xSecArrayTemp(i-HlevNuP(n) + HlevXSecP(n)) = phFitHIon(x, n, 1.)
+                 xSecArrayTemp(i-HlevNuP(n) + HlevXSecP(n)) = phFitHIon(x, n, 1.d0)
               end do
               xSecTop = xSecTop + HlevNuP(1) - HlevNuP(n) +1
               
@@ -332,13 +332,13 @@ module xSec_mod
            xSecTop = xSecTop + nbins - HeIlevNuP(1) + 1      
 
            ! HeI neutral He 21S from StewartJPhysB 11, L431
-           call powLawXSec(HeIlevNuP(2), HeIlevNuP(1), 0.4*8.7e-18, 1.5, HeISingXSecP(2))
+           call powLawXSec(HeIlevNuP(2), HeIlevNuP(1), 0.4d0*8.7e-18, 1.5d0, HeISingXSecP(2))
 
            ! HeI singlet bound free excited states
            z = 1.
            do n = 3, nHeIlevel
               xSec = 7.906e-18*float(n) / (z*z)
-              call powLawXSec(HeIlevNuP(n), HeIlevNuP(1), xSec, 3.0, HeISingXSecP(n))
+              call powLawXSec(HeIlevNuP(n), HeIlevNuP(1), xSec, 3.d0, HeISingXSecP(n))
            end do
 
            ! HeII ionized Helium bound free ground state
@@ -357,7 +357,7 @@ module xSec_mod
               HeIIXSecP(n) = xSecTop + 1
               do i = HeIIlevNuP(n), HeIIlevNuP(1)
                  x = log10(nuArray(i)) - log10(nuArray(HeIIlevNuP(n)))
-                 xSecArrayTemp(i-HeIIlevNuP(n)+HeIIXSecP(n)) = phFitHIon(x, n, 2.)
+                 xSecArrayTemp(i-HeIIlevNuP(n)+HeIIXSecP(n)) = phFitHIon(x, n, 2.d0)
               end do
               xSecTop = xSecTop + HeIIlevNuP(1) - HeIIlevNuP(n) + 1
            end do
@@ -481,13 +481,13 @@ module xSec_mod
          integer, intent(in) :: ne                ! # of electrons from 1 to nz
          integer, intent(in) :: shell             ! shell number
      
-         real, intent(in) :: photEn               ! photon energy [eV]
-         real, intent(out) :: xSec                ! cross section [Mb]
+         real(kind=dp), intent(in) :: photEn               ! photon energy [eV]
+         real(kind=dp), intent(out) :: xSec                ! cross section [Mb]
 
          ! local variables
          integer :: nOut, nInt                    ! # of outer or internal shell
  
-         real :: eInn, p1, y, q, a, b, x, z
+         real(kind=dp) :: eInn, p1, y, q, a, b, x, z
 
          ! initialize the cross section to 0.0
          xSec = 0.0
@@ -560,16 +560,16 @@ module xSec_mod
        function phFitHIon(x, n, z)
          implicit none
          
-         real :: phFitHIon              ! cross section [1/cm^2]
+         real(kind=dp) :: phFitHIon              ! cross section [1/cm^2]
          
          integer :: n                   ! principal QN
          
-         real :: x                      ! log10(W/W0)
-         real :: z                      ! nuclear charge
+         real(kind=dp) :: x                      ! log10(W/W0)
+         real(kind=dp) :: z                      ! nuclear charge
 
          ! local variables
 
-         real, dimension(10) ::  a, &   ! fit parameters
+         real(kind=dp), dimension(10) ::  a, &   ! fit parameters
               &b, c, d, e, f                               
 
          ! assign the the fit parameters
@@ -613,8 +613,8 @@ module xSec_mod
          
          integer, intent(in) :: n
          
-         real, intent(out) :: h0        ! crossection
-         real, intent(out) :: pow       ! power
+         real(kind=dp), intent(out) :: h0        ! crossection
+         real(kind=dp), intent(out) :: pow       ! power
 
          ! better than 1% fit for n>=30
          h0 = (1.3962688e-10 + 2.7479352e-9 * sqrt(float(n)) ) * &
@@ -640,9 +640,9 @@ module xSec_mod
          integer :: i, ixSec                               ! counters
          integer :: nPairs                                 ! # of data pair
          
-         real ::  slope                            ! slope for linear interpolation
-         real, dimension(nData) :: H2plusAr
-         real, dimension(nData/2) :: enerData,  &  ! energy and cross 
+         real(kind=dp) ::  slope                            ! slope for linear interpolation
+         real(kind=dp), dimension(nData) :: H2plusAr
+         real(kind=dp), dimension(nData/2) :: enerData,  &  ! energy and cross 
               &xSecData                            ! section arrays
 
          opP = xSecTop + 1
@@ -715,12 +715,12 @@ module xSec_mod
         integer, intent(in)  :: low, high ! pointers to boundaries of freq region
         integer, intent(out) :: xSecP     ! pointer to xSec array in xSecArray 
 
-        real, intent(in)     :: cross, s
+        real(kind=dp), intent(in)     :: cross, s
 
         ! local variables
         integer :: i                      ! counter
         
-        real :: thres                     ! threshold
+        real(kind=dp) :: thres                     ! threshold
 
         xSecP = xSecTop + 1               ! set x Sec pointer
         thres =  nuArray(low)             ! set threshold
@@ -753,8 +753,8 @@ module xSec_mod
         integer :: nIon                  ! ionic number
         integer :: shell                 ! shell(suit) number
     
-        real    :: energy                ! energy [eV]
-        real    :: xSec                  ! xSec [1/cm^2]
+        real(kind=dp)    :: energy                ! energy [eV]
+        real(kind=dp)    :: xSec                  ! xSec [1/cm^2]
         
 
         do nIon = 1, min(nElem, nstages)
@@ -807,20 +807,20 @@ module xSec_mod
       ! makes dust xsections [cm^2] ( pi a^2 Q )
       subroutine makeDustXsec()
 
-        real :: normWeight ! normalization constant for grain size weighting
-        real :: readReal     ! real number reader
-        real :: value ! general value variable
-        real, pointer :: da(:)
-        real, pointer :: tmp1(:), tmp2(:), tmp3(:), agrain(:), tmp11(:,:), tmp22(:,:),&
+        real(kind=dp) :: normWeight ! normalization constant for grain size weighting
+        real(kind=dp) :: readReal     ! real number reader
+        real(kind=dp) :: value ! general value variable
+        real(kind=dp), pointer :: da(:)
+        real(kind=dp), pointer :: tmp1(:), tmp2(:), tmp3(:), agrain(:), tmp11(:,:), tmp22(:,:),&
              & tmp33(:,:), tmpWav(:), QaTemp(:), QsTemp(:), gTemp(:), temp1nbins(:,:), &
              & temp2nbins(:,:), temp3nbins(:,:), norm(:)
-        real, pointer :: wav(:) ! wavelength in [um]
-        real, pointer :: gCos(:,:,:) ! phase function parameter
-        real, pointer :: Cabs(:,:,:) ! abs cross-section [um^2] for each grain species and size
-        real, pointer :: Csca(:,:,:) ! sca cross-section [um^2] for each grain species and size
-        real, pointer :: CTabs(:) ! total abs cross-section [um^2] for grain mixture
-        real, pointer :: CTsca(:) ! total sca cross-section [um^2] for grain mixture
-        real, pointer :: Ere(:), Eim(:) 
+        real(kind=dp), pointer :: wav(:) ! wavelength in [um]
+        real(kind=dp), pointer :: gCos(:,:,:) ! phase function parameter
+        real(kind=dp), pointer :: Cabs(:,:,:) ! abs cross-section [um^2] for each grain species and size
+        real(kind=dp), pointer :: Csca(:,:,:) ! sca cross-section [um^2] for each grain species and size
+        real(kind=dp), pointer :: CTabs(:) ! total abs cross-section [um^2] for grain mixture
+        real(kind=dp), pointer :: CTsca(:) ! total sca cross-section [um^2] for grain mixture
+        real(kind=dp), pointer :: Ere(:), Eim(:) 
 
         integer :: err ! allocation error status
         integer :: i, j, iwav, n, iSize, icomp ! counter
@@ -1548,19 +1548,19 @@ module xSec_mod
       subroutine getQs(Ere_in,Eim_in,Qabs,Qsca,ggCos)
         implicit none
 
-        real, intent(in) :: Ere_in(*), Eim_in(*)
-        real, intent(out) :: Qabs(nsizes,nbins), Qsca(nSizes, nbins),&
+        real(kind=dp), intent(in) :: Ere_in(*), Eim_in(*)
+        real(kind=dp), intent(out) :: Qabs(nsizes,nbins), Qsca(nSizes, nbins),&
              &ggCos(nSizes,nbins)       
       
-        complex :: refIndex
-        real    :: sizeParam
+        complex(kind=kind(1.d0)) :: refIndex
+        real(kind=dp)    :: sizeParam
         
         integer :: i, ai 
         
         do i = 1, nbins
 
            ! complex refraction index
-           refIndex = cmplx(Ere_in(i),Eim_in(i))
+           refIndex = cmplx(Ere_in(i),Eim_in(i),kind(1.d0))
            
            do ai = 1, nSizes
 
@@ -1600,22 +1600,22 @@ module xSec_mod
       subroutine BHmie (x,refrel,qext,qsca,ggsca)
         implicit none
         
-        complex, intent(in) :: refrel
-        real, intent(in)    :: x
+        complex(kind=kind(1.d0)), intent(in) :: refrel
+        real(kind=dp), intent(in)    :: x
         
-        real, intent(out)   :: qext, qsca, ggsca
+        real(kind=dp), intent(out)   :: qext, qsca, ggsca
         
-        real(kind = 8), dimension(100) ::  amu, theta,pii,tau,pi0,pi1
+        real(kind=dp), dimension(100) ::  amu, theta,pii,tau,pi0,pi1
         
-        double complex              :: d(3000),y,xi,xi0,xi1,an,bn,s1(200),s2(200),&
+        complex(kind=kind(1.d0))              :: d(3000),y,xi,xi0,xi1,an,bn,s1(200),s2(200),&
              &an1,bn1
-        real(kind = 8)                 ::  psi0,psi1,psi,dn,dx,xstop,ymod,dang,chi0,&
+        real(kind=dp)                 ::  psi0,psi1,psi,dn,dx,xstop,ymod,dang,chi0,&
              &chi1,apsi0,apsi1,apsi,fn,chi,p,t
 
-        double complex :: dpcx
+        complex(kind=kind(1.d0)) :: dpcx
 
-        real(kind = 8) ::  realpart
-        real(kind = 8) :: imagpart
+        real(kind=dp) ::  realpart
+        real(kind=dp) :: imagpart
         
         integer              :: nang,j,nstop,nmx,n,nn,rn,jj
 
@@ -1646,7 +1646,7 @@ module xSec_mod
         ! logarithmic derivative d(j) calculated by downward recurrence
         ! beginning with initial value 0.0 + i*0.0 at j = nmx
         !__________________________________________________________________
-        d(nmx)=cmplx(0.0,0.0)
+        d(nmx)=cmplx(0.0,0.0,kind(1.d0))
         nn=nmx-1
         do n=1,nn
            rn=nmx-n+1
@@ -1660,8 +1660,8 @@ module xSec_mod
       nn=2*nang-1
       
       do j=1,nn
-         s1(j)=cmplx(0.0,0.0)
-         s2(j)=cmplx(0.0,0.0)
+         s1(j)=cmplx(0.0,0.0,kind(1.d0))
+         s2(j)=cmplx(0.0,0.0,kind(1.d0))
       end do
       ! __________________________________________________________________
       ! riccati bessel functions with real argument x calculated by upward
@@ -1674,8 +1674,8 @@ module xSec_mod
       chi1=cos(x)
       apsi0=psi0
       apsi1=psi1
-      xi0=cmplx(apsi0,-chi0)
-      xi1=cmplx(apsi1,-chi1)
+      xi0=cmplx(apsi0,-chi0,kind(1.d0))
+      xi1=cmplx(apsi1,-chi1,kind(1.d0))
 
       qsca=0.0
       ggsca = 0.0
@@ -1689,7 +1689,7 @@ module xSec_mod
 
          apsi=psi
          chi=(2.*rn-1.)*chi1/x -  chi0
-         xi = cmplx(apsi,-chi)
+         xi = cmplx(apsi,-chi,kind(1.d0))
 
          if (n>1) then
             an1 = an
@@ -1736,7 +1736,7 @@ module xSec_mod
          apsi1=psi1
          chi0=chi1
          chi1=chi
-         xi1=cmplx(apsi1,-chi1)
+         xi1=cmplx(apsi1,-chi1,kind(1.d0))
 
          n=n+1
          rn=n
@@ -1761,7 +1761,7 @@ module xSec_mod
     subroutine setCompton()
       implicit none
 
-      real    :: P           ! ratio of incoming to outgoing photon energy      
+      real(kind=dp)    :: P           ! ratio of incoming to outgoing photon energy      
 
       integer :: i,j         ! counters
       integer :: nangles=180 ! # of theta bins 
@@ -1777,9 +1777,9 @@ module xSec_mod
       do i = 1, nbins
          do j = 1, nangles
         
-            P = Pcomp(nuArray(i),real(j))
+            P = Pcomp(nuArray(i),dble(j))
             PcompArray(i,j) = P
-            KNsigmaArray(i,j) = KNsigma(P,real(j))        
+            KNsigmaArray(i,j) = KNsigma(P,dble(j))        
             KNsigmaT(i) = KNsigmaT(i) + KNsigmaArray(i,j)*&
                  &2.*Pi*Sin(j*Pi/180.)*Pi/180.
          end do
@@ -1801,12 +1801,12 @@ module xSec_mod
 
     ! calculates the ratio of incoming photon energy to 
     ! outgoing photon energy
-    real function Pcomp(E,theta)
+    real(kind=dp) function Pcomp(E,theta)
       implicit none
       
-      real, intent(in) :: E, theta ! E is in [ryd] theta in deg
+      real(kind=dp), intent(in) :: E, theta ! E is in [ryd] theta in deg
       
-      real             :: const, thetarad
+      real(kind=dp)             :: const, thetarad
       
       ! const = m_e*c^2 * erg2ryd = 37557.99001
       const = 37557.66267
@@ -1824,11 +1824,11 @@ module xSec_mod
     ! P(E,theta)^2 Sin(theta)^2 + P(E,theta)^3)
     ! r_e = classical electron radius 
     ! m_e = mass of electron
-    real function KNsigma(P,theta)
+    real(kind=dp) function KNsigma(P,theta)
       implicit none
 
-      real, intent(in) :: P, theta ! theta in deg
-      real             :: const, thetarad
+      real(kind=dp), intent(in) :: P, theta ! theta in deg
+      real(kind=dp)             :: const, thetarad
 
       ! const = 0.5 r_e^2
       const = 3.970393838e-26

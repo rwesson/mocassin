@@ -17,41 +17,41 @@ module update_mod
 
         type(grid_type), intent(inout) :: grid         ! the grid
         
-        real, parameter :: Y0 = 0.5, Y1 = 0.2          ! see Baldwin et al. 1991
+        real(kind=dp), parameter :: Y0 = 0.5, Y1 = 0.2          ! see Baldwin et al. 1991
 
-        real                           :: deltaXHI        ! delta ionDen of H0                   
+        real(kind=dp)                           :: deltaXHI        ! delta ionDen of H0                   
                                                        ! H0 2 is from He0 and 3 is 
                                                        ! is for He+)
-        real                           :: phXSec      ! ph xSec of ion M at freqency bin j
-        real                           :: thResidual   ! thermal balance residual
-        real                           :: thResidualHigh! ther bal residual-high lim
-        real                           :: thResidualLow! ther bal residual-low lim
-        real                           :: Thigh        ! T high limit [K]
-        real                           :: Tlow         ! T low limit  [K]
-        real                           :: XOldHI       ! old ionDen of H0 at this cell 
+        real(kind=dp)                           :: phXSec      ! ph xSec of ion M at freqency bin j
+        real(kind=dp)                           :: thResidual   ! thermal balance residual
+        real(kind=dp)                           :: thResidualHigh! ther bal residual-high lim
+        real(kind=dp)                           :: thResidualLow! ther bal residual-low lim
+        real(kind=dp)                           :: Thigh        ! T high limit [K]
+        real(kind=dp)                           :: Tlow         ! T low limit  [K]
+        real(kind=dp)                           :: XOldHI       ! old ionDen of H0 at this cell 
 
         ! dust-gas interaction heating and cooling process
-        real                           :: grainEmi, grainRec ! grain emissions and recom          
-        real, pointer                  :: gasDustColl_d(:,:) ! cooling/heating of the 
+        real(kind=dp)                           :: grainEmi, grainRec ! grain emissions and recom          
+        real(kind=dp), pointer                  :: gasDustColl_d(:,:) ! cooling/heating of the 
                                                              ! dust through collisions with grains        
-        real                           :: gasDustColl_g ! cooling/heating of the 
+        real(kind=dp)                           :: gasDustColl_g ! cooling/heating of the 
                                                        ! gas through collisions with grains
-        real,pointer                   :: photoelHeat_d(:,:) ! cooling of dust by photoelectric
+        real(kind=dp),pointer                   :: photoelHeat_d(:,:) ! cooling of dust by photoelectric
                                                              ! emission 
-        real                           :: photoelHeat_g ! heating of gas by dust photoelctric 
+        real(kind=dp)                           :: photoelHeat_g ! heating of gas by dust photoelctric 
                                                        !emission 
-        real,pointer                   :: grainPot(:,:)  ! [Ryd]        
+        real(kind=dp),pointer                   :: grainPot(:,:)  ! [Ryd]        
 
-        real, parameter                :: hcRyd_k = &  ! constant: h*cRyd/k (Ryd at inf used) [K]
+        real(kind=dp), parameter                :: hcRyd_k = &  ! constant: h*cRyd/k (Ryd at inf used) [K]
              & 157893.94   
-        real, parameter                :: hcRyd = &    ! constant: h*c*Ryd (Ryd at inf used) [erg]
+        real(kind=dp), parameter                :: hcRyd = &    ! constant: h*c*Ryd (Ryd at inf used) [erg]
              & 2.1799153e-11
-        real, parameter                :: thLimit = 0.01! convergence limit T-iteration
+        real(kind=dp), parameter                :: thLimit = 0.01! convergence limit T-iteration
         
-        real, dimension(nElements, nstages) &
+        real(kind=dp), dimension(nElements, nstages) &
              & :: alphaTot     ! total recombination coeffs
 
-        real, dimension(nElements, nStages) &
+        real(kind=dp), dimension(nElements, nStages) &
              & :: nPhotoSte, & ! # of stellar photoionizations
              & nPhotoDif    ! # of diffuse photoionizations
 
@@ -346,10 +346,10 @@ module update_mod
             logical                       :: lgGCBConv       ! grain charge converged?
             logical                       :: lgIBConv        ! converged?
 
-            real                          :: coolInt         ! tot cooling integral [erg/s/Hden] 
-            real                          :: heatInt         ! tot heating integral [erg/s/Hden]
+            real(kind=dp)                          :: coolInt         ! tot cooling integral [erg/s/Hden] 
+            real(kind=dp)                          :: heatInt         ! tot heating integral [erg/s/Hden]
 
-            real, parameter               :: Xmax = 0.9999   ! max rel abundance
+            real(kind=dp), parameter               :: Xmax = 0.9999   ! max rel abundance
 
             ! step up T-iteration
             nIterateT = nIterateT + 1
@@ -527,14 +527,14 @@ module update_mod
         recursive subroutine setGrainPotential(iSp, ai, lgGCBConv)
           implicit none 
 
-          real,save            :: delta,delta1
-          real,save            :: grainPotOld ! local copy of grai pot
-          real                 :: grainEmi, grainRec ! grain emissions and recom          
-          real,save            :: grainEmiOld, grainRecOld ! grain emissions and recom          
-          real,parameter       :: errorLim = 0.005, dm = 0.05 ! loop convergence
-          real,parameter       :: safeLim = 100 ! loop safety limit
-          real                 :: threshold,fac
-          real,save            :: dVg,slope
+          real(kind=dp),save            :: delta,delta1
+          real(kind=dp),save            :: grainPotOld ! local copy of grai pot
+          real(kind=dp)                 :: grainEmi, grainRec ! grain emissions and recom          
+          real(kind=dp),save            :: grainEmiOld, grainRecOld ! grain emissions and recom          
+          real(kind=dp),parameter       :: errorLim = 0.005, dm = 0.05 ! loop convergence
+          real(kind=dp),parameter       :: safeLim = 100 ! loop safety limit
+          real(kind=dp)                 :: threshold,fac
+          real(kind=dp),save            :: dVg,slope
           
           integer, intent(in)  :: iSp, ai
 
@@ -603,12 +603,12 @@ module update_mod
           implicit none
 
 
-          real :: getGrainEmission
-          real, intent(in) :: Vg ! grain potential
-          real :: Yn, Yhat
+          real(kind=dp) :: getGrainEmission
+          real(kind=dp), intent(in) :: Vg ! grain potential
+          real(kind=dp) :: Yn, Yhat
 
-          real :: Qa ! grain absorption efficiency
-          real :: thres, photFlux
+          real(kind=dp) :: Qa ! grain absorption efficiency
+          real(kind=dp) :: thres, photFlux
           
           integer, intent(in) :: isp, ai
           integer :: ifreq, ip
@@ -657,17 +657,17 @@ module update_mod
         function getGrainRecombination(Vg)
           implicit none
 
-          real :: getGrainRecombination
-          real, intent(in) :: Vg ! grain potential [ryd]
+          real(kind=dp) :: getGrainRecombination
+          real(kind=dp), intent(in) :: Vg ! grain potential [ryd]
           
-          real :: eta   ! Coulomb correction
-          real :: cpDen ! colliding particle number density [cm^-3]
-          real :: eightkT_pi ! 8*k * Te/Pi [erg]
-          real :: mcp   ! mass of colliding particle in [g]
-          real :: kT    ! k*Te [ryd]
-          real :: S     ! sticking coefficient 
-          real :: vmean ! colliding particle mean velocity
-          real :: Z     ! colliding particle charge
+          real(kind=dp) :: eta   ! Coulomb correction
+          real(kind=dp) :: cpDen ! colliding particle number density [cm^-3]
+          real(kind=dp) :: eightkT_pi ! 8*k * Te/Pi [erg]
+          real(kind=dp) :: mcp   ! mass of colliding particle in [g]
+          real(kind=dp) :: kT    ! k*Te [ryd]
+          real(kind=dp) :: S     ! sticking coefficient 
+          real(kind=dp) :: vmean ! colliding particle mean velocity
+          real(kind=dp) :: Z     ! colliding particle charge
           
           integer :: istage
           
@@ -736,7 +736,7 @@ module update_mod
         subroutine setPhotoelHeatCool()
           implicit none
           
-          real    :: Qa, photFlux, EY, Yhat,Yn,th
+          real(kind=dp)    :: Qa, photFlux, EY, Yhat,Yn,th
 
           integer :: ns,na,ifreq,thP
 
@@ -810,10 +810,10 @@ module update_mod
         subroutine setDustGasCollHeatCool()
           implicit none         
 
-          real :: Z , kT, eta, psi,xi,  S, IPerg
-          real :: eightkT_pi ! 8*k * Te/Pi [erg]
+          real(kind=dp) :: Z , kT, eta, psi,xi,  S, IPerg
+          real(kind=dp) :: eightkT_pi ! 8*k * Te/Pi [erg]
           integer :: ss(30)
-          real :: vmean, mcp ! colliding particle mean velocity and mean particle mass
+          real(kind=dp) :: vmean, mcp ! colliding particle mean velocity and mean particle mass
           integer :: nelectrons, istage, ns, na
 
           ! outer shell array
@@ -933,30 +933,30 @@ module update_mod
         subroutine thermBalance(heatInt, coolInt)
             implicit none
 
-            real, intent(out)      :: heatInt, &    ! total heating and
+            real(kind=dp), intent(out)      :: heatInt, &    ! total heating and
                  & coolInt       ! cooling integrals
             ! local variables
             
             integer                :: i,j,k         ! counters
             integer                :: elem, ion     ! counters
  
-            real                   :: betaFF        ! energy loss coeff due to ff rad
-            real                   :: betaRec       ! energy loss coeff due to recomb
-            real                   :: ch12, ch13, & ! collision excitation of 
+            real(kind=dp)                   :: betaFF        ! energy loss coeff due to ff rad
+            real(kind=dp)                   :: betaRec       ! energy loss coeff due to recomb
+            real(kind=dp)                   :: ch12, ch13, & ! collision excitation of 
                  & ex12, ex13,&                     ! hydrogen data
                  & th12, th13                       ! (Mathis, Ly alpha, beta)
-            real                   :: coolFF        ! cool due to FF radiation [erg/s/Hden]
-            real                   :: coolColl      ! cool due to coll excit   [erg/s/Hden]
-            real                   :: coolRec       ! cool due to recombination[erg/s/Hden]
-            real                   :: fcool
-            real                   :: heatIonSte    ! heat due to this ion stellar phot
-            real                   :: heatIonDif    ! heat due to this ion diffuse phot
-            real                   :: heatSte       ! tot heat gain due to stellar phot
-            real                   :: heatDif       ! tot heat gain due to diffuse phot
-            real                   :: log10Te       ! log10(Te)
-            real                   :: log10TeScaled ! log10(Te/Z^2)
-            real                   :: Np            ! proton density
-            real                   :: Te4           ! Te/10000.
+            real(kind=dp)                   :: coolFF        ! cool due to FF radiation [erg/s/Hden]
+            real(kind=dp)                   :: coolColl      ! cool due to coll excit   [erg/s/Hden]
+            real(kind=dp)                   :: coolRec       ! cool due to recombination[erg/s/Hden]
+            real(kind=dp)                   :: fcool
+            real(kind=dp)                   :: heatIonSte    ! heat due to this ion stellar phot
+            real(kind=dp)                   :: heatIonDif    ! heat due to this ion diffuse phot
+            real(kind=dp)                   :: heatSte       ! tot heat gain due to stellar phot
+            real(kind=dp)                   :: heatDif       ! tot heat gain due to diffuse phot
+            real(kind=dp)                   :: log10Te       ! log10(Te)
+            real(kind=dp)                   :: log10TeScaled ! log10(Te/Z^2)
+            real(kind=dp)                   :: Np            ! proton density
+            real(kind=dp)                   :: Te4           ! Te/10000.
 
 
             ! find log10Te and Te4 at this cell
@@ -1283,7 +1283,7 @@ module update_mod
                               &1:nForLevelsLarge, 1:nForLevelsLarge))
                       else
                          call equilibrium(file_name=dataFile(elem, ion), &
-                              &ionDenUp=0., Te=TeUsed,&
+                              &ionDenUp=0.d0, Te=TeUsed,&
                               &Ne=NeUsed, FlineEm=forbiddenLinesLarge(&
                               &1:nForLevelsLarge, 1:nForLevelsLarge))
                       end if
@@ -1297,7 +1297,7 @@ module update_mod
                               &ionDenUsed(elementXref(elem),ion), &
                               & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
                       else
-                         call equilibrium(dataFile(elem, ion), 0., &
+                         call equilibrium(dataFile(elem, ion), 0.d0, &
                             & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
                       end if
                       forbiddenLines(elem, ion, :, :) = forbiddenLines(elem, ion, :, :)*& 
@@ -1323,17 +1323,17 @@ module update_mod
             logical, intent(out)   :: lgConv        ! did ion bal converge? 
 
             ! local variables
-            real                   :: collIon       ! collisional ionization of H 
-            real                   :: correction    ! used in lgNeInput = .t.
-            real                   :: deltaHI       ! delta(X(H0))
-            real                   :: deltaHeI      ! delta(X(He0))
-            real                   :: deltaHeII     ! delta(X(HeII))
-            real                   :: expFact       ! exponential factor
-            real                   :: t4            ! TeUsed/10000.
-            real, save             :: HIOld         ! X(H0) from last iteration
-            real, save             :: HeIOld        ! X(He0) from last iteration
-            real, save             :: HeIIOld       ! X(He+) from last iteration
-            real, parameter        :: limit = 0.01  ! convergence limit
+            real(kind=dp)                   :: collIon       ! collisional ionization of H 
+            real(kind=dp)                   :: correction    ! used in lgNeInput = .t.
+            real(kind=dp)                   :: deltaHI       ! delta(X(H0))
+            real(kind=dp)                   :: deltaHeI      ! delta(X(He0))
+            real(kind=dp)                   :: deltaHeII     ! delta(X(HeII))
+            real(kind=dp)                   :: expFact       ! exponential factor
+            real(kind=dp)                   :: t4            ! TeUsed/10000.
+            real(kind=dp), save             :: HIOld         ! X(H0) from last iteration
+            real(kind=dp), save             :: HeIOld        ! X(He0) from last iteration
+            real(kind=dp), save             :: HeIIOld       ! X(He+) from last iteration
+            real(kind=dp), parameter        :: limit = 0.01  ! convergence limit
 
             integer                :: elem, ion     ! element and ion counters
             integer                :: g0,g1         ! stat weights
@@ -1342,19 +1342,19 @@ module update_mod
             integer                :: outShell      ! byproduct of proc to get stat weights
 
 
-            real                   :: revRate       ! reverse charge exchange rate
+            real(kind=dp)                   :: revRate       ! reverse charge exchange rate
 
-            double precision, dimension(nELements) :: &
+            real(kind=dp), dimension(nELements) :: &
                  & denominator   ! denominator of final ion abundance
 
 
-            real, dimension(nElements, nstages) :: &
+            real(kind=dp), dimension(nElements, nstages) :: &
                  & deltaE_k      ! deltaE/k [K]
 
-            double precision, dimension(nElements, nstages) :: &
+            real(kind=dp), dimension(nElements, nstages) :: &
                  & ionRatio, &   ! X(i+1)/X(+i)
                  & ionProd       ! ionRatio products
-            real, dimension(nElements, nstages,4) :: &
+            real(kind=dp), dimension(nElements, nstages,4) :: &
                  & chex         ! ch exchange coeff in cm^3/s
 
 
@@ -1624,7 +1624,7 @@ module update_mod
         subroutine calcAlpha()
             implicit none
 
-            real, dimension(nElements, nstages) &
+            real(kind=dp), dimension(nElements, nstages) &
                  &:: diRec  ! total recombination coeffs
            
 
@@ -1678,7 +1678,7 @@ module update_mod
             integer, intent(in)             :: n     ! number of electrons (from 1 to z)
                 
 
-            real                            :: radRecFit    ! rad rate coeff [cm^3/s]
+            real(kind=dp)                            :: radRecFit    ! rad rate coeff [cm^3/s]
 
             ! local variables
             integer                              :: elem    ! element counter
@@ -1690,13 +1690,13 @@ module update_mod
             logical, save                        :: lgFirst = .true.
                                                             ! first time this is evaluated?
 
-            real                                 :: tt      ! temp dep fact in interpolation
+            real(kind=dp)                                 :: tt      ! temp dep fact in interpolation
 
-            real, dimension(2, nElements, nElements),&      ! coefficients for the  
+            real(kind=dp), dimension(2, nElements, nElements),&      ! coefficients for the  
                  & save  :: rrec    ! calculation of the 
-            real, dimension(4, nElements, nElements),&      ! radiative rates
+            real(kind=dp), dimension(4, nElements, nElements),&      ! radiative rates
                  & save  :: rnew    ! 
-            real, dimension(3, 4:13), save         :: fe    ! 
+            real(kind=dp), dimension(3, 4:13), save         :: fe    ! 
 
             ! if this is the first time this procedure is called 
             ! read in radiative recombination coefficient file 
@@ -1783,7 +1783,7 @@ module update_mod
         subroutine dielectronic(diRec)
             implicit none
 
-            real, intent(out), dimension(nElements, nstages) &
+            real(kind=dp), intent(out), dimension(nElements, nstages) &
                  &:: diRec   ! total recombination coeffs
 
             ! local variables
@@ -1794,12 +1794,12 @@ module update_mod
             integer              :: ios       ! I/O error status
             integer              :: g         ! temperature flag
             
-            real, dimension(nElements, nstages) :: &
+            real(kind=dp), dimension(nElements, nstages) :: &
                                     aldroPequi! high T dielec rec coeff by A&P73
 
-            real                 :: a,b,c,d,f ! fitting coefficients
-            real                 :: t,t0,t1   ! t = TeUsed/10000., t0,t1 are fitting par
-            real                 :: alpha
+            real(kind=dp)                 :: a,b,c,d,f ! fitting coefficients
+            real(kind=dp)                 :: t,t0,t1   ! t = TeUsed/10000., t0,t1 are fitting par
+            real(kind=dp)                 :: alpha
 
             t = TeUsed/10000.
 
@@ -1876,10 +1876,10 @@ module update_mod
          subroutine getDustT()
             implicit none
 
-            real                   :: dustAbsIntegral   ! dust absorption integral
-            real                   :: dabs
-            real                   :: resLineHeat       ! resonance line heating
-            real, dimension(nbins) :: radField          ! radiation field
+            real(kind=dp)                   :: dustAbsIntegral   ! dust absorption integral
+            real(kind=dp)                   :: dabs
+            real(kind=dp)                   :: resLineHeat       ! resonance line heating
+            real(kind=dp), dimension(nbins) :: radField          ! radiation field
 
             integer :: nS, i, ai ! counters
             integer :: iT        ! pointer to dust temp in dust temp array
@@ -1987,10 +1987,10 @@ module update_mod
           function resLineHeating(sizeP,speciesP, icompP)
             implicit none
 
-            real                :: resLineHeating ! dust heating due to res lines
+            real(kind=dp)                :: resLineHeating ! dust heating due to res lines
 
-            real                :: Gline   ! energy is the line [erg sec^-1]
-            real                :: heat    ! sub calculation var
+            real(kind=dp)                :: Gline   ! energy is the line [erg sec^-1]
+            real(kind=dp)                :: heat    ! sub calculation var
             
             integer, intent(in) :: sizeP   ! size pointer
             integer, intent(in) :: speciesP! species pointer

@@ -34,24 +34,24 @@ module iteration_mod
            include 'mpif.h'
 
            ! local variables
-           real, pointer :: budgetTemp(:,:)      ! temporary dust heating budget array
-           real, pointer :: dustPDFTemp(:,:)     ! temporary dust emission PDF array
-           real, pointer :: escapedPacketsTemp(:,:,:)!temporary escaped packets array
-           real, pointer :: fEscapeResPhotonsTemp(:,:) ! temporary escape res line phot 
-           real, pointer :: JDifTemp(:,:)        ! temporary diffuse field array
-           real, pointer :: JSteTemp(:,:)        ! temporary stellar field array
-           real, pointer :: linePacketsTemp(:,:) ! temporary line packets array
-           real, pointer :: opacityTemp(:,:)     ! temporary opacities array
-           real, pointer :: recPDFTemp(:,:)      ! temporary rec prob distribution function
-           real, pointer :: linePDFTemp(:,:)     ! temporary line prob distribution function
-           real, pointer :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
+           real(kind=dp), pointer :: budgetTemp(:,:)      ! temporary dust heating budget array
+           real(kind=dp), pointer :: dustPDFTemp(:,:)     ! temporary dust emission PDF array
+           real(kind=dp), pointer :: escapedPacketsTemp(:,:,:)!temporary escaped packets array
+           real(kind=dp), pointer :: fEscapeResPhotonsTemp(:,:) ! temporary escape res line phot 
+           real(kind=dp), pointer :: JDifTemp(:,:)        ! temporary diffuse field array
+           real(kind=dp), pointer :: JSteTemp(:,:)        ! temporary stellar field array
+           real(kind=dp), pointer :: linePacketsTemp(:,:) ! temporary line packets array
+           real(kind=dp), pointer :: opacityTemp(:,:)     ! temporary opacities array
+           real(kind=dp), pointer :: recPDFTemp(:,:)      ! temporary rec prob distribution function
+           real(kind=dp), pointer :: linePDFTemp(:,:)     ! temporary line prob distribution function
+           real(kind=dp), pointer :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
             
-           real, pointer          :: noHitPercent(:)    ! percentage of no Hit cells
-           real, pointer          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
-           real, pointer          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
-           real,save              :: totPercentOld   ! percentage of converged cells from prev iteration
-           real                   :: totCells        ! total # of active cells 
-           real                   :: totheatdust     ! total dust heating
+           real(kind=dp), pointer          :: noHitPercent(:)    ! percentage of no Hit cells
+           real(kind=dp), pointer          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
+           real(kind=dp), pointer          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
+           real(kind=dp),save              :: totPercentOld   ! percentage of converged cells from prev iteration
+           real(kind=dp)                   :: totCells        ! total # of active cells 
+           real(kind=dp)                   :: totheatdust     ! total dust heating
            
            integer, pointer       :: planeIonDistributionTemp(:,:) 
            integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets

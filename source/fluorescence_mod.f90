@@ -22,8 +22,8 @@ module fluorescence_mod
         implicit none
         
         
-        real :: number 
-        real, save :: ionPhot = 0.       
+        real(kind=dp) :: number 
+        real(kind=dp), save :: ionPhot = 0.       
 
         type(vector), intent(inout)                  :: rVec        ! 
 
@@ -81,7 +81,7 @@ module fluorescence_mod
           implicit none
           
           
-          real                     :: random            ! random number
+          real(kind=dp)                     :: random            ! random number
           type(vector), intent(in) :: position          ! the position at which the photon
           
           integer, intent(in)      :: nuP               ! the frequency of the photon packet
@@ -222,7 +222,7 @@ module fluorescence_mod
           
             type(photon_packet)                :: newFluorescencePacket! the photon packet to be created
             type(vector), intent(in)           :: rVec           ! 
-            real                               :: random         ! random number
+            real(kind=dp)                               :: random         ! random number
             
             type(vector)                       :: positionLoc    ! the position of the photon
                                                                  ! packet
@@ -352,18 +352,18 @@ module fluorescence_mod
              type(vector)                    :: vHat     ! direction vector
              type(vector)                    :: rVec     ! position vector
           
-             real                            :: absTau   ! optical depth
-             real                            :: dlLoc    ! local displacement
-             real                            :: dx, dy, dz 
-             real                            :: dSx, dSy, dSz 
+             real(kind=dp)                            :: absTau   ! optical depth
+             real(kind=dp)                            :: dlLoc    ! local displacement
+             real(kind=dp)                            :: dx, dy, dz 
+             real(kind=dp)                            :: dSx, dSy, dSz 
                                                       ! distances from x,y and z wall
-             real                            :: dS       ! distance from nearest wall 
-             real                            :: dV       ! lume of this cell
-             real                            :: passProb ! prob of passing the next segment
-             real                            :: probSca  ! prob that the packet scatters
-             real                            :: radius   ! radius
-             real                            :: random   ! random number
-             real                            :: tauCell  ! local tau
+             real(kind=dp)                            :: dS       ! distance from nearest wall 
+             real(kind=dp)                            :: dV       ! lume of this cell
+             real(kind=dp)                            :: passProb ! prob of passing the next segment
+             real(kind=dp)                            :: probSca  ! prob that the packet scatters
+             real(kind=dp)                            :: radius   ! radius
+             real(kind=dp)                            :: random   ! random number
+             real(kind=dp)                            :: tauCell  ! local tau
 
              integer                         :: idirT,idirP ! direction cosine counters
              integer                         :: i, j, nS ! counter
@@ -1786,16 +1786,16 @@ module fluorescence_mod
    implicit none
 
    
-   real                              :: newNu,newTheta     ! new energy and theta
-   real                              :: random             ! random number
-   real                              :: u,v,w,t            ! direction units
+   real(kind=dp)                              :: newNu,newTheta     ! new energy and theta
+   real(kind=dp)                              :: random             ! random number
+   real(kind=dp)                              :: u,v,w,t            ! direction units
    type(photon_packet),intent(inout) :: fPacket            ! the fluorescent packet
 
    integer                           :: newNuP,newThetaP   ! pointer to new energy and theta
 
    ! calculate new direction
    call getNu2(KNsigmaArray(fPacket%nuP,1:180),newThetaP)     
-   newTheta = real(newThetaP)*Pi/180.
+   newTheta = real(kind=dp)(newThetaP)*Pi/180.
 
    ! calculate u,v,w (Harries & Howarth, 1997)
    call random_number(random)
@@ -1823,9 +1823,9 @@ module fluorescence_mod
  ! same as getNu2
  subroutine getNu2(probDen, nuP)
    
-   real, dimension(:), intent(in) :: probDen    ! probability density function
+   real(kind=dp), dimension(:), intent(in) :: probDen    ! probability density function
    
-   real                           :: random     ! random number
+   real(kind=dp)                           :: random     ! random number
    
    integer, intent(out)           :: nuP        ! frequency index of the new
    

@@ -811,7 +811,7 @@ module set_input_mod
           subroutine readGridList(filename)
             implicit none
             
-            real                          :: skipR
+            real(kind=dp)                          :: skipR
 
             character(len=50), intent(in) :: filename
             character(len=50)             ::  skipC            

@@ -40,11 +40,11 @@ module grid_mod
         integer, parameter :: maxLim = 10000
         integer, parameter :: nSeries = 17
 
-        real, dimension(17)  :: seriesEdge
+        real(kind=dp), dimension(17)  :: seriesEdge
 
-        real                 :: nuMinArray, nuMaxArray        
+        real(kind=dp)                 :: nuMinArray, nuMaxArray        
 
-        real, pointer        :: nuTemp(:)
+        real(kind=dp), pointer        :: nuTemp(:)
 
         print*, "in initCartesianGrid"
         
@@ -503,7 +503,7 @@ module grid_mod
         integer, parameter :: maxLim = 10000
         integer, parameter :: nSeries = 17
         
-        real :: massFac,dV
+        real(kind=dp) :: massFac,dV
         integer                        :: ix,iy,iz     ! counters   
         integer                        :: nspec, ai    ! counters
         integer                        :: nsp          ! pointer
@@ -783,9 +783,9 @@ module grid_mod
         end if
 
         ! locate the origin of the axes
-        call locate(grid(1)%xAxis, 0., iOrigin)
-        call locate(grid(1)%yAxis, 0., jOrigin)
-        call locate(grid(1)%zAxis, 0., kOrigin)
+        call locate(grid(1)%xAxis, 0.d0, iOrigin)
+        call locate(grid(1)%yAxis, 0.d0, jOrigin)
+        call locate(grid(1)%zAxis, 0.d0, kOrigin)
 
         if (taskid == 0) print*, 'Origin at mother grid cell:  ' , iOrigin, jOrigin, kOrigin
 
@@ -893,27 +893,27 @@ module grid_mod
         type(grid_type), intent(inout) :: grid      ! the grid
 
         ! local variables
-        real                           :: denominator   ! denominator
-        real                           :: dV           ! volume element
-        real                           :: expFactor    ! exp factor in density law calculations
-        real                           :: gasCell      ! mass of gas in current cell
-        real                           :: H0in         ! estimated H0 at the inner radius for regionI
-        real, pointer                  :: MdMg(:,:,:)  ! Md/Mg
-        real                           :: MhMg         ! mass oh hydrogen over mass of gas
-        real                           :: norm, scale  ! normalisation and scaling for meanField
-        real                           :: radius       ! distance from the origin
-        real                           :: random       ! random nmumber 
-        real                           :: totalMass    ! total ionized mass 
-        real                           :: totalVolume  ! total active volume
-        real                      :: echoVolume, vol   ! just echo volume
+        real(kind=dp)                           :: denominator   ! denominator
+        real(kind=dp)                           :: dV           ! volume element
+        real(kind=dp)                           :: expFactor    ! exp factor in density law calculations
+        real(kind=dp)                           :: gasCell      ! mass of gas in current cell
+        real(kind=dp)                           :: H0in         ! estimated H0 at the inner radius for regionI
+        real(kind=dp), pointer                  :: MdMg(:,:,:)  ! Md/Mg
+        real(kind=dp)                           :: MhMg         ! mass oh hydrogen over mass of gas
+        real(kind=dp)                           :: norm, scale  ! normalisation and scaling for meanField
+        real(kind=dp)                           :: radius       ! distance from the origin
+        real(kind=dp)                           :: random       ! random nmumber 
+        real(kind=dp)                           :: totalMass    ! total ionized mass 
+        real(kind=dp)                           :: totalVolume  ! total active volume
+        real(kind=dp)                      :: echoVolume, vol   ! just echo volume
 
-        real, dimension(nElements) :: aWeight
-        real, parameter :: amu = 1.66053e-24 ! [g]
+        real(kind=dp), dimension(nElements) :: aWeight
+        real(kind=dp), parameter :: amu = 1.66053e-24 ! [g]
 
-        real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
-        real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density arra
-        real, pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust abundance index array
-        real, pointer                  :: twoDscaleJTemp(:)
+        real(kind=dp), pointer                  :: HdenTemp(:,:,:) ! temporary Hden
+        real(kind=dp), pointer                  :: NdustTemp(:,:,:) ! temporary dust number density arra
+        real(kind=dp), pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust abundance index array
+        real(kind=dp), pointer                  :: twoDscaleJTemp(:)
         
 
 
@@ -1792,23 +1792,23 @@ module grid_mod
            
 
            ! local variables
-           real                           :: x,y,z        ! x,y,z 
-           real                           :: delta        ! displacement for realigning subgrids to mothergrid
-           real                           :: denominator   ! denominator
-           real                           :: denfac       ! enhancement factor
-           real                           :: dV           ! volume element
-           real                           :: gasCell      ! mass of gas in current cell
-           real                           :: H0in         ! estimated H0 at the inner radius for regionI
-           real                           :: MhMg         ! hdrogen to gas mass ratio
-           real                           :: radius       ! distance from the origin
-           real                           :: totalMass    ! total ionized mass 
-           real                           :: totalVolume  ! total active volume
-           real                      :: echoVolume, vol   ! just echo volume
+           real(kind=dp)                           :: x,y,z        ! x,y,z 
+           real(kind=dp)                           :: delta        ! displacement for realigning subgrids to mothergrid
+           real(kind=dp)                           :: denominator   ! denominator
+           real(kind=dp)                           :: denfac       ! enhancement factor
+           real(kind=dp)                           :: dV           ! volume element
+           real(kind=dp)                           :: gasCell      ! mass of gas in current cell
+           real(kind=dp)                           :: H0in         ! estimated H0 at the inner radius for regionI
+           real(kind=dp)                           :: MhMg         ! hdrogen to gas mass ratio
+           real(kind=dp)                           :: radius       ! distance from the origin
+           real(kind=dp)                           :: totalMass    ! total ionized mass 
+           real(kind=dp)                           :: totalVolume  ! total active volume
+           real(kind=dp)                      :: echoVolume, vol   ! just echo volume
            
            
-           real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
-           real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density array
-           real, pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust number density array
+           real(kind=dp), pointer                  :: HdenTemp(:,:,:) ! temporary Hden
+           real(kind=dp), pointer                  :: NdustTemp(:,:,:) ! temporary dust number density array
+           real(kind=dp), pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust number density array
            
            integer                        :: edgeP        ! subgrid edge pointer on mothergrid
            integer                        :: i,j,k,iG,ai  ! counters
@@ -2863,11 +2863,11 @@ module grid_mod
         
         integer, intent(in)        :: xP, yP, zP        ! cell indeces  
 
-        real                       :: getVolume         ! volume of the cell [e45 cm^3]
+        real(kind=dp)                       :: getVolume         ! volume of the cell [e45 cm^3]
 
         ! local variables
          
-        real                       :: dx, &             ! cartesian axes increments
+        real(kind=dp)                       :: dx, &             ! cartesian axes increments
 &                                      dy, &             ! in [cm] 
 &                                      dz                ! 
 
@@ -2959,8 +2959,8 @@ module grid_mod
       integer                        :: i,j,k ! counters
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
-      real                           :: p0,p00,p1,p2,p3,ind
-      real, pointer                  :: p(:)                                        
+      real(kind=dp)                           :: p0,p00,p1,p2,p3,ind
+      real(kind=dp), pointer                  :: p(:)                                        
       integer :: iG, ai  ! counters
       integer :: totCells, totcellsloc
       integer :: yTop, xPmap
@@ -2969,7 +2969,7 @@ module grid_mod
       integer, parameter :: maxLim = 10000
       integer, parameter :: nSeries = 17
       
-      real                 :: radius
+      real(kind=dp)                 :: radius
 
       print*, 'resetGrid in'
       
@@ -3538,9 +3538,9 @@ module grid_mod
       if (lgDust) close(88)
 
       ! locate the origin of the axes
-      call locate(grid(1)%xAxis, 0., iOrigin)
-      call locate(grid(1)%yAxis, 0., jOrigin)
-      call locate(grid(1)%zAxis, 0., kOrigin)
+      call locate(grid(1)%xAxis, 0.d0, iOrigin)
+      call locate(grid(1)%yAxis, 0.d0, jOrigin)
+      call locate(grid(1)%zAxis, 0.d0, kOrigin)
 
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
 
@@ -3553,7 +3553,7 @@ module grid_mod
       
       type(grid_type), intent(inout) :: grid(maxGrids)  ! the 3d grids
 
-      real, dimension(:) :: xA,yA,zA
+      real(kind=dp), dimension(:) :: xA,yA,zA
       
       Integer :: i, xP,yP,zP, nxA,nyA,nzA
 
@@ -3644,10 +3644,10 @@ module grid_mod
       implicit none
       type(grid_type),intent(in) :: grid              ! the grid
       integer, intent(in)        :: xP, yP, zP        ! cell indeces  
-      double precision :: x,y,z,dx,dy,dz,t1,t2,vol
-      real             :: t1i,t2i,vEcho,odx,ody,odz,volume
-      double precision :: h,rho,ddx,ddy,xx,yy
-      double precision :: dfac=9.4605284e17,tfac=365.25
+      real(kind=dp) :: x,y,z,dx,dy,dz,t1,t2,vol
+      real(kind=dp)             :: t1i,t2i,vEcho,odx,ody,odz,volume
+      real(kind=dp) :: h,rho,ddx,ddy,xx,yy
+      real(kind=dp) :: dfac=9.4605284e17,tfac=365.25
       integer :: i,j
       integer :: n=25 ! number of points in grid cell over which to integrate
       
@@ -3727,7 +3727,7 @@ module grid_mod
     end function vEcho
 !
     function zee(rho,t)
-      double precision :: zee,rho,t
+      real(kind=dp) :: zee,rho,t
 
       zee=rho**2/(2.*t)-t/2.
       return 

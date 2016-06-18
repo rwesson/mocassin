@@ -2,15 +2,18 @@
 !
 ! Version 2.02
 module interpolation_mod
+!precision
+integer, parameter,private :: dp=kind(1.d0)
+
     contains
 
     subroutine sortUp(arr)
       implicit none
       
-      real, dimension(:), intent(inout) :: arr
-      real, pointer :: tmp(:)
+      real(kind=dp), dimension(:), intent(inout) :: arr
+      real(kind=dp), pointer :: tmp(:)
 
-      real       :: min
+      real(kind=dp)       :: min
       
 
       integer    :: i, j
@@ -51,8 +54,8 @@ module interpolation_mod
 
         integer, intent(out) :: ns
 
-        real, dimension(:), intent(in) :: xa  ! input array
-        real, intent(in) :: x                 ! variable to be located
+        real(kind=dp), dimension(:), intent(in) :: xa  ! input array
+        real(kind=dp), intent(in) :: x                 ! variable to be located
 
         ! local variables
 
@@ -86,8 +89,8 @@ module interpolation_mod
     subroutine linearMap(y, x, nx, y_new, x_new, nx_new)
       implicit none
 
-      real, intent(out)   :: y_new(*)
-      real, intent(in)    :: y(*), x(*), x_new(*)
+      real(kind=dp), intent(out)   :: y_new(*)
+      real(kind=dp), intent(in)    :: y(*), x(*), x_new(*)
       
       integer, intent(in) :: nx, nx_new
       integer             :: i, ii 
@@ -112,9 +115,9 @@ module interpolation_mod
     subroutine polint(xa, ya,  x, y, dy)
         implicit none
 
-        real, dimension(:), intent(in) :: xa, ya
-        real, intent(in) :: x
-        real, intent(out) :: y, dy
+        real(kind=dp), dimension(:), intent(in) :: xa, ya
+        real(kind=dp), intent(in) :: x
+        real(kind=dp), intent(out) :: y, dy
 
         ! local variables
 
@@ -122,8 +125,8 @@ module interpolation_mod
         integer :: n                          ! size of the arrays
         integer :: ns = 1            
 
-        real :: den, ho, hp, w
-        real, dimension(size(xa)) :: c, d 
+        real(kind=dp) :: den, ho, hp, w
+        real(kind=dp), dimension(size(xa)) :: c, d 
 
         ! locate the index ns closest to the table entry
         call locate(xa, x, ns) 
@@ -182,9 +185,9 @@ module interpolation_mod
     subroutine spline(xa, ya, yp1,ypn, y2a)
     implicit none
 
-        real, dimension(:), intent(inout) :: xa, ya
-        real, intent(in) :: yp1, ypn
-        real, dimension(:), intent(out) :: y2a
+        real(kind=dp), dimension(:), intent(inout) :: xa, ya
+        real(kind=dp), intent(in) :: yp1, ypn
+        real(kind=dp), dimension(:), intent(out) :: y2a
                 
         ! local variables
             
@@ -192,8 +195,8 @@ module interpolation_mod
         integer :: n                  ! size of the arrays
         integer, parameter :: nmax=500! safety limit
 
-        real                  :: p, qn, sig, un
-        real, dimension(nmax) :: u
+        real(kind=dp)                  :: p, qn, sig, un
+        real(kind=dp), dimension(nmax) :: u
         n = size(xa)
 
         if (yp1 > .99e30) then
@@ -260,16 +263,16 @@ module interpolation_mod
     ! values
     subroutine splint(xa, ya, y2a, x, y)
 
-       real, dimension(:), intent(in) :: xa, ya, y2a
-       real, intent(in) :: x
-       real, intent(out) :: y
+       real(kind=dp), dimension(:), intent(in) :: xa, ya, y2a
+       real(kind=dp), intent(in) :: x
+       real(kind=dp), intent(out) :: y
 
        ! local variables
 
        integer :: klo, khi, i, n
        integer, parameter :: imax = 1000
 
-       real :: a, b, h
+       real(kind=dp) :: a, b, h
 
        n = size(xa)
 
@@ -322,14 +325,14 @@ module interpolation_mod
         integer, intent(in), optional        :: elem            ! element index
         integer, intent(in), optional        :: ion             ! ion index             
 
-        real, intent(in), dimension(:,:,:),&
+        real(kind=dp), intent(in), dimension(:,:,:),&
 &                          optional           :: s3Dgrid          ! 3D scalar grid
-        real, intent(in), dimension(:,:,:,:),&  
+        real(kind=dp), intent(in), dimension(:,:,:,:),&  
 &                          optional           :: s4Dgrid          ! 4D scalar grid
-        real, intent(in), dimension(:,:,:,:,:),&  
+        real(kind=dp), intent(in), dimension(:,:,:,:,:),&  
 &                          optional           :: s5Dgrid          ! 5D scalar grid
-        real, intent(in)                     :: t1, t2, t3      ! interpolation coefficients
-        real                                 :: interpGrid      ! interpolated value
+        real(kind=dp), intent(in)                     :: t1, t2, t3      ! interpolation coefficients
+        real(kind=dp)                                 :: interpGrid      ! interpolated value
 
         if ( present(freqP) .and. (.not.present(elem)) .and. (.not.present(ion)) ) then 
             if(.not.present(s4Dgrid)) then

@@ -13,9 +13,9 @@ module vector_mod
   ! The definition of the vector type
 
   type vector
-     real :: x
-     real :: y
-     real :: z
+     real(kind=dp) :: x
+     real(kind=dp) :: y
+     real(kind=dp) :: z
   end type vector
 
   ! Define multiply
@@ -86,7 +86,7 @@ contains
 
   ! the dot product function
 
-  real function dotProd(a , b)
+  real(kind=dp) function dotProd(a , b)
     type(vector), intent(in) :: a
     type(vector), intent(in) :: b
 
@@ -109,7 +109,7 @@ contains
 
   subroutine normalize(a)
     type(vector) :: a
-    real :: m
+    real(kind=dp) :: m
 
     m = modulus(a)
 
@@ -126,7 +126,7 @@ contains
 
   ! find the modulus of a vector
 
-  real function modulus(a)
+  real(kind=dp) function modulus(a)
     type(vector) :: a
 
     modulus = a%x*a%x + a%y*a%y + a%z*a%z
@@ -137,7 +137,7 @@ contains
   ! multiply function
 
   type(vector) function mult(a,b)
-    real, intent(in) :: a
+    real(kind=dp), intent(in) :: a
     type(vector), intent(in) :: b
 
     mult%x = a * b%x
@@ -151,7 +151,7 @@ contains
 
   type(vector) function divideVec(a,b)
     type(vector), intent(in) :: a
-    real, intent(in) :: b
+    real(kind=dp), intent(in) :: b
 
     divideVec%x = a%x / b
     divideVec%y = a%y / b
@@ -243,7 +243,7 @@ contains
 
     implicit none
     type(vector) :: vec
-    real :: r, theta, phi, cosTheta 
+    real(kind=dp) :: r, theta, phi, cosTheta 
 
     r = modulus(vec)
     if ((vec%y == 0.) .and. (vec%x == 0)) then
@@ -260,8 +260,8 @@ contains
 
   type(vector) function rotateZ(a,b)
     type(vector), intent(in) :: a
-    real, intent(in) :: b   ! angle in radians
-    real :: cosb, sinb
+    real(kind=dp), intent(in) :: b   ! angle in radians
+    real(kind=dp) :: cosb, sinb
 
     cosb = cos(b)
     sinb = sin(b)
@@ -274,8 +274,8 @@ contains
 
   type(vector) function rotateX(a,b)
     type(vector), intent(in) :: a
-    real, intent(in) :: b   ! angle in radians
-    real :: cosb, sinb
+    real(kind=dp), intent(in) :: b   ! angle in radians
+    real(kind=dp) :: cosb, sinb
 
     cosb = cos(b)
     sinb = sin(b)
@@ -288,8 +288,8 @@ contains
 
   type(vector) function rotateY(a,b)
     type(vector), intent(in) :: a
-    real, intent(in) :: b   ! angle in radians
-    real :: cosb, sinb
+    real(kind=dp), intent(in) :: b   ! angle in radians
+    real(kind=dp) :: cosb, sinb
 
     cosb = cos(b)
     sinb = sin(b)
@@ -301,7 +301,7 @@ contains
   end function rotateY
 
     type(vector) function randomUnitVector()
-    real :: r1, r2, u, v, w, t, ang
+    real(kind=dp) :: r1, r2, u, v, w, t, ang
     call random_number(r1)
     w = 2.*r1 - 1.
     t = sqrt(1.-w*w)

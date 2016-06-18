@@ -32,61 +32,61 @@ module output_mod
         integer                     :: ypLoc
 
 
-        real, pointer               :: cMap(:)           ! local c-value
-        real, pointer               :: flam(:)           ! f(lambda) value from file
+        real(kind=dp), pointer               :: cMap(:)           ! local c-value
+        real(kind=dp), pointer               :: flam(:)           ! f(lambda) value from file
 
-        real                        :: dV       ! volume of this cell
-        real                        :: factor1  ! calculations factor
-        real                        :: factor2  ! calculations factor
-        real                        :: g        ! alpha*h*nu (used to calculate line intensities)
-        real, pointer               :: HbetaLuminosity(:) ! MC Hbeta luminosity [E36 erg/sec]
-        real, pointer               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]        
-        real                        :: LtotAn   ! HbetaVol * sumAn
-        real                        :: LtotMC   ! HbetaLuminosity * sumMC 
-        real                        :: sumAn    ! sum of the relative an intensities
-        real                        :: sumMC    ! sum of the relative MC intensities
-        real                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
-        real, parameter             :: hcryd = 2.1799153e-11!
-        real                        :: radius, dz, dr
+        real(kind=dp)                        :: dV       ! volume of this cell
+        real(kind=dp)                        :: factor1  ! calculations factor
+        real(kind=dp)                        :: factor2  ! calculations factor
+        real(kind=dp)                        :: g        ! alpha*h*nu (used to calculate line intensities)
+        real(kind=dp), pointer               :: HbetaLuminosity(:) ! MC Hbeta luminosity [E36 erg/sec]
+        real(kind=dp), pointer               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]        
+        real(kind=dp)                        :: LtotAn   ! HbetaVol * sumAn
+        real(kind=dp)                        :: LtotMC   ! HbetaLuminosity * sumMC 
+        real(kind=dp)                        :: sumAn    ! sum of the relative an intensities
+        real(kind=dp)                        :: sumMC    ! sum of the relative MC intensities
+        real(kind=dp)                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
+        real(kind=dp), parameter             :: hcryd = 2.1799153e-11!
+        real(kind=dp)                        :: radius, dz, dr
 
         ! lexingotn
-        !        real, pointer :: denominatorIon(:,:,:) ! denominator for IonVol calculations
+        !        real(kind=dp), pointer :: denominatorIon(:,:,:) ! denominator for IonVol calculations
 
         ! Harrington 1982
-        real, pointer ::  denominatorIon(:,:)           ! denominator for IonVol calculations
-        real, pointer :: denominatorTe(:,:,:)           ! denominator for TeVol calculations
+        real(kind=dp), pointer ::  denominatorIon(:,:)           ! denominator for IonVol calculations
+        real(kind=dp), pointer :: denominatorTe(:,:,:)           ! denominator for TeVol calculations
 
-        real, dimension(nLines)             :: &
+        real(kind=dp), dimension(nLines)             :: &
              &                                       linePacketsUsed ! linePackets at this cell
-        real, dimension(nElements) ::  elemAbundanceUsed  ! local abundances
-        real, pointer         :: resLinesVol(:,:)    ! resonance lines volume emission
-        real, pointer         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
-        real, pointer         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
-        real, pointer         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
-        real, pointer         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
-        real, pointer         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
-        real, pointer         :: lineLuminosity(:,:) ! MC luminosity in a given line
+        real(kind=dp), dimension(nElements) ::  elemAbundanceUsed  ! local abundances
+        real(kind=dp), pointer         :: resLinesVol(:,:)    ! resonance lines volume emission
+        real(kind=dp), pointer         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
+        real(kind=dp), pointer         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
+        real(kind=dp), pointer         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
+        real(kind=dp), pointer         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
+        real(kind=dp), pointer         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
+        real(kind=dp), pointer         :: lineLuminosity(:,:) ! MC luminosity in a given line
 
-        double precision, dimension(nElements,nstages,nForLevels,nForLevels) :: wav           
-        double precision, dimension(nForLevelsLarge,nForLevelsLarge) :: wavLarge
-        real, pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
-        real, pointer         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
-        real, pointer         :: TeVol(:,:,:)      ! mean Temperature for a given ion
+        real(kind=dp), dimension(nElements,nstages,nForLevels,nForLevels) :: wav           
+        real(kind=dp), dimension(nForLevelsLarge,nForLevelsLarge) :: wavLarge
+        real(kind=dp), pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
+        real(kind=dp), pointer         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
+        real(kind=dp), pointer         :: TeVol(:,:,:)      ! mean Temperature for a given ion
 
         ! recombination lines stuff (1=Oii, 2=mgii,3=neii,4=cii,5=n33ii,6=n34ii)
 
-        real(kind=8), pointer          :: RecLinesFlux(:,:,:)    ! 1st is ion num, 2nd is emissivity
-        real(kind=8), dimension(500)   :: recLambdaOII           ! lambda in angstrom
-        real(kind=8), dimension(500)   :: recLambdaMgII    
-        real(kind=8), dimension(500)   :: recLambdaNeII
-        real(kind=8), dimension(500)   :: recLambdaCII
-        real(kind=8), dimension(500)   :: recLambdaN33II      !   3-3, Kisielius & Storey 2002
-        real(kind=8), dimension(500)   :: recLambdaN34II      !   3d-4f, Escalante & Victor 1990   
+        real(kind=dp), pointer          :: RecLinesFlux(:,:,:)    ! 1st is ion num, 2nd is emissivity
+        real(kind=dp), dimension(500)   :: recLambdaOII           ! lambda in angstrom
+        real(kind=dp), dimension(500)   :: recLambdaMgII    
+        real(kind=dp), dimension(500)   :: recLambdaNeII
+        real(kind=dp), dimension(500)   :: recLambdaCII
+        real(kind=dp), dimension(500)   :: recLambdaN33II      !   3-3, Kisielius & Storey 2002
+        real(kind=dp), dimension(500)   :: recLambdaN34II      !   3d-4f, Escalante & Victor 1990   
 
-        real(kind=8), dimension(500) :: recFlux               ! local rec lines fluxes from subroutine
-        real(kind=8), dimension(500) :: recLinesLambda        ! local rec lines wavelengths from subroutine
+        real(kind=dp), dimension(500) :: recFlux               ! local rec lines fluxes from subroutine
+        real(kind=dp), dimension(500) :: recLinesLambda        ! local rec lines wavelengths from subroutine
 
-        real                         :: denIon=0.
+        real(kind=dp)                         :: denIon=0.
 
 
         print*, "in outputGas" 
@@ -1378,10 +1378,10 @@ module output_mod
 !        ref Storey 1994 A&A 282, 999, Liu 1995, MNRAS, 272, 369
           implicit none
 
-          real, intent(in) :: tk,den
-          real(kind=8), intent(inout):: lamb(500),flux(500)
+          real(kind=dp), intent(in) :: tk,den
+          real(kind=dp), intent(inout):: lamb(500),flux(500)
 
-          real(kind=8)  :: ahb,te,emhb,an(4), &
+          real(kind=dp)  :: ahb,te,emhb,an(4), &
                &        a,b,c,d,logne,aeff,br(3,500),em
           integer       :: i,g2(500)
 
@@ -1715,9 +1715,9 @@ module output_mod
 
          subroutine rmgii(fluxremg, lambd, tk)
          implicit none
-         real, intent(in) :: tk
-         real(kind=8),intent(inout) :: fluxremg(500), lambd(500)
-         real(kind=8) ::te,ahb,emhb,&
+         real(kind=dp), intent(in) :: tk
+         real(kind=dp),intent(inout) :: fluxremg(500), lambd(500)
+         real(kind=dp) ::te,ahb,emhb,&
          &         aeff,a,b,c,d,f
          data a,b,c,d,f/27.586,-0.055,-0.039,-0.208,-1.1416/
           te=tk/10000.d0
@@ -1737,9 +1737,9 @@ module output_mod
        subroutine rneii(lamb,flux,tk)
 !      ref Kisielius AAS, 133, 257
        implicit none
-         real, intent(in) :: tk
-         real(kind=8),intent(inout) :: flux(500), lamb(500)
-         real(kind=8)  :: te,a,b,c,d,f,ahb,emhb,aeff,br
+         real(kind=dp), intent(in) :: tk
+         real(kind=dp),intent(inout) :: flux(500), lamb(500)
+         real(kind=dp)  :: te,a,b,c,d,f,ahb,emhb,aeff,br
          integer :: i
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
@@ -1784,9 +1784,9 @@ module output_mod
          subroutine rcii(lamb,flux,tk)
 !        ref Davey A&As 2000 142, 85
          implicit none
-         real, intent(in) ::tk
-         real(kind=8), intent(inout) :: lamb(500),flux(500)
-         real(kind=8)          ::te,a,b,c,d,f,ahb,emhb,aeff,br
+         real(kind=dp), intent(in) ::tk
+         real(kind=dp), intent(inout) :: lamb(500),flux(500)
+         real(kind=dp)          ::te,a,b,c,d,f,ahb,emhb,aeff,br
          integer :: i
          te=tk/10000.d0
          ahb=6.68e-14*te**(-0.507)/(1.+1.221*te** 0.653)
@@ -1805,9 +1805,9 @@ module output_mod
          subroutine rnii(lamb,flux,tk,den)
 !        ref Storey 2002, A&A, 387, 1135
          implicit none
-         real, intent(in):: tk,den
-         real(kind=8),  intent(inout) :: lamb(500),flux(500)
-         real(kind=8) ::logden,te,a,b,c,d,&
+         real(kind=dp), intent(in):: tk,den
+         real(kind=dp),  intent(inout) :: lamb(500),flux(500)
+         real(kind=dp) ::logden,te,a,b,c,d,&
           &    f,u,v,ahb,emhb,aeff,br,y
          integer :: i
           te=tk/10000.d0
@@ -1830,9 +1830,9 @@ module output_mod
           subroutine rnii4f(lamb,flux,tk)
 !     compute N II 3d--4f, ref Escalante 1990, ApJs, 73, 513
           implicit none
-          real, intent(in) :: tk
-          real(kind=8), intent(inout) :: lamb(500),flux(500)
-          real(kind=8)  :: ahb,emhb,te,aeff,&
+          real(kind=dp), intent(in) :: tk
+          real(kind=dp), intent(inout) :: lamb(500),flux(500)
+          real(kind=dp)  :: ahb,emhb,te,aeff,&
            &  a(51),b(51),c(51),br(500),em,a1,b1,c1,d1,z,br1
           integer :: i
           do i=1,500
@@ -1932,7 +1932,7 @@ module output_mod
                             & wavLarge(:,:))
                     else
                        call equilibrium(dataFile(elem, ion), &
-                            &0., &
+                            &0.d0, &
                             & TeUsed, NeUsed, forbiddenLinesLarge(:,:), &
                             & wavLarge(:,:))
                     end if
@@ -1949,7 +1949,7 @@ module output_mod
                             & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), &
                             & wav(elem,ion,:,:))
                     else
-                       call equilibrium(dataFile(elem, ion), 0., &
+                       call equilibrium(dataFile(elem, ion), 0.d0, &
                             & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), &
                             wav(elem,ion,:,:))
                     end if
@@ -1983,13 +1983,13 @@ module output_mod
 &                                      iup        ! pointer to upper level
         integer                    :: denint
 
-        real                       :: Hbeta       ! Hbeta emission
-        real                       :: HeII4686    ! HeII 4686 emission
-        real                       :: Lalpha      ! Lalpha emission
-        real                       :: T4          ! TeUsed/10000.
-        real                       :: x1,x2
-        real                       :: hb          ! emissivity of H 4->2
-        real                       :: fh          ! emissivity of H
+        real(kind=dp)                       :: Hbeta       ! Hbeta emission
+        real(kind=dp)                       :: HeII4686    ! HeII 4686 emission
+        real(kind=dp)                       :: Lalpha      ! Lalpha emission
+        real(kind=dp)                       :: T4          ! TeUsed/10000.
+        real(kind=dp)                       :: x1,x2
+        real(kind=dp)                       :: hb          ! emissivity of H 4->2
+        real(kind=dp)                       :: fh          ! emissivity of H
 
 
         T4 = TeUsed / 10000.
@@ -2129,9 +2129,9 @@ module output_mod
       integer                    :: ndum       ! level
       integer                    :: j          ! integer
 
-      real, dimension(15)              :: densx
-      real, dimension(15)              :: tempx
-      real, dimension(5000,15,15)      :: ex
+      real(kind=dp), dimension(15)              :: densx
+      real(kind=dp), dimension(15)              :: tempx
+      real(kind=dp), dimension(5000,15,15)      :: ex
       common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu      
       close(337)
       open(unit =337, file = PREFIX//"/share/mocassin/data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
@@ -2161,7 +2161,7 @@ module output_mod
     !  or 2s recombination coefficient (iopt=2)
     ! authors Wang Wei and Yu Pei (PKU)
     subroutine hlinex(nu,nl,xt,xd,fh)
-      implicit real*8(a-h,o-z)
+      implicit real(kind=dp)(a-h,o-z)
       integer                    :: nu         ! upper level
       integer                    :: nl         ! lower level
       integer                    :: ntempx     ! number of temperature
@@ -2172,22 +2172,22 @@ module output_mod
       integer                    :: id, it, nt, j, i0, k, nls, nus, ncut
       integer                    :: ks, j0, ip, kp, jp, ky, kx, js
       integer                    :: int, max, ns, nint1, nint, is
-      real                       :: nof
-      real                       :: xt         ! temperature used
-      real                       :: xd         ! density used
-      real                       :: fh         ! H atomic data
+      real(kind=dp)                       :: nof
+      real(kind=dp)                       :: xt         ! temperature used
+      real(kind=dp)                       :: xd         ! density used
+      real(kind=dp)                       :: fh         ! H atomic data
 
-      real, dimension(15)              :: densx
-      real, dimension(15)              :: tempx
-      real, dimension(5000,15,15)      :: ex
-      real, dimension(15,15)           :: r
-      real, dimension(15)               :: x
-      real, dimension(15)               :: y
-      real, dimension(5)               :: ni
-      real, dimension(5)               :: cx
-      real, dimension(5)               :: cy
-      real, dimension(5)               :: ri
-      real, dimension(2,15)            :: f
+      real(kind=dp), dimension(15)              :: densx
+      real(kind=dp), dimension(15)              :: tempx
+      real(kind=dp), dimension(5000,15,15)      :: ex
+      real(kind=dp), dimension(15,15)           :: r
+      real(kind=dp), dimension(15)               :: x
+      real(kind=dp), dimension(15)               :: y
+      real(kind=dp), dimension(5)               :: ni
+      real(kind=dp), dimension(5)               :: cx
+      real(kind=dp), dimension(5)               :: cy
+      real(kind=dp), dimension(5)               :: ri
+      real(kind=dp), dimension(2,15)            :: f
       common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu
       data max/4/ni/2,3,4,5,6/       ! interpolation parameters
 !          interpolation variables
@@ -2342,7 +2342,7 @@ module output_mod
 
       type(vector) :: aVec, uHat        
       
-      real, pointer :: outTau(:)
+      real(kind=dp), pointer :: outTau(:)
 
       integer :: err, i, ios
 
@@ -2467,11 +2467,11 @@ module output_mod
       integer :: ios, err                        ! I/O error status
       integer :: i,j,k,freq, imu, iG, ic, ijk    ! counters
       
-      real, pointer :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
+      real(kind=dp), pointer :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
 
-      real          :: theta1, theta2, phi1, phi2
-      real          :: lambda                    ! lambda [cm]
-      real          :: totalE                    ! total energy [erg/sec]
+      real(kind=dp)          :: theta1, theta2, phi1, phi2
+      real(kind=dp)          :: lambda                    ! lambda [cm]
+      real(kind=dp)          :: totalE                    ! total energy [erg/sec]
 
       print*, 'in writeSED'      
 
@@ -2680,8 +2680,8 @@ module output_mod
       integer :: ios,ix,iy,iz, iG        ! I/O error status, counters
       integer ::  freq, imu, ifreq1, ifreq2      ! counters
       
-      real, intent(inout)         :: freq1,freq2 ! wavelengths in um
-      real                        :: contI(0:nanglebins) ! continuum int in band
+      real(kind=dp), intent(inout)         :: freq1,freq2 ! wavelengths in um
+      real(kind=dp)                        :: contI(0:nanglebins) ! continuum int in band
 
       print*, 'in writeContCube'      
 

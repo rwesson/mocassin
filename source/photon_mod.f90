@@ -13,7 +13,7 @@ module photon_mod
 
     ! common variables 
 
-    real :: Qphot = 0.
+    real(kind=dp) :: Qphot = 0.
 
 
     type(vector), parameter :: origin=vector(0.,0.,0.)  ! origin of the cartesian grid axes
@@ -492,7 +492,7 @@ module photon_mod
 
             type(photon_packet)      :: initPhotonPacket  ! the photon packet
    
-            real                     :: random            ! random number
+            real(kind=dp)                     :: random            ! random number
 
             integer, intent(in)      :: nuP               ! the frequency of the photon packet
             integer, intent(in),dimension(2) :: xP, yP, &
@@ -687,12 +687,12 @@ module photon_mod
         ! according to the given probability density
         subroutine getNu(probDen, nuP)
 
-            real, dimension(:), intent(in) :: probDen    ! probability density function
+            real(kind=dp), dimension(:), intent(in) :: probDen    ! probability density function
        
             integer, intent(out)           :: nuP         ! frequency index of the new
 
             ! local variables
-            real                           :: random     ! random number
+            real(kind=dp)                           :: random     ! random number
 
             ! get a random number
             call random_number(random)
@@ -718,9 +718,9 @@ module photon_mod
         ! does not use bisection to locate nu on array
         subroutine getNu2(probDen, nuP)
 
-            real, dimension(:), intent(in) :: probDen    ! probability density function
+            real(kind=dp), dimension(:), intent(in) :: probDen    ! probability density function
 
-            real                           :: random     ! random number
+            real(kind=dp)                           :: random     ! random number
        
             integer, intent(out)           :: nuP        ! frequency index of the new
 
@@ -784,7 +784,7 @@ module photon_mod
             integer, intent(inout)   :: gP
             integer                            :: igpn           ! grid pointe 1=motehr, 2=sub
 
-            real                               :: random         ! random number
+            real(kind=dp)                               :: random         ! random number
 
             if (gP==1) then
                igpn = 1
@@ -1066,18 +1066,18 @@ module photon_mod
           type(vector)                    :: vHat     ! direction vector
           type(vector)                    :: rVec     ! position vector
           
-          real                            :: absTau   ! optical depth
-          real                            :: dlLoc    ! local displacement
-          real                            :: dx, dy, dz 
-          real                            :: dSx, dSy, dSz 
+          real(kind=dp)                            :: absTau   ! optical depth
+          real(kind=dp)                            :: dlLoc    ! local displacement
+          real(kind=dp)                            :: dx, dy, dz 
+          real(kind=dp)                            :: dSx, dSy, dSz 
                                                       ! distances from x,y and z wall
-          real                            :: dS       ! distance from nearest wall 
-          real                            :: dV       ! lume of this cell
-          real                            :: passProb ! prob of passing the next segment
-          real                            :: probSca  ! prob that the packet scatters
-          real                            :: radius   ! radius
-          real                            :: random   ! random number
-          real                            :: tauCell  ! local tau
+          real(kind=dp)                            :: dS       ! distance from nearest wall 
+          real(kind=dp)                            :: dV       ! lume of this cell
+          real(kind=dp)                            :: passProb ! prob of passing the next segment
+          real(kind=dp)                            :: probSca  ! prob that the packet scatters
+          real(kind=dp)                            :: radius   ! radius
+          real(kind=dp)                            :: random   ! random number
+          real(kind=dp)                            :: tauCell  ! local tau
 
           integer                         :: iierr, ihg
           integer                         :: idirT,idirP ! direction cosine counters
@@ -2877,9 +2877,9 @@ module photon_mod
  
    type(photon_packet), intent(inout) :: inpacket
    
-   real :: sint,cost,sinp,cosp,phi
-   real :: random, random0, vin(3), vout(3), s, denom
-   real :: hgg, znorm
+   real(kind=dp) :: sint,cost,sinp,cosp,phi
+   real(kind=dp) :: random, random0, vin(3), vout(3), s, denom
+   real(kind=dp) :: hgg, znorm
    
    integer :: ierr
 

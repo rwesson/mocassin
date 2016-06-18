@@ -20,11 +20,11 @@ module pathIntegration_mod
 
         integer, intent(out)        :: nTau           ! actual size of opacity and length arrays 
 
-        real, intent(in)            :: freq           ! the frequency [Hz]
-        real, intent(out), &
+        real(kind=dp), intent(in)            :: freq           ! the frequency [Hz]
+        real(kind=dp), intent(out), &
              & dimension(maxTau)    :: absTau         ! absorption optical depth
 
-        real, intent(out), &
+        real(kind=dp), intent(out), &
              & dimension(maxTau)    :: lambda         ! distance array
 
         ! local variables
@@ -39,7 +39,7 @@ module pathIntegration_mod
         integer, parameter          :: nl = 4         ! defines the size of the distance increment 
 
 
-        real                        :: dlSmall        ! distance increment
+        real(kind=dp)                        :: dlSmall        ! distance increment
 
         if (nGrids>1) then
            print*, 'integratePathTau: tau integration routine still not developed for multiple grids... returning '
@@ -246,7 +246,7 @@ module pathIntegration_mod
         type(vector),  intent(in)   :: uHat           ! direction vector
         type(vector),  intent(in)   :: aVec           ! starting position vector
 
-        real, intent(out)           :: absTau         ! extinction optical depth
+        real(kind=dp), intent(out)           :: absTau         ! extinction optical depth
 
         ! local variables
 
@@ -258,7 +258,7 @@ module pathIntegration_mod
         integer                     :: i              ! counter
         integer                     :: xP, yP, zP     ! x, y, and z axis indeces
 
-        real                        :: dlSmall        ! distance increment
+        real(kind=dp)                        :: dlSmall        ! distance increment
 
         if (nGrids>1) then
            print*, 'integratePathTau: tau integration routine still not developed for multiple grids... returning '

@@ -7,17 +7,17 @@ module ionization_mod
     use xSec_mod               ! x sections module
 
     ! common variables
-    real, pointer :: contBoltz(:)       ! Boltzman factors for the continuum array
-    real, pointer :: FFOpacity(:)       ! FF opacity
-    real, pointer :: log10nuArray(:)    ! log10(nu) at this cell
+    real(kind=dp), pointer :: contBoltz(:)       ! Boltzman factors for the continuum array
+    real(kind=dp), pointer :: FFOpacity(:)       ! FF opacity
+    real(kind=dp), pointer :: log10nuArray(:)    ! log10(nu) at this cell
 
-    real, pointer & 
+    real(kind=dp), pointer & 
          &:: density(:,:)               ! abundance*ionDensity*HDen [cm^-3] 
 
-    real, save :: log10Ne               ! log10(Ne) at this cell
-    real, save :: log10Te               ! log10(Te) at this cell
-    real, save :: sqrTeUsed             ! sqr(Te) at this cell
-    real, save :: eDenFFSum=0.          ! sum of heavy elements free electrons
+    real(kind=dp), save :: log10Ne               ! log10(Ne) at this cell
+    real(kind=dp), save :: log10Te               ! log10(Te) at this cell
+    real(kind=dp), save :: sqrTeUsed             ! sqr(Te) at this cell
+    real(kind=dp), save :: eDenFFSum=0.          ! sum of heavy elements free electrons
     
 
     contains
@@ -139,8 +139,8 @@ module ionization_mod
         integer :: iflag                        ! status flag returned by getGauntFF
         integer :: max                          ! upper nu limit given by 0 exp
 
-        real :: exponent                        ! exponenent
-        real, save :: TeOld1=-1., TeOld2=-1.    ! te on last run of sub
+        real(kind=dp) :: exponent                        ! exponenent
+        real(kind=dp), save :: TeOld1=-1., TeOld2=-1.    ! te on last run of sub
 
         ! correction factors for induced recombination
         ! are also used as Boltzmann factors.
@@ -166,9 +166,9 @@ module ionization_mod
         ! find the Gaunt factors
         ! check if temperature has changed by much
         if ( abs(1. - TeOld2/TeUsed) > 0.10 ) then
-            call getGauntFF(0., log10Te, log10nuArray, gauntFF, iflag)
+            call getGauntFF(0.d0, log10Te, log10nuArray, gauntFF, iflag)
             ! following is for ionized helium
-            call getGauntFF(0.30103, log10Te, log10nuArray, gauntFFHeII, iflag) 
+            call getGauntFF(0.30103d0, log10Te, log10nuArray, gauntFFHeII, iflag) 
             TeOld2 = TeUsed
         end if
     end subroutine BoltGaunt
@@ -195,25 +195,25 @@ module ionization_mod
 
         integer, intent(out) :: iflag                ! explanation given in each area        
 
-        real, intent(in) :: log10Te                  ! log10(Te)
-        real, intent(in) ::  z                       ! log10 of nuclear charge
-        real, dimension(:), intent(in) :: xlf        ! array of log10(h*nu/Ryd)
-        real, dimension(size(xlf)), intent(out) :: g ! array of values of g
+        real(kind=dp), intent(in) :: log10Te                  ! log10(Te)
+        real(kind=dp), intent(in) ::  z                       ! log10 of nuclear charge
+        real(kind=dp), dimension(:), intent(in) :: xlf        ! array of log10(h*nu/Ryd)
+        real(kind=dp), dimension(size(xlf)), intent(out) :: g ! array of values of g
 
         ! local variables 
         integer ::  i, ir, j
 
-        real, dimension(11) :: b
-        real, dimension(8) :: c
-        real :: con
-        real(kind=8), dimension(88) :: dd
-        real(kind=8), dimension(8, 11) :: d
-        real :: gamma2                               ! gamma^2 (gams = Z^2 * Ryd / k*T)
-        real :: slope                                ! slope
-        real :: txg                                  ! hummer variable related to gamma^2
-        real :: txu                                  ! hummer variable related to U
-        real :: u                                    ! U = h*nu/k*T
-        real :: xlrkt                                ! log(ryd/kt)
+        real(kind=dp), dimension(11) :: b
+        real(kind=dp), dimension(8) :: c
+        real(kind=dp) :: con
+        real(kind=dp), dimension(88) :: dd
+        real(kind=dp), dimension(8, 11) :: d
+        real(kind=dp) :: gamma2                               ! gamma^2 (gams = Z^2 * Ryd / k*T)
+        real(kind=dp) :: slope                                ! slope
+        real(kind=dp) :: txg                                  ! hummer variable related to gamma^2
+        real(kind=dp) :: txu                                  ! hummer variable related to U
+        real(kind=dp) :: u                                    ! U = h*nu/k*T
+        real(kind=dp) :: xlrkt                                ! log(ryd/kt)
 
         dd = (/8.986940175e+00, -4.009515855e+00,  8.808871266e-01,& 
 &          2.640245111e-02, -4.580645915e-02, -3.568055702e-03,&
@@ -302,7 +302,7 @@ module ionization_mod
               if( (log10Te>=2.5) .and. (log10Te<=8.0) ) iflag = 2
             ! On the bottom side of the box,u<-4 and gamma2<.33
             else if( (log10(u)<-4.0) .and. (gamma2>=0.3) ) then
-                g(i) = 0.551329 * alog( 0.944931/u/sqrt(gamma2) )
+                g(i) = 0.551329 * log( 0.944931/u/sqrt(gamma2) )
                 if( (log10Te>=2.5) .and.( log10Te<=8.0) ) iflag = 3
                 ! Now on the bottom side of the box
                 else if (txu>2.0) then
@@ -349,12 +349,12 @@ module ionization_mod
     subroutine addOpacity(opacity)
         implicit none
 
-        real, dimension(:), intent(out) :: opacity                !  opacity
+        real(kind=dp), dimension(:), intent(out) :: opacity                !  opacity
 
        ! local variables
 
         integer :: i                                           ! counters
-        real    :: fac1, fac2, fac3       ! factors to be used in calculations
+        real(kind=dp)    :: fac1, fac2, fac3       ! factors to be used in calculations
 
         ! (re) initialize opacity arrays
         opacity = 0.
@@ -393,7 +393,7 @@ module ionization_mod
         end do
 
        ! hydrogen lyman continuum photoelectric opacity
-       call inOpacity(HlevXSecP(1), HlevNuP(1), nbins, density(1,1), 0.)
+       call inOpacity(HlevXSecP(1), HlevNuP(1), nbins, density(1,1), 0.d0)
 
        ! NOTE: the opacity due to the excited levels of HI, HeI and HeII is
        ! neglected for now as it requires calculations of the densities of 
@@ -401,10 +401,10 @@ module ionization_mod
        ! of the lower level [cm^-3]
 
        ! helium singlets HeI (ground special because it extends to the high energy limit)
-       call inOpacity(HeISingXSecP(1), HeIlevNuP(1), nbins, density(2, 1), 0.)
+       call inOpacity(HeISingXSecP(1), HeIlevNuP(1), nbins, density(2, 1), 0.d0)
 
        ! ionized helium HeII (ground special because it extends to the high energy limit)
-       call inOpacity(HeIIXSecP(1), HeIIlevNuP(1), nbins, density(2, 2), 0.)
+       call inOpacity(HeIIXSecP(1), HeIIlevNuP(1), nbins, density(2, 2), 0.d0)
 
        do i = 3, nElements
           if ( lgElementOn(i) ) call putOpacity(i)
@@ -435,7 +435,7 @@ module ionization_mod
                          nuLowP = elementP(nElem, nIon, nShell, 1)
                          nuHighP = elementP(nElem, nIon, nShell, 2)
                          xSecP = elementP(nElem, nIon, nShell, 3)
-                         call inOpacity(xSecP, nuLowP, nuHighP, density(nElem, nIon), 0.)
+                         call inOpacity(xSecP, nuLowP, nuHighP, density(nElem, nIon), 0.d0)
                      end do
 
                  end if
@@ -451,15 +451,15 @@ module ionization_mod
              integer, intent(in)               :: nuLowP, nuHighP  ! pointers to lower and higher limits in nuArray
              integer, intent(in)               :: xSecP            ! x section pointer
 
-             real, intent(in)                  :: b                ! departure coefficient
-             real, intent(in)                  :: den              ! density of the lower level [cm^-3]
+             real(kind=dp), intent(in)                  :: b                ! departure coefficient
+             real(kind=dp), intent(in)                  :: den              ! density of the lower level [cm^-3]
 
              ! local variables
              integer             :: i                              ! counter
              integer             :: iup                            ! upper limit
              integer             :: k                              ! offset
 
-             real                :: bInv                           ! 1./b
+             real(kind=dp)                :: bInv                           ! 1./b
 
              k = xSecP - nuLowP
              iup = min(nuHighP, nbins)
