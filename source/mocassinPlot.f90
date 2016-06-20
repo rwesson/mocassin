@@ -22,17 +22,17 @@ program MoCaSSiNplot
 
     type(plot_type) :: plot           ! the plot
 
-    real(kind=dp),pointer    :: flinePlot(:,:,:,:)
-    real(kind=dp),pointer    :: flinePlotLarge(:,:)
-    real(kind=dp), pointer   :: image(:,:,:,:)    
+    real(kind=8),pointer    :: flinePlot(:,:,:,:)
+    real(kind=8),pointer    :: flinePlotLarge(:,:)
+    real, pointer   :: image(:,:,:,:)    
 
     ! filter transmission stuff
-    real(kind=dp)            :: frequency(5000), frequencyTemp(5000),tranCoeff(5000),tranCoeffTemp(5000)
+    real            :: frequency(5000), frequencyTemp(5000),tranCoeff(5000),tranCoeffTemp(5000)
     Real, pointer   :: coeff(:)
 
-    real(kind=dp)            :: dV                     ! volume of local cell [e45 cm^3]
-    real(kind=dp)            :: freq1,freq2
-    real(kind=dp)            :: log10TeLoc
+    real            :: dV                     ! volume of local cell [e45 cm^3]
+    real            :: freq1,freq2
+    real            :: log10TeLoc
 
     character(len=30) :: filename       ! input file
     character(len=30) :: bandFile       ! band transmission coeff file
@@ -212,7 +212,7 @@ program MoCaSSiNplot
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                                    & HIRecLines(iup,ilow)*HdenUsed*dV
+                                    & real(HIRecLines(iup,ilow)*HdenUsed*dV)
                                iLine = iLine+1
                                
                             end do
@@ -221,7 +221,7 @@ program MoCaSSiNplot
                          do l = 1, 34 
                             if (plot%lineNumber(plotNum) == iLine) &
                                  & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
-                                 & HeIRecLines(l)*HdenUsed*dV
+                                 & real(HeIRecLines(l)*HdenUsed*dV)
 
                             iLine = iLine+1
 
@@ -235,7 +235,7 @@ program MoCaSSiNplot
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                                    & HeIIRecLines(iup,ilow)*HdenUsed*dV
+                                    & real(HeIIRecLines(iup,ilow)*HdenUsed*dV)
 
                                iLine = iLine+1
 
@@ -258,7 +258,7 @@ program MoCaSSiNplot
                                               
 !                                              print*, flinePlotLarge(iup,ilow), elem,ion,iup,ilow
                                               plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                                                   & flinePlotLarge(iup,ilow)*HdenUsed*dV
+                                                   & real(flinePlotLarge(iup,ilow)*HdenUsed*dV)
                                               
                                            end if
                                            
@@ -277,7 +277,7 @@ program MoCaSSiNplot
                                               
 !                                              print*, flinePlot(elem,ion,iup,ilow), elem,ion,iup,ilow
                                               plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                                                   & flinePlot(elem,ion,iup,ilow)*HdenUsed*dV
+                                                   & real(flinePlot(elem,ion,iup,ilow)*HdenUsed*dV)
                                               
                                            end if
                                            
@@ -466,7 +466,7 @@ program MoCaSSiNplot
 
 
         ! local variables
-        real(kind=dp)                      :: freq        ! cont freq
+        real                      :: freq        ! cont freq
 
         character(len=10)         :: lineORcont  ! line or continuum ?
         character(len=10)         :: filter      ! filter?
@@ -638,7 +638,7 @@ program MoCaSSiNplot
                             &ionDenUsed(elementXref(elem),ion), &
                             & TeUsed, NeUsed, flinePlotLarge(:,:))
                     else
-                       call equilibrium(dataFile(elem, ion), 0.d0, &
+                       call equilibrium(dataFile(elem, ion), 0., &
                             & TeUsed, NeUsed, flinePlotLarge(:,:))
                     end if
 
@@ -653,7 +653,7 @@ program MoCaSSiNplot
                             &ionDenUsed(elementXref(elem),ion), &
                             & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                     else
-                       call equilibrium(dataFile(elem, ion), 0.d0, &
+                       call equilibrium(dataFile(elem, ion), 0., &
                             & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                     end if
 
@@ -689,13 +689,13 @@ program MoCaSSiNplot
 &                                      iup        ! pointer to upper level
         integer                    :: denint
 
-        real(kind=dp)                       :: Hbeta       ! Hbeta emission
-        real(kind=dp)                       :: HeII4686    ! HeII 4686 emission
-        real(kind=dp)                       :: Lalpha      ! Lalpha emission
-        real(kind=dp)                       :: T4          ! TeUsed/10000.
-        real(kind=dp)                       :: x1,x2
-        real(kind=dp)                       :: hb          ! emissivity of H 4->2
-        real(kind=dp)                       :: fh          ! emissivity of H
+        real                       :: Hbeta       ! Hbeta emission
+        real                       :: HeII4686    ! HeII 4686 emission
+        real                       :: Lalpha      ! Lalpha emission
+        real                       :: T4          ! TeUsed/10000.
+        real                       :: x1,x2
+        real                       :: hb          ! emissivity of H 4->2
+        real                       :: fh          ! emissivity of H
 
 
         T4 = TeUsed / 10000.

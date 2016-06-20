@@ -7,19 +7,19 @@ module continuum_mod
     use interpolation_mod
 
     ! common variables
-    real(kind=dp), parameter      :: hcRyd_k = 157893.94    ! constant: h*cRyd/k (Ryd at inf used) [K]
-    real(kind=dp), parameter      :: hcRyd = 2.1799153e-11  ! constant: h*c*Ryd (Ryd at inf used) [erg]
-    real(kind=dp), parameter      :: cRyd = 3.2898423e15    ! constant: c*Ryd (Ryd at inf used) [Hz]
+    real, parameter      :: hcRyd_k = 157893.94    ! constant: h*cRyd/k (Ryd at inf used) [K]
+    real, parameter      :: hcRyd = 2.1799153e-11  ! constant: h*c*Ryd (Ryd at inf used) [erg]
+    real, parameter      :: cRyd = 3.2898423e15    ! constant: c*Ryd (Ryd at inf used) [Hz]
 
 
-    real(kind=dp), pointer, save :: inSpectrumErg(:) ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
-    real(kind=dp), pointer, save :: inSpectrumPhot(:) ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
-    real(kind=dp), pointer, save :: inSpectrumProbDen(:,:)  ! probability density for input spectrum (nstars,nbins)
+    real(kind=8), pointer, save :: inSpectrumErg(:) ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
+    real(kind=8), pointer, save :: inSpectrumPhot(:) ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
+    real, pointer, save :: inSpectrumProbDen(:,:)  ! probability density for input spectrum (nstars,nbins)
 
-    real(kind=dp), save          :: normConstantErg = 0.    ! normalization constant (area beyond input spectrum)
-    real(kind=dp), save          :: normConstantPhot= 0.    ! normalization constant (area beyond input spectrum)    
-    real(kind=dp)                :: correctionPhot
-    real(kind=dp),save           :: RStar
+    real, save          :: normConstantErg = 0.    ! normalization constant (area beyond input spectrum)
+    real, save          :: normConstantPhot= 0.    ! normalization constant (area beyond input spectrum)    
+    real                :: correctionPhot
+    real,save           :: RStar
                
     integer, parameter  :: maxLim = 200000        ! max number of rows in the input spectrum file
     integer             :: nuP                     ! frequency pointer
@@ -44,11 +44,11 @@ module continuum_mod
         integer, parameter :: sb99nuLim=1221
 
         integer,dimension(nbins) :: lamCount
-        real(kind=dp)    :: skip, time                ! stellar surface [e36 cm^2]
-        real(kind=dp),dimension(maxLim)    :: tmp1, tmp2
+        real    :: skip, time                ! stellar surface [e36 cm^2]
+        real(kind=8),dimension(maxLim)    :: tmp1, tmp2
 
-        real(kind=dp), dimension(maxLim) :: enArray  ! freq array as read from input spectrum file [Hz]
-        real(kind=dp), dimension(maxLim)  :: Hflux    ! flux array as read from input spectrum file [erg/cm^2/s/Hz/sr]
+        real, dimension(maxLim) :: enArray  ! freq array as read from input spectrum file [Hz]
+        real(kind=8), dimension(maxLim)  :: Hflux    ! flux array as read from input spectrum file [erg/cm^2/s/Hz/sr]
 
   
         print*, 'in setContinuum ', contShape
@@ -80,7 +80,7 @@ module continuum_mod
         inSpectrumProbDen = 0.
 
         ! find the Lyman limit
-        call locate(nuArray, 1.d0, lymanP)
+        call locate(nuArray, 1., lymanP)
 
         if (Ldiffuse >0.) then
            star1 = 0
@@ -160,7 +160,7 @@ module continuum_mod
                  do i = 1,sb99nuLim
                     
                     Hflux(i) = tmp1(sb99nuLim-i+1)
-                    enArray(i) = tmp2(sb99nuLim-i+1)
+                    enArray(i) = real(tmp2(sb99nuLim-i+1))
                     
                  end do
              
@@ -244,7 +244,7 @@ module continuum_mod
                  do i = 1,j-1
                     
                     Hflux(i) = tmp1(j-1-i+1)
-                    enArray(i) = tmp2(j-1-i+1)
+                    enArray(i) = real(tmp2(j-1-i+1))
                     
                  end do
              
@@ -351,12 +351,12 @@ module continuum_mod
     ! continuum specified by contShape at the specified cell  
     function getFlux(energy, temperature, cShape)
 
-        real(kind=dp), intent(in) :: energy     ! energy [Ryd]
-        real(kind=dp), intent(in) :: temperature! temperature [K]
+        real, intent(in) :: energy     ! energy [Ryd]
+        real, intent(in) :: temperature! temperature [K]
 
-        real(kind=dp) :: constant               ! units constant
-        real(kind=dp) :: denominator            ! denominator
-        real(kind=dp) :: getFlux                ! erg/(cm^2*s*Hz*sr)
+        real :: constant               ! units constant
+        real :: denominator            ! denominator
+        real :: getFlux                ! erg/(cm^2*s*Hz*sr)
 
         character(len=50), intent(in) :: cShape
 
@@ -418,10 +418,10 @@ module continuum_mod
         integer :: err                    ! allocation error status
         integer :: i                      ! counter
 
-        real(kind=dp) :: maxp
+        real :: maxp
 
-        real(kind=dp), pointer :: inSpSumErg(:)    ! partial input spectrum sum [erg/s]
-        real(kind=dp), pointer :: inSpSumPhot(:)   ! partial input spectrum sum [phot/s]
+        real, pointer :: inSpSumErg(:)    ! partial input spectrum sum [erg/s]
+        real, pointer :: inSpSumPhot(:)   ! partial input spectrum sum [phot/s]
 
 
         allocate(inSpSumPhot(nbins), stat = err)
@@ -442,8 +442,8 @@ module continuum_mod
         
         do i = 1, nbins
            if (taskid==0) print*, i, nuArray(i),  inSpectrumErg(i)
-           inSpSumErg(i)  =  inSpectrumErg(i)
-           inSpSumPhot(i) =  inSpectrumPhot(i)
+           inSpSumErg(i)  =  real(inSpectrumErg(i))
+           inSpSumPhot(i) =  real(inSpectrumPhot(i))
         end do
 
         ! calculate normalization constants 
@@ -488,7 +488,7 @@ module continuum_mod
         
         type(grid_type), intent(inout) :: grid(1:nGrids)
 
-        real(kind=dp)    :: norm, dV
+        real    :: norm, dV
 
         integer :: iloc, igrid, ix, iy, iz, ngridsloc
 
@@ -576,11 +576,11 @@ module continuum_mod
         
         integer, intent(in)        :: xP, yP, zP        ! cell indeces  
 
-        real(kind=dp)                       :: getVolumeCon         ! volume of the cell [e45 cm^3]
+        real                       :: getVolumeCon         ! volume of the cell [e45 cm^3]
 
         ! local variables
          
-        real(kind=dp)                       :: dx, &             ! cartesian axes increments
+        real                       :: dx, &             ! cartesian axes increments
 &                                      dy, &             ! in [cm] 
 &                                      dz                ! 
 

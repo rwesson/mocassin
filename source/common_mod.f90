@@ -6,12 +6,13 @@ module common_mod
     use vector_mod
     implicit none
 
+
     ! fluorescence variables
     integer          :: nFluo ! # of fluorescent lines to be transfered
     integer          :: nVP   ! # of fluorescent viewing angles
 
     character(len=4), pointer :: fluorescenceLabel(:) ! ID labels of fluorescent transitions
-    real(kind=dp), pointer    :: fluorescenceVP(:,:) ! viewing angles for fluorescence cube &
+    real, pointer    :: fluorescenceVP(:,:) ! viewing angles for fluorescence cube &
                                             ! (for the first dimension 1=theta;2=phi)
 
     ! MPI variables
@@ -38,48 +39,48 @@ module common_mod
     logical         :: lginputDustMass = .false.! user sets input dust mass?
     logical         :: lginputGasMass = .false. ! user sets input gas mass?
 
-    real(kind=dp), pointer :: gSca(:)                 ! gSca(freq)
+    real, pointer :: gSca(:)                 ! gSca(freq)
 
-    real(kind=dp), pointer   :: TdustTemp(:,:,:)     ! temporary dust temperature array (species,size,cell)
-    real(kind=dp), pointer   :: ionDenTemp(:,:,:)    ! temporary ion density array    
-    real(kind=dp), pointer   :: NeTemp(:)            ! temporary electron density array
-    real(kind=dp), pointer   :: TeTemp(:)            ! temporary electron Temperature array    
-    real(kind=dp)            :: HeIrecLineCoeff(34,3,4)
-    real(kind=dp), pointer   :: KNsigmaArray(:,:)    ! Klein Nishina calc PDFs (nbins,180)
-    real(kind=dp), pointer   :: KNsigmaT(:)          ! Klein Nishina cross-sections integrated over the solid angle
-    real(kind=dp), pointer   :: PcompArray (:,:) 
-    real(kind=dp), pointer   :: twoDscaleJ(:)
+    real, pointer   :: TdustTemp(:,:,:)     ! temporary dust temperature array (species,size,cell)
+    real, pointer   :: ionDenTemp(:,:,:)    ! temporary ion density array    
+    real, pointer   :: NeTemp(:)            ! temporary electron density array
+    real, pointer   :: TeTemp(:)            ! temporary electron Temperature array    
+    real            :: HeIrecLineCoeff(34,3,4)
+    real, pointer   :: KNsigmaArray(:,:)    ! Klein Nishina calc PDFs (nbins,180)
+    real, pointer   :: KNsigmaT(:)          ! Klein Nishina cross-sections integrated over the solid angle
+    real, pointer   :: PcompArray (:,:) 
+    real, pointer   :: twoDscaleJ(:)
 
     integer         :: radio4p9GHzP   ! 
       
     integer         :: ierr           ! MPI error status
     integer         :: numtasks       ! total # of processes
     integer         :: taskid         ! process identification #
-    real(kind=dp)            :: starttime      ! start time [sec]
+    real            :: starttime      ! start time [sec]
 
-    real(kind=dp)            :: endtime        ! end time [sec]    
-    real(kind=dp)            :: absInt         ! total number of absorption events
-    real(kind=dp)            :: scaInt         ! total number of scattering events
-    real(kind=dp)            :: echot1=0., echot2=0.   ! light time travel parameters
-    real(kind=dp)            :: echoTemp=0.       ! temperature outside the illuminated parabula
-    real(kind=dp)            :: dTheta                  ! 
-    real(kind=dp)            :: dPhi                    ! 
-    real(kind=dp)            :: nu0                     ! 
-    real(kind=dp)            :: nu0Add                  !
-    real(kind=dp)            :: totalDustMass 
-    real(kind=dp)            :: totalGasMass 
-    real(kind=dp)            :: inputDustMass           ! for when user sets desired dust mass in input
-    real(kind=dp)            :: inputGasMass           ! for when user sets desired gas mass in input
-    real(kind=dp)            :: forceTDust = 0.         ! for TDust feature
-    real(kind=dp)            :: convPercent=0.          ! total convergence percentage
-    real(kind=dp)            :: pwlIndex = 0.           ! power law input spectrum index
-    real(kind=dp)            :: pwlMin=0.               ! power law lower cutoff [Ryd]
-    real(kind=dp)            :: pwlMax=0.               ! power law higher cutoff [Ryd]
-    real(kind=dp)            :: totPercent=0.           ! 
-    real(kind=dp)            :: minaQHeat = 0.          ! min radius for Q Heat in [um]
-    real(kind=dp)            :: NeUsed, TeUsed, HdenUsed ! local properties of the gas
-    real(kind=dp)            :: Tmax                    ! max temp for qheat
-    real(kind=dp)            :: auger(30,30,10,10)      ! auger yields
+    real            :: endtime        ! end time [sec]    
+    real            :: absInt         ! total number of absorption events
+    real            :: scaInt         ! total number of scattering events
+    real            :: echot1=0., echot2=0.   ! light time travel parameters
+    real            :: echoTemp=0.       ! temperature outside the illuminated parabula
+    real            :: dTheta                  ! 
+    real            :: dPhi                    ! 
+    real            :: nu0                     ! 
+    real            :: nu0Add                  !
+    real            :: totalDustMass 
+    real            :: totalGasMass 
+    real            :: inputDustMass           ! for when user sets desired dust mass in input
+    real            :: inputGasMass           ! for when user sets desired gas mass in input
+    real            :: forceTDust = 0.         ! for TDust feature
+    real            :: convPercent=0.          ! total convergence percentage
+    real            :: pwlIndex = 0.           ! power law input spectrum index
+    real            :: pwlMin=0.               ! power law lower cutoff [Ryd]
+    real            :: pwlMax=0.               ! power law higher cutoff [Ryd]
+    real            :: totPercent=0.           ! 
+    real            :: minaQHeat = 0.          ! min radius for Q Heat in [um]
+    real            :: NeUsed, TeUsed, HdenUsed ! local properties of the gas
+    real            :: Tmax                    ! max temp for qheat
+    real            :: auger(30,30,10,10)      ! auger yields
 
 
 
@@ -154,40 +155,40 @@ module common_mod
     
 
     ! energies temperatures etc..
-    real(kind=dp) :: Bjump = 0.                        ! Balmer jump
+    real :: Bjump = 0.                        ! Balmer jump
 
 
     ! slit stuff
-    real(kind=dp) :: dxSlit = 0.
-    real(kind=dp) :: dySlit = 0.
+    real :: dxSlit = 0.
+    real :: dySlit = 0.
 
     ! photoionization data 
-    real(kind=dp), dimension(5,30,30) :: CF=0.
-    real(kind=dp), dimension(30,30)   :: cionTherm = 0.
-    real(kind=dp), dimension(6, 30, 30, 7) :: ph1
-    real(kind=dp), dimension(7, 30, 30) :: ph2
-    real(kind=dp), dimension(nElements) :: aWeight
-    real(kind=dp), dimension(450) :: ionEdge 
+    real, dimension(5,30,30) :: CF=0.
+    real, dimension(30,30)   :: cionTherm = 0.
+    real, dimension(6, 30, 30, 7) :: ph1
+    real, dimension(7, 30, 30) :: ph2
+    real, dimension(nElements) :: aWeight
+    real, dimension(450) :: ionEdge 
 
-    real(kind=dp), pointer :: logGammaHI(:,:),logGammaHeI(:,:),logGammaHeII(:,:), tkGamma(:), nuGammaHI(:),&
+    real, pointer :: logGammaHI(:,:),logGammaHeI(:,:),logGammaHeII(:,:), tkGamma(:), nuGammaHI(:),&
          & nuGammaHeI(:),nuGammaHeII(:)
 
     ! dust arrays
-    real(kind=dp), pointer :: TdustSublime(:)        ! sublimation T (nspecies)
-    real(kind=dp), pointer :: grainVn(:)             ! potential of neutral grain
-    real(kind=dp), pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
-    real(kind=dp), pointer :: rho(:)                 ! intrinsic density (nspecies)    
-    real(kind=dp), pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
-    real(kind=dp), pointer :: SEDnoExt(:)            ! SED no extinction
-    real(kind=dp), pointer :: equivalentTau(:)       ! SED no extinction
+    real, pointer :: TdustSublime(:)        ! sublimation T (nspecies)
+    real, pointer :: grainVn(:)             ! potential of neutral grain
+    real, pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
+    real, pointer :: rho(:)                 ! intrinsic density (nspecies)    
+    real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
+    real, pointer :: SEDnoExt(:)            ! SED no extinction
+    real, pointer :: equivalentTau(:)       ! SED no extinction
 
-    real(kind=dp), save,pointer::&
+    double precision, save,pointer::&
           & forbiddenLines(:,:,:,:)                                 ! emissivity from heavies  rec lines
-    real(kind=dp), save,pointer::&
+    double precision, save,pointer::&
           & forbiddenLinesLarge(:,:) 
 
     ! linear increments
-    real(kind=dp), pointer :: dl(:)
+    real, pointer :: dl(:)
 
     ! calculate recombination lines?
     logical :: lgRecombination=.false.
@@ -196,38 +197,38 @@ module common_mod
     logical, dimension(nElements) :: lgElementOn ! is this element present?
 
     ! dust arrays
-    real(kind=dp), pointer :: dustEmIntegral(:,:,:)   ! dust emission integral (species,size,temperature)
+    real, pointer :: dustEmIntegral(:,:,:)   ! dust emission integral (species,size,temperature)
     
     ! allocatable arrays
-    real(kind=dp), pointer :: absOpacSpecies(:,:)     ! absOpacSpecies (nspecies, freq)
+    real, pointer :: absOpacSpecies(:,:)     ! absOpacSpecies (nspecies, freq)
 
-    real(kind=dp), pointer :: continuum(:)            ! continuum array (freq)
+    real, pointer :: continuum(:)            ! continuum array (freq)
 
-    real(kind=dp), pointer :: gauntFF(:)              ! gaunt factor
+    real, pointer :: gauntFF(:)              ! gaunt factor
 
-    real(kind=dp), pointer :: gauntFFHeII(:)          ! gaunt ff for HeII
+    real, pointer :: gauntFFHeII(:)          ! gaunt ff for HeII
 
-    real(kind=dp), pointer :: H2phot(:)               ! H 2-photon emission
+    real, pointer :: H2phot(:)               ! H 2-photon emission
  
-    real(kind=dp), pointer :: HeI2phot(:)             ! HeI 2-photon emission
+    real, pointer :: HeI2phot(:)             ! HeI 2-photon emission
 
-    real(kind=dp), pointer :: HeII2phot(:)            ! HeII 2-photon emission
+    real, pointer :: HeII2phot(:)            ! HeII 2-photon emission
 
-    real(kind=dp), pointer :: ionDenUsed(:,:)         ! local ionDen array
+    real, pointer :: ionDenUsed(:,:)         ! local ionDen array
 
-    real(kind=dp), pointer :: nuArray(:)              ! energy array [Ryd]
+    real, pointer :: nuArray(:)              ! energy array [Ryd]
 
-    real(kind=dp), pointer :: xSecArray(:)            ! x Section array calculated in xSec_mod
+    real, pointer :: xSecArray(:)            ! x Section array calculated in xSec_mod
 
-    real(kind=dp), pointer :: xSecRecoil(:)           ! compton recoil xSec
+    real, pointer :: xSecRecoil(:)           ! compton recoil xSec
 
-    real(kind=dp), pointer :: comXSecH(:)             ! compton Xsec Heat array
+    real, pointer :: comXSecH(:)             ! compton Xsec Heat array
 
-    real(kind=dp), pointer :: comXSecC(:)             ! compton Xsec Cool array
+    real, pointer :: comXSecC(:)             ! compton Xsec Cool array
 
-    real(kind=dp), pointer :: widFlx(:)               ! widFlx array
+    real, pointer :: widFlx(:)               ! widFlx array
 
-    real(kind=dp), pointer :: photoRateFluo(:,:)      ! photoionisation rate (nfluo, nstages) [sec^-1]
+    real, pointer :: photoRateFluo(:,:)      ! photoionisation rate (nfluo, nstages) [sec^-1]
 
 
     integer, pointer :: planeIonDistribution(:,:) ! initial distribution of ionising photons 
@@ -256,47 +257,47 @@ module common_mod
         integer, pointer :: active(:,:,:)           ! point to active cell in 1d array; 
                                                     ! returns 0 for inactive cells        
 
-        real(kind=dp)    :: geoCorrX,geoCorrY,geoCorrZ       ! geometric correction
-        real(kind=dp)    :: noHit                            ! cells not sampled by rad field
-        real(kind=dp)    :: noIonBal                         ! Ion Balance not raeched 
-        real(kind=dp)    :: noTeBal                          ! Te Balance not reached
+        real    :: geoCorrX,geoCorrY,geoCorrZ       ! geometric correction
+        real    :: noHit                            ! cells not sampled by rad field
+        real    :: noIonBal                         ! Ion Balance not raeched 
+        real    :: noTeBal                          ! Te Balance not reached
 
 
-        real(kind=dp), pointer :: absOpac(:,:)               ! dust absorption opacity 
-        real(kind=dp), pointer :: scaOpac(:,:)               ! dust scattering opacity 
-        real(kind=dp), pointer :: dustPDF(:,:)               ! dust emission PDF 
-        real(kind=dp), pointer :: fEscapeResPhotons(:,:)     ! frac of res line photons escaping (cell,resline)
-        real(kind=dp), pointer :: fluorescenceCube(:,:,:)    ! escaped fluorescence packets (ncell,nFluo,nVP)
-        real(kind=dp), pointer :: Hden(:)                    ! density of H [1/cm^3]
-        real(kind=dp), pointer :: Ne(:)                      ! electron density [1/cm^3]
-        real(kind=dp), pointer :: Te(:)                      ! electron temperature [K]
-        real(kind=dp), pointer :: Tdust(:,:,:)               ! dust temperature (species,size,cell) [K] 
-        real(kind=dp), pointer :: ionDen(:,:,:)              ! fractional ion density (x,y,z,elem,stage)
-        real(kind=dp), pointer :: Jste(:,:)                  ! MC estimator of stellar J (cell,nu) 
-        real(kind=dp), pointer :: Jdif(:,:)                  ! MC estimator of diffuse J (cell,nu)
-        real(kind=dp), pointer :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
-        real(kind=dp), pointer :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
-        real(kind=dp), pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
-        real(kind=dp), pointer :: LFluorescence(:,:)         ! local fluorescence luminosity of cell [e36 erg/sec]
-        real(kind=dp), pointer :: LdiffuseLoc(:)             ! loc luminosity of diffuse source [e36 erg/sec]
-        real(kind=dp), pointer :: Ndust(:)                   ! number density for dust
+        real, pointer :: absOpac(:,:)               ! dust absorption opacity 
+        real, pointer :: scaOpac(:,:)               ! dust scattering opacity 
+        real, pointer :: dustPDF(:,:)               ! dust emission PDF 
+        real, pointer :: fEscapeResPhotons(:,:)     ! frac of res line photons escaping (cell,resline)
+        real, pointer :: fluorescenceCube(:,:,:)    ! escaped fluorescence packets (ncell,nFluo,nVP)
+        real, pointer :: Hden(:)                    ! density of H [1/cm^3]
+        real, pointer :: Ne(:)                      ! electron density [1/cm^3]
+        real, pointer :: Te(:)                      ! electron temperature [K]
+        real, pointer :: Tdust(:,:,:)               ! dust temperature (species,size,cell) [K] 
+        real, pointer :: ionDen(:,:,:)              ! fractional ion density (x,y,z,elem,stage)
+        real, pointer :: Jste(:,:)                  ! MC estimator of stellar J (cell,nu) 
+        real, pointer :: Jdif(:,:)                  ! MC estimator of diffuse J (cell,nu)
+        real, pointer :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
+        real, pointer :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
+        real, pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
+        real, pointer :: LFluorescence(:,:)         ! local fluorescence luminosity of cell [e36 erg/sec]
+        real, pointer :: LdiffuseLoc(:)             ! loc luminosity of diffuse source [e36 erg/sec]
+        real, pointer :: Ndust(:)                   ! number density for dust
 
-        real(kind=dp), pointer :: xAxis(:)                   ! x-axis
-        real(kind=dp), pointer :: yAxis(:)                   ! y-axiss
-        real(kind=dp), pointer :: zAxis(:)                   ! z-axis
+        real, pointer :: xAxis(:)                   ! x-axis
+        real, pointer :: yAxis(:)                   ! y-axiss
+        real, pointer :: zAxis(:)                   ! z-axis
 
-        real(kind=dp), pointer :: NeInput(:)                 ! only used if lgNeInput=.t.
+        real, pointer :: NeInput(:)                 ! only used if lgNeInput=.t.
 
 
-        real(kind=dp), pointer :: opacity(:,:)               ! total  opacity (cell,nu) [1/cm]
-        real(kind=dp), pointer :: recPDF(:,:)                ! rec prob distribution function
-        real(kind=dp), pointer :: linePDF(:,:)               ! line prob distribution function
-        real(kind=dp), pointer :: totalLines(:)              ! fraction of non-ionizing line phots
+        real, pointer :: opacity(:,:)               ! total  opacity (cell,nu) [1/cm]
+        real, pointer :: recPDF(:,:)                ! rec prob distribution function
+        real, pointer :: linePDF(:,:)               ! line prob distribution function
+        real, pointer :: totalLines(:)              ! fraction of non-ionizing line phots
     
-        real(kind=dp), pointer :: elemAbun(:,:)              ! elemental abundance (specified
+        real, pointer :: elemAbun(:,:)              ! elemental abundance (specified
                                                     ! by number relative to total 
                                                     ! hydrogen density)
-        real(kind=dp), pointer :: echoVol(:,:,:)  ! BEKS 2010. Contains volume of one
+        real, pointer :: echoVol(:,:,:)  ! BEKS 2010. Contains volume of one
         ! grid cell enclosed by echo.  Only used if lgEcho=.true.
     end type grid_type
 
@@ -309,7 +310,7 @@ module common_mod
         integer, dimension(2) :: origin ! 1=ig, 2=icell
         integer       :: iG        ! grid index 
 
-        real(kind=dp)          :: nu
+        real          :: nu
         logical       :: lgStellar
         logical       :: lgLine
     
@@ -321,8 +322,8 @@ module common_mod
 
     ! plot type
     type plot_type
-       real(kind=dp), pointer         :: intensity(:,:,:)
-       real(kind=dp), pointer         :: xAxis(:), yAxis(:)
+       real, pointer         :: intensity(:,:,:)
+       real, pointer         :: xAxis(:), yAxis(:)
 
        logical               :: lgFilter
        logical               :: lgMap
@@ -345,11 +346,11 @@ module common_mod
        integer               :: nmul ! # of components in the multiplet
        integer,pointer       :: moclow(:), mochigh(:) ! mocassin's lower and higher levels code
 
-       real(kind=dp)                  :: m_ion ! mass of the ion
-       real(kind=dp)                  :: wav  ! wavelength [A]
-       real(kind=dp)                  :: freq ! frequency [Ryd]
-       real(kind=dp)                  :: Elow,Ehigh ! lower and higher level energies
-       real(kind=dp)                  :: Aik,fik ! trans prob and oscillator strength
+       real                  :: m_ion ! mass of the ion
+       real                  :: wav  ! wavelength [A]
+       real                  :: freq ! frequency [Ryd]
+       real                  :: Elow,Ehigh ! lower and higher level energies
+       real                  :: Aik,fik ! trans prob and oscillator strength
     end type resLine_type
 
     !  model parameters
@@ -419,44 +420,44 @@ module common_mod
     integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z, 4=gp
     integer            :: nstages          ! # of ionisation stages to be included
 
-    real(kind=dp)               :: fluoCubeMineV, fluoCubeMaxeV ! limits of the fluorescence cube band
-    real(kind=dp)               :: fillingFactor    ! filling factor epsilon
-    real(kind=dp)               :: contCube(2)      ! continuum cube
-    real(kind=dp)               :: convIncPercent   ! percentage by  which conv must increase
-    real(kind=dp)               :: convWriteGrid    ! min conv level before starting to write the grid
-    real(kind=dp)               :: nPhotIncrease    ! nPhoton increase factor
-    real(kind=dp)               :: densityLaw(3)    ! density law parameters (R1,n,f,N0)
-    real(kind=dp),pointer       :: grainAbun(:,:)     ! abundance of this species
-    real(kind=dp),pointer       :: grainRadius(:)   ! grain radius [um]
-    real(kind=dp),pointer       :: grainWeight(:)   ! grain weight normalised to 1
-    real(kind=dp),pointer       :: viewPointTheta(:),viewPointPhi(:)     ! viewing angles
-    real(kind=dp)               :: Hdensity         ! constant H density values (cm-^3)
-    real(kind=dp)               :: H0Start          ! initial guess at X(H0) for regions I and II
-    real(kind=dp)               :: Lphot            ! L of ionizing source [e36 phot/sec]
-    real(kind=dp)               :: Ldiffuse         ! total luminosity of diffuse source [e36 erg/sec]
-    real(kind=dp),pointer       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
-    real(kind=dp)               :: meanField        ! mean ionizing field to be used with plane parallel 
+    real               :: fluoCubeMineV, fluoCubeMaxeV ! limits of the fluorescence cube band
+    real               :: fillingFactor    ! filling factor epsilon
+    real               :: contCube(2)      ! continuum cube
+    real               :: convIncPercent   ! percentage by  which conv must increase
+    real               :: convWriteGrid    ! min conv level before starting to write the grid
+    real               :: nPhotIncrease    ! nPhoton increase factor
+    real               :: densityLaw(3)    ! density law parameters (R1,n,f,N0)
+    real,pointer       :: grainAbun(:,:)     ! abundance of this species
+    real,pointer       :: grainRadius(:)   ! grain radius [um]
+    real,pointer       :: grainWeight(:)   ! grain weight normalised to 1
+    real,pointer       :: viewPointTheta(:),viewPointPhi(:)     ! viewing angles
+    real               :: Hdensity         ! constant H density values (cm-^3)
+    real               :: H0Start          ! initial guess at X(H0) for regions I and II
+    real               :: Lphot            ! L of ionizing source [e36 phot/sec]
+    real               :: Ldiffuse         ! total luminosity of diffuse source [e36 erg/sec]
+    real,pointer       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
+    real               :: meanField        ! mean ionizing field to be used with plane parallel 
                                            ! geometry [erg/sec/cm^2]
-    real(kind=dp)               :: meanFieldin
-    real(kind=dp)               :: minConvergence   ! stop when this level of convergence has been reached  
-    real(kind=dp)               :: minConvQHeat     ! min convergence level for Qheat routines to run
-    real(kind=dp)               :: NeStart          ! initial guess at Ne
-    real(kind=dp)               :: MdMgValue        ! dust-to-gas ratio by mass
-    real(kind=dp)               :: NdustValue       ! dust number density [cm^-3]
-    real(kind=dp)               :: nuMax            ! max nu limit [Ryd]
-    real(kind=dp)               :: nuMin            ! min nu limit [Ryd]
-    real(kind=dp)               :: nuStepSize       ! 
-    real(kind=dp)               :: resLinesTransfer ! after what conv percent should the resonant line transfer start?    
-    real(kind=dp)               :: Rnx,Rny,Rnz      ! edges [cm]
-    real(kind=dp)               :: R_in             ! inner radius [cm]
-    real(kind=dp)               :: R_out            ! outer radius [cm]
-    real(kind=dp)               :: SEDfreq(2)       ! 
-    real(kind=dp)               :: TeStart          ! initial guess at Te for regions I and II
-    real(kind=dp), pointer      :: deltaE(:)        ! energy carried by a single photon
-    real(kind=dp)               :: Tdiffuse         ! energy of diffuse ionising source [K]
-    real(kind=dp), pointer      :: Tstellar(:)      ! T of ionizing source [K]    
-    real(kind=dp), pointer      :: tStep(:)         ! time step for sb99 inputs [yrs]
-    real(kind=dp)               :: XHILimit         ! convergence limit on X(HI)
+    real               :: meanFieldin
+    real               :: minConvergence   ! stop when this level of convergence has been reached  
+    real               :: minConvQHeat     ! min convergence level for Qheat routines to run
+    real               :: NeStart          ! initial guess at Ne
+    real               :: MdMgValue        ! dust-to-gas ratio by mass
+    real               :: NdustValue       ! dust number density [cm^-3]
+    real               :: nuMax            ! max nu limit [Ryd]
+    real               :: nuMin            ! min nu limit [Ryd]
+    real               :: nuStepSize       ! 
+    real               :: resLinesTransfer ! after what conv percent should the resonant line transfer start?    
+    real               :: Rnx,Rny,Rnz      ! edges [cm]
+    real               :: R_in             ! inner radius [cm]
+    real               :: R_out            ! outer radius [cm]
+    real               :: SEDfreq(2)       ! 
+    real               :: TeStart          ! initial guess at Te for regions I and II
+    real, pointer      :: deltaE(:)        ! energy carried by a single photon
+    real               :: Tdiffuse         ! energy of diffuse ionising source [K]
+    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]    
+    real, pointer      :: tStep(:)         ! time step for sb99 inputs [yrs]
+    real               :: XHILimit         ! convergence limit on X(HI)
     
     integer             :: lymanP                  ! frequency pointer to Lyman limit
     ! dust parameters

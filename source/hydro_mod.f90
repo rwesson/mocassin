@@ -6,7 +6,7 @@ module elements_mod
     use interpolation_mod
     implicit none
 
-    real(kind=dp) :: HlevEn(nHlevel+1), HeIlevEn(nHeIlevel+1), HeIIlevEn(nHeIIlevel+1)
+    real :: HlevEn(nHlevel+1), HeIlevEn(nHeIlevel+1), HeIIlevEn(nHeIIlevel+1)
 
     contains
 
@@ -220,7 +220,7 @@ module elements_mod
          integer            :: outShell       ! outer shell number
 
 
-         real(kind=dp)               :: thres ! threshold [Ryd]
+         real               :: thres ! threshold [Ryd]
 
          if ( .not.lgElementOn(nElem) ) then
              print*, "! setShells: element is switched off [elem]", nElem
@@ -342,17 +342,17 @@ module elements_mod
          call locate(nuArray, KshellLimit, KshellLimitP)
 
          ! set pointer for secondary ionisation
-         call locate(nuArray,7.353d0,secIonP)
+         call locate(nuArray,7.353,secIonP)
 
          ! set pointer for Compton recoil
-         call locate(nuArray,194.d0, cRecoilHP)
-         call locate(nuArray,260.d0, cRecoilHeP)
+         call locate(nuArray,194., cRecoilHP)
+         call locate(nuArray,260., cRecoilHeP)
          
          ! set xRay pointer
-         call locate(nuArray,20.6d0, xrayP)
+         call locate(nuArray,20.6, xrayP)
 
          ! set the pointer to the Balmer jump in the nuArray
-         call locate(nuArray, 0.25d0, BjumpP)
+         call locate(nuArray, 0.25, BjumpP)
 
          ! set data for hydrogen and helium atoms
          call makeHydro()  

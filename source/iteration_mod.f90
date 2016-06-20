@@ -34,24 +34,24 @@ module iteration_mod
            include 'mpif.h'
 
            ! local variables
-           real(kind=dp), pointer :: budgetTemp(:,:)      ! temporary dust heating budget array
-           real(kind=dp), pointer :: dustPDFTemp(:,:)     ! temporary dust emission PDF array
-           real(kind=dp), pointer :: escapedPacketsTemp(:,:,:)!temporary escaped packets array
-           real(kind=dp), pointer :: fEscapeResPhotonsTemp(:,:) ! temporary escape res line phot 
-           real(kind=dp), pointer :: JDifTemp(:,:)        ! temporary diffuse field array
-           real(kind=dp), pointer :: JSteTemp(:,:)        ! temporary stellar field array
-           real(kind=dp), pointer :: linePacketsTemp(:,:) ! temporary line packets array
-           real(kind=dp), pointer :: opacityTemp(:,:)     ! temporary opacities array
-           real(kind=dp), pointer :: recPDFTemp(:,:)      ! temporary rec prob distribution function
-           real(kind=dp), pointer :: linePDFTemp(:,:)     ! temporary line prob distribution function
-           real(kind=dp), pointer :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
+           real, pointer :: budgetTemp(:,:)      ! temporary dust heating budget array
+           real, pointer :: dustPDFTemp(:,:)     ! temporary dust emission PDF array
+           real, pointer :: escapedPacketsTemp(:,:,:)!temporary escaped packets array
+           real, pointer :: fEscapeResPhotonsTemp(:,:) ! temporary escape res line phot 
+           real, pointer :: JDifTemp(:,:)        ! temporary diffuse field array
+           real, pointer :: JSteTemp(:,:)        ! temporary stellar field array
+           real, pointer :: linePacketsTemp(:,:) ! temporary line packets array
+           real, pointer :: opacityTemp(:,:)     ! temporary opacities array
+           real, pointer :: recPDFTemp(:,:)      ! temporary rec prob distribution function
+           real, pointer :: linePDFTemp(:,:)     ! temporary line prob distribution function
+           real, pointer :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
             
-           real(kind=dp), pointer          :: noHitPercent(:)    ! percentage of no Hit cells
-           real(kind=dp), pointer          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
-           real(kind=dp), pointer          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
-           real(kind=dp),save              :: totPercentOld   ! percentage of converged cells from prev iteration
-           real(kind=dp)                   :: totCells        ! total # of active cells 
-           real(kind=dp)                   :: totheatdust     ! total dust heating
+           real, pointer          :: noHitPercent(:)    ! percentage of no Hit cells
+           real, pointer          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
+           real, pointer          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
+           real,save              :: totPercentOld   ! percentage of converged cells from prev iteration
+           real                   :: totCells        ! total # of active cells 
+           real                   :: totheatdust     ! total dust heating
            
            integer, pointer       :: planeIonDistributionTemp(:,:) 
            integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets
@@ -706,7 +706,7 @@ module iteration_mod
                  if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:) * 1.e-9
                  do ifreq = 1, nbins
                     totalEscaped = totalEscaped+&
-                         & grid(iG)%escapedPackets(i,ifreq, 0)
+                         & nint(grid(iG)%escapedPackets(i,ifreq, 0))
                     do ian = 0, nAngleBins
                        grid(iG)%escapedPackets(i,ifreq,ian) = grid(iG)%escapedPackets(i,ifreq,ian)                           
                     end do
@@ -715,7 +715,7 @@ module iteration_mod
                  if (lgSymmetricXYZ) then
                     grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:)/8.
                     grid(iG)%escapedPackets(i,:,:) = grid(iG)%escapedPackets(i,:,:)/8.
-                    totalEscaped = totalEscaped/8.
+                    totalEscaped = nint(real(totalEscaped)/8.)
                     if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:)/8.
                  end if
                  
@@ -1080,7 +1080,7 @@ module iteration_mod
                 & .and. nPhotonsTot < maxPhotons .and. totPercentOld > 0.) then
 
               if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
-                 nPhotons = nPhotons*nPhotIncrease
+                 nPhotons = nint(nPhotons*nPhotIncrease)
                  deltaE   = deltaE/nPhotIncrease
 
                  if (taskid==0) &
@@ -1088,7 +1088,7 @@ module iteration_mod
                       &increased to ", nPhotons
 
                  if (Ldiffuse>0.) then
-                    nPhotonsDiffuseLoc = nPhotonsDiffuseLoc*nPhotIncrease
+                    nPhotonsDiffuseLoc = nint(nPhotonsDiffuseLoc*nPhotIncrease)
                     if (taskid==0) &
                          & print*, "! iterateMC: [talk] number of diffuse energy packets &
                          &per cell increased to ", nPhotonsDiffuseLoc
