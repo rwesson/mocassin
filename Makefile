@@ -19,7 +19,7 @@ FFLAGS += -cpp -fno-range-check -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${
 #FFLAGS += -64 -C -mpio -OPT:Olimit=3495 -O3 -lmpi -cpp -DPREFIX=\"${PREFIX}\"
 
 PREFIX=/usr
-MANDIR=${DESTDIR}/usr/share/man/man1
+MANDIR=${DESTDIR}${PREFIX}/share/man/man1
 SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
 	source/continuum_mod.o source/ionization_mod.o source/pathIntegration_mod.o \
@@ -57,24 +57,24 @@ clean:
 	/bin/rm -f source/*.o *~ source/*.mod mocassin mocassinWarm mocassinOutput mocassinPlot
 
 install:
-	test -e ${DESTDIR}/usr/share/mocassin || mkdir -p ${DESTDIR}/usr/share/mocassin
-	test -e ${DESTDIR}/usr/bin || mkdir -p ${DESTDIR}/usr/bin
+	test -e ${DESTDIR}${PREFIX}/share/mocassin || mkdir -p ${DESTDIR}${PREFIX}/share/mocassin
+	test -e ${DESTDIR}${PREFIX}/bin || mkdir -p ${DESTDIR}${PREFIX}/bin
 	test -e ${MANDIR} || mkdir -p ${MANDIR}
-	cp -r data/ ${DESTDIR}/usr/share/mocassin
-	cp -r dustData/ ${DESTDIR}/usr/share/mocassin
-	cp -r benchmarks/ ${DESTDIR}/usr/share/mocassin
-	cp -r examples/ ${DESTDIR}/usr/share/mocassin
-	install -g 0 -o 0 -m 644 man/mocassin.1 ${MANDIR}
+	cp -r data/ ${DESTDIR}${PREFIX}/share/mocassin
+	cp -r dustData/ ${DESTDIR}${PREFIX}/share/mocassin
+	cp -r benchmarks/ ${DESTDIR}${PREFIX}/share/mocassin
+	cp -r examples/ ${DESTDIR}${PREFIX}/share/mocassin
+	install -m 644 man/mocassin.1 ${MANDIR}
 	gzip -f ${MANDIR}/mocassin.1
 	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinWarm.1.gz
 	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinOutput.1.gz
 	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinPlot.1.gz
-	install mocassin ${DESTDIR}/usr/bin
-	install mocassinWarm ${DESTDIR}/usr/bin
-	install mocassinPlot ${DESTDIR}/usr/bin
-	install mocassinOutput ${DESTDIR}/usr/bin
+	install mocassin ${DESTDIR}${PREFIX}/bin
+	install mocassinWarm ${DESTDIR}${PREFIX}/bin
+	install mocassinPlot ${DESTDIR}${PREFIX}/bin
+	install mocassinOutput ${DESTDIR}${PREFIX}/bin
 
 uninstall:
-	rm -f ${DESTDIR}/usr/bin/mocassin*
+	rm -f ${DESTDIR}${PREFIX}/bin/mocassin*
 	rm -f ${MANDIR}/mocassin*.1.gz
-	rm -rf ${DESTDIR}/usr/share/mocassin
+	rm -rf ${DESTDIR}${PREFIX}/share/mocassin
