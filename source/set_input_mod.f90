@@ -113,22 +113,13 @@ module set_input_mod
         TeStart       = 10000.
         XHILimit      = 0.05
 
-        ! ask the user to input file name and check for errors (three chances)
-        do i=1,3
-             in_file = 'input/input.in'
+        ! ask the user to input file name and check for errors
+        in_file = 'input/input.in'
 
-             close(10)
-             open (unit = 10, file = in_file, status = "old", &
-                  &position="rewind",  iostat = ios, action="read")
-
-             if (ios==0) exit
- 
-             print *, "! readInput: can't open file - please try again", ios
-
-        end do
-
+        close(10)
+        open (unit = 10, file = in_file, status = "old", position="rewind",  iostat = ios, action="read")
         if (ios /= 0) then
-            print*, "!out_in: can't open file - terminating"
+            print*, "!out_in: can't open file input/input.in - terminating"
             stop
         end if
 
