@@ -84,7 +84,7 @@ module photon_mod
 
         call random_seed(put = seed)
         
-        if (associated(seed)) deallocate(seed)
+        if (associated(seed)) nullify(seed)
 
         Qphot = 0.
 

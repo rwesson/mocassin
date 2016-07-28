@@ -479,7 +479,7 @@ module continuum_mod
         end if
 
 
-        if (associated(inSpSumPhot)) deallocate(inSpSumPhot)
+        if (associated(inSpSumPhot)) nullify(inSpSumPhot)
 
       end subroutine setProbDen
 

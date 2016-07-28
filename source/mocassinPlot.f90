@@ -445,8 +445,8 @@ program MoCaSSiNplot
     ! free all space allocated to the plot
     call freePlot(plot)
     
-    if (associated(ionDenUsed)) deallocate(ionDenUsed)
-    if (associated(fLinePlot)) deallocate(fLinePlot)
+    if (associated(ionDenUsed)) nullify(ionDenUsed)
+    if (associated(fLinePlot)) nullify(fLinePlot)
     
 
     call mpi_finalize(ierr)
@@ -605,10 +605,10 @@ program MoCaSSiNplot
 
         type(plot_type), intent(inout) :: plot
         
-        if (associated(plot%intensity))  deallocate(plot%intensity)
-        if (associated(plot%lgLine))     deallocate(plot%lgLine)
-        if (associated(plot%lineNumber)) deallocate(plot%lineNumber)
-        if (associated(plot%nuP))        deallocate(plot%nuP)
+        if (associated(plot%intensity))  nullify(plot%intensity)
+        if (associated(plot%lgLine))     nullify(plot%lgLine)
+        if (associated(plot%lineNumber)) nullify(plot%lineNumber)
+        if (associated(plot%nuP))        nullify(plot%nuP)
 
       end subroutine freePlot
 

@@ -1346,27 +1346,27 @@ module output_mod
         close(30)
         close(60)
              
-        if (associated(HIVol)) deallocate(HIVol)
-        if (associated(HeIVol)) deallocate(HeIVol)
-        if (associated(HeIIVol)) deallocate(HeIIVol)
-        if (associated(ionDenVol)) deallocate(ionDenVol)
+        if (associated(HIVol)) nullify(HIVol)
+        if (associated(HeIVol)) nullify(HeIVol)
+        if (associated(HeIIVol)) nullify(HeIIVol)
+        if (associated(ionDenVol)) nullify(ionDenVol)
         if (lgDebug) then
-           if (associated(lineLuminosity)) deallocate(lineLuminosity)
+           if (associated(lineLuminosity)) nullify(lineLuminosity)
         end if
-        if (associated(forbVol)) deallocate(forbVol)
-        if (associated(forbVolLarge)) deallocate(forbVolLarge)
-        if (associated(TeVol)) deallocate(TeVol)
-        if (associated(recLinesFlux)) deallocate(recLinesFlux)
-        if (associated(denominatorIon)) deallocate(denominatorIon)
-        if (associated(denominatorTe)) deallocate(denominatorTe)
+        if (associated(forbVol)) nullify(forbVol)
+        if (associated(forbVolLarge)) nullify(forbVolLarge)
+        if (associated(TeVol)) nullify(TeVol)
+        if (associated(recLinesFlux)) nullify(recLinesFlux)
+        if (associated(denominatorIon)) nullify(denominatorIon)
+        if (associated(denominatorTe)) nullify(denominatorTe)
         
         if (present(extMap)) then 
-           if (associated(cMap)) deallocate(cMap)
-           if (associated(flam)) deallocate(flam)
+           if (associated(cMap)) nullify(cMap)
+           if (associated(flam)) nullify(flam)
         end if
         if (convPercent >= resLinesTransfer .and. lgDust) then
-           if (associated(resLinesVol)) deallocate(resLinesVol)
-           if (associated(resLinesVolCorr)) deallocate(resLinesVolCorr)
+           if (associated(resLinesVol)) nullify(resLinesVol)
+           if (associated(resLinesVolCorr)) nullify(resLinesVolCorr)
         end if
 
       contains
@@ -2460,7 +2460,7 @@ module output_mod
 
       close(73)
       
-      if(associated(outTau)) deallocate(outTau)
+      if(associated(outTau)) nullify(outTau)
 
     end subroutine writeTauNu
 
@@ -2669,9 +2669,9 @@ module output_mod
       close(16)
 !      close(116)
 
-      if (associated(SED)) deallocate(SED)
-      if (associated(sSED)) deallocate(sSED)
-      if (associated(dSED)) deallocate(dSED)
+      if (associated(SED)) nullify(SED)
+      if (associated(sSED)) nullify(sSED)
+      if (associated(dSED)) nullify(dSED)
 
       print*, 'out writeSED...'
 

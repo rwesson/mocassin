@@ -202,10 +202,10 @@ module grid_mod
                
                allocate (nuTemp(1:nbins))
                nuTemp = nuArray(1:nbins)
-               if (associated(nuArray)) deallocate(nuArray)
+               if (associated(nuArray)) nullify(nuArray)
                allocate (nuArray(1:nbins))
                nuArray = nuTemp
-               if (associated(nuTemp)) deallocate(nuTemp)
+               if (associated(nuTemp)) nullify(nuTemp)
 
             else if (lgGas .and. (.not.lgDust)) then
 
@@ -1599,13 +1599,13 @@ module grid_mod
              end do
              
              ! deallocate temp array
-             if(associated(HdenTemp)) deallocate(HdenTemp)
+             if(associated(HdenTemp)) nullify(HdenTemp)
 
           end if ! lgGas
 
            if (lgDust) then
-              if(associated(NdustTemp)) deallocate(NdustTemp)
-              if(lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
+              if(associated(NdustTemp)) nullify(NdustTemp)
+              if(lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) nullify(dustAbunIndexTemp)
            end if
 
            ! set up atomic weight array
@@ -1716,7 +1716,8 @@ module grid_mod
 
 
 
-           if(associated(MdMg)) deallocate(MdMg)
+!           if(associated(MdMg)) nullify(MdMg)
+           if(associated(MdMg)) nullify(MdMg)
 
            if (taskid == 0) then
 
@@ -2450,13 +2451,13 @@ module grid_mod
                  end do
                  
                  ! deallocate temp array
-                 if(associated(HdenTemp)) deallocate(HdenTemp)
+                 if(associated(HdenTemp)) nullify(HdenTemp)
                  
               end if ! lgGas
 
               if (lgDust) then
-                 if(associated(NdustTemp)) deallocate(NdustTemp)
-                 if (lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
+                 if(associated(NdustTemp)) nullify(NdustTemp)
+                 if (lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) nullify(dustAbunIndexTemp)
               end if
               
               totalMass = 0.
@@ -2585,42 +2586,42 @@ module grid_mod
            print*, "in freeGrid"
 
            if (lgDust) then
-              if(associated(grid%absOpac)) deallocate(grid%absOpac)
-              if(associated(grid%scaOpac)) deallocate(grid%scaOpac)
-              if(associated(grid%Ndust)) deallocate(grid%Ndust)
-              if(associated(grid%Tdust)) deallocate(grid%Tdust)
+              if(associated(grid%absOpac)) nullify(grid%absOpac)
+              if(associated(grid%scaOpac)) nullify(grid%scaOpac)
+              if(associated(grid%Ndust)) nullify(grid%Ndust)
+              if(associated(grid%Tdust)) nullify(grid%Tdust)
               if (lgMultiChemistry .and. associated(grid%dustAbunIndex)) &
                    &  deallocate(grid%dustAbunIndex)
               if (.not.lgGas) then
-                 if(associated(grid%dustPDF)) deallocate(grid%dustPDF)
+                 if(associated(grid%dustPDF)) nullify(grid%dustPDF)
               end if
            end if
-           if (associated(grid%active)) deallocate(grid%active)
-           if (associated(grid%lgConverged)) deallocate(grid%lgConverged)
-           if (associated(grid%lgBlack)) deallocate(grid%lgBlack)     
+           if (associated(grid%active)) nullify(grid%active)
+           if (associated(grid%lgConverged)) nullify(grid%lgConverged)
+           if (associated(grid%lgBlack)) nullify(grid%lgBlack)     
            if (lgGas) then
-              if (associated(grid%abFileIndex)) deallocate(grid%abFileIndex)           
-              if (associated(grid%Te)) deallocate(grid%Te)
-              if (associated(grid%Ne)) deallocate(grid%Ne)
-              if (associated(grid%Hden)) deallocate(grid%Hden) 
-              if (associated(grid%ionDen)) deallocate(grid%ionDen)
-              if (associated(ionDenUsed)) deallocate(ionDenUsed)
-              if (associated(grid%recPDF)) deallocate(grid%recPDF)
-              if (associated(grid%totalLines)) deallocate(grid%totalLines)
+              if (associated(grid%abFileIndex)) nullify(grid%abFileIndex)           
+              if (associated(grid%Te)) nullify(grid%Te)
+              if (associated(grid%Ne)) nullify(grid%Ne)
+              if (associated(grid%Hden)) nullify(grid%Hden) 
+              if (associated(grid%ionDen)) nullify(grid%ionDen)
+              if (associated(ionDenUsed)) nullify(ionDenUsed)
+              if (associated(grid%recPDF)) nullify(grid%recPDF)
+              if (associated(grid%totalLines)) nullify(grid%totalLines)
            end if
-           if (associated(grid%opacity)) deallocate(grid%opacity)
-           if (associated(grid%Jste)) deallocate(grid%Jste)
+           if (associated(grid%opacity)) nullify(grid%opacity)
+           if (associated(grid%Jste)) nullify(grid%Jste)
 !BS10           if (lgDebug) then
-              if (associated(grid%Jdif)) deallocate(grid%Jdif)
-              if (associated(grid%linePackets)) deallocate(grid%linePackets)
-              if (associated(grid%linePDF)) deallocate(grid%linePDF)
+              if (associated(grid%Jdif)) nullify(grid%Jdif)
+              if (associated(grid%linePackets)) nullify(grid%linePackets)
+              if (associated(grid%linePDF)) nullify(grid%linePDF)
 !BS10           end if
            if (lgNeInput) then
-               if (associated(grid%NeInput)) deallocate(grid%NeInput)
+               if (associated(grid%NeInput)) nullify(grid%NeInput)
            end if
-           if (associated(grid%xAxis)) deallocate(grid%xAxis)
-           if (associated(grid%yAxis)) deallocate(grid%yAxis)
-           if (associated(grid%zAxis)) deallocate(grid%zAxis)
+           if (associated(grid%xAxis)) nullify(grid%xAxis)
+           if (associated(grid%yAxis)) nullify(grid%yAxis)
+           if (associated(grid%zAxis)) nullify(grid%zAxis)
 
            print*, "out freeGrid"
          end subroutine freeGrid
@@ -3543,7 +3544,7 @@ module grid_mod
 
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
 
-      if (associated(p)) deallocate(p)
+      if (associated(p)) nullify(p)
 
     end subroutine resetGrid      
 

@@ -246,18 +246,18 @@ module emission_mod
         end if
 
         ! deallocate arrays
-        if ( associated(emissionHI) ) deallocate(emissionHI)
-        if ( associated(emissionHeI) ) deallocate(emissionHeI)
-        if ( associated(emissionHeII) ) deallocate(emissionHeII)
-        if ( associated(gammaHI) ) deallocate(gammaHI)
-        if ( associated(gammaHeI) ) deallocate(gammaHeI)
-        if ( associated(gammaHeII) ) deallocate(gammaHeII)
-        if ( associated(gammaHeavies) ) deallocate(gammaHeavies)
-        if ( associated(twoPhotHI) ) deallocate(twoPhotHI)
-        if ( associated(twoPhotHeI) ) deallocate(twoPhotHeI)
-        if ( associated(twoPhotHeII) ) deallocate(twoPhotHeII)
-        if ( associated(ffCoeff1) ) deallocate(ffCoeff1)
-        if ( associated(ffCoeff2) ) deallocate(ffCoeff2)
+        if ( associated(emissionHI) ) nullify(emissionHI)
+        if ( associated(emissionHeI) ) nullify(emissionHeI)
+        if ( associated(emissionHeII) ) nullify(emissionHeII)
+        if ( associated(gammaHI) ) nullify(gammaHI)
+        if ( associated(gammaHeI) ) nullify(gammaHeI)
+        if ( associated(gammaHeII) ) nullify(gammaHeII)
+        if ( associated(gammaHeavies) ) nullify(gammaHeavies)
+        if ( associated(twoPhotHI) ) nullify(twoPhotHI)
+        if ( associated(twoPhotHeI) ) nullify(twoPhotHeI)
+        if ( associated(twoPhotHeII) ) nullify(twoPhotHeII)
+        if ( associated(ffCoeff1) ) nullify(ffCoeff1)
+        if ( associated(ffCoeff2) ) nullify(ffCoeff2)
 
         grids(iG) = grid
 
@@ -1450,11 +1450,11 @@ module emission_mod
 
         grid%totalLines(grid%active(ix,iy,iz)) = grid%totalLines(grid%active(ix,iy,iz)) / normalize
         ! deallocate arrays
-        if ( associated(sumDiffuseHI) ) deallocate(sumDiffuseHI)
-        if ( associated(sumDiffuseHeI) ) deallocate(sumDiffuseHeI)
-        if ( associated(sumDiffuseHeII) ) deallocate(sumDiffuseHeII)
+        if ( associated(sumDiffuseHI) ) nullify(sumDiffuseHI)
+        if ( associated(sumDiffuseHeI) ) nullify(sumDiffuseHeI)
+        if ( associated(sumDiffuseHeII) ) nullify(sumDiffuseHeII)
         if (lgDust) then
-           if ( associated(sumDiffuseDust) ) deallocate(sumDiffuseDust)
+           if ( associated(sumDiffuseDust) ) nullify(sumDiffuseDust)
         end if
 
     end subroutine setDiffusePDF  
@@ -2502,22 +2502,22 @@ module emission_mod
     end do
 
     ! deallocate arrays
-    if( associated(alphaTotal) ) deallocate(alphaTotal)
-    if( associated(label) ) deallocate(label)
-    if( associated(logTemp) ) deallocate(logTemp)
-    if( associated(a) ) deallocate(a)
-    if( associated(cs) ) deallocate(cs)
-    if( associated(n) ) deallocate(n)
-    if( associated(n2) ) deallocate(n2)
-    if( associated(qeff) ) deallocate(qeff) 
-    if( associated(qq) ) deallocate(qq)
-    if( associated(qq2) ) deallocate(qq2)
-    if( associated(tnij) ) deallocate(tnij) 
-    if( associated(x) ) deallocate(x) 
-    if( associated(y) ) deallocate(y) 
-    if( associated(e) ) deallocate(e)
-    if( associated(g) ) deallocate(g)
-    if( associated(qom) ) deallocate(qom)
+    if( associated(alphaTotal) ) nullify(alphaTotal)
+    if( associated(label) ) nullify(label)
+    if( associated(logTemp) ) nullify(logTemp)
+    if( associated(a) ) nullify(a)
+    if( associated(cs) ) nullify(cs)
+    if( associated(n) ) nullify(n)
+    if( associated(n2) ) nullify(n2)
+    if( associated(qeff) ) nullify(qeff) 
+    if( associated(qq) ) nullify(qq)
+    if( associated(qq2) ) nullify(qq2)
+    if( associated(tnij) ) nullify(tnij) 
+    if( associated(x) ) nullify(x) 
+    if( associated(y) ) nullify(y) 
+    if( associated(e) ) nullify(e)
+    if( associated(g) ) nullify(g)
+    if( associated(qom) ) nullify(qom)
 
   end subroutine equilibrium
 
@@ -2914,22 +2914,22 @@ module emission_mod
        end do
     end do
     ! deallocate arrays
-    if( associated(alphaTotal) ) deallocate(alphaTotal)
-    if( associated(label) ) deallocate(label)
-    if( associated(logTemp) ) deallocate(logTemp)
-    if( associated(a) ) deallocate(a)
-    if( associated(cs) ) deallocate(cs)
-    if( associated(n) ) deallocate(n)
-    if( associated(n2) ) deallocate(n2)
-    if( associated(qeff) ) deallocate(qeff) 
-    if( associated(qq) ) deallocate(qq)
-    if( associated(qq2) ) deallocate(qq2)
-    if( associated(tnij) ) deallocate(tnij) 
-    if( associated(x) ) deallocate(x) 
-    if( associated(y) ) deallocate(y) 
-    if( associated(e) ) deallocate(e)
-    if( associated(g) ) deallocate(g)
-    if( associated(qom) ) deallocate(qom)
+    if( associated(alphaTotal) ) nullify(alphaTotal)
+    if( associated(label) ) nullify(label)
+    if( associated(logTemp) ) nullify(logTemp)
+    if( associated(a) ) nullify(a)
+    if( associated(cs) ) nullify(cs)
+    if( associated(n) ) nullify(n)
+    if( associated(n2) ) nullify(n2)
+    if( associated(qeff) ) nullify(qeff) 
+    if( associated(qq) ) nullify(qq)
+    if( associated(qq2) ) nullify(qq2)
+    if( associated(tnij) ) nullify(tnij) 
+    if( associated(x) ) nullify(x) 
+    if( associated(y) ) nullify(y) 
+    if( associated(e) ) nullify(e)
+    if( associated(g) ) nullify(g)
+    if( associated(qom) ) nullify(qom)
   end subroutine equilibrium1
 
 

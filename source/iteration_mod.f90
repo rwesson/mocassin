@@ -155,7 +155,7 @@ module iteration_mod
                        end do
                     end do
                  end do
-                 if ( associated(opacityTemp) ) deallocate(opacityTemp)
+                 if ( associated(opacityTemp) ) nullify(opacityTemp)
 
               end if
            
@@ -381,7 +381,7 @@ module iteration_mod
                     end do
                  end do
 
-                 if (associated(dustPDFTemp)) deallocate(dustPDFTemp)
+                 if (associated(dustPDFTemp)) nullify(dustPDFTemp)
               end if
 
               call mpi_barrier(mpi_comm_world, ierr)
@@ -415,9 +415,9 @@ module iteration_mod
                  if ( associated(totalLinesTemp) )&
                       & deallocate(totalLinesTemp)
                  if (lgDebug) then
-                    if ( associated(linePDFTemp) ) deallocate(linePDFTemp)
+                    if ( associated(linePDFTemp) ) nullify(linePDFTemp)
                  end if
-                 if ( associated(recPDFTemp) ) deallocate(recPDFTemp) 
+                 if ( associated(recPDFTemp) ) nullify(recPDFTemp) 
               end if
 
               ! check if min convergence was reached to carry out resonant line transfer
@@ -435,14 +435,14 @@ module iteration_mod
                  
                  size = grid(iG)%nCells+1
 
-                 if (associated(fEscapeResPhotonsTemp)) deallocate(fEscapeResPhotonsTemp)
+                 if (associated(fEscapeResPhotonsTemp)) nullify(fEscapeResPhotonsTemp)
 
                  call mpi_allreduce(grid(iG)%resLinePackets, resLinePacketsTemp, size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
 
                  grid(iG)%resLinePackets(0:grid(iG)%nCells) = resLinePacketsTemp
 
-                 if (associated(resLinePacketsTemp)) deallocate(resLinePacketsTemp)
+                 if (associated(resLinePacketsTemp)) nullify(resLinePacketsTemp)
                  
                  call mpi_barrier(mpi_comm_world, ierr)
 
@@ -574,7 +574,7 @@ module iteration_mod
                  close(18)
               end if
 
-              if (associated(planeIonDistributionTemp)) deallocate(planeIonDistributionTemp)
+              if (associated(planeIonDistributionTemp)) nullify(planeIonDistributionTemp)
 
            end if
 
@@ -635,7 +635,7 @@ module iteration_mod
               end do
                  
 
-              if ( associated(escapedPacketsTemp) ) deallocate(escapedPacketsTemp)
+              if ( associated(escapedPacketsTemp) ) nullify(escapedPacketsTemp)
               
 !              if (taskid==0) call writeSED(grid)
 !              if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) &
@@ -694,10 +694,10 @@ module iteration_mod
 
 
               if (lgDebug) then
-                 if ( associated(linePacketsTemp) )    deallocate(linePacketsTemp)
-                 if ( associated(JDifTemp) )           deallocate(JDifTemp)
+                 if ( associated(linePacketsTemp) )    nullify(linePacketsTemp)
+                 if ( associated(JDifTemp) )           nullify(JDifTemp)
               end if
-              if ( associated(JSteTemp) )           deallocate(JSteTemp)           
+              if ( associated(JSteTemp) )           nullify(JSteTemp)           
 
 
               do i = 0, grid(iG)%nCells
@@ -923,15 +923,15 @@ module iteration_mod
 
               call mpi_barrier(mpi_comm_world, ierr)
            
-              if ( associated(lgConvergedTemp) )  deallocate(lgConvergedTemp)
-              if ( associated(lgBlackTemp) )  deallocate(lgBlackTemp)
+              if ( associated(lgConvergedTemp) )  nullify(lgConvergedTemp)
+              if ( associated(lgBlackTemp) )  nullify(lgBlackTemp)
               if (lgGas) then
-                 if ( associated(NeTemp) )           deallocate(NeTemp)
-                 if ( associated(TeTemp) )           deallocate(TeTemp)
-                 if ( associated(ionDenTemp) )       deallocate(ionDenTemp)
+                 if ( associated(NeTemp) )           nullify(NeTemp)
+                 if ( associated(TeTemp) )           nullify(TeTemp)
+                 if ( associated(ionDenTemp) )       nullify(ionDenTemp)
               end if
               if (lgDust) then
-                 if ( associated(TdustTemp)) deallocate(TdustTemp)
+                 if ( associated(TdustTemp)) nullify(TdustTemp)
               end if
               
            end do
