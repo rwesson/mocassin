@@ -642,7 +642,7 @@ module update_mod
 
              photFlux = photFlux*fourPi             
 
-             Qa = XSecArray(dustAbsXsecP(isp,ai)+ifreq-1)/(1.e-8*grainRadius(ai)**2.)
+             Qa = XSecArray(dustAbsXsecP(isp,ai)+ifreq-1)/(1.e-8*grainRadius(ai)**2)
 
              getGrainEmission = getGrainEmission+Yhat*photFlux*Qa
 
@@ -786,7 +786,7 @@ module update_mod
 
 
                    EY = Yn*0.5* min(nuArray(ifreq)-grainVn(ns),&
-                        & max(0., ((nuArray(ifreq)-grainVn(ns))**2.-grainPot(ns,na)**2.)/& 
+                        & max(0., ((nuArray(ifreq)-grainVn(ns))**2-grainPot(ns,na)**2)/&
                         & (nuArray(ifreq)-grainVn(ns))))
 
 !                   photoelHeat_d(ns,na) = photoelHeat_d(ns,na)+Qa*photFlux*EY*hcRyd/Pi
@@ -853,7 +853,7 @@ module update_mod
 
                       do ns = 1, nSpeciesPart(nspU)
                          if (istage == 1) then
-                            S = 2*mcp*MsurfAtom(ns)/(mcp+MsurfAtom(ns))**2.
+                            S = 2*mcp*MsurfAtom(ns)/(mcp+MsurfAtom(ns))**2
                          else
                             S = 1.
                          end if
@@ -1817,14 +1817,14 @@ module update_mod
                if (ion <= nstages) then
                   
                   if (g == 0) then
-                     diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
+                     diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2)*t**(-3./2.)*exp(-f/t)
                   else if (g == 1) then
                      if (TeUsed < 20000.) then
-                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
+                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2)*t**(-3./2.)*exp(-f/t)
                      end if
                   else if (g == 2) then
                      if (TeUsed >= 20000.) then
-                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
+                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2)*t**(-3./2.)*exp(-f/t)
                      end if
                   end if
                end if

@@ -2878,18 +2878,18 @@ module grid_mod
 
            if (xP == 1) then              
 
-              getVolume = 4.*Pi* ( (grid%xAxis(xP+1)/1.e15)**3.)/3.
+              getVolume = 4.*Pi* ( (grid%xAxis(xP+1)/1.e15)**3)/3.
 
 
            else if ( xP==grid%nx) then
  
-              getVolume = Pi* ( (3.*(grid%xAxis(xP)/1.e15)-(grid%xAxis(xP-1)/1.e15))**3. - &
-                   & ((grid%xAxis(xP)/1.e15)+(grid%xAxis(xP-1)/1.e15))**3. ) / 6.
+              getVolume = Pi* ( (3.*(grid%xAxis(xP)/1.e15)-(grid%xAxis(xP-1)/1.e15))**3 - &
+                   & ((grid%xAxis(xP)/1.e15)+(grid%xAxis(xP-1)/1.e15))**3 ) / 6.
 
            else 
 
-              getVolume = Pi* ( ((grid%xAxis(xP+1)/1.e15)+(grid%xAxis(xP)/1.e15))**3. - &
-                   & ((grid%xAxis(xP-1)/1.e15)+(grid%xAxis(xP)/1.e15))**3. ) / 6.
+              getVolume = Pi* ( ((grid%xAxis(xP+1)/1.e15)+(grid%xAxis(xP)/1.e15))**3 - &
+                   & ((grid%xAxis(xP-1)/1.e15)+(grid%xAxis(xP)/1.e15))**3 ) / 6.
 
            end if
 

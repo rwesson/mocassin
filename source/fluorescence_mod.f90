@@ -679,18 +679,18 @@ module fluorescence_mod
 
                    if (xP == 1) then              
 
-                      dV = 4.*Pi* ( (grid(gP)%xAxis(xP+1)/1.e15)**3.)/3.
+                      dV = 4.*Pi* ( (grid(gP)%xAxis(xP+1)/1.e15)**3)/3.
 
 
                    else if ( xP==grid(gP)%nx) then
                    
-                      dV = Pi* ( (3.*(grid(gP)%xAxis(xP)/1.e15)-(grid(gP)%xAxis(xP-1)/1.e15))**3. - &
-                           & ((grid(gP)%xAxis(xP)/1.e15)+(grid(gP)%xAxis(xP-1)/1.e15))**3. ) / 6.
+                      dV = Pi* ( (3.*(grid(gP)%xAxis(xP)/1.e15)-(grid(gP)%xAxis(xP-1)/1.e15))**3 - &
+                           & ((grid(gP)%xAxis(xP)/1.e15)+(grid(gP)%xAxis(xP-1)/1.e15))**3 ) / 6.
 
                    else 
 
-                      dV = Pi* ( ((grid(gP)%xAxis(xP+1)/1.e15)+(grid(gP)%xAxis(xP)/1.e15))**3. - &
-                           & ((grid(gP)%xAxis(xP-1)/1.e15)+(grid(gP)%xAxis(xP)/1.e15))**3. ) / 6.
+                      dV = Pi* ( ((grid(gP)%xAxis(xP+1)/1.e15)+(grid(gP)%xAxis(xP)/1.e15))**3 - &
+                           & ((grid(gP)%xAxis(xP-1)/1.e15)+(grid(gP)%xAxis(xP)/1.e15))**3 ) / 6.
                       
                    end if
 
@@ -786,7 +786,7 @@ module fluorescence_mod
                    end if
 
                    ! check if the position within the cell is still within the outer radius
-                   if ( sqrt( (rvec%x/1.e10)**2. + (rvec%y/1.e10)**2. + (rvec%z/1.e10)**2.)*1.e10 >= R_out &
+                   if ( sqrt( (rvec%x/1.e10)**2 + (rvec%y/1.e10)**2 + (rvec%z/1.e10)**2)*1.e10 >= R_out &
                         & .and. R_out > 0.) then
                    
                       ! the packet escapes without further interaction

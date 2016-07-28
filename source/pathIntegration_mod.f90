@@ -113,7 +113,7 @@ module pathIntegration_mod
            
            if (rVec%z > grid(1)%zAxis(grid(1)%nz)) exit
            
-           if ( sqrt( (rvec%x/1.e10)**2. + (rvec%y/1.e10)**2. + (rvec%z/1.e10)**2.)*1.e10 >= R_out &
+           if ( sqrt( (rvec%x/1.e10)**2 + (rvec%y/1.e10)**2 + (rvec%z/1.e10)**2)*1.e10 >= R_out &
                 & .and. R_out > 0.) exit
            
            
@@ -357,7 +357,7 @@ module pathIntegration_mod
            
            if (rVec%z > grid(1)%zAxis(grid(1)%nz)) exit
            
-           if ( sqrt( (rvec%x/1.e10)**2. + (rvec%y/1.e10)**2. + (rvec%z/1.e10)**2.)*1.e10 >= R_out &
+           if ( sqrt( (rvec%x/1.e10)**2 + (rvec%y/1.e10)**2 + (rvec%z/1.e10)**2)*1.e10 >= R_out &
                 & .and. R_out > 0.) exit
            
            

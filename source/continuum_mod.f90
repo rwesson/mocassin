@@ -144,7 +144,7 @@ module continuum_mod
                           read(12, *) time, enArray(k), skip, Hflux(k)
 
                           ! change Log L(lambda) [erg/s/A] into L(nu) [erg/s/Hz]                         
-                          tmp1(k) = (10.**(Hflux(k))*(1.e-8*enArray(k)**2.))/c
+                          tmp1(k) = (10.**(Hflux(k))*(1.e-8*enArray(k)**2))/c
                     
                           ! change to Ryd 
                           tmp2(k) = (c/(enArray(k)*1.e-8))/cRyd
@@ -232,7 +232,7 @@ module continuum_mod
                     
                     ! change Hflux(lambda) [erg/cm^"/s/A/sr] into Hflux(nu) [erg/cm^2/s/Hz]
                     
-                    tmp1(j) = (Hflux(j)*(1.e-8*enArray(j)**2.))/c/4.
+                    tmp1(j) = (Hflux(j)*(1.e-8*enArray(j)**2))/c/4.
                     
                     ! change to Ryd 
                     tmp2(j) = (c/(enArray(j)*1.e-8))/cRyd
@@ -308,7 +308,7 @@ module continuum_mod
 
              RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
               
-              LStar(1) = fourPi*RStar*RStar*sigma*TStellar(1)**4.
+              LStar(1) = fourPi*RStar*RStar*sigma*TStellar(1)**4
 
               deltaE(1)=Lstar(1)/nPhotons(1)
            
@@ -322,7 +322,7 @@ module continuum_mod
               deltaE(1)=Lstar(1)/nPhotons(1)
 
               if (contShape(1) /= 'powerlaw') then
-                 RStar = sqrt(Lstar(1) / (fourPi*sigma*TStellar(1)**4.))
+                 RStar = sqrt(Lstar(1) / (fourPi*sigma*TStellar(1)**4))
               
                  LPhot = fourPi*RStar*RStar*normConstantPhot*cRyd
               
@@ -592,18 +592,18 @@ module continuum_mod
 
            if (xP == 1) then              
 
-              getVolumeCon = 4.*Pi* ( (grid%xAxis(xP+1)/1.e15)**3.)/3.
+              getVolumeCon = 4.*Pi* ( (grid%xAxis(xP+1)/1.e15)**3)/3.
 
 
            else if ( xP==grid%nx) then
  
-              getVolumeCon = Pi* ( (3.*(grid%xAxis(xP)/1.e15)-(grid%xAxis(xP-1)/1.e15))**3. - &
-                   & ((grid%xAxis(xP)/1.e15)+(grid%xAxis(xP-1)/1.e15))**3. ) / 6.
+              getVolumeCon = Pi* ( (3.*(grid%xAxis(xP)/1.e15)-(grid%xAxis(xP-1)/1.e15))**3 - &
+                   & ((grid%xAxis(xP)/1.e15)+(grid%xAxis(xP-1)/1.e15))**3 ) / 6.
 
            else 
 
-              getVolumeCon = Pi* ( ((grid%xAxis(xP+1)/1.e15)+(grid%xAxis(xP)/1.e15))**3. - &
-                   & ((grid%xAxis(xP-1)/1.e15)+(grid%xAxis(xP)/1.e15))**3. ) / 6.
+              getVolumeCon = Pi* ( ((grid%xAxis(xP+1)/1.e15)+(grid%xAxis(xP)/1.e15))**3 - &
+                   & ((grid%xAxis(xP-1)/1.e15)+(grid%xAxis(xP)/1.e15))**3 ) / 6.
 
            end if
 
