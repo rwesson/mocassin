@@ -1,6 +1,6 @@
 autoPackets 0.20 2. 1000000000
 TStellar 20000.
-output 
+output
 symmetricXYZ
 Hdensity 100.
 TeStart 6000.
