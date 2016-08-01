@@ -20,8 +20,8 @@ module dust_mod
 
       ! local variables      
 
-      real, allocatable :: absOpacTmp(:,:)
-      real, allocatable :: scaOpacTmp(:,:)
+      real, pointer :: absOpacTmp(:,:)
+      real, pointer :: scaOpacTmp(:,:)
 
       integer :: err ! allocation error status
       integer :: iP,jP,kP ! counter

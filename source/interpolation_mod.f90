@@ -8,7 +8,7 @@ module interpolation_mod
       implicit none
       
       real, dimension(:), intent(inout) :: arr
-      real, allocatable :: tmp(:)
+      real, pointer :: tmp(:)
 
       real       :: min
       
@@ -35,7 +35,7 @@ module interpolation_mod
       
       arr = tmp
       
-      deallocate(tmp)
+      nullify(tmp)
 
     end subroutine sortUp            
       

@@ -34,27 +34,27 @@ module iteration_mod
            include 'mpif.h'
 
            ! local variables
-           real, allocatable :: budgetTemp(:,:)      ! temporary dust heating budget array
-           real, allocatable :: dustPDFTemp(:,:)     ! temporary dust emission PDF array
-           real, allocatable :: escapedPacketsTemp(:,:,:)!temporary escaped packets array
-           real, allocatable :: fEscapeResPhotonsTemp(:,:) ! temporary escape res line phot 
-           real, allocatable :: JDifTemp(:,:)        ! temporary diffuse field array
-           real, allocatable :: JSteTemp(:,:)        ! temporary stellar field array
-           real, allocatable :: linePacketsTemp(:,:) ! temporary line packets array
-           real, allocatable :: opacityTemp(:,:)     ! temporary opacities array
-           real, allocatable :: recPDFTemp(:,:)      ! temporary rec prob distribution function
-           real, allocatable :: linePDFTemp(:,:)     ! temporary line prob distribution function
-           real, allocatable :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
+           real, pointer :: budgetTemp(:,:)      ! temporary dust heating budget array
+           real, pointer :: dustPDFTemp(:,:)     ! temporary dust emission PDF array
+           real, pointer :: escapedPacketsTemp(:,:,:)!temporary escaped packets array
+           real, pointer :: fEscapeResPhotonsTemp(:,:) ! temporary escape res line phot 
+           real, pointer :: JDifTemp(:,:)        ! temporary diffuse field array
+           real, pointer :: JSteTemp(:,:)        ! temporary stellar field array
+           real, pointer :: linePacketsTemp(:,:) ! temporary line packets array
+           real, pointer :: opacityTemp(:,:)     ! temporary opacities array
+           real, pointer :: recPDFTemp(:,:)      ! temporary rec prob distribution function
+           real, pointer :: linePDFTemp(:,:)     ! temporary line prob distribution function
+           real, pointer :: totalLinesTemp(:)    ! temporary fraction of non-ionizing line phots
             
-           real, allocatable          :: noHitPercent(:)    ! percentage of no Hit cells
-           real, allocatable          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
-           real, allocatable          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
+           real, pointer          :: noHitPercent(:)    ! percentage of no Hit cells
+           real, pointer          :: noIonBalPercent(:) ! percentage of cell where ion bal not conv
+           real, pointer          :: noTeBalPercent(:)  ! percentage of cell where Te bal not conv
            real,save              :: totPercentOld   ! percentage of converged cells from prev iteration
            real                   :: totCells        ! total # of active cells 
            real                   :: totheatdust     ! total dust heating
            
-           integer, allocatable       :: planeIonDistributionTemp(:,:) 
-           integer, allocatable       :: resLinePacketsTemp(:) ! temporary array for extra packets
+           integer, pointer       :: planeIonDistributionTemp(:,:) 
+           integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets
            integer                :: err             ! allocation error status
            integer                :: freq,nS         ! counters
            integer                :: ifreq, ian      ! counters
@@ -155,7 +155,7 @@ module iteration_mod
                        end do
                     end do
                  end do
-                 if ( allocated(opacityTemp) ) deallocate(opacityTemp)
+                 if ( associated(opacityTemp) ) nullify(opacityTemp)
 
               end if
            
@@ -381,7 +381,7 @@ module iteration_mod
                     end do
                  end do
 
-                 if (allocated(dustPDFTemp)) deallocate(dustPDFTemp)
+                 if (associated(dustPDFTemp)) nullify(dustPDFTemp)
               end if
 
               call mpi_barrier(mpi_comm_world, ierr)
@@ -412,12 +412,12 @@ module iteration_mod
 
                  call mpi_barrier(mpi_comm_world, ierr)
                  
-                 if ( allocated(totalLinesTemp) )&
-                      & deallocate(totalLinesTemp)
+                 if ( associated(totalLinesTemp) )&
+                      & nullify(totalLinesTemp)
                  if (lgDebug) then
-                    if ( allocated(linePDFTemp) ) deallocate(linePDFTemp)
+                    if ( associated(linePDFTemp) ) nullify(linePDFTemp)
                  end if
-                 if ( allocated(recPDFTemp) ) deallocate(recPDFTemp) 
+                 if ( associated(recPDFTemp) ) nullify(recPDFTemp) 
               end if
 
               ! check if min convergence was reached to carry out resonant line transfer
@@ -435,14 +435,14 @@ module iteration_mod
                  
                  size = grid(iG)%nCells+1
 
-                 if (allocated(fEscapeResPhotonsTemp)) deallocate(fEscapeResPhotonsTemp)
+                 if (associated(fEscapeResPhotonsTemp)) nullify(fEscapeResPhotonsTemp)
 
                  call mpi_allreduce(grid(iG)%resLinePackets, resLinePacketsTemp, size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
 
                  grid(iG)%resLinePackets(0:grid(iG)%nCells) = resLinePacketsTemp
 
-                 if (allocated(resLinePacketsTemp)) deallocate(resLinePacketsTemp)
+                 if (associated(resLinePacketsTemp)) nullify(resLinePacketsTemp)
                  
                  call mpi_barrier(mpi_comm_world, ierr)
 
@@ -574,7 +574,7 @@ module iteration_mod
                  close(18)
               end if
 
-              if (allocated(planeIonDistributionTemp)) deallocate(planeIonDistributionTemp)
+              if (associated(planeIonDistributionTemp)) nullify(planeIonDistributionTemp)
 
            end if
 
@@ -635,7 +635,7 @@ module iteration_mod
               end do
                  
 
-              if ( allocated(escapedPacketsTemp) ) deallocate(escapedPacketsTemp)
+              if ( associated(escapedPacketsTemp) ) nullify(escapedPacketsTemp)
               
 !              if (taskid==0) call writeSED(grid)
 !              if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) &
@@ -694,10 +694,10 @@ module iteration_mod
 
 
               if (lgDebug) then
-                 if ( allocated(linePacketsTemp) )    deallocate(linePacketsTemp)
-                 if ( allocated(JDifTemp) )           deallocate(JDifTemp)
+                 if ( associated(linePacketsTemp) )    nullify(linePacketsTemp)
+                 if ( associated(JDifTemp) )           nullify(JDifTemp)
               end if
-              if ( allocated(JSteTemp) )           deallocate(JSteTemp)           
+              if ( associated(JSteTemp) )           nullify(JSteTemp)           
 
 
               do i = 0, grid(iG)%nCells
@@ -901,7 +901,7 @@ module iteration_mod
                     dustHeatingBudget = budgetTemp
 
 
-                    deallocate(budgetTemp)
+                    nullify(budgetTemp)
                     
                  end if
 
@@ -923,15 +923,15 @@ module iteration_mod
 
               call mpi_barrier(mpi_comm_world, ierr)
            
-              if ( allocated(lgConvergedTemp) )  deallocate(lgConvergedTemp)
-              if ( allocated(lgBlackTemp) )  deallocate(lgBlackTemp)
+              if ( associated(lgConvergedTemp) )  nullify(lgConvergedTemp)
+              if ( associated(lgBlackTemp) )  nullify(lgBlackTemp)
               if (lgGas) then
-                 if ( allocated(NeTemp) )           deallocate(NeTemp)
-                 if ( allocated(TeTemp) )           deallocate(TeTemp)
-                 if ( allocated(ionDenTemp) )       deallocate(ionDenTemp)
+                 if ( associated(NeTemp) )           nullify(NeTemp)
+                 if ( associated(TeTemp) )           nullify(TeTemp)
+                 if ( associated(ionDenTemp) )       nullify(ionDenTemp)
               end if
               if (lgDust) then
-                 if ( allocated(TdustTemp)) deallocate(TdustTemp)
+                 if ( associated(TdustTemp)) nullify(TdustTemp)
               end if
               
            end do

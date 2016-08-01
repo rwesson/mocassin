@@ -7,11 +7,11 @@ module ionization_mod
     use xSec_mod               ! x sections module
 
     ! common variables
-    real, allocatable :: contBoltz(:)       ! Boltzman factors for the continuum array
-    real, allocatable :: FFOpacity(:)       ! FF opacity
-    real, allocatable :: log10nuArray(:)    ! log10(nu) at this cell
+    real, pointer :: contBoltz(:)       ! Boltzman factors for the continuum array
+    real, pointer :: FFOpacity(:)       ! FF opacity
+    real, pointer :: log10nuArray(:)    ! log10(nu) at this cell
 
-    real, allocatable & 
+    real, pointer & 
          &:: density(:,:)               ! abundance*ionDensity*HDen [cm^-3] 
 
     real, save :: log10Ne               ! log10(Ne) at this cell

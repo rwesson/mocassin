@@ -49,7 +49,7 @@ module photon_mod
         integer                        :: iPhot       ! counter
         integer                        :: seedSize    ! pseudo random number generator seed 
         integer, dimension(2)          :: inX,inY,inZ ! initial position indeces
-        integer, allocatable               :: seed(:)     ! seed array
+        integer, pointer               :: seed(:)     ! seed array
         integer                        :: msec        ! millisecs of the sec
         integer                        :: dt(8)       ! date and time values
         integer                        :: trapped
@@ -84,7 +84,7 @@ module photon_mod
 
         call random_seed(put = seed)
         
-        if (allocated(seed)) deallocate(seed)
+        if (associated(seed)) nullify(seed)
 
         Qphot = 0.
 
@@ -755,7 +755,7 @@ module photon_mod
                nuP=nuP+1
             end if
 
-            if (nuP .gt. nbins) then
+            if (nuP>=nbins) then
                print*, 'random: ', random
                print*, 'probDen: ', probDen
             end if
@@ -822,7 +822,7 @@ module photon_mod
                 ! determine the frequency of the newly created photon packet
                 call getNu2(inSpectrumProbDen(iStar,1:nbins), nuP)
 
-                if (nuP .gt. nbins) then
+                if (nuP>=nbins) then
                    print*, "! newPhotonPacket: insanity occured in stellar photon &
                         &nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(igpn),yP(igpn),zP(igpn), &
                         & grid(starIndeces(iStar,4))%active(xP(igpn),yP(igpn),zP(igpn))
@@ -864,7 +864,7 @@ module photon_mod
 
                 call getNu2(inSpectrumProbDen(0,1:nbins), nuP)
 
-                if (nuP .gt. nbins) then
+                if (nuP>=nbins) then
                    print*, "! newPhotonPacket: insanity occured in extra diffuse photon &
                         & nuP assignment (nuP,gp,activeP)", nuP, gp
                    print*, "difSpectrumProbDen: ", inSpectrumProbDen(0,:)
@@ -958,7 +958,7 @@ module photon_mod
 
                     call getNu2(grid(gP)%recPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),1:nbins), nuP)
 
-                    if (nuP .gt. nbins) then
+                    if (nuP>=nbins) then
                        print*, "! newPhotonPacket: insanity occured in diffuse photon &
                        & nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(igPn),yP(igPn),zP(igPn),&
                        &  grid(gP)%active(xP(igPn),yP(igPn),zP(igPn))
@@ -1014,7 +1014,7 @@ module photon_mod
 
                call getNu2(grid(gP)%dustPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),1:nbins), nuP)
 
-               if (nuP .gt. nbins) then
+               if (nuP>=nbins) then
                    print*, "! newPhotonPacket: insanity occured in dust emitted photon &
                        &nuP assignment (iphot, nuP,xP(gP),yP(gP),zP(gP),activeP)", iphot, &
                        & nuP, xP(igPn),yP(igPn),zP(igPn), &

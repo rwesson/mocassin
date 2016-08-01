@@ -32,15 +32,15 @@ module update_mod
 
         ! dust-gas interaction heating and cooling process
         real                           :: grainEmi, grainRec ! grain emissions and recom          
-        real, allocatable                  :: gasDustColl_d(:,:) ! cooling/heating of the 
+        real, pointer                  :: gasDustColl_d(:,:) ! cooling/heating of the 
                                                              ! dust through collisions with grains        
         real                           :: gasDustColl_g ! cooling/heating of the 
                                                        ! gas through collisions with grains
-        real, allocatable                   :: photoelHeat_d(:,:) ! cooling of dust by photoelectric
+        real,pointer                   :: photoelHeat_d(:,:) ! cooling of dust by photoelectric
                                                              ! emission 
         real                           :: photoelHeat_g ! heating of gas by dust photoelctric 
                                                        !emission 
-        real, allocatable                   :: grainPot(:,:)  ! [Ryd]        
+        real,pointer                   :: grainPot(:,:)  ! [Ryd]        
 
         real, parameter                :: hcRyd_k = &  ! constant: h*cRyd/k (Ryd at inf used) [K]
              & 157893.94   
@@ -62,7 +62,7 @@ module update_mod
         ! local variables
         logical                        :: lgHit        ! has this cell been hit by a photon?
 
-        integer , allocatable               :: grainPotP(:,:) 
+        integer ,pointer               :: grainPotP(:,:) 
         integer                        :: cellP        ! points to this cell
         integer                        :: highNuP      ! pointer to highest energy of shell
         integer                        :: IPnuP        ! pointer to this ion's IP in NuArray

@@ -810,17 +810,17 @@ module xSec_mod
         real :: normWeight ! normalization constant for grain size weighting
         real :: readReal     ! real number reader
         real :: value ! general value variable
-        real, allocatable :: da(:)
-        real, allocatable :: tmp1(:), tmp2(:), tmp3(:), agrain(:), tmp11(:,:), tmp22(:,:),&
+        real, pointer :: da(:)
+        real, pointer :: tmp1(:), tmp2(:), tmp3(:), agrain(:), tmp11(:,:), tmp22(:,:),&
              & tmp33(:,:), tmpWav(:), QaTemp(:), QsTemp(:), gTemp(:), temp1nbins(:,:), &
              & temp2nbins(:,:), temp3nbins(:,:), norm(:)
-        real, allocatable :: wav(:) ! wavelength in [um]
-        real, allocatable :: gCos(:,:,:) ! phase function parameter
-        real, allocatable :: Cabs(:,:,:) ! abs cross-section [um^2] for each grain species and size
-        real, allocatable :: Csca(:,:,:) ! sca cross-section [um^2] for each grain species and size
-        real, allocatable :: CTabs(:) ! total abs cross-section [um^2] for grain mixture
-        real, allocatable :: CTsca(:) ! total sca cross-section [um^2] for grain mixture
-        real, allocatable :: Ere(:), Eim(:) 
+        real, pointer :: wav(:) ! wavelength in [um]
+        real, pointer :: gCos(:,:,:) ! phase function parameter
+        real, pointer :: Cabs(:,:,:) ! abs cross-section [um^2] for each grain species and size
+        real, pointer :: Csca(:,:,:) ! sca cross-section [um^2] for each grain species and size
+        real, pointer :: CTabs(:) ! total abs cross-section [um^2] for grain mixture
+        real, pointer :: CTsca(:) ! total sca cross-section [um^2] for grain mixture
+        real, pointer :: Ere(:), Eim(:) 
 
         integer :: err ! allocation error status
         integer :: i, j, iwav, n, iSize, icomp ! counter
@@ -1184,8 +1184,8 @@ module xSec_mod
                  end do
                  wav=tmp3
                  
-                 if (allocated(Ere)) deallocate(Ere)
-                 if (allocated(Eim)) deallocate(Eim)
+                 if (associated(Ere)) nullify(Ere)
+                 if (associated(Eim)) nullify(Eim)
                  
                  allocate (Ere(1:nbins), stat=err)
                  if (err/=0) then
@@ -1210,12 +1210,12 @@ module xSec_mod
 !                 call getQs(Ere,Eim,Cabs(nSpec,1:nSizes,1:nbins),Csca(nSpec,1:nSizes,1:nbins))
 
                  
-                 if (allocated(wav)) deallocate(wav)
-                 if (allocated(Ere)) deallocate(Ere)
-                 if (allocated(Eim)) deallocate(Eim)
-                 if (allocated(tmp1)) deallocate(tmp1)
-                 if (allocated(tmp2)) deallocate(tmp2)
-                 if (allocated(tmp3)) deallocate(tmp3)
+                 if (associated(wav)) nullify(wav)
+                 if (associated(Ere)) nullify(Ere)
+                 if (associated(Eim)) nullify(Eim)
+                 if (associated(tmp1)) nullify(tmp1)
+                 if (associated(tmp2)) nullify(tmp2)
+                 if (associated(tmp3)) nullify(tmp3)
                  
                  
               case ('Q')
@@ -1372,14 +1372,14 @@ module xSec_mod
                  
                  close(20)
                  
-                 if (allocated(QaTemp)) deallocate(QaTemp) 
-                 if (allocated(QsTemp)) deallocate(QsTemp) 
-                 if (allocated(gTemp)) deallocate(gTemp) 
-                 if (allocated(tmp11)) deallocate(tmp11)
-                 if (allocated(tmp22)) deallocate(tmp22)
-                 if (allocated(tmp33)) deallocate(tmp33)           
-                 if (allocated(wav)) deallocate(wav)
-                 if (allocated(tmpWav)) deallocate(tmpWav)           
+                 if (associated(QaTemp)) nullify(QaTemp) 
+                 if (associated(QsTemp)) nullify(QsTemp) 
+                 if (associated(gTemp)) nullify(gTemp) 
+                 if (associated(tmp11)) nullify(tmp11)
+                 if (associated(tmp22)) nullify(tmp22)
+                 if (associated(tmp33)) nullify(tmp33)           
+                 if (associated(wav)) nullify(wav)
+                 if (associated(tmpWav)) nullify(tmpWav)           
 
                  ! interpolate over the grain size distribution
                  do i = 1, nSizes
@@ -1426,10 +1426,10 @@ module xSec_mod
                     
                  end do
                  
-                 if (allocated(agrain)) deallocate(agrain)
-                 if (allocated(temp1nbins)) deallocate(temp1nbins)
-                 if (allocated(temp2nbins)) deallocate(temp2nbins)
-                 if (allocated(temp3nbins)) deallocate(temp3nbins)           
+                 if (associated(agrain)) nullify(agrain)
+                 if (associated(temp1nbins)) nullify(temp1nbins)
+                 if (associated(temp2nbins)) nullify(temp2nbins)
+                 if (associated(temp3nbins)) nullify(temp3nbins)           
 
 
               case default
@@ -1506,10 +1506,10 @@ module xSec_mod
            ! update value of xSecTop
            xSecTop = xSecTop + 2*nbins*(nSpeciesPart(icomp)+1)*nSizes
            
-           if (allocated(Csca)) deallocate(Csca)
-           if (allocated(Cabs)) deallocate(Cabs)
-           if (allocated(CTsca)) deallocate(CTsca)
-           if (allocated(CTabs)) deallocate(CTabs)
+           if (associated(Csca)) nullify(Csca)
+           if (associated(Cabs)) nullify(Cabs)
+           if (associated(CTsca)) nullify(CTsca)
+           if (associated(CTabs)) nullify(CTabs)
 
            gSca = 0.
            norm = 0.
@@ -1539,7 +1539,7 @@ module xSec_mod
 
         end do
 
-        if (allocated(gCos)) deallocate(gCos)
+        if (associated(gCos)) nullify(gCos)
 
       end subroutine makeDustXsec
 

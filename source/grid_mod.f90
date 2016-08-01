@@ -44,7 +44,7 @@ module grid_mod
 
         real                 :: nuMinArray, nuMaxArray        
 
-        real, allocatable        :: nuTemp(:)
+        real, pointer        :: nuTemp(:)
 
         print*, "in initCartesianGrid"
         
@@ -202,10 +202,10 @@ module grid_mod
                
                allocate (nuTemp(1:nbins))
                nuTemp = nuArray(1:nbins)
-               if (allocated(nuArray)) deallocate(nuArray)
+               if (associated(nuArray)) nullify(nuArray)
                allocate (nuArray(1:nbins))
                nuArray = nuTemp
-               if (allocated(nuTemp)) deallocate(nuTemp)
+               if (associated(nuTemp)) nullify(nuTemp)
 
             else if (lgGas .and. (.not.lgDust)) then
 
@@ -898,7 +898,7 @@ module grid_mod
         real                           :: expFactor    ! exp factor in density law calculations
         real                           :: gasCell      ! mass of gas in current cell
         real                           :: H0in         ! estimated H0 at the inner radius for regionI
-        real, allocatable                  :: MdMg(:,:,:)  ! Md/Mg
+        real, pointer                  :: MdMg(:,:,:)  ! Md/Mg
         real                           :: MhMg         ! mass oh hydrogen over mass of gas
         real                           :: norm, scale  ! normalisation and scaling for meanField
         real                           :: radius       ! distance from the origin
@@ -910,10 +910,10 @@ module grid_mod
         real, dimension(nElements) :: aWeight
         real, parameter :: amu = 1.66053e-24 ! [g]
 
-        real, allocatable                  :: HdenTemp(:,:,:) ! temporary Hden
-        real, allocatable                  :: NdustTemp(:,:,:) ! temporary dust number density arra
-        real, allocatable                  :: dustAbunIndexTemp(:,:,:) ! temporary dust abundance index array
-        real, allocatable                  :: twoDscaleJTemp(:)
+        real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
+        real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density arra
+        real, pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust abundance index array
+        real, pointer                  :: twoDscaleJTemp(:)
         
 
 
@@ -1325,7 +1325,7 @@ module grid_mod
              do i = 1, grid%nCells
                 TwoDscaleJ(i) = TwoDscaleJtemp(i)
              end do
-             deallocate(TwoDscaleJtemp)
+             nullify(TwoDscaleJtemp)
 
           end if
 
@@ -1598,14 +1598,14 @@ module grid_mod
                 end do
              end do
              
-             ! deallocate temp array
-             if(allocated(HdenTemp)) deallocate(HdenTemp)
+             ! nullify temp array
+             if(associated(HdenTemp)) nullify(HdenTemp)
 
           end if ! lgGas
 
            if (lgDust) then
-              if(allocated(NdustTemp)) deallocate(NdustTemp)
-              if(lgMultiDustChemistry .and. allocated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
+              if(associated(NdustTemp)) nullify(NdustTemp)
+              if(lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) nullify(dustAbunIndexTemp)
            end if
 
            ! set up atomic weight array
@@ -1716,8 +1716,7 @@ module grid_mod
 
 
 
-!           if(allocated(MdMg)) deallocate(MdMg)
-           if(allocated(MdMg)) deallocate(MdMg)
+           if(associated(MdMg)) nullify(MdMg)
 
            if (taskid == 0) then
 
@@ -1807,9 +1806,9 @@ module grid_mod
            real                      :: echoVolume, vol   ! just echo volume
            
            
-           real, allocatable                  :: HdenTemp(:,:,:) ! temporary Hden
-           real, allocatable                  :: NdustTemp(:,:,:) ! temporary dust number density array
-           real, allocatable                  :: dustAbunIndexTemp(:,:,:) ! temporary dust number density array
+           real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
+           real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density array
+           real, pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust number density array
            
            integer                        :: edgeP        ! subgrid edge pointer on mothergrid
            integer                        :: i,j,k,iG,ai  ! counters
@@ -2450,14 +2449,14 @@ module grid_mod
                     end do
                  end do
                  
-                 ! deallocate temp array
-                 if(allocated(HdenTemp)) deallocate(HdenTemp)
+                 ! nullify temp array
+                 if(associated(HdenTemp)) nullify(HdenTemp)
                  
               end if ! lgGas
 
               if (lgDust) then
-                 if(allocated(NdustTemp)) deallocate(NdustTemp)
-                 if (lgMultiDustChemistry .and. allocated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
+                 if(associated(NdustTemp)) nullify(NdustTemp)
+                 if (lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) nullify(dustAbunIndexTemp)
               end if
               
               totalMass = 0.
@@ -2586,42 +2585,42 @@ module grid_mod
            print*, "in freeGrid"
 
            if (lgDust) then
-              if(allocated(grid%absOpac)) deallocate(grid%absOpac)
-              if(allocated(grid%scaOpac)) deallocate(grid%scaOpac)
-              if(allocated(grid%Ndust)) deallocate(grid%Ndust)
-              if(allocated(grid%Tdust)) deallocate(grid%Tdust)
-              if (lgMultiChemistry .and. allocated(grid%dustAbunIndex)) &
-                   &  deallocate(grid%dustAbunIndex)
+              if(associated(grid%absOpac)) nullify(grid%absOpac)
+              if(associated(grid%scaOpac)) nullify(grid%scaOpac)
+              if(associated(grid%Ndust)) nullify(grid%Ndust)
+              if(associated(grid%Tdust)) nullify(grid%Tdust)
+              if (lgMultiChemistry .and. associated(grid%dustAbunIndex)) &
+                   &  nullify(grid%dustAbunIndex)
               if (.not.lgGas) then
-                 if(allocated(grid%dustPDF)) deallocate(grid%dustPDF)
+                 if(associated(grid%dustPDF)) nullify(grid%dustPDF)
               end if
            end if
-           if (allocated(grid%active)) deallocate(grid%active)
-           if (allocated(grid%lgConverged)) deallocate(grid%lgConverged)
-           if (allocated(grid%lgBlack)) deallocate(grid%lgBlack)     
+           if (associated(grid%active)) nullify(grid%active)
+           if (associated(grid%lgConverged)) nullify(grid%lgConverged)
+           if (associated(grid%lgBlack)) nullify(grid%lgBlack)     
            if (lgGas) then
-              if (allocated(grid%abFileIndex)) deallocate(grid%abFileIndex)           
-              if (allocated(grid%Te)) deallocate(grid%Te)
-              if (allocated(grid%Ne)) deallocate(grid%Ne)
-              if (allocated(grid%Hden)) deallocate(grid%Hden) 
-              if (allocated(grid%ionDen)) deallocate(grid%ionDen)
-              if (allocated(ionDenUsed)) deallocate(ionDenUsed)
-              if (allocated(grid%recPDF)) deallocate(grid%recPDF)
-              if (allocated(grid%totalLines)) deallocate(grid%totalLines)
+              if (associated(grid%abFileIndex)) nullify(grid%abFileIndex)           
+              if (associated(grid%Te)) nullify(grid%Te)
+              if (associated(grid%Ne)) nullify(grid%Ne)
+              if (associated(grid%Hden)) nullify(grid%Hden) 
+              if (associated(grid%ionDen)) nullify(grid%ionDen)
+              if (associated(ionDenUsed)) nullify(ionDenUsed)
+              if (associated(grid%recPDF)) nullify(grid%recPDF)
+              if (associated(grid%totalLines)) nullify(grid%totalLines)
            end if
-           if (allocated(grid%opacity)) deallocate(grid%opacity)
-           if (allocated(grid%Jste)) deallocate(grid%Jste)
+           if (associated(grid%opacity)) nullify(grid%opacity)
+           if (associated(grid%Jste)) nullify(grid%Jste)
 !BS10           if (lgDebug) then
-              if (allocated(grid%Jdif)) deallocate(grid%Jdif)
-              if (allocated(grid%linePackets)) deallocate(grid%linePackets)
-              if (allocated(grid%linePDF)) deallocate(grid%linePDF)
+              if (associated(grid%Jdif)) nullify(grid%Jdif)
+              if (associated(grid%linePackets)) nullify(grid%linePackets)
+              if (associated(grid%linePDF)) nullify(grid%linePDF)
 !BS10           end if
            if (lgNeInput) then
-               if (allocated(grid%NeInput)) deallocate(grid%NeInput)
+               if (associated(grid%NeInput)) nullify(grid%NeInput)
            end if
-           if (allocated(grid%xAxis)) deallocate(grid%xAxis)
-           if (allocated(grid%yAxis)) deallocate(grid%yAxis)
-           if (allocated(grid%zAxis)) deallocate(grid%zAxis)
+           if (associated(grid%xAxis)) nullify(grid%xAxis)
+           if (associated(grid%yAxis)) nullify(grid%yAxis)
+           if (associated(grid%zAxis)) nullify(grid%zAxis)
 
            print*, "out freeGrid"
          end subroutine freeGrid
@@ -2960,7 +2959,7 @@ module grid_mod
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
       real                           :: p0,p00,p1,p2,p3,ind
-      real, allocatable                  :: p(:)                                        
+      real, pointer                  :: p(:)                                        
       integer :: iG, ai  ! counters
       integer :: totCells, totcellsloc
       integer :: yTop, xPmap
@@ -3544,7 +3543,7 @@ module grid_mod
 
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
 
-      if (allocated(p)) deallocate(p)
+      if (associated(p)) nullify(p)
 
     end subroutine resetGrid      
 

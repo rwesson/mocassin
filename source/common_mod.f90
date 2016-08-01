@@ -11,13 +11,13 @@ module common_mod
     integer          :: nFluo ! # of fluorescent lines to be transfered
     integer          :: nVP   ! # of fluorescent viewing angles
 
-    character(len=4), allocatable :: fluorescenceLabel(:) ! ID labels of fluorescent transitions
-    real, allocatable    :: fluorescenceVP(:,:) ! viewing angles for fluorescence cube &
+    character(len=4), pointer :: fluorescenceLabel(:) ! ID labels of fluorescent transitions
+    real, pointer    :: fluorescenceVP(:,:) ! viewing angles for fluorescence cube &
                                             ! (for the first dimension 1=theta;2=phi)
 
     ! MPI variables
-    integer, allocatable :: lgConvergedTemp(:)  ! temporary converged? flag
-    integer, allocatable :: lgBlackTemp(:)      ! temporary converged? flag
+    integer, pointer :: lgConvergedTemp(:)  ! temporary converged? flag
+    integer, pointer :: lgBlackTemp(:)      ! temporary converged? flag
 
     logical         :: lg2D=.false.             ! 2D?
     logical         :: lgIsotropic
@@ -39,17 +39,17 @@ module common_mod
     logical         :: lginputDustMass = .false.! user sets input dust mass?
     logical         :: lginputGasMass = .false. ! user sets input gas mass?
 
-    real, allocatable :: gSca(:)                 ! gSca(freq)
+    real, pointer :: gSca(:)                 ! gSca(freq)
 
-    real, allocatable   :: TdustTemp(:,:,:)     ! temporary dust temperature array (species,size,cell)
-    real, allocatable   :: ionDenTemp(:,:,:)    ! temporary ion density array    
-    real, allocatable   :: NeTemp(:)            ! temporary electron density array
-    real, allocatable   :: TeTemp(:)            ! temporary electron Temperature array    
+    real, pointer   :: TdustTemp(:,:,:)     ! temporary dust temperature array (species,size,cell)
+    real, pointer   :: ionDenTemp(:,:,:)    ! temporary ion density array    
+    real, pointer   :: NeTemp(:)            ! temporary electron density array
+    real, pointer   :: TeTemp(:)            ! temporary electron Temperature array    
     real            :: HeIrecLineCoeff(34,3,4)
-    real, allocatable   :: KNsigmaArray(:,:)    ! Klein Nishina calc PDFs (nbins,180)
-    real, allocatable   :: KNsigmaT(:)          ! Klein Nishina cross-sections integrated over the solid angle
-    real, allocatable   :: PcompArray (:,:) 
-    real, allocatable   :: twoDscaleJ(:)
+    real, pointer   :: KNsigmaArray(:,:)    ! Klein Nishina calc PDFs (nbins,180)
+    real, pointer   :: KNsigmaT(:)          ! Klein Nishina cross-sections integrated over the solid angle
+    real, pointer   :: PcompArray (:,:) 
+    real, pointer   :: twoDscaleJ(:)
 
     integer         :: radio4p9GHzP   ! 
       
@@ -84,9 +84,9 @@ module common_mod
 
 
 
-    integer, allocatable  :: HINuEdgeP(:)     ! pointers to the HI, HeI and HeII 
-    integer, allocatable  :: HeINuEdgeP(:)    ! series edges in nuArray
-    integer, allocatable  :: HeIINuEdgeP(:)   !
+    integer, pointer  :: HINuEdgeP(:)     ! pointers to the HI, HeI and HeII 
+    integer, pointer  :: HeINuEdgeP(:)    ! series edges in nuArray
+    integer, pointer  :: HeIINuEdgeP(:)   !
 
 
     integer :: nTbins                     ! # of temp bins in qheat
@@ -125,8 +125,8 @@ module common_mod
                                                ! 3 is opacity offset
 
 
-    integer, allocatable :: dustScaXsecP(:,:)       ! pointer to dust scatterring x-sec in xSecArray (species,size)
-    integer, allocatable :: dustAbsXsecP(:,:)       ! pointer to dust absorption x-sec in xSecArray  (species,size)
+    integer,pointer :: dustScaXsecP(:,:)       ! pointer to dust scatterring x-sec in xSecArray (species,size)
+    integer,pointer :: dustAbsXsecP(:,:)       ! pointer to dust absorption x-sec in xSecArray  (species,size)
 
 
 
@@ -141,7 +141,7 @@ module common_mod
          & :: HeIIlevNuP = 0   ! pointer to the nth HeII level in nuArray
 
    
-    logical, allocatable :: &
+    logical, pointer :: &
          & lgDataAvailable(:,:)! is the atomic data available for this species?
 
     character(len=50), dimension(3:nElements, 1:10) :: &
@@ -170,25 +170,25 @@ module common_mod
     real, dimension(nElements) :: aWeight
     real, dimension(450) :: ionEdge 
 
-    real, allocatable :: logGammaHI(:,:),logGammaHeI(:,:),logGammaHeII(:,:), tkGamma(:), nuGammaHI(:),&
+    real, pointer :: logGammaHI(:,:),logGammaHeI(:,:),logGammaHeII(:,:), tkGamma(:), nuGammaHI(:),&
          & nuGammaHeI(:),nuGammaHeII(:)
 
     ! dust arrays
-    real, allocatable :: TdustSublime(:)        ! sublimation T (nspecies)
-    real, allocatable :: grainVn(:)             ! potential of neutral grain
-    real, allocatable :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
-    real, allocatable :: rho(:)                 ! intrinsic density (nspecies)    
-    real, allocatable :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
-    real, allocatable :: SEDnoExt(:)            ! SED no extinction
-    real, allocatable :: equivalentTau(:)       ! SED no extinction
+    real, pointer :: TdustSublime(:)        ! sublimation T (nspecies)
+    real, pointer :: grainVn(:)             ! potential of neutral grain
+    real, pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
+    real, pointer :: rho(:)                 ! intrinsic density (nspecies)    
+    real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
+    real, pointer :: SEDnoExt(:)            ! SED no extinction
+    real, pointer :: equivalentTau(:)       ! SED no extinction
 
-    double precision, save, allocatable::&
+    double precision, save,pointer::&
           & forbiddenLines(:,:,:,:)                                 ! emissivity from heavies  rec lines
-    double precision, save, allocatable::&
+    double precision, save,pointer::&
           & forbiddenLinesLarge(:,:) 
 
     ! linear increments
-    real, allocatable :: dl(:)
+    real, pointer :: dl(:)
 
     ! calculate recombination lines?
     logical :: lgRecombination=.false.
@@ -197,41 +197,41 @@ module common_mod
     logical, dimension(nElements) :: lgElementOn ! is this element present?
 
     ! dust arrays
-    real, allocatable :: dustEmIntegral(:,:,:)   ! dust emission integral (species,size,temperature)
+    real, pointer :: dustEmIntegral(:,:,:)   ! dust emission integral (species,size,temperature)
     
     ! allocatable arrays
-    real, allocatable :: absOpacSpecies(:,:)     ! absOpacSpecies (nspecies, freq)
+    real, pointer :: absOpacSpecies(:,:)     ! absOpacSpecies (nspecies, freq)
 
-    real, allocatable :: continuum(:)            ! continuum array (freq)
+    real, pointer :: continuum(:)            ! continuum array (freq)
 
-    real, allocatable :: gauntFF(:)              ! gaunt factor
+    real, pointer :: gauntFF(:)              ! gaunt factor
 
-    real, allocatable :: gauntFFHeII(:)          ! gaunt ff for HeII
+    real, pointer :: gauntFFHeII(:)          ! gaunt ff for HeII
 
-    real, allocatable :: H2phot(:)               ! H 2-photon emission
+    real, pointer :: H2phot(:)               ! H 2-photon emission
  
-    real, allocatable :: HeI2phot(:)             ! HeI 2-photon emission
+    real, pointer :: HeI2phot(:)             ! HeI 2-photon emission
 
-    real, allocatable :: HeII2phot(:)            ! HeII 2-photon emission
+    real, pointer :: HeII2phot(:)            ! HeII 2-photon emission
 
-    real, allocatable :: ionDenUsed(:,:)         ! local ionDen array
+    real, pointer :: ionDenUsed(:,:)         ! local ionDen array
 
-    real, allocatable :: nuArray(:)              ! energy array [Ryd]
+    real, pointer :: nuArray(:)              ! energy array [Ryd]
 
-    real, allocatable :: xSecArray(:)            ! x Section array calculated in xSec_mod
+    real, pointer :: xSecArray(:)            ! x Section array calculated in xSec_mod
 
-    real, allocatable :: xSecRecoil(:)           ! compton recoil xSec
+    real, pointer :: xSecRecoil(:)           ! compton recoil xSec
 
-    real, allocatable :: comXSecH(:)             ! compton Xsec Heat array
+    real, pointer :: comXSecH(:)             ! compton Xsec Heat array
 
-    real, allocatable :: comXSecC(:)             ! compton Xsec Cool array
+    real, pointer :: comXSecC(:)             ! compton Xsec Cool array
 
-    real, allocatable :: widFlx(:)               ! widFlx array
+    real, pointer :: widFlx(:)               ! widFlx array
 
-    real, allocatable :: photoRateFluo(:,:)      ! photoionisation rate (nfluo, nstages) [sec^-1]
+    real, pointer :: photoRateFluo(:,:)      ! photoionisation rate (nfluo, nstages) [sec^-1]
 
 
-    integer, allocatable :: planeIonDistribution(:,:) ! initial distribution of ionising photons 
+    integer, pointer :: planeIonDistribution(:,:) ! initial distribution of ionising photons 
 
 
 
@@ -248,13 +248,13 @@ module common_mod
         integer :: nCells                           ! number of active cells
         integer :: motherP                          ! pointer to the motherGrid
 
-        integer, allocatable :: dustAbunIndex(:)        ! dust chemistry file index (cell) 
-        integer, allocatable :: resLinePackets(:)       ! extraPackets to be generated cell (cell)
-        integer, allocatable :: abFileIndex(:,:,:)      ! abundance file index axxay
-        integer, allocatable :: lgConverged(:)          ! has the model converged at this grid cell?
-        integer, allocatable :: lgBlack(:)              ! is this to remain a black cell?
+        integer, pointer :: dustAbunIndex(:)        ! dust chemistry file index (cell) 
+        integer, pointer :: resLinePackets(:)       ! extraPackets to be generated cell (cell)
+        integer, pointer :: abFileIndex(:,:,:)      ! abundance file index axxay
+        integer, pointer :: lgConverged(:)          ! has the model converged at this grid cell?
+        integer, pointer :: lgBlack(:)              ! is this to remain a black cell?
 
-        integer, allocatable :: active(:,:,:)           ! point to active cell in 1d array; 
+        integer, pointer :: active(:,:,:)           ! point to active cell in 1d array; 
                                                     ! returns 0 for inactive cells        
 
         real    :: geoCorrX,geoCorrY,geoCorrZ       ! geometric correction
@@ -263,41 +263,41 @@ module common_mod
         real    :: noTeBal                          ! Te Balance not reached
 
 
-        real, allocatable :: absOpac(:,:)               ! dust absorption opacity 
-        real, allocatable :: scaOpac(:,:)               ! dust scattering opacity 
-        real, allocatable :: dustPDF(:,:)               ! dust emission PDF 
-        real, allocatable :: fEscapeResPhotons(:,:)     ! frac of res line photons escaping (cell,resline)
-        real, allocatable :: fluorescenceCube(:,:,:)    ! escaped fluorescence packets (ncell,nFluo,nVP)
-        real, allocatable :: Hden(:)                    ! density of H [1/cm^3]
-        real, allocatable :: Ne(:)                      ! electron density [1/cm^3]
-        real, allocatable :: Te(:)                      ! electron temperature [K]
-        real, allocatable :: Tdust(:,:,:)               ! dust temperature (species,size,cell) [K] 
-        real, allocatable :: ionDen(:,:,:)              ! fractional ion density (x,y,z,elem,stage)
-        real, allocatable :: Jste(:,:)                  ! MC estimator of stellar J (cell,nu) 
-        real, allocatable :: Jdif(:,:)                  ! MC estimator of diffuse J (cell,nu)
-        real, allocatable :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
-        real, allocatable :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
-        real, allocatable :: linePackets(:,:)           ! line packets (x,y,z,n)
-        real, allocatable :: LFluorescence(:,:)         ! local fluorescence luminosity of cell [e36 erg/sec]
-        real, allocatable :: LdiffuseLoc(:)             ! loc luminosity of diffuse source [e36 erg/sec]
-        real, allocatable :: Ndust(:)                   ! number density for dust
+        real, pointer :: absOpac(:,:)               ! dust absorption opacity 
+        real, pointer :: scaOpac(:,:)               ! dust scattering opacity 
+        real, pointer :: dustPDF(:,:)               ! dust emission PDF 
+        real, pointer :: fEscapeResPhotons(:,:)     ! frac of res line photons escaping (cell,resline)
+        real, pointer :: fluorescenceCube(:,:,:)    ! escaped fluorescence packets (ncell,nFluo,nVP)
+        real, pointer :: Hden(:)                    ! density of H [1/cm^3]
+        real, pointer :: Ne(:)                      ! electron density [1/cm^3]
+        real, pointer :: Te(:)                      ! electron temperature [K]
+        real, pointer :: Tdust(:,:,:)               ! dust temperature (species,size,cell) [K] 
+        real, pointer :: ionDen(:,:,:)              ! fractional ion density (x,y,z,elem,stage)
+        real, pointer :: Jste(:,:)                  ! MC estimator of stellar J (cell,nu) 
+        real, pointer :: Jdif(:,:)                  ! MC estimator of diffuse J (cell,nu)
+        real, pointer :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
+        real, pointer :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
+        real, pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
+        real, pointer :: LFluorescence(:,:)         ! local fluorescence luminosity of cell [e36 erg/sec]
+        real, pointer :: LdiffuseLoc(:)             ! loc luminosity of diffuse source [e36 erg/sec]
+        real, pointer :: Ndust(:)                   ! number density for dust
 
-        real, allocatable :: xAxis(:)                   ! x-axis
-        real, allocatable :: yAxis(:)                   ! y-axiss
-        real, allocatable :: zAxis(:)                   ! z-axis
+        real, pointer :: xAxis(:)                   ! x-axis
+        real, pointer :: yAxis(:)                   ! y-axiss
+        real, pointer :: zAxis(:)                   ! z-axis
 
-        real, allocatable :: NeInput(:)                 ! only used if lgNeInput=.t.
+        real, pointer :: NeInput(:)                 ! only used if lgNeInput=.t.
 
 
-        real, allocatable :: opacity(:,:)               ! total  opacity (cell,nu) [1/cm]
-        real, allocatable :: recPDF(:,:)                ! rec prob distribution function
-        real, allocatable :: linePDF(:,:)               ! line prob distribution function
-        real, allocatable :: totalLines(:)              ! fraction of non-ionizing line phots
+        real, pointer :: opacity(:,:)               ! total  opacity (cell,nu) [1/cm]
+        real, pointer :: recPDF(:,:)                ! rec prob distribution function
+        real, pointer :: linePDF(:,:)               ! line prob distribution function
+        real, pointer :: totalLines(:)              ! fraction of non-ionizing line phots
     
-        real, allocatable :: elemAbun(:,:)              ! elemental abundance (specified
+        real, pointer :: elemAbun(:,:)              ! elemental abundance (specified
                                                     ! by number relative to total 
                                                     ! hydrogen density)
-        real, allocatable :: echoVol(:,:,:)  ! BEKS 2010. Contains volume of one
+        real, pointer :: echoVol(:,:,:)  ! BEKS 2010. Contains volume of one
         ! grid cell enclosed by echo.  Only used if lgEcho=.true.
     end type grid_type
 
@@ -322,16 +322,16 @@ module common_mod
 
     ! plot type
     type plot_type
-       real, allocatable         :: intensity(:,:,:)
-       real, allocatable         :: xAxis(:), yAxis(:)
+       real, pointer         :: intensity(:,:,:)
+       real, pointer         :: xAxis(:), yAxis(:)
 
        logical               :: lgFilter
        logical               :: lgMap
-       logical, allocatable      :: lgLine(:)
+       logical, pointer      :: lgLine(:)
 
-       integer, allocatable      :: lineNumber(:)
+       integer, pointer      :: lineNumber(:)
        integer               :: nPlots
-       integer, allocatable      :: nuP(:,:)
+       integer, pointer      :: nuP(:,:)
        
     end type plot_type
 
@@ -344,7 +344,7 @@ module common_mod
        integer               :: ion  ! ionization stage
        integer               :: glow, ghigh ! lower and upper statistical weights
        integer               :: nmul ! # of components in the multiplet
-       integer, allocatable       :: moclow(:), mochigh(:) ! mocassin's lower and higher levels code
+       integer,pointer       :: moclow(:), mochigh(:) ! mocassin's lower and higher levels code
 
        real                  :: m_ion ! mass of the ion
        real                  :: wav  ! wavelength [A]
@@ -355,7 +355,7 @@ module common_mod
 
     !  model parameters
 
-    type(vector), allocatable :: starPosition(:) ! ionising source(s) position
+    type(vector), pointer :: starPosition(:) ! ionising source(s) position
     type(vector)       :: nullUnitVector 
 
     logical            :: lgCompton        ! evaluate Compton energy exchange?
@@ -380,20 +380,20 @@ module common_mod
     logical            :: lgSymmetricXYZ   ! symmetric in x, y, and z?
 
     character(len=50)  :: gridList ! grid list file name
-    character(len=50), allocatable  :: abundanceFIle(:) ! abundance file names
-    character(len=50), allocatable  :: dustSpeciesFIle(:) ! abundance file names
+    character(len=50), pointer  :: abundanceFIle(:) ! abundance file names
+    character(len=50), pointer  :: dustSpeciesFIle(:) ! abundance file names
     character(len=50)           :: contDiffuse      ! shape of the diffuse ionising spectrum
-    character(len=50), allocatable  :: contShape(:)     ! continuumShape
-    character(len=50), allocatable  :: contShapeIn(:)   ! continuumShape
-    character(len=50), allocatable  :: spID(:)          ! input spectrum generator ID
+    character(len=50), pointer  :: contShape(:)     ! continuumShape
+    character(len=50), pointer  :: contShapeIn(:)   ! continuumShape
+    character(len=50), pointer  :: spID(:)          ! input spectrum generator ID
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
     character(len=50)  :: MdMgFile         ! name of MdMg file
     character(len=50)  :: NdustFile        ! name of Ndust file    
     character(len=50)  :: Qfile            ! name of Qfile 
-    character(len=30), allocatable       :: grainLabel(:)    ! name of this species
+    character(len=30),pointer       :: grainLabel(:)    ! name of this species
 
-    integer, allocatable    :: viewPointPtheta(:), viewPointPphi(:)       ! viewing angles
+    integer,pointer    :: viewPointPtheta(:), viewPointPphi(:)       ! viewing angles
 
     integer            :: nAngleBins=0     ! number of viewing angles for SED
     integer            :: TotAngleBinsTheta=10 ! total # of theta angle bins for SED
@@ -403,10 +403,10 @@ module common_mod
     integer            :: maxPhotons       ! limit to packets to be use
     integer            :: nAbComponents=1  ! number of abundance components            
     integer            :: nDustComponents=1 ! number of dust components            
-    integer, allocatable   :: dustComPoint(:)  !  
+    integer, pointer   :: dustComPoint(:)  !  
     integer            :: nBins            ! number of energy bins 
     integer            :: nElementsUsed    ! actual number of elements used
-    integer, allocatable   :: nPhotons(:)      ! # of packets to be used in the sim
+    integer, pointer   :: nPhotons(:)      ! # of packets to be used in the sim
     integer            :: nPhotonsTot      ! # of packets to be used in the sim
     integer            :: nPhotonsDiffuse  ! # of packets to be used by the diffuse ionisation source
     integer            :: nPhotonsDiffuseLoc! # of packets to be used by the diffuse ionisation source
@@ -417,7 +417,7 @@ module common_mod
     integer            :: nStars           ! number of ionising sources
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
     integer            :: emittingGrid     ! grid emiting illuminating radiation [0 for all]
-    integer, allocatable   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z, 4=gp
+    integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z, 4=gp
     integer            :: nstages          ! # of ionisation stages to be included
 
     real               :: fluoCubeMineV, fluoCubeMaxeV ! limits of the fluorescence cube band
@@ -427,15 +427,15 @@ module common_mod
     real               :: convWriteGrid    ! min conv level before starting to write the grid
     real               :: nPhotIncrease    ! nPhoton increase factor
     real               :: densityLaw(3)    ! density law parameters (R1,n,f,N0)
-    real, allocatable       :: grainAbun(:,:)     ! abundance of this species
-    real, allocatable       :: grainRadius(:)   ! grain radius [um]
-    real, allocatable       :: grainWeight(:)   ! grain weight normalised to 1
-    real, allocatable       :: viewPointTheta(:),viewPointPhi(:)     ! viewing angles
+    real,pointer       :: grainAbun(:,:)     ! abundance of this species
+    real,pointer       :: grainRadius(:)   ! grain radius [um]
+    real,pointer       :: grainWeight(:)   ! grain weight normalised to 1
+    real,pointer       :: viewPointTheta(:),viewPointPhi(:)     ! viewing angles
     real               :: Hdensity         ! constant H density values (cm-^3)
     real               :: H0Start          ! initial guess at X(H0) for regions I and II
     real               :: Lphot            ! L of ionizing source [e36 phot/sec]
     real               :: Ldiffuse         ! total luminosity of diffuse source [e36 erg/sec]
-    real, allocatable       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
+    real,pointer       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
     real               :: meanField        ! mean ionizing field to be used with plane parallel 
                                            ! geometry [erg/sec/cm^2]
     real               :: meanFieldin
@@ -453,16 +453,16 @@ module common_mod
     real               :: R_out            ! outer radius [cm]
     real               :: SEDfreq(2)       ! 
     real               :: TeStart          ! initial guess at Te for regions I and II
-    real, allocatable      :: deltaE(:)        ! energy carried by a single photon
+    real, pointer      :: deltaE(:)        ! energy carried by a single photon
     real               :: Tdiffuse         ! energy of diffuse ionising source [K]
-    real, allocatable      :: Tstellar(:)      ! T of ionizing source [K]    
-    real, allocatable      :: tStep(:)         ! time step for sb99 inputs [yrs]
+    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]    
+    real, pointer      :: tStep(:)         ! time step for sb99 inputs [yrs]
     real               :: XHILimit         ! convergence limit on X(HI)
     
     integer             :: lymanP                  ! frequency pointer to Lyman limit
     ! dust parameters
     integer            :: nSizes           ! number of grain sizes
-    integer, allocatable    :: nSpeciesPart(:)  ! number of grain specie
+    integer,pointer    :: nSpeciesPart(:)  ! number of grain specie
     integer            :: nSpecies         ! number of grain specie
     integer            :: nSpeciesMax      ! max number of grain species
     integer            :: nResLines=0      ! number of resonant lines to be transfered

@@ -12,9 +12,9 @@ module continuum_mod
     real, parameter      :: cRyd = 3.2898423e15    ! constant: c*Ryd (Ryd at inf used) [Hz]
 
 
-    real(kind=8), allocatable, save :: inSpectrumErg(:) ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
-    real(kind=8), allocatable, save :: inSpectrumPhot(:) ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
-    real, allocatable, save :: inSpectrumProbDen(:,:)  ! probability density for input spectrum (nstars,nbins)
+    real(kind=8), pointer, save :: inSpectrumErg(:) ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
+    real(kind=8), pointer, save :: inSpectrumPhot(:) ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
+    real, pointer, save :: inSpectrumProbDen(:,:)  ! probability density for input spectrum (nstars,nbins)
 
     real, save          :: normConstantErg = 0.    ! normalization constant (area beyond input spectrum)
     real, save          :: normConstantPhot= 0.    ! normalization constant (area beyond input spectrum)    
@@ -420,8 +420,8 @@ module continuum_mod
 
         real :: maxp
 
-        real, allocatable :: inSpSumErg(:)    ! partial input spectrum sum [erg/s]
-        real, allocatable :: inSpSumPhot(:)   ! partial input spectrum sum [phot/s]
+        real, pointer :: inSpSumErg(:)    ! partial input spectrum sum [erg/s]
+        real, pointer :: inSpSumPhot(:)   ! partial input spectrum sum [phot/s]
 
 
         allocate(inSpSumPhot(nbins), stat = err)
@@ -479,7 +479,7 @@ module continuum_mod
         end if
 
 
-        if (allocated(inSpSumPhot)) deallocate(inSpSumPhot)
+        if (associated(inSpSumPhot)) nullify(inSpSumPhot)
 
       end subroutine setProbDen
 
