@@ -8,12 +8,12 @@ module emission_mod
     use grid_mod
     use xSec_mod
 
-    type(resLine_type), pointer         :: resLine(:)  ! resonant lines
+    type(resLine_type), allocatable         :: resLine(:)  ! resonant lines
 
     ! units are [e-40erg/cm^3/s/Hz]
-    double precision, pointer :: emissionHI(:)                     ! HI continuum emission coefficient 
-    double precision, pointer :: emissionHeI(:)                    ! HeI continuum emission coefficient
-    double precision, pointer :: emissionHeII(:)                   ! HeII continuum emission coefficient  
+    double precision, allocatable :: emissionHI(:)                     ! HI continuum emission coefficient 
+    double precision, allocatable :: emissionHeI(:)                    ! HeI continuum emission coefficient
+    double precision, allocatable :: emissionHeII(:)                   ! HeII continuum emission coefficient  
 
     ! units are [e-25erg/s/N_gas]
     double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
@@ -50,15 +50,15 @@ module emission_mod
 
         real    :: dV                        ! volume element        
 
-        double precision, pointer :: gammaHI(:)          ! HI fb+ff emission coefficient [e-40 erg*cm^3/s/Hz]
-        double precision, pointer :: gammaHeI(:)         ! HeI fb+ff emission coefficient [e-40erg*cm^3/s/Hz]
-        double precision, pointer :: gammaHeII(:)        ! HeII fb+ff emission coefficient [e-40erg*cm^3/s/Hz]
-        double precision, pointer :: gammaHeavies(:)     ! Heavy ions f-b emission coefficient [e-40 erg*cm^3/s/Hz]
-        double precision, pointer :: ffCoeff1(:)         ! ff emission coefficient for Z=1 ions [e-40 erg*cm^3/s/Hz] 
-        double precision, pointer :: ffCoeff2(:)         ! ff emission coefficient for Z=2 ions [e-40 erg*cm^3/s/Hz]
-        double precision, pointer :: twoPhotHI(:)        ! HI 2photon emission coefficient [e-40 erg*cm^3/s/Hz]
-        double precision, pointer :: twoPhotHeI(:)       ! HeI 2photon emission coefficient [e-40 erg*cm^3/s/Hz]  
-        double precision, pointer :: twoPhotHeII(:)      ! HeII 2photon emission coefficient [e-40 erg*cm^3/s/Hz]
+        double precision, allocatable :: gammaHI(:)          ! HI fb+ff emission coefficient [e-40 erg*cm^3/s/Hz]
+        double precision, allocatable :: gammaHeI(:)         ! HeI fb+ff emission coefficient [e-40erg*cm^3/s/Hz]
+        double precision, allocatable :: gammaHeII(:)        ! HeII fb+ff emission coefficient [e-40erg*cm^3/s/Hz]
+        double precision, allocatable :: gammaHeavies(:)     ! Heavy ions f-b emission coefficient [e-40 erg*cm^3/s/Hz]
+        double precision, allocatable :: ffCoeff1(:)         ! ff emission coefficient for Z=1 ions [e-40 erg*cm^3/s/Hz] 
+        double precision, allocatable :: ffCoeff2(:)         ! ff emission coefficient for Z=2 ions [e-40 erg*cm^3/s/Hz]
+        double precision, allocatable :: twoPhotHI(:)        ! HI 2photon emission coefficient [e-40 erg*cm^3/s/Hz]
+        double precision, allocatable :: twoPhotHeI(:)       ! HeI 2photon emission coefficient [e-40 erg*cm^3/s/Hz]  
+        double precision, allocatable :: twoPhotHeII(:)      ! HeII 2photon emission coefficient [e-40 erg*cm^3/s/Hz]
 
 
         grid = grids(iG)
@@ -246,18 +246,18 @@ module emission_mod
         end if
 
         ! deallocate arrays
-        if ( associated(emissionHI) ) nullify(emissionHI)
-        if ( associated(emissionHeI) ) nullify(emissionHeI)
-        if ( associated(emissionHeII) ) nullify(emissionHeII)
-        if ( associated(gammaHI) ) nullify(gammaHI)
-        if ( associated(gammaHeI) ) nullify(gammaHeI)
-        if ( associated(gammaHeII) ) nullify(gammaHeII)
-        if ( associated(gammaHeavies) ) nullify(gammaHeavies)
-        if ( associated(twoPhotHI) ) nullify(twoPhotHI)
-        if ( associated(twoPhotHeI) ) nullify(twoPhotHeI)
-        if ( associated(twoPhotHeII) ) nullify(twoPhotHeII)
-        if ( associated(ffCoeff1) ) nullify(ffCoeff1)
-        if ( associated(ffCoeff2) ) nullify(ffCoeff2)
+        if ( allocated(emissionHI) ) deallocate(emissionHI)
+        if ( allocated(emissionHeI) ) deallocate(emissionHeI)
+        if ( allocated(emissionHeII) ) deallocate(emissionHeII)
+        if ( allocated(gammaHI) ) deallocate(gammaHI)
+        if ( allocated(gammaHeI) ) deallocate(gammaHeI)
+        if ( allocated(gammaHeII) ) deallocate(gammaHeII)
+        if ( allocated(gammaHeavies) ) deallocate(gammaHeavies)
+        if ( allocated(twoPhotHI) ) deallocate(twoPhotHI)
+        if ( allocated(twoPhotHeI) ) deallocate(twoPhotHeI)
+        if ( allocated(twoPhotHeII) ) deallocate(twoPhotHeII)
+        if ( allocated(ffCoeff1) ) deallocate(ffCoeff1)
+        if ( allocated(ffCoeff2) ) deallocate(ffCoeff2)
 
         grids(iG) = grid
 
@@ -375,7 +375,7 @@ module emission_mod
              & phXSecHeI,&                            ! phot x sec for HeI
              & phXSecHeII,&                           ! phot x sec for HeII 
              & phXSecM                                ! phot x sec for ion M
-        real, pointer :: logGammaHIloc(:), logGammaHeIloc(:), logGammaHeIIloc(:)
+        real, allocatable :: logGammaHIloc(:), logGammaHeIloc(:), logGammaHeIIloc(:)
                                                       ! gamma [e-40 erg/Hz] for HI, HeI and HeII
      
         allocate (logGammaHIloc(nlimGammaHI), stat=err)
@@ -1064,10 +1064,10 @@ module emission_mod
         real, dimension(NHeIILyman) &
 &                          :: HeIILymanNu       ! HeII Lyman lines freq. [Ryd]          
 
-        real, pointer     :: sumDiffuseDust(:) ! summation terms for dust emission
-        real, pointer     :: sumDiffuseHI(:)   ! summation terms for HI emission
-        real, pointer     :: sumDiffuseHeI(:)  ! summation terms for HeI emission   
-        real, pointer     :: sumDiffuseHeII(:) ! summation terms for HeII emission   
+        real, allocatable     :: sumDiffuseDust(:) ! summation terms for dust emission
+        real, allocatable     :: sumDiffuseHI(:)   ! summation terms for HI emission
+        real, allocatable     :: sumDiffuseHeI(:)  ! summation terms for HeI emission   
+        real, allocatable     :: sumDiffuseHeII(:) ! summation terms for HeII emission   
 
         integer           :: dcp                ! local dustComPointer
         integer           :: elem, ion          ! counters
@@ -1450,11 +1450,11 @@ module emission_mod
 
         grid%totalLines(grid%active(ix,iy,iz)) = grid%totalLines(grid%active(ix,iy,iz)) / normalize
         ! deallocate arrays
-        if ( associated(sumDiffuseHI) ) nullify(sumDiffuseHI)
-        if ( associated(sumDiffuseHeI) ) nullify(sumDiffuseHeI)
-        if ( associated(sumDiffuseHeII) ) nullify(sumDiffuseHeII)
+        if ( allocated(sumDiffuseHI) ) deallocate(sumDiffuseHI)
+        if ( allocated(sumDiffuseHeI) ) deallocate(sumDiffuseHeI)
+        if ( allocated(sumDiffuseHeII) ) deallocate(sumDiffuseHeII)
         if (lgDust) then
-           if ( associated(sumDiffuseDust) ) nullify(sumDiffuseDust)
+           if ( allocated(sumDiffuseDust) ) deallocate(sumDiffuseDust)
         end if
 
     end subroutine setDiffusePDF  
@@ -2079,23 +2079,22 @@ module emission_mod
     double precision   :: sumN                      ! normalization factor for populations
     double precision        :: sqrTe                     ! sqrt(Te)
     
-    double precision, pointer          :: a(:,:)      ! transition rates array
-    double precision, pointer          :: cs(:,:)     ! collisional strengths array
-    double precision, pointer          :: e(:)        ! energy levels array
-    double precision, pointer          :: qeff(:,:)   ! q eff  array
-    double precision, pointer          :: qom(:,:,:)  ! qom array
-    double precision, pointer          :: tnij(:,:)   ! tnij array
-    double precision, pointer          :: x(:,:)      ! matrix arrays
-    double precision, pointer          :: y(:)        !       
-    double precision, &
-         & pointer :: n(:), n2(:) ! level population arrays
+    double precision, allocatable          :: a(:,:)      ! transition rates array
+    double precision, allocatable          :: cs(:,:)     ! collisional strengths array
+    double precision, allocatable          :: e(:)        ! energy levels array
+    double precision, allocatable          :: qeff(:,:)   ! q eff  array
+    double precision, allocatable          :: qom(:,:,:)  ! qom array
+    double precision, allocatable          :: tnij(:,:)   ! tnij array
+    double precision, allocatable          :: x(:,:)      ! matrix arrays
+    double precision, allocatable          :: y(:)        !       
+    double precision, allocatable          :: n(:), n2(:) ! level population arrays
 
     real                 :: a_r(4),a_d(5),z,br       !
-    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
+    real, allocatable     :: alphaTotal(:)             ! maximum 100-level ion
     real                 :: qomInt                    ! interpolated value of qom
-    real,    pointer     :: logTemp(:)                ! log10 temperature points array
-    real,    pointer     :: qq(:)                     ! qq array
-    real,    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
+    real, allocatable     :: logTemp(:)                ! log10 temperature points array
+    real, allocatable     :: qq(:)                     ! qq array
+    real, allocatable     :: qq2(:)                    ! 2nd deriv qq2 array
 
     real, intent(in) &
          & :: Te, &    ! electron temperature [K]
@@ -2116,12 +2115,12 @@ module emission_mod
     
     integer, parameter :: safeLim = 100000 ! loop safety limit
     
-    integer, pointer :: g(:)              ! statistical weight array
+    integer, allocatable :: g(:)              ! statistical weight array
     
     integer, dimension(2) :: ilow, &      ! lower index
          & iup          ! upper index
 
-    character(len = 20), pointer :: &
+    character(len = 20), allocatable :: &
          & label(:)! labels array
 
     character(len = 75) :: text  ! lines of text
@@ -2433,7 +2432,7 @@ module emission_mod
           cs(i-1, j) = qomInt
           
           ! the calculation constant here is the energy [erg] 
-                ! associated to unit wavenumber [1/cm] divided by the 
+                ! allocated to unit wavenumber [1/cm] divided by the 
           ! boltzmann constant k.
           constant = 1.4388463d0
           ! exponential factor 
@@ -2502,22 +2501,22 @@ module emission_mod
     end do
 
     ! deallocate arrays
-    if( associated(alphaTotal) ) nullify(alphaTotal)
-    if( associated(label) ) nullify(label)
-    if( associated(logTemp) ) nullify(logTemp)
-    if( associated(a) ) nullify(a)
-    if( associated(cs) ) nullify(cs)
-    if( associated(n) ) nullify(n)
-    if( associated(n2) ) nullify(n2)
-    if( associated(qeff) ) nullify(qeff) 
-    if( associated(qq) ) nullify(qq)
-    if( associated(qq2) ) nullify(qq2)
-    if( associated(tnij) ) nullify(tnij) 
-    if( associated(x) ) nullify(x) 
-    if( associated(y) ) nullify(y) 
-    if( associated(e) ) nullify(e)
-    if( associated(g) ) nullify(g)
-    if( associated(qom) ) nullify(qom)
+    if( allocated(alphaTotal) ) deallocate(alphaTotal)
+    if( allocated(label) ) deallocate(label)
+    if( allocated(logTemp) ) deallocate(logTemp)
+    if( allocated(a) ) deallocate(a)
+    if( allocated(cs) ) deallocate(cs)
+    if( allocated(n) ) deallocate(n)
+    if( allocated(n2) ) deallocate(n2)
+    if( allocated(qeff) ) deallocate(qeff) 
+    if( allocated(qq) ) deallocate(qq)
+    if( allocated(qq2) ) deallocate(qq2)
+    if( allocated(tnij) ) deallocate(tnij) 
+    if( allocated(x) ) deallocate(x) 
+    if( allocated(y) ) deallocate(y) 
+    if( allocated(e) ) deallocate(e)
+    if( allocated(g) ) deallocate(g)
+    if( allocated(qom) ) deallocate(qom)
 
   end subroutine equilibrium
 
@@ -2541,23 +2540,22 @@ module emission_mod
     double precision   :: sumN                      ! normalization factor for populations
     double precision        :: sqrTe                     ! sqrt(Te)
     
-    double precision, pointer          :: a(:,:)      ! transition rates array
-    double precision, pointer          :: cs(:,:)     ! collisional strengths array
-    double precision, pointer          :: e(:)        ! energy levels array
-    double precision, pointer          :: qeff(:,:)   ! q eff  array
-    double precision, pointer          :: qom(:,:,:)  ! qom array
-    double precision, pointer          :: tnij(:,:)   ! tnij array
-    double precision, pointer          :: x(:,:)      ! matrix arrays
-    double precision, pointer          :: y(:)        !       
-    double precision, &
-         & pointer :: n(:), n2(:) ! level population arrays
+    double precision, allocatable          :: a(:,:)      ! transition rates array
+    double precision, allocatable          :: cs(:,:)     ! collisional strengths array
+    double precision, allocatable          :: e(:)        ! energy levels array
+    double precision, allocatable          :: qeff(:,:)   ! q eff  array
+    double precision, allocatable          :: qom(:,:,:)  ! qom array
+    double precision, allocatable          :: tnij(:,:)   ! tnij array
+    double precision, allocatable          :: x(:,:)      ! matrix arrays
+    double precision, allocatable          :: y(:)        !       
+    double precision, allocatable          :: n(:), n2(:) ! level population arrays
 
     real                 :: a_r(4),a_d(5),z,br       !
-    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
+    real, allocatable     :: alphaTotal(:)             ! maximum 100-level ion
     real                 :: qomInt                    ! interpolated value of qom
-    real,    pointer     :: logTemp(:)                ! log10 temperature points array
-    real,    pointer     :: qq(:)                     ! qq array
-    real,    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
+    real, allocatable     :: logTemp(:)                ! log10 temperature points array
+    real, allocatable     :: qq(:)                     ! qq array
+    real, allocatable     :: qq2(:)                    ! 2nd deriv qq2 array
 
     real, intent(in) &
          & :: Te, &    ! electron temperature [K]
@@ -2577,12 +2575,12 @@ module emission_mod
     
     integer, parameter :: safeLim = 10000 ! loop safety limit
     
-    integer, pointer :: g(:)              ! statistical weight array
+    integer, allocatable :: g(:)              ! statistical weight array
     
     integer, dimension(2) :: ilow, &      ! lower index
          & iup          ! upper index
 
-    character(len = 20), pointer :: &
+    character(len = 20), allocatable :: &
          & label(:)! labels array
 
     character(len = 75) :: text  ! lines of text
@@ -2853,7 +2851,7 @@ module emission_mod
           cs(i-1, j) = qomInt
           
           ! the calculation constant here is the energy [erg] 
-                ! associated to unit wavenumber [1/cm] divided by the 
+                ! allocated to unit wavenumber [1/cm] divided by the 
           ! boltzmann constant k.
           constant = 1.4388463d0
           ! exponential factor 
@@ -2914,22 +2912,22 @@ module emission_mod
        end do
     end do
     ! deallocate arrays
-    if( associated(alphaTotal) ) nullify(alphaTotal)
-    if( associated(label) ) nullify(label)
-    if( associated(logTemp) ) nullify(logTemp)
-    if( associated(a) ) nullify(a)
-    if( associated(cs) ) nullify(cs)
-    if( associated(n) ) nullify(n)
-    if( associated(n2) ) nullify(n2)
-    if( associated(qeff) ) nullify(qeff) 
-    if( associated(qq) ) nullify(qq)
-    if( associated(qq2) ) nullify(qq2)
-    if( associated(tnij) ) nullify(tnij) 
-    if( associated(x) ) nullify(x) 
-    if( associated(y) ) nullify(y) 
-    if( associated(e) ) nullify(e)
-    if( associated(g) ) nullify(g)
-    if( associated(qom) ) nullify(qom)
+    if( allocated(alphaTotal) ) deallocate(alphaTotal)
+    if( allocated(label) ) deallocate(label)
+    if( allocated(logTemp) ) deallocate(logTemp)
+    if( allocated(a) ) deallocate(a)
+    if( allocated(cs) ) deallocate(cs)
+    if( allocated(n) ) deallocate(n)
+    if( allocated(n2) ) deallocate(n2)
+    if( allocated(qeff) ) deallocate(qeff) 
+    if( allocated(qq) ) deallocate(qq)
+    if( allocated(qq2) ) deallocate(qq2)
+    if( allocated(tnij) ) deallocate(tnij) 
+    if( allocated(x) ) deallocate(x) 
+    if( allocated(y) ) deallocate(y) 
+    if( allocated(e) ) deallocate(e)
+    if( allocated(g) ) deallocate(g)
+    if( allocated(qom) ) deallocate(qom)
   end subroutine equilibrium1
 
 

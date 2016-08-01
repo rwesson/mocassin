@@ -49,7 +49,7 @@ module photon_mod
         integer                        :: iPhot       ! counter
         integer                        :: seedSize    ! pseudo random number generator seed 
         integer, dimension(2)          :: inX,inY,inZ ! initial position indeces
-        integer, pointer               :: seed(:)     ! seed array
+        integer, allocatable               :: seed(:)     ! seed array
         integer                        :: msec        ! millisecs of the sec
         integer                        :: dt(8)       ! date and time values
         integer                        :: trapped
@@ -84,7 +84,7 @@ module photon_mod
 
         call random_seed(put = seed)
         
-        if (associated(seed)) nullify(seed)
+        if (allocated(seed)) deallocate(seed)
 
         Qphot = 0.
 

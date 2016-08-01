@@ -8,7 +8,7 @@ module interpolation_mod
       implicit none
       
       real, dimension(:), intent(inout) :: arr
-      real, pointer :: tmp(:)
+      real, allocatable :: tmp(:)
 
       real       :: min
       
