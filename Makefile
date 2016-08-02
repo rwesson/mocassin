@@ -27,9 +27,11 @@ SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/
 	source/update_mod.o source/output_mod.o source/iteration_mod.o
 
 ifeq ($(CO),debug) #to show all compiler warnings
-  FFLAGS += -fbounds-check -Wall -Wuninitialized #-ffpe-trap=zero,overflow,invalid,underflow,denormal -fbacktrace -fcheck=all
-else ifeq ($(CO),debug2) #for profiling
-  FFLAGS += -g -pg
+  FFLAGS += -fbounds-check -Wall -Wuninitialized -g -pg #-ffpe-trap=zero,overflow,invalid,underflow,denormal -fbacktrace -fcheck=all
+else ifeq ($(CO),valgrind)
+  FFLAGS += -g
+else ifeq ($(CO),gprof)
+  FFLAGS += -pg
 endif
 
 .PHONY: all clean new install uninstall
