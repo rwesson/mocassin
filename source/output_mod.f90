@@ -1306,7 +1306,7 @@ module output_mod
               end do
            end do
 
-           write(27,*) 'T(H+) ', TeVol(iAb,1,2), ' componenet ', iAb
+           write(27,*) 'T(H+) ', TeVol(iAb,1,2), ' component ', iAb
 
            write(30, *) "Element      Ion        <ion>/<H+>I     <ion>/<H+>II"
            write(30, *)
