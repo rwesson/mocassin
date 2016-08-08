@@ -1268,48 +1268,11 @@ module emission_mod
 
         ! Sum  up energy in recombination lines
         
-        normRec = 0.
-        ! HI
-        do iup = 3, 15
-            do ilow = 2, min0(8, iup-1)
-                normRec = normRec+real(HIRecLines(iup, ilow))
-            end do
-        end do
-        ! HeII            
-        do iup = 3, 30
-            do ilow = 2, min0(16, iup-1)
-                normRec = normRec+real(HeIIRecLines(iup, ilow))
-            end do
-        end do
-        ! HeI singlets
-        do i = 1, 34
-            normRec = normRec+real(HeIRecLines(i))
-        end do
+        normRec = real(sum(HIRecLines)+sum(HeIIRecLines)+sum(HeIRecLines))
 
         ! Sum  up energy in forbidden lines
 
-        normFor = 0.
-        do elem = 3, nElements
-           do ion = 1, min(elem+1, nstages)
-              if (elem ==26 .and. ion==2) then
-                 do ilow = 1, nForLevelsLarge
-                    do iup = 1, nForLevelsLarge
-                       if (forbiddenLinesLarge(ilow, iup) > 1.e-35)  then 
-                          normFor = normFor + real(forbiddenLinesLarge(ilow, iup))
-                       end if
-                    end do
-                 end do
-              else
-                 do ilow = 1, nForLevels
-                    do iup = 1, nForLevels
-                       if (forbiddenLines(elem, ion, ilow, iup) > 1.e-35)  then 
-                          normFor = normFor + real(forbiddenLines(elem, ion, ilow, iup))
-                       end if
-                    end do
-                 end do
-              end if
-           end do
-        end do
+        normFor = real(sum(forbiddenLines,forbiddenlines.gt.1.e-35)+sum(forbiddenlineslarge,forbiddenlineslarge.gt.1.e-35))
 
         ! total energy in lines (note: this variable will later be turned into the fraction of
         ! non-ionizing line photons as in declaration)
