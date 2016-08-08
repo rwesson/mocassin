@@ -945,21 +945,24 @@ module emission_mod
 
         ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
         if (denint>0.and.denint<3) then
-           do i = 1, 34
-              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
-              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
 
-              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+!old code: easier to read but less efficient
+!           do i = 1, 34
 
-           end do
+!              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+!              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
+
+!              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+
+!           end do
+!new code: should do exactly the same as the old code but faster
+           HeIRecLines = HeIrecLineCoeff(:,denint,1)*(T4**(HeIrecLineCoeff(:,denint,2)))*exp(HeIrecLineCoeff(:,denint,3)/T4) + &
+& ((HeIrecLineCoeff(:,denint+1,1)*(T4**(HeIrecLineCoeff(:,denint+1,2)))*exp(HeIrecLineCoeff(:,denint+1,3)/T4) - HeIrecLineCoeff(:,denint,1)*(T4**(HeIrecLineCoeff(:,denint,2)))*exp(HeIrecLineCoeff(:,denint,3)/T4)) &
+& *(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
        elseif(denint==0) then
-           do i = 1, 34
-              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
-           end do
+           HeIRecLines = HeIrecLineCoeff(:,1,1)*(T4**(HeIrecLineCoeff(:,1,2)))*exp(HeIrecLineCoeff(:,1,3)/T4)
         elseif(denint==3) then
-           do i = 1, 34
-              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
-           end do
+           HeIRecLines = HeIrecLineCoeff(:,3,1)*(T4**(HeIrecLineCoeff(:,3,2)))*exp(HeIrecLineCoeff(:,3,3)/T4)
         end if
         HeIRecLines=HeIRecLines*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
 
