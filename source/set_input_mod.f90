@@ -720,11 +720,11 @@ module set_input_mod
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
             stop
-       else if (LPhot == 0. .and. LStar(1) == 0. .and. .not.lgPlaneIonization & 
+       else if (LPhot == 0. .and. .not.associated(LStar) .and. .not.lgPlaneIonization &
             & .and. Ldiffuse<=0.) then
             print*, "! readInput: LPhot and LStar missing from model parameter input file"
             stop
-        else if (LPhot /= 0. .and. LStar(1) /= 0.) then 
+        else if (LPhot /= 0. .and. associated(LStar)) then
             print*, "! readInput: [warning] LPhot and LStar both entered. "
         else if (maxIterateMC < 1) then
             print*, "! readInput: invalid maxIterateMC in model parameter input &
