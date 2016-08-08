@@ -614,6 +614,7 @@ module set_input_mod
         else
            allocate(nPhotons(1))
            allocate(deltaE(0:1))
+           deltaE = 0.
            nPhotons(1)=nPhotonsTot
 
            if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
