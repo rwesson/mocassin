@@ -643,19 +643,19 @@ module fluorescence_mod
                    print*, 'grid(gP)%xAxis ', grid(gP)%xAxis
                    print*, 'gP,xP,grid(gP)%xAxis(xP), rVec%x, vHat%x'
                    print*, gP,xP,grid(gP)%xAxis(xP), rVec%x, vHat%x
-                   dS = amin1(dSy, dSz)
+                   dS = min(dSy, dSz)
                 else if (dSy<=0.) then
                    print*, '! fluoPathSegment: [warning] dSy <= 0.', dSy
                    print*, 'grid(gP)%yAxis ', grid(gP)%yAxis
                    print*, 'gP,yP,grid(gP)%yAxis(yP), rVec%y, vHat%y'
                    print*, gP,yP,grid(gP)%yAxis(yP), rVec%y, vHat%y
-                   dS = amin1(dSx, dSz)
+                   dS = min(dSx, dSz)
                 else if (dSz<=0.) then
                    print*, '! fluoPathSegment: [warning] dSz <= 0.', dSz
                    print*, 'grid(gP)%zAxis ', grid(gP)%zAxis
                    print*, 'gP,zP,grid(gP)%zAxis(zP), rVec%z, vHat%z'
                    print*, gP,zP,grid(gP)%zAxis(zP), rVec%z, vHat%z
-                   dS = amin1(dSx, dSy)
+                   dS = min(dSx, dSy)
                 else
                    dS = min(dSx,dSy)
                    dS = min(dS, dSz)

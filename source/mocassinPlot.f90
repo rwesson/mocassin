@@ -230,7 +230,7 @@ program MoCaSSiNplot
                          
                          ! HeII rec lines
                          do iup = 3, 30
-                            do ilow = 2, min0(16, iup-1)
+                            do ilow = 2, min(16, iup-1)
                                
                                
                                if (plot%lineNumber(plotNum) == iLine) &
@@ -743,7 +743,7 @@ program MoCaSSiNplot
             stop
         end if
         do iup = 30, 3, -1
-            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min0(16, iup-1))
+            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min(16, iup-1))
         end do
 
         close(95)
@@ -754,7 +754,7 @@ program MoCaSSiNplot
 
         ! calculate emission due to HeI recombination lines [e-25 ergs/s/cm^3]
         do iup = 30, 3, -1
-            do ilow = 2, min0(16, iup-1)
+            do ilow = 2, min(16, iup-1)
                 HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
             end do
         end do    

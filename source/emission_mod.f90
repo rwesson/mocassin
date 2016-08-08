@@ -880,7 +880,7 @@ module emission_mod
             stop
         end if
         do iup = 15, 3, -1
-            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
+            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min(8, iup-1)) 
         end do
 
         close(94)
@@ -893,7 +893,7 @@ module emission_mod
 
         ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
         do iup = 15, 3, -1
-            do ilow = 2, min0(8, iup-1)
+            do ilow = 2, min(8, iup-1)
                 HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
             end do
         end do    
@@ -915,7 +915,7 @@ module emission_mod
             stop
         end if
         do iup = 30, 3, -1
-            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min0(16, iup-1))
+            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min(16, iup-1))
         end do
 
         close(95)
@@ -926,7 +926,7 @@ module emission_mod
 
         ! calculate emission due to HeI recombination lines [e-25 ergs/s/cm^3]
         do iup = 30, 3, -1
-            do ilow = 2, min0(16, iup-1)
+            do ilow = 2, min(16, iup-1)
                 HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
              end do
         end do    
@@ -3460,15 +3460,15 @@ module emission_mod
 
                      if (dSx<=0.) then
                         print*, '! setResLineEscapeProb: [warning] dSx <= 0.'
-                        dS = amin1(dSy, dSz)
+                        dS = min(dSy, dSz)
                      else if (dSy<=0.) then
                         print*, '! setResLineEscapeProb: [warning] dSy <= 0.'
-                        dS = amin1(dSx, dSz)
+                        dS = min(dSx, dSz)
                      else if (dSz<=0.) then
                         print*, '! setResLineEscapeProb: [warning] dSz <= 0.'
-                        dS = amin1(dSx, dSy)
+                        dS = min(dSx, dSy)
                      else
-                        dS = amin1(dSx,dSy,dSz)
+                        dS = min(dSx,dSy,dSz)
                      end if
 
                      ! this should now never ever happen
