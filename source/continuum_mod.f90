@@ -317,7 +317,7 @@ module continuum_mod
               print*, "RStar = ", RStar, " [e18 cm]"
               print*, "deltaE = ", deltaE, " [e36 erg/s]"
 
-           else if (Lstar(1) > 0. ) then ! calculate LPhot [e36 phot/s]
+           else if (associated(Lstar)) then ! calculate LPhot [e36 phot/s]
               
               deltaE(1)=Lstar(1)/nPhotons(1)
 
