@@ -1003,7 +1003,7 @@ module iteration_mod
                     end if
                  end if                
                  
-                 print*, "! iterateMC:  Summary] Iteration ",nIterateMC,'; ', &
+                 print*, "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
                       &int(convPercent),"% converged cells in grid ", iG
                  print*, "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
                       &int(noHitPercent(iG)),"% no hit cells in grid ", iG
