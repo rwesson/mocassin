@@ -90,6 +90,9 @@ module grid_mod
                  stop
               end if
 
+              forbiddenLines(:,:,:,:) = 0.
+              forbiddenLinesLarge(:,:) = 0.
+
               call setComposition(grid)
 
            else
