@@ -418,7 +418,7 @@ module set_input_mod
                 print*, keyword, LStar(1)
             case ("LPhot")
                 backspace 10
-                if (.not. associated(LStar)) allocate(Lstar(0:1))                
+                if (.not. allocated(LStar)) allocate(Lstar(0:1))                
                 read(unit=10, fmt=*, iostat=ios) keyword, LPhot
                 print*, keyword, LPhot
             case ("nuMax")
@@ -619,9 +619,9 @@ module set_input_mod
 
            if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
               if (nStars<1) then
-                 if(.not.associated(contShape)) allocate(contShape(0:0))
-                 if(.not.associated(spID)) allocate(spID(0:0))
-                 if(.not.associated(LStar)) allocate(LStar(0:0))
+                 if(.not.allocated(contShape)) allocate(contShape(0:0))
+                 if(.not.allocated(spID)) allocate(spID(0:0))
+                 if(.not.allocated(LStar)) allocate(LStar(0:0))
               end if
               deltaE(0) = Ldiffuse/nPhotonsDiffuse
               contShape(0) = shapeDiffuse
@@ -632,7 +632,7 @@ module set_input_mod
               end if
            end if
 
-           if (.not.associated(starPosition)) then
+           if (.not.allocated(starPosition)) then
               allocate (starPosition(1))
               starPosition(1)%x=0.
               starPosition(1)%y=0.
@@ -641,19 +641,19 @@ module set_input_mod
            end if
         end if
 
-        if (.not.associated(contShape)) then
+        if (.not.allocated(contShape)) then
            print*, "! readInput: no information about the continuum shape - contShape -"
            stop
         end if
-        if (.not.associated(TStellar)) then
+        if (.not.allocated(TStellar)) then
            print*, "! readInput: no information about the stellar effective temperature - Tstellar -"
            stop
         end if
-        if (.not.associated(nPhotons)) then
+        if (.not.allocated(nPhotons)) then
            print*, "! readInput: no information about the number of energy packets to be used - nPhotons -"
            stop
         end if
-        if (.not.associated(Lstar) .and. Lphot<=0.) then
+        if (.not.allocated(Lstar) .and. Lphot<=0.) then
            print*, "! readInput: no information about the stellar luminosity - Lstar or Lphot -"
            stop
         end if
@@ -681,7 +681,7 @@ module set_input_mod
            print*, "! readInput: [warning] both dust and gas processes must be activated, to use the&
                 &resonanceLinesTransfer keyword. Reset to 101."
            resLinesTransfer = 101.
-        else if (.not.associated(abundanceFile) .and. lgGas) then
+        else if (.not.allocated(abundanceFile) .and. lgGas) then
            print*, "! readInput: no elemental abundance file has been specified"
            stop
         else if ((lgMdMh .and. lgMdMg) .and. (NdustFile /= "none" .or. NdustValue /=0) )then
@@ -721,11 +721,11 @@ module set_input_mod
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
             stop
-       else if (LPhot == 0. .and. .not.associated(LStar) .and. .not.lgPlaneIonization &
+       else if (LPhot == 0. .and. .not.allocated(LStar) .and. .not.lgPlaneIonization &
             & .and. Ldiffuse<=0.) then
             print*, "! readInput: LPhot and LStar missing from model parameter input file"
             stop
-        else if (LPhot /= 0. .and. associated(LStar)) then
+        else if (LPhot /= 0. .and. allocated(LStar)) then
             print*, "! readInput: [warning] LPhot and LStar both entered. "
         else if (maxIterateMC < 1) then
             print*, "! readInput: invalid maxIterateMC in model parameter input &

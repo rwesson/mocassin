@@ -32,15 +32,15 @@ module output_mod
         integer                     :: ypLoc
 
 
-        real, pointer               :: cMap(:)           ! local c-value
-        real, pointer               :: flam(:)           ! f(lambda) value from file
+        real, allocatable               :: cMap(:)           ! local c-value
+        real, allocatable               :: flam(:)           ! f(lambda) value from file
 
         real                        :: dV       ! volume of this cell
         real                        :: factor1  ! calculations factor
         real                        :: factor2  ! calculations factor
         real                        :: g        ! alpha*h*nu (used to calculate line intensities)
-        real, pointer               :: HbetaLuminosity(:) ! MC Hbeta luminosity [E36 erg/sec]
-        real, pointer               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]        
+        real, allocatable               :: HbetaLuminosity(:) ! MC Hbeta luminosity [E36 erg/sec]
+        real, allocatable               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]        
         real                        :: LtotAn   ! HbetaVol * sumAn
         real                        :: LtotMC   ! HbetaLuminosity * sumMC 
         real                        :: sumAn    ! sum of the relative an intensities
@@ -50,32 +50,32 @@ module output_mod
         real                        :: radius, dz, dr
 
         ! lexingotn
-        !        real, pointer :: denominatorIon(:,:,:) ! denominator for IonVol calculations
+        !        real, allocatable :: denominatorIon(:,:,:) ! denominator for IonVol calculations
 
         ! Harrington 1982
-        real, pointer ::  denominatorIon(:,:)           ! denominator for IonVol calculations
-        real, pointer :: denominatorTe(:,:,:)           ! denominator for TeVol calculations
+        real, allocatable ::  denominatorIon(:,:)           ! denominator for IonVol calculations
+        real, allocatable :: denominatorTe(:,:,:)           ! denominator for TeVol calculations
 
         real, dimension(nLines)             :: &
              &                                       linePacketsUsed ! linePackets at this cell
         real, dimension(nElements) ::  elemAbundanceUsed  ! local abundances
-        real, pointer         :: resLinesVol(:,:)    ! resonance lines volume emission
-        real, pointer         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
-        real, pointer         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
-        real, pointer         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
-        real, pointer         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
-        real, pointer         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
-        real, pointer         :: lineLuminosity(:,:) ! MC luminosity in a given line
+        real, allocatable         :: resLinesVol(:,:)    ! resonance lines volume emission
+        real, allocatable         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
+        real, allocatable         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
+        real, allocatable         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
+        real, allocatable         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
+        real, allocatable         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
+        real, allocatable         :: lineLuminosity(:,:) ! MC luminosity in a given line
 
         double precision, dimension(nElements,nstages,nForLevels,nForLevels) :: wav           
         double precision, dimension(nForLevelsLarge,nForLevelsLarge) :: wavLarge
-        real, pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
-        real, pointer         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
-        real, pointer         :: TeVol(:,:,:)      ! mean Temperature for a given ion
+        real, allocatable         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
+        real, allocatable         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
+        real, allocatable         :: TeVol(:,:,:)      ! mean Temperature for a given ion
 
         ! recombination lines stuff (1=Oii, 2=mgii,3=neii,4=cii,5=n33ii,6=n34ii)
 
-        real(kind=8), pointer          :: RecLinesFlux(:,:,:)    ! 1st is ion num, 2nd is emissivity
+        real(kind=8), allocatable          :: RecLinesFlux(:,:,:)    ! 1st is ion num, 2nd is emissivity
         real(kind=8), dimension(500)   :: recLambdaOII           ! lambda in angstrom
         real(kind=8), dimension(500)   :: recLambdaMgII    
         real(kind=8), dimension(500)   :: recLambdaNeII
@@ -1346,27 +1346,27 @@ module output_mod
         close(30)
         close(60)
              
-        if (associated(HIVol)) nullify(HIVol)
-        if (associated(HeIVol)) nullify(HeIVol)
-        if (associated(HeIIVol)) nullify(HeIIVol)
-        if (associated(ionDenVol)) nullify(ionDenVol)
+        if (allocated(HIVol)) deallocate(HIVol)
+        if (allocated(HeIVol)) deallocate(HeIVol)
+        if (allocated(HeIIVol)) deallocate(HeIIVol)
+        if (allocated(ionDenVol)) deallocate(ionDenVol)
         if (lgDebug) then
-           if (associated(lineLuminosity)) nullify(lineLuminosity)
+           if (allocated(lineLuminosity)) deallocate(lineLuminosity)
         end if
-        if (associated(forbVol)) nullify(forbVol)
-        if (associated(forbVolLarge)) nullify(forbVolLarge)
-        if (associated(TeVol)) nullify(TeVol)
-        if (associated(recLinesFlux)) nullify(recLinesFlux)
-        if (associated(denominatorIon)) nullify(denominatorIon)
-        if (associated(denominatorTe)) nullify(denominatorTe)
+        if (allocated(forbVol)) deallocate(forbVol)
+        if (allocated(forbVolLarge)) deallocate(forbVolLarge)
+        if (allocated(TeVol)) deallocate(TeVol)
+        if (allocated(recLinesFlux)) deallocate(recLinesFlux)
+        if (allocated(denominatorIon)) deallocate(denominatorIon)
+        if (allocated(denominatorTe)) deallocate(denominatorTe)
         
         if (present(extMap)) then 
-           if (associated(cMap)) nullify(cMap)
-           if (associated(flam)) nullify(flam)
+           if (allocated(cMap)) deallocate(cMap)
+           if (allocated(flam)) deallocate(flam)
         end if
         if (convPercent >= resLinesTransfer .and. lgDust) then
-           if (associated(resLinesVol)) nullify(resLinesVol)
-           if (associated(resLinesVolCorr)) nullify(resLinesVolCorr)
+           if (allocated(resLinesVol)) deallocate(resLinesVol)
+           if (allocated(resLinesVolCorr)) deallocate(resLinesVolCorr)
         end if
 
       contains
@@ -2348,7 +2348,7 @@ module output_mod
 
       type(vector) :: aVec, uHat        
       
-      real, pointer :: outTau(:)
+      real, allocatable :: outTau(:)
 
       integer :: err, i, ios
 
@@ -2460,7 +2460,7 @@ module output_mod
 
       close(73)
       
-      if(associated(outTau)) nullify(outTau)
+      if(allocated(outTau)) deallocate(outTau)
 
     end subroutine writeTauNu
 
@@ -2473,7 +2473,7 @@ module output_mod
       integer :: ios, err                        ! I/O error status
       integer :: i,j,k,freq, imu, iG, ic, ijk    ! counters
       
-      real, pointer :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
+      real, allocatable :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
 
       real          :: theta1, theta2, phi1, phi2
       real          :: lambda                    ! lambda [cm]
@@ -2669,9 +2669,9 @@ module output_mod
       close(16)
 !      close(116)
 
-      if (associated(SED)) nullify(SED)
-      if (associated(sSED)) nullify(sSED)
-      if (associated(dSED)) nullify(dSED)
+      if (allocated(SED)) deallocate(SED)
+      if (allocated(sSED)) deallocate(sSED)
+      if (allocated(dSED)) deallocate(dSED)
 
       print*, 'out writeSED...'
 
