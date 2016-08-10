@@ -945,24 +945,21 @@ module emission_mod
 
         ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
         if (denint>0.and.denint<3) then
+           do i = 1, 34
+              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
 
-!old code: easier to read but less efficient
-!           do i = 1, 34
+              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
 
-!              x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
-!              x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
-
-!              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
-
-!           end do
-!new code: should do exactly the same as the old code but faster
-           HeIRecLines = HeIrecLineCoeff(:,denint,1)*(T4**(HeIrecLineCoeff(:,denint,2)))*exp(HeIrecLineCoeff(:,denint,3)/T4) + &
-& ((HeIrecLineCoeff(:,denint+1,1)*(T4**(HeIrecLineCoeff(:,denint+1,2)))*exp(HeIrecLineCoeff(:,denint+1,3)/T4) - HeIrecLineCoeff(:,denint,1)*(T4**(HeIrecLineCoeff(:,denint,2)))*exp(HeIrecLineCoeff(:,denint,3)/T4)) &
-& *(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+           end do
        elseif(denint==0) then
-           HeIRecLines = HeIrecLineCoeff(:,1,1)*(T4**(HeIrecLineCoeff(:,1,2)))*exp(HeIrecLineCoeff(:,1,3)/T4)
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
         elseif(denint==3) then
-           HeIRecLines = HeIrecLineCoeff(:,3,1)*(T4**(HeIrecLineCoeff(:,3,2)))*exp(HeIrecLineCoeff(:,3,3)/T4)
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
         end if
         HeIRecLines=HeIRecLines*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
 
@@ -1271,11 +1268,48 @@ module emission_mod
 
         ! Sum  up energy in recombination lines
         
-        normRec = real(sum(HIRecLines)+sum(HeIIRecLines)+sum(HeIRecLines))
+        normRec = 0.
+        ! HI
+        do iup = 3, 15
+            do ilow = 2, min0(8, iup-1)
+                normRec = normRec+real(HIRecLines(iup, ilow))
+            end do
+        end do
+        ! HeII            
+        do iup = 3, 30
+            do ilow = 2, min0(16, iup-1)
+                normRec = normRec+real(HeIIRecLines(iup, ilow))
+            end do
+        end do
+        ! HeI singlets
+        do i = 1, 34
+            normRec = normRec+real(HeIRecLines(i))
+        end do
 
         ! Sum  up energy in forbidden lines
 
-        normFor = real(sum(forbiddenLines,forbiddenlines.gt.1.e-35)+sum(forbiddenlineslarge,forbiddenlineslarge.gt.1.e-35))
+        normFor = 0.
+        do elem = 3, nElements
+           do ion = 1, min(elem+1, nstages)
+              if (elem ==26 .and. ion==2) then
+                 do ilow = 1, nForLevelsLarge
+                    do iup = 1, nForLevelsLarge
+                       if (forbiddenLinesLarge(ilow, iup) > 1.e-35)  then 
+                          normFor = normFor + real(forbiddenLinesLarge(ilow, iup))
+                       end if
+                    end do
+                 end do
+              else
+                 do ilow = 1, nForLevels
+                    do iup = 1, nForLevels
+                       if (forbiddenLines(elem, ion, ilow, iup) > 1.e-35)  then 
+                          normFor = normFor + real(forbiddenLines(elem, ion, ilow, iup))
+                       end if
+                    end do
+                 end do
+              end if
+           end do
+        end do
 
         ! total energy in lines (note: this variable will later be turned into the fraction of
         ! non-ionizing line photons as in declaration)
