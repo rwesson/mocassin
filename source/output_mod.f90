@@ -255,7 +255,7 @@ module output_mod
 
            open(unit=20, status='old', position='rewind', file=PREFIX//'/share/mocassin/data/flambda.dat',  action="read",iostat=ios)
            if (ios /= 0) then
-              print*, "! outputGas: can't open file for reading, data/flambda.dat"
+              print*, "! outputGas: can't open file for reading, ",PREFIX,"/share/mocassin/data/flambda.dat"
               stop
            end if
 
@@ -922,13 +922,13 @@ module output_mod
         if (present(extMap)) then
            open(unit=10, status='unknown', position='rewind', file='output/lineFlux.ext', action="write", iostat=ios)
            if (ios /= 0) then
-              print*, "! outputGas: can't open file for writing: lineFlux.out"
+              print*, "! outputGas: can't open file for writing: output/lineFlux.out"
               stop
            end if
         else
            open(unit=10, status='unknown', position='rewind', file='output/lineFlux.out', action="write",iostat=ios)
            if (ios /= 0) then
-              print*, "! outputGas: can't open file for writing: lineFlux.out"
+              print*, "! outputGas: can't open file for writing: output/lineFlux.out"
               stop
            end if
         end if
@@ -1240,13 +1240,13 @@ module output_mod
         ! write the temperature.out file
         open(unit=20, status='unknown', position='rewind', file='output/temperature.out', action="write",iostat=ios)
         if (ios /= 0) then
-           print*, "! outputGas: can't open file for writing: temperature.out"
+           print*, "! outputGas: can't open file for writing: output/temperature.out"
            stop
         end if
         
         open(unit=27, status='unknown', position='append', file='output/summary.out', action="write",iostat=ios)
         if (ios /= 0) then
-           print*, "! iterationMC: can't open file for writing, summary.out"
+           print*, "! iterationMC: can't open file for writing: output/summary.out"
            stop
         end if
 
@@ -1254,7 +1254,7 @@ module output_mod
         ! write ionratio.out file
         open(unit=30, status='unknown', position='rewind', file='output/ionratio.out', action="write",iostat=ios)
         if (ios /= 0) then
-           print*, "! outputGas: can't open file for writing: ionratio.out"
+           print*, "! outputGas: can't open file for writing: output/ionratio.out"
            stop
         end if
         
@@ -1262,7 +1262,7 @@ module output_mod
            
            open(unit=60, status='unknown', position='rewind', file='output/ionDen.out', action="write",iostat=ios)
            if (ios /= 0) then
-              print*, "! outputGas: can't open file for writing: ionDen.out"
+              print*, "! outputGas: can't open file for writing: output/ionDen.out"
               stop
            end if
 
@@ -2058,7 +2058,7 @@ module output_mod
         close(95)
         open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
+            print*, "! RecLinesEmission: can't open file:",PREFIX,"/share/mocassin/data/r2b0100.dat"
             stop
         end if
         do iup = 30, 3, -1
@@ -2136,7 +2136,7 @@ module output_mod
       close(337)
       open(unit =337, file = PREFIX//"/share/mocassin/data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
         if (ios /= 0) then
-             print*, "! hdatax: can't open  data/e1bx.d"
+             print*, "! hdatax: can't open ",PREFIX,"/share/mocassin/data/e1bx.d"
              stop
         end if
 

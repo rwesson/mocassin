@@ -782,7 +782,7 @@ module emission_mod
         close(93)
         open(unit = 93,  action="read", file = PREFIX//"/share/mocassin/data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! HeI2phot: can't open file: data/HeI2phot.dat"
+            print*, "! HeI2phot: can't open file: ",PREFIX,"/share/mocassin/data/HeI2phot.dat"
             stop
         end if
         do i = 1, 41
@@ -876,7 +876,7 @@ module emission_mod
         close(94)
         open(unit = 94,  action="read", file = PREFIX//"/share/mocassin/data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
+            print*, "! RecLinesEmission: can't open file:",PREFIX,"/share/mocassin/data/r1b0100.dat"
             stop
         end if
         do iup = 15, 3, -1
@@ -911,7 +911,7 @@ module emission_mod
         close(95)
         open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
+            print*, "! RecLinesEmission: can't open file:",PREFIX,"/share/mocassin/data/r2b0100.dat"
             stop
         end if
         do iup = 30, 3, -1
@@ -1159,7 +1159,7 @@ module emission_mod
         close(98)
         open(unit = 98,  action="read", file = PREFIX//"/share/mocassin/data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! setDiffusePDF: can't open file: data/r2a0100.dat"
+            print*, "! setDiffusePDF: can't open file:",PREFIX,"/share/mocassin/data/r2a0100.dat"
             stop
         end if
         do i = 1, NHeIILyman
@@ -2138,7 +2138,7 @@ module emission_mod
          & iostat = ios)
 
     if (ios /= 0) then
-       print*, "! equilibrium: can't open file: ", file_name
+       print*, "! equilibrium: can't open file: ", PREFIX,"/share/mocassin/",file_name
        stop
     end if
 
@@ -2597,7 +2597,7 @@ module emission_mod
     open(unit=11,  action="read", file = PREFIX//"/share/mocassin/"//file_name, status="old", position="rewind", &
          & iostat = ios)
     if (ios /= 0) then
-       print*, "! equilibrium: can't open file: ", file_name
+       print*, "! equilibrium: can't open file: ", PREFIX, "/share/mocassin/",file_name
        stop
     end if
     
@@ -3029,7 +3029,7 @@ module emission_mod
 
       open(unit=19, action="read", file=PREFIX//"/share/mocassin/data/resLines.dat", status="old", position="rewind", iostat=ios)
       if (ios /= 0) then
-         print*, "! initResLines: can't open file: data/resLines"
+         print*, "! initResLines: can't open file: ",PREFIX,"/share/mocassin/data/resLines.dat"
          stop
       end if
       
@@ -3040,7 +3040,7 @@ module emission_mod
          do j = 1, nmul
             read(unit=19,fmt=*, iostat=ios) 
             if (ios/=0) then
-               print*, "! initResLines: error reading data/resLines.dat file"
+               print*, "! initResLines: error reading ",PREFIX,"/share/mocassin/data/resLines.dat file"
                stop
             end if
          end do
@@ -3108,7 +3108,7 @@ module emission_mod
             read(unit=19,fmt='(A112,1x,I2,1x,I2)', iostat=ios) reader, &
                  & resLine(nL)%moclow(j), resLine(nL)%mochigh(j) 
             if (ios/=0) then
-               print*, "! initResLines: error reading data/resLines.dat file - 2"
+               print*, "! initResLines: error reading ",PREFIX,"/share/mocassin/data/resLines.dat file - 2"
                stop
             end if
          end do

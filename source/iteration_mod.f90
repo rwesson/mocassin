@@ -993,14 +993,14 @@ module iteration_mod
                     close(21)
                     open(unit=21, status='unknown', position='rewind', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
-                       print*, "! iterationMC: can't open file for writing, summary.out -1"
+                       print*, "! iterationMC: can't open file for writing, output/summary.out -1"
                        stop
                     end if
                  else
                     close(21)
                     open(unit=21, status='unknown', position='append', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
-                       print*, "! iterationMC: can't open file for writing, summary.out -2"
+                       print*, "! iterationMC: can't open file for writing, output/summary.out -2"
                        stop
                     end if
                  end if                
