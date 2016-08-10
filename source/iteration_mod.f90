@@ -74,6 +74,8 @@ module iteration_mod
 
            integer                :: dcp, nsp
 
+           character(len=10)      :: time            ! to display time when each iteration finishes
+
            allocate(noHitPercent(nGrids))
            allocate(noIonBalPercent(nGrids))
            allocate(noTeBalPercent(nGrids))           
@@ -1113,6 +1115,11 @@ module iteration_mod
 
 
            totPercentOld = totPercent
+
+           if (taskid==0) then
+              call date_and_time(TIME=time)
+              print *,"! iterateMC: [Summary] Iteration ",nIterateMC,"; finished at ",time(1:2),":",time(3:4),":",time(5:6)
+           endif
 
            if ( totPercent >= minConvergence ) then
               
