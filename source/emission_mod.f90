@@ -122,27 +122,23 @@ module emission_mod
         call twoPhoton()
 
         ! calculate the total emission coefficients for H and He
-        do i = 1, nbins
-            emissionHI(i)  = (gammaHI(i) + twoPhotHI(i) ) * grids(iG)&
+
+        emissionHI = (gammaHI + twoPhotHI) * grids(iG)&
                  &%elemAbun(grids(iG)%abFileIndex(ix,iy,iz), 1) * ionDenUsed(elementXref(1),2)*NeUsed &
-                 &+ gammaHeavies(i)*NeUsed
-            emissionHeI(i) = (gammaHeI(i) + twoPhotHeI(i) ) * grids(iG)&
-                 &%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2) * ionDenUsed(elementXref(2),2)*NeUsed 
-            emissionHeII(i)= (gammaHeII(i) + twoPhotHeII(i) ) * grids(iG)&
+                 &+ gammaHeavies*NeUsed
+        emissionHeI = (gammaHeI + twoPhotHeI ) * grids(iG)&
+                 &%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2) * ionDenUsed(elementXref(2),2)*NeUsed
+        emissionHeII= (gammaHeII + twoPhotHeII ) * grids(iG)&
                  &%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2) * ionDenUsed(elementXref(2),3)*NeUsed
 
-            continuum(i)   = real(emissionHI(i) + emissionHeI(i) + &
-                 & emissionHeII(i))
+        ! zero out near zero contributions
 
-            ! zero out near zero contributions
+        where (emissionHI < 1.e-15 ) emissionHI = 0.
+        where (emissionHeI < 1.e-15 ) emissionHeI = 0.
+        where (emissionHeII < 1.e-15 ) emissionHeII = 0.
 
-            if (emissionHI(i) < 1.e-15 ) emissionHI(i) = 0.
-            if (emissionHeI(i) < 1.e-15 ) emissionHeI(i) = 0.
-            if (emissionHeII(i) < 1.e-15 ) emissionHeII(i) = 0.
+        continuum = (emissionHI + emissionHeI + emissionHeII)
 
-
-        end do
-        
         dV = getVolume(grids(iG),ix,iy,iz)
 
         ! add contribution of this cell to the integrated balmer jump
@@ -443,7 +439,7 @@ module emission_mod
         statW = (/2., 0.5, 2./)
         do i = HIPnuP, nbins
             factor = (nuArray(i)*nuArray(i)*nuArray(i)) / (TeUsed*sqrTeUsed)
-            expFactor = exp( (-nuArray(i) + nuArray(HIPnuP)) * hcRyd_k / TeUsed)
+            expFactor = exp(dble( (-nuArray(i) + nuArray(HIPnuP)) * hcRyd_k / TeUsed))
 
             phXSecHI =  xSecArray(i-HIPnuP+1+HlevXSecP(1)-1)
             gammaHI(i) = fourPi * phXSecHI * statW(1) * hcRyd * constant*&
@@ -453,7 +449,7 @@ module emission_mod
             ! calculate gammaHeI
 !            if (i >= HeIPnuP) then
             if (i >= HeINuEdgeP(nlimGammaHeI) ) then
-                expFactor = exp( (-nuArray(i) + nuArray(HeIPnuP)) * hcRyd_k / TeUsed)
+                expFactor = exp(dble( (-nuArray(i) + nuArray(HeIPnuP)) * hcRyd_k / TeUsed))
                 phXSecHeI = xSecArray(i-HeIPnuP+1+HeISingXSecP(1)-1)
 
                 gammaHeI(i) = fourPi * phXSecHeI * statW(2) * hcRyd * constant*&
@@ -461,7 +457,7 @@ module emission_mod
                 ! add the free free contribution
                 gammaHeI(i) = gammaHeI(i) + ffCoeff1(i)
                 if (i >= HeIINuEdgeP(nlimGammaHeII)) then
-                    expFactor  = exp( (-nuArray(i) + nuArray(HeIIPnuP)) * hcRyd_k / TeUsed)
+                    expFactor  = exp(dble( (-nuArray(i) + nuArray(HeIIPnuP)) * hcRyd_k / TeUsed))
                     phXSecHeII = xSecArray(i-HeIIPnuP+1+HeIIXSecP(1)-1)
                     gammaHeII(i) = fourPi * phXSecHeII * statW(3) * hcRyd * constant*&
 &                              factor * expFactor * 1.e20 *1.e20     
@@ -518,8 +514,7 @@ module emission_mod
                         phXSecM = xSecArray(i+xSecP-IPnuP+1-1) 
              
                         ! sum up the coefficients
-                        expFactor = exp( (-nuArray(i)+nuArray(IPnuP)) *&
-&                                  hcRyd_k / TeUsed)
+                        expFactor = exp( dble((-nuArray(i)+nuArray(IPnuP)) * hcRyd_k / TeUsed))
 
                         gammaHeavies(i) = gammaHeavies(i) + &
 &                                  expFactor * phXSecM * (real(g0)/real(g1)) * &
@@ -749,16 +744,16 @@ module emission_mod
     function ffCoeff(nu, Z, g)
         implicit none
 
-        real                 :: ffCoeff     ! ff emission coefficient [e-40 erg*cm^3/s.Hz]
+        double precision     :: ffCoeff     ! ff emission coefficient [e-40 erg*cm^3/s.Hz]
         real, intent(in)     :: g           ! ff gaunt 
         real, intent(in)     :: nu          ! frequency [Ryd]
 
         integer, intent(in)  :: Z           ! nuclear charge
 
         ! local variables
-        real                 :: expFactor   ! exponential factor
+        double precision     :: expFactor   ! exponential factor
 
-        expFactor = exp(-nu*hcRyd_k/TeUsed)
+        expFactor = exp(dble(-nu*hcRyd_k/TeUsed))
 
         ffCoeff = fourPi*54.43*Z*Z*g*expFactor/sqrTeUsed
 
