@@ -283,13 +283,12 @@ module iteration_mod
 
               if (taskid==0) print*, '! iterateMC: emissionDriver in',iG           
               iCell = 0
-              do i = 1, grid(iG)%nx
+              do i = 1, grid(iG)%nz
                  do j = 1, yTop
-                    do k = 1, grid(iG)%nz
+                    do k = 1, grid(iG)%nx
                        iCell = iCell+1
                        if (mod(iCell-(taskid+1),numtasks)==0) &
-                            & call emissionDriver(grid,i,j,k,iG)
-
+                            & call emissionDriver(grid,k,j,i,iG)
                     end do
                  end do
               end do
