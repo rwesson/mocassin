@@ -74,6 +74,8 @@ module iteration_mod
 
            integer                :: dcp, nsp
 
+           character(len=10)      :: time            ! to display time when each iteration finishes
+
            allocate(noHitPercent(nGrids))
            allocate(noIonBalPercent(nGrids))
            allocate(noTeBalPercent(nGrids))           
@@ -990,14 +992,14 @@ module iteration_mod
                     close(21)
                     open(unit=21, status='unknown', position='rewind', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
-                       print*, "! iterationMC: can't open file for writing, summary.out -1"
+                       print*, "! iterationMC: can't open file for writing, output/summary.out -1"
                        stop
                     end if
                  else
                     close(21)
                     open(unit=21, status='unknown', position='append', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
-                       print*, "! iterationMC: can't open file for writing, summary.out -2"
+                       print*, "! iterationMC: can't open file for writing, output/summary.out -2"
                        stop
                     end if
                  end if                
@@ -1112,6 +1114,11 @@ module iteration_mod
 
 
            totPercentOld = totPercent
+
+           if (taskid==0) then
+              call date_and_time(TIME=time)
+              print *,"! iterateMC: [Summary] Iteration ",nIterateMC,"; finished at ",time(1:2),":",time(3:4),":",time(5:6)
+           endif
 
            if ( totPercent >= minConvergence ) then
               
