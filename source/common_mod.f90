@@ -238,7 +238,6 @@ module common_mod
     ! derived types
 
     type grid_type             ! derived grid type
-        sequence
 
         character(len=50) :: composition            ! chemical composition
 
