@@ -170,8 +170,10 @@ module photon_mod
         end do
 
         if (iStar>0) then
-           print*, 'Star: ', iStar
-           print*, 'Qphot = ', Qphot
+          if (taskid==0) then
+            print*, 'Star: ', iStar
+            print*, 'Qphot = ', Qphot
+          endif
         end if
 
 
@@ -264,7 +266,7 @@ module photon_mod
         end if
 
 
-        if (iStar>0) print*, 'Qphot = ', Qphot
+        if (iStar>0 .and. taskid==0) print*, 'Qphot = ', Qphot
         if (lgTalk) print*, 'Packets trapped = ', trapped, taskid
 
         ! evaluate Jste and Jdif
@@ -276,7 +278,7 @@ module photon_mod
         ! [erg sec^-1 cm^-2] -> no Hz^-1 as they are summed over separate bins (see
         ! Lucy A&A (1999)                                                                                                                                   
 
-        if(iStar>0.) then
+        if(iStar>0. .and. taskid==0) then
            print*, 'Lstar', Lstar(iStar)           
         end if
 
