@@ -1059,6 +1059,9 @@ module iteration_mod
                    &totPercent,"% converged cells over all grids"
               write(21,*) "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
                    &nPhotons, " energy packets used"
+              call date_and_time(TIME=time)
+              write(21,*) "! iterateMC: [Summary] Iteration ",nIterateMC,"; finished at ",time(1:2),":",time(3:4),":",time(5:6)
+              write(21,*) ""
               close(21)
            
               ! write grid to files for warm start
@@ -1116,7 +1119,6 @@ module iteration_mod
            totPercentOld = totPercent
 
            if (taskid==0) then
-              call date_and_time(TIME=time)
               print *,"! iterateMC: [Summary] Iteration ",nIterateMC,"; finished at ",time(1:2),":",time(3:4),":",time(5:6)
            endif
 
