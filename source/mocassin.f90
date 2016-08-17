@@ -49,20 +49,29 @@ program MoCaSSiN
     real, dimension(2) :: timing              ! cputimer 
     integer         :: nhours, nminutes, nseconds
 
-    print*, "MOCASSIN 2005 Version 2.0"
-    print*, " "
+    call cpu_time(timing(1))
+    call mpi_init(ierr)
+    call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
+    call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
+
+    if (taskid == 0) then
+        print*, "MOCASSIN 2005 Version 2.0"
+        print*, " "
+    end if
 
     ! read the input parameters of the simulation
-    call readInput()      
+    call readInput()
 
-    print*, " "
+    if (taskid == 0) then
+        print*, " "
+    end if
 
     ! initialize the 3D cartesian grid
-    
+
     do iGrid = 1, nGrids
        call initCartesianGrid(grid3D(iGrid), nxIn(iGrid), nyIn(iGrid), nzIn(iGrid))
     end do
-    
+
     ! initialize opacities x sections array
     call initXSecArray()
     ! set the ionzing continuum according to the contShape variable
@@ -72,17 +81,19 @@ program MoCaSSiN
 
     call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
 
-    do iGrid = 1, nGrids
-      print*, 'Grid : ', iGrid
-      print*, 'active cells: ', grid3D(iGrid)%nCells
-    end do
+    if (taskid==0) then
+       do iGrid = 1, nGrids
+          print*, 'Grid : ', iGrid
+          print*, 'active cells: ', grid3D(iGrid)%nCells
+       end do
+    end if
 
     ! prepare atomica data stuff
     if (lgGas) call makeElements()
-    
-    print*, 'active elements: ', nElementsUsed
 
-    ! if grains are included, calculate the dust opacity     
+    if (taskid==0) print*, 'active elements: ', nElementsUsed
+
+    ! if grains are included, calculate the dust opacity
     if (lgDust) then
        if (taskid==0) print*, '! mocassin: calling dustDriver'
        do iGrid = 1, nGrids
@@ -91,10 +102,7 @@ program MoCaSSiN
        if (taskid==0) print*, '! mocassin: dustDriver done'
     end if
 
-    call cpu_time(timing(1))
-    call mpi_init(ierr)
-    call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
-    call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
+    call mpi_barrier(mpi_comm_world, ierr)
 
     ! set local diffuse ionisation field
     if (Ldiffuse>0.) then
@@ -111,17 +119,19 @@ program MoCaSSiN
        end if
     end if
 
-    if (taskid==0) print*, '! mocassin: calling MCIterationDriver'    
+    if (taskid==0) print*, '! mocassin: calling MCIterationDriver'
     ! start the Monte Carlo simulation
     call MCIterationDriver(grid3D(1:nGrids))
-    if (taskid==0) print*, '! mocassin: MCIterationDriver done'    
+    if (taskid==0) print*, '! mocassin: MCIterationDriver done'
 
     call mpi_barrier(mpi_comm_world, ierr)
 
     ! free all space allocated to the 3D grid
-    do iGrid=1, nGrids
-       call freeGrid(grid3D(iGrid))
-    end do
+    if (taskid==0) then
+      do iGrid=1, nGrids
+         call freeGrid(grid3D(iGrid))
+      end do
+    endif
 
     call mpi_finalize(ierr)
     call cpu_time(timing(2))
@@ -131,10 +141,9 @@ program MoCaSSiN
     nminutes = int(mod(timing(2)-timing(1),60.))
     nseconds = nint(60.*((timing(2)-timing(1))-real(nhours*60)-real(nminutes)))
 
-    write(6,100)nhours,nminutes,nseconds
-    100 format('total run time per processor ',1i3.2,':',1i2.2,':',1i2.2' (HMS)')
-    stop '! MoCaSSin: end simulation reached - clean exit -'
+    if (taskid==0) then
+      print "(A,I3.2,A,I2.2,A,I2.2,A)","total run time per processor ",nhours,":",nminutes,":",nseconds," (HMS)"
+      print *,'! MoCaSSin: end simulation reached - clean exit -'
+    endif
 
 end program MoCaSSiN
-   
-    
