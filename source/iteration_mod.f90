@@ -318,7 +318,7 @@ module iteration_mod
                  if (lgSymmetricXYZ) Bjump = Bjump*8.
                  Bjump = Bjump*1.e5
                  
-                 print*, "Balmer Jump: [erg/s/A] ", Bjump
+                 if (taskid==0) print*, "Balmer Jump: [erg/s/A] ", Bjump
                  
                  allocate(recPDFTemp(0:grid(iG)%nCells, 1:nbins),&
                       & stat = err)
@@ -732,7 +732,7 @@ module iteration_mod
                    &  scaInt*100./(scaInt+absInt),"%"
            end if
            
-           print*, " total Escaped Packets :",  totalEscaped              
+           if (taskid==0) print*, " total Escaped Packets :",  totalEscaped
 
            if (taskid==0) call writeSED(grid)                          
            if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) & 

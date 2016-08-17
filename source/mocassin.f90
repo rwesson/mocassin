@@ -49,22 +49,13 @@ program MoCaSSiN
     real, dimension(2) :: timing              ! cputimer 
     integer         :: nhours, nminutes, nseconds
 
-    call cpu_time(timing(1))
-    call mpi_init(ierr)
-    call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
-    call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
-
-    if (taskid == 0) then
-        print*, "MOCASSIN 2005 Version 2.0"
-        print*, " "
-    end if 
+    print*, "MOCASSIN 2005 Version 2.0"
+    print*, " "
 
     ! read the input parameters of the simulation
     call readInput()      
 
-    if (taskid == 0) then
-        print*, " "
-    end if
+    print*, " "
 
     ! initialize the 3D cartesian grid
     
@@ -81,12 +72,10 @@ program MoCaSSiN
 
     call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
 
-    if (taskid==0) then
-       do iGrid = 1, nGrids
-          print*, 'Grid : ', iGrid 
-          print*, 'active cells: ', grid3D(iGrid)%nCells
-       end do
-    end if
+    do iGrid = 1, nGrids
+      print*, 'Grid : ', iGrid
+      print*, 'active cells: ', grid3D(iGrid)%nCells
+    end do
 
     ! prepare atomica data stuff
     if (lgGas) call makeElements()
@@ -102,7 +91,10 @@ program MoCaSSiN
        if (taskid==0) print*, '! mocassin: dustDriver done'
     end if
 
-    call mpi_barrier(mpi_comm_world, ierr)
+    call cpu_time(timing(1))
+    call mpi_init(ierr)
+    call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
+    call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
 
     ! set local diffuse ionisation field
     if (Ldiffuse>0.) then
