@@ -1,0 +1,12 @@
+*.o
+*.mod
+mocassin
+mocassinWarm
+mocassinPlot
+mocassinOutput
+mocassinFluorescence
+input
+output
+breaks
+testing
+prof*
