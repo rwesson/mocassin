@@ -2101,9 +2101,9 @@ module output_mod
         close(94)
 
         ! calculate Hbeta 
-!        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
         ! fits to Storey and Hummer MNRAS 272(1995)41
-        Hbeta = 10**(-0.870*log10Te + 3.57)
+!        Hbeta = 10**(-0.870*log10Te + 3.57)
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
 
         ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
