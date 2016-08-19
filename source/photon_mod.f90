@@ -1775,8 +1775,6 @@ module photon_mod
                          stop
                       end if
 
-!print*, igpp, gp, 'scattered'
-
                       enPacket = initPhotonPacket(enPacket%nuP, rVec, enPacket%direction, .false., .false., enPacket%xP(1:2), &
                            & enPacket%yP(1:2), enPacket%zP(1:2), gP, .true.)
                       
@@ -1786,8 +1784,7 @@ module photon_mod
                             if(iierr==0) exit
                          end do
                          if (ihg >=10) then
-                            print*, '! pathSegment: problem with hg [enPacket]', enPacket
-                            stop
+                            print*, '! pathSegment [warning]: hg called ten times [enPacket]', enPacket
                          end if
                       end if
                       

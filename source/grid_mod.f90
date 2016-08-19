@@ -518,6 +518,10 @@ module grid_mod
         integer, parameter :: nSeries = 17
         
         real                 :: nuStepSizeLoc
+        real :: massFac,dV
+        integer                        :: ix,iy,iz     ! counters   
+        integer                        :: nspec, ai    ! counters
+        integer                        :: nsp          ! pointer
 
         print*, "in fillGrid"
 
@@ -625,6 +629,52 @@ module grid_mod
            ! set the subGrids
            if (nGrids>1) call setSubGrids(grid(1:nGrids))
 
+!BEKS 2010: scale the dust mass here, not later.
+           if (lgDust .and. lginputDustMass) then
+              totalDustMass = 0.
+              do iG = 1, nGrids
+                 do ix = 1, grid(iG)%nx
+                    do iy = 1, grid(iG)%ny
+                       do iz = 1, grid(iG)%nz
+                          if (grid(iG)%active(ix,iy,iz)>0) then
+                             if (lgMultiDustChemistry) then
+                                nsp = grid(iG)%dustAbunIndex(grid(iG)%active(ix,iy,iz))
+                             else
+                                nsp = 1
+                             end if
+                             dV = getVolume(grid(iG),ix,iy,iz)
+                             do ai = 1, nsizes
+                                do nspec = 1, nspeciesPart(nsp)
+                                   totalDustMass = totalDustMass + &
+                           & (1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*&
+                           & rho(dustComPoint(nsp)-1+nspec)*&
+                           & grainWeight(ai)*grainAbun(nsp,nspec)&
+                           & *grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))*dV)
+                                end do
+                             end do
+                          endif
+                       enddo
+                    enddo
+                 enddo
+              enddo
+              massFac = inputDustMass / totalDustMass
+              print*,'fillGrid: Scaling all dust densities by ',massFac
+              do iG = 1, nGrids
+                 do ix = 1, grid(iG)%nx
+                    do iy = 1, grid(iG)%ny
+                       do iz = 1, grid(iG)%nz
+                          if (grid(iG)%active(ix,iy,iz)>0) then
+                             grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = &
+ & grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) *  massFac
+
+                          endif
+                       enddo
+                    enddo
+                 enddo
+              enddo
+              totalDustMass = inputDustMass
+           endif
+!
            totCells = 0       
            totcellsloc=0
            if (emittingGrid>0) then
@@ -644,8 +694,8 @@ module grid_mod
               
            if (lgDust) then
               if (lgSymmetricXYZ) totalDustMass=totalDustMass*8.
-              print*, 'Total dust mass [1.e45 g]: ', totalDustMass
-              print*, 'Total dust mass [Msol]: ', totalDustMass*5.028e11                
+              print*, 'fillGrid: Total dust mass [1.e45 g]: ', totalDustMass
+              print*, 'fillGrid: Total dust mass [Msol]: ', totalDustMass*5.028e11                
            end if           
 
            if (nPhotonsDiffuse > 0 .and. nPhotonsDiffuse < totCellsloc) then
@@ -1632,16 +1682,16 @@ module grid_mod
               end do
            end do
 
-           if (lgDust .and. lginputDustMass) then
-           do i = 1, grid%nx
-              do j = 1, yTop
-                 do k = 1, grid%nz
-             grid%Ndust(grid%active(i,j,k)) = grid%Ndust(grid%active(i,j,k)) * inputDustMass / totalDustMass
-                 end do
-              end do
-           end do
-           totalDustMass = inputDustMass
-           end if
+!           if (lgDust .and. lginputDustMass) then
+!           do i = 1, grid%nx
+!              do j = 1, yTop
+!                 do k = 1, grid%nz
+!             grid%Ndust(grid%active(i,j,k)) = grid%Ndust(grid%active(i,j,k)) * inputDustMass / totalDustMass
+!                 end do
+!              end do
+!           end do
+!           totalDustMass = inputDustMass
+!           end if
 
 
            if(associated(MdMg)) deallocate(MdMg)
@@ -2501,16 +2551,16 @@ module grid_mod
                  end do
               end do
 
-           if (lgDust .and. lginputDustMass) then
-           do ix = 1, grid(iG)%nx
-              do iy = 1, grid(iG)%ny
-                 do iz = 1, grid(iG)%nz
-        grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) * inputDustMass / totalDustMass
-                 end do
-              end do
-           end do
-           totalDustMass = inputDustMass
-           end if
+!           if (lgDust .and. lginputDustMass) then
+!           do ix = 1, grid(iG)%nx
+!              do iy = 1, grid(iG)%ny
+!                 do iz = 1, grid(iG)%nz
+!        grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) * inputDustMass / totalDustMass
+!                 end do
+!              end do
+!           end do
+!           totalDustMass = inputDustMass
+!           end if
 
               if (taskid == 0) then
               
@@ -3696,6 +3746,7 @@ module grid_mod
 
 
 end module grid_mod
+
 
 
 
