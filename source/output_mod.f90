@@ -2387,8 +2387,8 @@ module output_mod
 
       write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
       write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
-      write(16,*) '   nu [Ryd]        lambda [um]        nu*F(nu)          '
-      write(16,*) '                                  [erg/sec/cm^2/str]    '
+      write(16,*) '   nu [Ryd]        lambda [um]        nu*F(nu)            '
+      write(16,*) '                                  [erg/sec/cm^2/str]              '
 
       totalE=0.
 
@@ -2428,6 +2428,13 @@ module output_mod
       write(16,*) 'All SEDs given per unit direction'
       write(16,*) 'To obtain total emission over all directions must multiply by Pi'
 
+      write(16,*) ' '
+      if (nuArray(1)<radio4p9GHzP) then
+         write(16,*) 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
+              & SED(radio4p9GHzP,0)*Pi*1.e23/(nuArray(radio4p9GHzP)*fr1Ryd)
+         print*, 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
+              & SED(radio4p9GHzP,0)*Pi*1.e23/(nuArray(radio4p9GHzP)*fr1Ryd)
+      end if
 
       close(16)
             

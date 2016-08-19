@@ -30,12 +30,14 @@ module grid_mod
         integer :: err, ios                         ! allocation error status
         integer :: ii
         integer :: i, j, iCount, nuCount, elem, ion ! counters
+        integer :: nradio
         integer :: g0,g1
         integer :: nEdges  
         integer :: nElec
         integer :: outshell
 
         logical, save :: lgFirst=.true.
+        logical       :: lgAssigned
 
         integer, parameter :: maxLim = 1000
         integer, parameter :: nSeries = 17
@@ -43,6 +45,7 @@ module grid_mod
         real, dimension(450) :: ordered
         real, dimension(17)  :: seriesEdge
         
+        real                 :: dradio
         real                 :: nuStepSizeLoc
 
         real, pointer        :: nuTemp(:)
@@ -216,6 +219,32 @@ module grid_mod
                nuArray(1)     = nuMin
                nuCount        = 1
 
+               nradio         = nbins/70
+               dradio         = abs((log10(nuMin+nuStepSize/8.)-log10(nuMin)) /real(nradio-1.))
+
+
+               lgAssigned=.false.
+               do i = 1, nradio
+                  nuCount = nuCount+1
+                  nuArray(nuCount) = 10.**(log10(nuArray(nuCount-1))+dradio)
+
+                  if (.not.lgAssigned .and. nuArray(1) < radio4p9GHz .and. &
+                       & nuArray(nuCount)>radio4p9GHz) then
+                     nuArray(nuCount) = radio4p9GHz
+                     lgAssigned = .true.
+                  end if
+
+                  if (nuArray(nuCount)>nuStepSize/8.) then
+                     if (nuCount > 1) then
+                        nuCount = nuCount-1
+                        exit
+                     else 
+                        exit
+                     end if
+                  end if
+
+               end do
+              
                do i = 1, maxLim
                   if (iCount <= nSeries) then
                       if (seriesEdge(iCount) > nuArray(nuCount)) then
@@ -397,7 +426,14 @@ module grid_mod
                widFlx(i) = nuArray(i+1)-nuArray(i)
             end do
             widFlx(nbins) = widFlx(nbins-1)
-                        
+            
+            ! set the 4.9 GHz pointer
+            if (nuArray(1) <= radio4p9GHz) then
+               call locate(nuArray,radio4p9GHz,radio4p9GHzP)
+               if (radio4p9GHz > (nuArray(radio4p9GHzP)+nuArray(radio4p9GHzP+1))/2.) &
+                    & radio4p9GHzP =radio4p9GHzP+1
+            end if
+            
             if (widFlx(1)<=0. .or. widFlx(nbins)<=0. ) then
                print*, " ! initCartesianGrid: null or negative frequency bin [1, nbins]", widFlx(1), widFlx(nbins)
                stop

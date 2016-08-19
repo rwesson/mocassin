@@ -708,7 +708,7 @@ module photon_mod
                            
                    else
                       
-                      nuP = 1
+                      nuP = 0
 
                    end if
 
@@ -1180,6 +1180,7 @@ module photon_mod
                       end if
                    else
                   
+
                       grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                            & enPacket%nuP,0) = &
                            & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
@@ -1589,6 +1590,7 @@ module photon_mod
                      end if
 
                   else
+
                      grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                           enPacket%nuP,0) = &
                           & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
@@ -1675,6 +1677,7 @@ module photon_mod
                                     & enPacket%nuP,0) + 1.
                             end if
                          else
+
                             grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                                  enPacket%nuP,0) = &
                                  & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &

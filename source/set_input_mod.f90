@@ -585,6 +585,9 @@ module set_input_mod
             print*, "! readInput: invalid nuMin  in model parameter input &
                  & file", in_file, nuMin
             stop
+        else if (nuMin > 1.4e-6) then
+            print*, "! readInput [waring]:  nuMin  in model parameter input &
+                 & file is too small to include 5GHz flux calculations", in_file,nuMin            
         else if (R_out < 0.) then
             print*, "! readInput: invalid R_out  in model parameter input &
                  & file", in_file, R_out

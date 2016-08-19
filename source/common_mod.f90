@@ -27,6 +27,8 @@ module common_mod
     real, pointer   :: TeTemp(:)            ! temporary electron Temperature array    
    
 
+    integer         :: radio4p9GHzP   ! 
+      
     integer         :: ierr           ! MPI error status
     integer         :: numtasks       ! total # of processes
     integer         :: taskid         ! process identification #

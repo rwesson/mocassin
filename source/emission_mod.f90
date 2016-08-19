@@ -1345,6 +1345,7 @@ module emission_mod
 
         grid%recPDF(cellPUsed, nbins) = 1.
 
+
         ! calculate the PDF for recombination and forbidden lines
         if (lgDebug) then 
            i = 1

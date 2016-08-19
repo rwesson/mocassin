@@ -15,6 +15,7 @@ module constants_mod
     real, parameter :: hnu3c2 = 0.524166
     real, parameter :: me = 9.109382e-28           ! mass of e- [g]
     real, parameter :: kBoltzmann = 1.38062e-16     ! Boltzmann constant
+    real, parameter :: radio4p9GHz = 1.489434e-6     ! 4.9 GHz in Ryd
     real, parameter :: Ryd2erg = 2.1799e-11        ! converts ryd to erg
     real, parameter :: RydInf = 109737.315         ! Ryd for infinite mass nuclei [1/cm]
     real, parameter :: sigma = 5.66956e-5          ! Stefan-Boltzmann constant [erg*cm^-2deg^-4s-1]
