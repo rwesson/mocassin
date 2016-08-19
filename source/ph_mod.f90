@@ -890,16 +890,6 @@ module xSec_mod
                  print*, "! makeDustXsec: error allocation memory for tmp3 array"
                  stop
               end if
-              allocate (Ere(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for Ere array"
-                 stop
-              end if
-              allocate (Eim(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for Eim array"
-                 stop
-              end if
 
               ! initialise arrays
               tmp1 = 0.
@@ -910,9 +900,19 @@ module xSec_mod
               Csca = 0.
               CTabs = 0.
               CTsca = 0.
-              Ere = 0.
-              Eim = 0.
            end if
+           allocate (Ere(1:nWav), stat=err)
+           if (err/=0) then
+              print*, "! makeDustXsec: error allocation memory for Ere array"
+              stop
+           end if
+           allocate (Eim(1:nWav), stat=err)
+           if (err/=0) then
+              print*, "! makeDustXsec: error allocation memory for Eim array"
+              stop
+           end if
+           Ere = 0.
+           Eim = 0.
 
            read(20, *) grainLabel(nSpec), TdustSublime(nSpec)
 
@@ -960,11 +960,12 @@ module xSec_mod
            ! calculate efficiencies
            call getQs(Ere,Eim,Cabs(nSpec,1:nSizes,1:nbins),Csca(nSpec,1:nSizes,1:nbins))
 
+           if (associated(Ere)) deallocate(Ere)
+           if (associated(Eim)) deallocate(Eim)
+
         end do
 
         close(10)
-        if (associated(Ere)) deallocate(Ere)
-        if (associated(Eim)) deallocate(Eim)
 
 
         print*, "! makeDustXsec: Grain Abundances: " 
