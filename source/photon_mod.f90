@@ -369,19 +369,28 @@ module photon_mod
                end if
 
                if (nAngleBins>0) then
-                  if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
-                       & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
-                       & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
-                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
-                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                          & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)
-                     if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
-                          & enPacket%nuP,0) = &
-                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                          & enPacket%nuP,0) +  deltaE(iStar)
+                  
+                  if (viewPointPtheta(idirT) > 0 .and. viewPointPphi(idirP)>0) then 
+                     if( viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                          & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                          & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                        grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
+                             & viewPointPtheta(idirT)) = &
+                             &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                             & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
+                        if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                             enPacket%nuP,0) = &
+                             & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                             & enPacket%nuP,0) +  deltaE(iStar)
+                     else
+                        grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                             enPacket%nuP,0) = &
+                             & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                             & enPacket%nuP,0) +  deltaE(iStar)
+                     end if
                   else
                      grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
-                          & enPacket%nuP,0) = &
+                          enPacket%nuP,0) = &
                           & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,0) +  deltaE(iStar)
                   end if
@@ -1313,21 +1322,29 @@ module photon_mod
                    end if
                
                    if (nAngleBins>0) then
-                      if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
-                           & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
-                           & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
-                         grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
-                              &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                              & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
-                         if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
-                              & enPacket%nuP,0) = &
-                              & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                              & enPacket%nuP,0) +  deltaE(iStar)
+                      if (viewPointPtheta(idirT) > 0 .and. viewPointPphi(idirP)>0) then 
+                         if( viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                              & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                              & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
+                                 & viewPointPtheta(idirT)) = &
+                                 &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
+                            if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                 enPacket%nuP,0) = &
+                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,0) +  deltaE(iStar)
+                         else
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                 enPacket%nuP,0) = &
+                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,0) +  deltaE(iStar)
+                         end if
                       else
                          grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
-                          & enPacket%nuP,0) = &
-                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                          & enPacket%nuP,0) +  deltaE(iStar)
+                              enPacket%nuP,0) = &
+                              & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                              & enPacket%nuP,0) +  deltaE(iStar)
                       end if
                    else
                   
@@ -1729,27 +1746,34 @@ module photon_mod
 
 
                   if (nAngleBins>0) then
-                     if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
-                          & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
-                          & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
-                        grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
-                             &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                             & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
-                        if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
-                             enPacket%nuP,0) = &
-                             & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                             & enPacket%nuP,0) +  deltaE(iStar)
-                        
+
+                     if (viewPointPtheta(idirT) > 0 .and. viewPointPphi(idirP)>0) then 
+                        if( viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                             & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                             & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                           grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
+                                & viewPointPtheta(idirT)) = &
+                                &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
+                           if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                enPacket%nuP,0) = &
+                                & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                & enPacket%nuP,0) +  deltaE(iStar)
+                        else
+                           grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                enPacket%nuP,0) = &
+                                & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                & enPacket%nuP,0) +  deltaE(iStar)
+                        end if
                      else
                         grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                              enPacket%nuP,0) = &
                              & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                              & enPacket%nuP,0) +  deltaE(iStar)
-                        
                      end if
 
                   else
-
+                     
                      grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                           enPacket%nuP,0) = &
                           & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
@@ -1787,8 +1811,9 @@ module photon_mod
                      ! the energy packet escapes
 
                      ! the packet escapes without further interaction
-                  
+
                      idirT = int(acos(enPacket%direction%z)/dTheta)+1
+
                      if (idirT>totangleBinsTheta) then
                         idirT=totangleBinsTheta
 !                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
@@ -1799,7 +1824,7 @@ module photon_mod
                              &  idirT, enPacket, dTheta, totAngleBinsTheta
                         stop
                      end if
-                         
+
                      if (enPacket%direction%x<1.e-35) then
                         idirP = 0
                      else
@@ -1819,27 +1844,34 @@ module photon_mod
                              &  idirP, enPacket, dPhi, totAngleBinsPhi
                         stop
                      end if
-                     
+
                      if (nAngleBins>0) then
-                        if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
-                             & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
-                             & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
-                           grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
-                                & viewPointPtheta(idirT)) = &
-                                &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                                & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
-                           if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
-                                enPacket%nuP,0) = &
-                                & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                                & enPacket%nuP,0) +  deltaE(iStar)
+                        if (viewPointPtheta(idirT) > 0 .and. viewPointPphi(idirP)>0) then 
+                           if( viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                                & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                                & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                              grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
+                                   & viewPointPtheta(idirT)) = &
+                                   &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                   & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
+                              if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                   enPacket%nuP,0) = &
+                                   & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                   & enPacket%nuP,0) +  deltaE(iStar)
+                           else
+                              grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                   enPacket%nuP,0) = &
+                                   & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                   & enPacket%nuP,0) +  deltaE(iStar)
+                           end if
                         else
                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                                 enPacket%nuP,0) = &
                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
-                                & enPacket%nuP,0) +  deltaE(iStar)
+                             & enPacket%nuP,0) +  deltaE(iStar)
                         end if
                      else
-
+                        
                         grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                              enPacket%nuP,0) = &
                              & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &

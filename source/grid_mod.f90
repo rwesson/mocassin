@@ -548,9 +548,9 @@ module grid_mod
             viewPointPphi(int(viewPointPhi(i)/dPhi)+1) = i
          end do
          
-!         print*, viewpointptheta
-!         print*, ' '
-!         print*, viewpointpphi
+         print*, viewpointptheta
+         print*, ' '
+         print*, viewpointpphi
 
          print*, 'dTheta : ', dTheta
          print*, 'dPhi : ', dPhi

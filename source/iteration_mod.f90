@@ -871,7 +871,7 @@ module iteration_mod
            if (nGrids>1) then
 !              print*, " ! iterateMC: integratePathTau stuff still not implemented for multiple grids.... skipping"
            else
-              call writeTau(grid)
+              if (lgTau) call writeTau(grid)
            end if
 
            ! decide over final convergence of the model

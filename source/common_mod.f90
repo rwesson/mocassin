@@ -11,6 +11,7 @@ module common_mod
     integer, pointer :: lgConvergedTemp(:)  ! temporary converged? flag
     integer, pointer :: lgBlackTemp(:)      ! temporary converged? flag
 
+    logical         :: lgTau=.false.            ! get tau?
     logical         :: lgWarm=.false.           ! warm started?
     logical         :: lgNeInput=.false.        ! Ne distribution entered
     logical         :: lgResLinesFirst = .true. ! first time the res lines transfer proc is called? 

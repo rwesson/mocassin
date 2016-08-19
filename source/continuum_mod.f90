@@ -12,8 +12,8 @@ module continuum_mod
     real, parameter      :: cRyd = 3.2898423e15    ! constant: c*Ryd (Ryd at inf used) [Hz]
 
 
-    real, pointer, save :: inSpectrumErg(:)        ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
-    real, pointer, save :: inSpectrumPhot(:)       ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
+    real(kind=8), pointer, save :: inSpectrumErg(:) ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
+    real(kind=8), pointer, save :: inSpectrumPhot(:) ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
     real, pointer, save :: inSpectrumProbDen(:,:)  ! probability density for input spectrum (nstars,nbins)
 
     real, save          :: normConstantErg = 0.    ! normalization constant (area beyond input spectrum)
@@ -34,6 +34,8 @@ module continuum_mod
         ! local variables
 
         character(len=30) :: filein          ! input file name
+        
+        logical :: notfound
 
         integer :: enP                       ! pointer in enArray
         integer :: err                       ! allocation error status
@@ -45,17 +47,16 @@ module continuum_mod
 
         integer,dimension(nbins) :: lamCount
         real    :: SStar, skip, time         ! stellar surface [e36 cm^2]
-        real,dimension(maxLim)    :: tmp1, tmp2
+        real(kind=8),dimension(maxLim)    :: tmp1, tmp2
 
         real, dimension(maxLim) :: enArray  ! freq array as read from input spectrum file [Hz]
-        real, dimension(maxLim)  :: Hflux    ! flux array as read from input spectrum file [erg/cm^2/s/Hz/sr]
+        real(kind=8), dimension(maxLim)  :: Hflux    ! flux array as read from input spectrum file [erg/cm^2/s/Hz/sr]
 
   
         print*, 'in setContinuum', contShape
 
         ios = 0
 
-        lamCount=0
         
         ! initialize arrays 
         allocate(inSpectrumErg(nbins), stat = err)
@@ -93,8 +94,10 @@ module continuum_mod
            inSpectrumErg     = 0.
            inSpectrumPhot    = 0.
            inSpectrumProbDen(iStar,:) = 0.          
-           
+           lamCount          = 0
+
            filein = contShape(iStar)           
+
                  
            ! open file for reading
            close(12)
@@ -125,6 +128,8 @@ module continuum_mod
                  !       wavenegth order. 
                  !       First 7 lines are comments
                  ! check if the end of the file has been reached 
+                 if (taskid==0) print*, '! setContinuum: reading STARBURST99 File at t= ',tStep(iStar)
+                 notfound= .true.
                  do j = 1, 7                   
                     read(unit=12, fmt=*) 
                  end do
@@ -135,8 +140,10 @@ module continuum_mod
                     if (ios < 0) exit ! end of file reached
 
                     if (time == tStep(iStar)) then
+                       notfound = .false.
                        backspace(12)
                        do k = 1, sb99nuLim                          
+
                           read(12, *) time, enArray(k), skip, Hflux(k)
 
                           ! change Log L(lambda) [erg/s/A] into L(nu) [erg/s/Hz]                         
@@ -152,6 +159,10 @@ module continuum_mod
                  end do
 
                  close(12)
+                 if (notfound) then 
+                    print*, '! setContinuum: SB99 timestep was not found'
+                    stop
+                 end if
 
                  do i = 1,sb99nuLim
                     
@@ -172,6 +183,7 @@ module continuum_mod
                             & enArray(j)<(nuArray(i+1)+nuArray(i))/2.) then
                           inSpectrumErg(i) = inSpectrumErg(i)+Hflux(j)
                           lamCount(i) = lamCount(i)+1
+
                        end if
                     end do
                     if(enArray(j)>=nuArray(nbins)-widflx(nbins)/2. .and.&
@@ -204,6 +216,7 @@ module continuum_mod
                           end if
                        end do
                     end if
+
                  end do
 
               case ('rauch')
@@ -320,7 +333,7 @@ module continuum_mod
               print*, "deltaE = ", deltaE, " [e36 erg/s]"              
 
            end if
-           
+
         end if
 
         if (Ldiffuse>0. .and. nPhotonsDiffuse>0 ) then
@@ -404,6 +417,7 @@ module continuum_mod
         real :: delNu                     ! frequency step in nuArray
         real :: RStar                     ! stellar radius [e18 cm]
         real :: SStar                     ! stellar surface [e36 cm^2]
+        real :: maxp
 
         real, pointer :: inSpSumErg(:)    ! partial input spectrum sum [erg/s]
         real, pointer :: inSpSumPhot(:)   ! partial input spectrum sum [phot/s]
@@ -423,21 +437,27 @@ module continuum_mod
         end if
         inSpSumErg = 0.
 
+        if (taskid==0) print*,'Ionising/illuminating spectrum:'
+        
         do i = 1, nbins
+           if (taskid==0) print*, i, nuArray(i),  inSpectrumErg(i)
            inSpSumErg(i)  =  inSpectrumErg(i)
            inSpSumPhot(i) =  inSpectrumPhot(i)
         end do
 
         ! calculate normalization constants 
+        normConstantErg=0.
         do i = 1, nbins
             normConstantErg   = normConstantErg  + inSpSumErg(i)*widFlx(i)   
         end do
 
         if (lgDust) then
+           normConstantPhot=0.
            do i = 1, nbins
               normConstantPhot  = normConstantPhot + inSpSumPhot(i)*widFlx(i)
            end do
         else
+           normConstantPhot=0.
            do i = lymanP, nbins
               normConstantPhot  = normConstantPhot + inSpSumPhot(i)*widFlx(i)
            end do
@@ -451,7 +471,15 @@ module continuum_mod
 
         end do
 
-        inSpectrumProbDen(iS,nbins) = 1.
+
+        maxp = 0.
+        do i = 1, nbins
+           if (inSpectrumProbDen(iS,i)>maxp) maxp = inSpectrumProbDen(iS,i)
+        end do
+
+        do i = 1, nbins
+           if (inSpectrumProbDen(iS,i)>=maxp) inSpectrumProbDen(iS,i)=1.
+        end do
 
         if (contShape(iS)=='blackbody') then
            normConstantErg = Pi*normConstantErg*hPlanck

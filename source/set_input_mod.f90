@@ -52,6 +52,7 @@ module set_input_mod
         lg1D          = .false.
         lgDustScattering = .true.
         lgSymmetricXYZ= .false.
+        lgTau         = .false.
 
         nPhotonsDiffuse = 0        
         nStars        = 0
@@ -139,6 +140,10 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case("getTau")
+               backspace 10
+               print*, keyword
+               lgTau = .true.
             case ("diffuseSource") 
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse

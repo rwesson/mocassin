@@ -1,5 +1,5 @@
-function read_raias,filename,dim1,dim2,dim3,va,do_x8=do_x8,contcube=contcube,param=param,help=help, $
-                    radio=radio,abond=abond,plot=plot,double=double,$ 
+function read_raias,filename,dim1,dim2,dim3,do_x8=do_x8,param=param,help=help, $
+                    radio=radio,abond=abond,black=black,plot=plot,double=double,$ 
                     do_divise=do_divise
 
 ;+
@@ -13,16 +13,16 @@ function read_raias,filename,dim1,dim2,dim3,va,do_x8=do_x8,contcube=contcube,par
 
 
 if keyword_set(help) then begin
-  print,'function read_raias,filename,dim1,dim2,dim3,contcube=contcube,param=param,help=help,radio=radio,abond=abond, plot=plot' 
+  print,'function read_raias,filename,dim1,dim2,dim3,param=param,help=help,radio=radio,abond=abond, plot=plot' 
   return,0
 endif
 
 if keyword_set(double) then begin
 case 1 of
-   (keyword_set(contcube)) : $	
-         res = {num:0l,xx:0.d,yy:0.d,zz:0.d,im0:fltarr(va+1)}
+   (keyword_set(black)) : $
+    res = {cell:0l,conv:0l,bla:0l}   
    (keyword_set(param)) : $
-    res = {num:0l,t:0.d,de:0.d,dh:0.d}
+    res = {t:0.d,de:0.d,dh:0.d}
    (keyword_set(plot)) : $
     res = {num:0l,r1:0.d}
    (keyword_set(radio)) : $ 
@@ -32,6 +32,7 @@ case 1 of
 	n0:0.d,n1:0.d,n2:0.d,n3:0.d,n4:0.d,n5:0.d,n6:0.d,o0:0.d,o1:0.d,o2:0.d,o3:0.d,o4:0.d,o5:0.d,o6:0.d,$
 	ne0:0.d,ne1:0.d,ne2:0.d,ne3:0.d,ne4:0.d,ne5:0.d,ne6:0.d, $
 mg0:0.d,mg1:0.d,mg2:0.d,mg3:0.d,mg4:0.d,mg5:0.d,mg6:0.d, $
+si0:0.d,si1:0.d,si2:0.d,si3:0.d,si4:0.d,si5:0.d,si6:0.d, $
 s0:0.d,s1:0.d,s2:0.d,s3:0.d,s4:0.d,s5:0.d,s6:0.d, $
 cl0:0.d,cl1:0.d,cl2:0.d,cl3:0.d,cl4:0.d,cl5:0.d,cl6:0.d, $
 ar0:0.d,ar1:0.d,ar2:0.d,ar3:0.d,ar4:0.d,ar5:0.d,ar6:0.d, $
@@ -43,19 +44,20 @@ fe0:0.d,fe1:0.d,fe2:0.d,fe3:0.d,fe4:0.d,fe5:0.d,fe6:0.d}
 endcase
 endif else begin
    case 1 of
-      (keyword_set(contcube)) : $
-         res = {num:0l,xx:0.d,yy:0.d,zz:0.d,im0:fltarray(va+1)}
+       (keyword_set(black)) : $
+         res = {cell:0l,conv:0l,bla:0l}   
       (keyword_set(param)) : $
-       res ={num:0l,t:0.,de:0.,dh:0.}
+       res ={t:0.,de:0.,dh:0.}
       (keyword_set(plot)) : $
        res ={num:0l,r1:0.}
       (keyword_set(radio)) : $ 
        res = {num:0l,r1:0.,r2:0.,r3:0.,r4:0.}
       (keyword_set(abond)) : $ 
-       res ={h0:0.,h1:0.,he0:0.,he1:0.,he2:0.,c0:0.,c1:0.,c2:0.,c3:0.,c4:0.,c5:0.,c6:0.,n0:0.,n1:0.,n2:0.,$
-	n3:0.,n4:0.,n5:0.,n6:0.,o0:0.,o1:0.,o2:0.,o3:0.,o4:0.,o5:0.,o6:0.,ne0:0.,ne1:0.,ne2:0.,$
-	ne3:0.,ne4:0.,ne5:0.,ne6:0., $
+       res ={h0:0.d,h1:0.d,he0:0.d,he1:0.d,he2:0.d,c0:0.d,c1:0.d,c2:0.d,c3:0.d,c4:0.d,c5:0.d,c6:0.d,$
+	n0:0.d,n1:0.d,n2:0.d,n3:0.d,n4:0.d,n5:0.d,n6:0.d,o0:0.d,o1:0.d,o2:0.d,o3:0.d,o4:0.d,o5:0.d,o6:0.d,$
+	ne0:0.d,ne1:0.d,ne2:0.d,ne3:0.d,ne4:0.d,ne5:0.d,ne6:0.d, $
 mg0:0.d,mg1:0.d,mg2:0.d,mg3:0.d,mg4:0.d,mg5:0.d,mg6:0.d, $
+si0:0.d,si1:0.d,si2:0.d,si3:0.d,si4:0.d,si5:0.d,si6:0.d, $
 s0:0.d,s1:0.d,s2:0.d,s3:0.d,s4:0.d,s5:0.d,s6:0.d, $
 cl0:0.d,cl1:0.d,cl2:0.d,cl3:0.d,cl4:0.d,cl5:0.d,cl6:0.d, $
 ar0:0.d,ar1:0.d,ar2:0.d,ar3:0.d,ar4:0.d,ar5:0.d,ar6:0.d, $
@@ -88,8 +90,6 @@ if keyword_set(do_divise) then begin
 endif else $
  if keyword_set(do_x8) then resultat =  cube_x8(res,res_tab) $
 else resultat =  res_tab
-
-
 
 return,resultat
 end
