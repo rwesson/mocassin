@@ -101,8 +101,14 @@ program MoCaSSiN
     call MCIterationDriver(grid3D(1:nGrids))
 
     if (taskid ==  0) then
-        ! determine final statistics
-        if (lgGas) call outputGas(grid3D(1:nGrids))
+       ! determine final statistics
+       if (lgGas) then
+          if (lg3DextinctionMap) then
+             call outputGas(grid3D(1:nGrids), extMapFile) 
+          else
+             call outputGas(grid3D(1:nGrids)) 
+          end if
+       end if
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)

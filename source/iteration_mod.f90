@@ -933,7 +933,13 @@ module iteration_mod
                  ! output results at this itearation stage (every 3 iterations)
 
                  call writeGrid(grid(1:nGrids))
-                 if (lgGas) call outputGas(grid(1:nGrids)) 
+                 if (lgGas) then
+                    if (lg3DextinctionMap) then
+                       call outputGas(grid(1:nGrids), extMapFile) 
+                    else
+                       call outputGas(grid(1:nGrids)) 
+                    end if
+                 end if
               end if
               
               call mpi_barrier(mpi_comm_world, ierr)
@@ -946,7 +952,14 @@ module iteration_mod
                       & maxIterateMC
 
                  call writeGrid(grid(1:nGrids))
-                 if (lgGas) call outputGas(grid(1:nGrids))
+                 if (lgGas) then
+                    if (lg3DextinctionMap) then
+                       call outputGas(grid(1:nGrids), extMapFile) 
+                    else
+                       call outputGas(grid(1:nGrids)) 
+                    end if
+                 end if
+
               end if
 
               call mpi_barrier(mpi_comm_world, ierr)
@@ -956,10 +969,16 @@ module iteration_mod
               if (lgOutput .and. taskid == 0 ) then
                  ! output results at this itearation stage (every ? iterations)
                  if ( mod(nIterateMC, 1) == 0 ) then
-                    if (lgGas) call outputGas(grid(1:nGrids)) 
+                    if (lgGas) then
+                       if (lg3DextinctionMap) then
+                          call outputGas(grid(1:nGrids), extMapFile) 
+                       else
+                          call outputGas(grid(1:nGrids)) 
+                       end if
+                    end if
                  end if
               end if
-              
+
               call mpi_barrier(mpi_comm_world, ierr)
                  
               ! step up MC iterations counter

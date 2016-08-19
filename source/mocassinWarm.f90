@@ -74,11 +74,17 @@ program MoCaSSiNwarm
     call MCIterationDriver(grid3D)
 
     if (taskid ==  0 .and. .not.lgOutput) then
-        ! determine final statistics
-        if (lgGas) call outputGas(grid3D)
-        call writeSED(grid3D)
-        if (contCube(1)>0. .and. contCube(2)>0. ) &
-             & call writeContCube(grid3D, contCube(1),contCube(2))              
+       ! determine final statistics
+       if (lgGas) then
+          if (lg3DextinctionMap) then
+             call outputGas(grid3D(1:nGrids), extMapFile) 
+          else
+             call outputGas(grid3D(1:nGrids)) 
+          end if
+       end if
+       call writeSED(grid3D)
+       if (contCube(1)>0. .and. contCube(2)>0. ) &
+            & call writeContCube(grid3D, contCube(1),contCube(2))              
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)

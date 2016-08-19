@@ -285,6 +285,7 @@ module common_mod
 
     type(vector), pointer :: starPosition(:) ! ionising source(s) position
 
+    logical            :: lg3DextinctionMap! is 3D extinction to be accounted for?
     logical            :: lgAutoPackets    ! automatic increase of packets on the fly? 
     logical            :: lgTalk           ! talk on?
     logical            :: lgDfile          ! use an external density file?
@@ -311,6 +312,7 @@ module common_mod
     character(len=50), pointer  :: spID(:)          ! input spectrum generator ID
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
+    character(len=50)  :: extMapFile       ! name of 3D extinction map file
     character(len=50)  :: MdMgFile         ! name of MdMg file
     character(len=50)  :: NdustFile        ! name of Ndust file    
     character(len=50)  :: Qfile            ! name of Qfile 

@@ -28,7 +28,8 @@ module set_input_mod
         logical             :: lgMultiStars=.false.
         
         ! set default values and set non oprional values to 0 or 0. or "zero"
-       
+
+        lg3DextinctionMap = .false.       
         lgRecombination = .false.
         lgAutoPackets = .false.
         lgMultiChemistry = .false.
@@ -85,6 +86,7 @@ module set_input_mod
         multiPhotoSources = "none"
         densityFile   = "none"
         dustFile      = "none"
+        extMapFile    = "none"
         gridList      = "none"
 
         Hdensity      = 0.
@@ -132,6 +134,11 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case ("3DextinctionMap") 
+               lg3DextinctionMap= .true.
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, extMapFile 
+               print*, keyword, extMapFile 
             case ("traceHeating")
                lgTraceHeating = .true.
                print*, keyword, lgTraceHeating

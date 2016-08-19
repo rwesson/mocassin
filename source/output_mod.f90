@@ -120,7 +120,7 @@ module output_mod
            end if
            resLinesVolCorr = 0.
         end if
-        allocate(HIVol(0:nAbComponents, 3:30, 2:8), stat=err)
+        allocate(HIVol(0:nAbComponents, 3:15, 2:8), stat=err)
         if (err /= 0) then
            print*, "! output mod: can't allocate array HIVol memory"
            stop
@@ -254,7 +254,7 @@ module output_mod
               do j = 1, grid(1)%ny
                  do k = 1, grid(1)%nz         
                     if (grid(1)%active(i,j,k)>0) then
-                       read(19, *) l,l,l, cMap(grid(1)%active(i,j,k))
+                       read(19, *) cMap(grid(1)%active(i,j,k))
                     else
                        read(19, *) 
                     end if
@@ -287,9 +287,6 @@ module output_mod
            close(20)
 
         end if
-
-        ! read in data file for higher level H transitions
-        call hdatx
 
         ! calculate analytical emissivities first
 
@@ -359,8 +356,9 @@ module output_mod
                           iCount = 1
 
                           ! H recombination lines
-                          do iup = 30, ilow+1, -1
+                          do iup = 15, 3, -1
                              do ilow = 2, min0(8, iup-1)
+
                                 HIRecLines(iup, ilow) = &
                                      & HIRecLines(iup, ilow)*10.**(-(cMap(grid(1)%active(i,j,k))*flam(iCount)&
                                      & +cMap(grid(1)%active(i,j,k))))
@@ -424,8 +422,8 @@ module output_mod
 
 
                        ! HI rec lines
-                       do ilow = 2, 8
-                          do iup = ilow+1, 30
+                       do iup = 3, 15
+                          do ilow = 2, min0(8,iup-1)
                              HIVol(abFileUsed,iup,ilow) = HIVol(abFileUsed,iup,ilow) + &
                                   & HIRecLines(iup,ilow)*HdenUsed*dV
                              HIVol(0,iup,ilow) = HIVol(0,iup,ilow) + &
@@ -786,8 +784,8 @@ module output_mod
            else
 
               ! HI rec lines
-              do ilow = 2, 8 
-                 do iup = ilow+1, 30
+              do iup = 3, 15
+                 do ilow = 2, min0(8,iup-1)
                     HIVol(iAb,iup,ilow) = HIVol(iAb,iup,ilow) /HbetaVol(iAb)
                  end do
               end do
@@ -1009,8 +1007,8 @@ module output_mod
            write(10, *) "HI recombination lines:"
            write(10, *)
            iLine = 1
-           do ilow = 2, 8
-              do iup = ilow+1, 30
+           do iup = 3, 15
+              do ilow = 2, min(8,iup-1)
 
                  if (lgDebug) then
                     if (lineLuminosity(iAb,iLine) > 0. ) then
@@ -2087,8 +2085,6 @@ module output_mod
         real                       :: aFit        ! general interpolation coeff
         real                       :: C5876, C6678! collition exc. corrections
         real                       :: Hbeta       ! Hbeta emission
-        real                       :: hb          ! emissivity of H 4->2
-        real                       :: fh          ! emissivity of H
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
         real                       :: T4          ! TeUsed/10000.
@@ -2100,17 +2096,17 @@ module output_mod
 
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
-!        close(94)
-!        open(unit = 94, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
-!        if (ios /= 0) then
-!            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
-!            stop
-!        end if
-!        do iup = 15, 3, -1
-!            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
-!        end do
+        close(94)
+        open(unit = 94, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+        if (ios /= 0) then
+            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
+            stop
+        end if
+        do iup = 15, 3, -1
+            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
+        end do
 
-!        close(94)
+        close(94)
 
         ! calculate Hbeta 
         Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
@@ -2118,26 +2114,17 @@ module output_mod
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
 
-        call hlinex(4,2,TeUsed,NeUsed,fh,2)
-        hb = fh
-        do ilow = 2, 8
-           do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)
-              HIRecLines(iup, ilow) = (fh/hb)*Hbeta
-           enddo
-        enddo
-
         ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
-!        do iup = 15, 3, -1
-!            do ilow = 2, min0(8, iup-1)
-!                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
-!            end do
-!        end do    
+        do iup = 15, 3, -1
+            do ilow = 2, min0(8, iup-1)
+                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
+            end do
+        end do    
 
         ! add contribution of Lyman alpha 
         ! fits to Storey and Hummer MNRAS 272(1995)41
         Lalpha = 10**(-0.897*log10Te + 5.05) 
-        HIRecLines(30, 8) =HIRecLines(30, 8) + elemAbundanceUsed(1)*ionDenUsed(elementXref(1),2)*&
+        HIRecLines(15, 8) =HIRecLines(15, 8) + elemAbundanceUsed(1)*ionDenUsed(elementXref(1),2)*&
              & NeUsed*Lalpha 
         
 
@@ -2235,232 +2222,6 @@ module output_mod
     end subroutine RecLinesEmission
 
     end subroutine outputGas
-
-        
-    ! read atomic data for higher level H transitions. 
-    ! authors: Wang Wei, Yu Pei (PKU) 
-    subroutine hdatx
-      implicit none
-      integer                    :: ios         ! I/O error status
-      integer                    :: ia         ! upper level
-      integer                    :: ib         ! lower level
-      integer                    :: ntempx     ! number of temperature
-      integer                    :: ndensx     ! number of density
-      integer                    :: ntop       ! top level
-      integer                    :: nll        ! lower level
-      integer                    :: nlu        ! upper level
-      integer                    :: ne         ! level
-      integer                    :: ndum       ! level
-      integer                    :: i          ! integer
-      integer                    :: j          ! integer
-
-      real, dimension(15)              :: densx
-      real, dimension(15)              :: tempx
-      real, dimension(5000,15,15)      :: ex
-      common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu      
-      close(337)
-      open(unit =337, file = "data/e1bx.d", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-             print*, "! hdatax: can't open  data/e1bx.d"
-             stop
-        end if
-
-      read(337,*) ntempx,ndensx
-        do ia=1,ntempx
-           do ib=1,ndensx
-                read(337,25) densx(ib),tempx(ia),ntop,ndum,nlu,nll 
-25              format(1x,e10.3,5x,e10.3,5x,4i5)
-                ne=(2*ntop-nlu-nll)*(nlu-nll+1)/2
-                read(337,30) (ex(j,ia,ib),j=1,ne)
-30              format((8e10.3))
-           enddo
-        enddo
-      close(337)
-      
-    end subroutine hdatx
-
-
-
-    !  Interpolate in density/temperature for specified line emissivity
-    !  Interpolate in density/temperature for specified line emissivity (iopt=1)
-    !  or 2s recombination coefficient (iopt=2)
-    ! authors Wang Wei and Yu Pei (PKU)
-    subroutine hlinex(nu,nl,xt,xd,fh,iopt)
-      implicit real*8(a-h,o-z)
-      integer                    :: nu         ! upper level
-      integer                    :: nl         ! lower level
-      integer                    :: ntempx     ! number of temperature
-      integer                    :: ndensx     ! number of density
-      integer                    :: ntop       ! top level
-      integer                    :: nll        ! lower level
-      integer                    :: nlu        ! upper level
-      integer                    :: id, it, nt, j, i0, k, nls, nus, ncut
-      integer                    :: ks, j0, ip, kp, jp, ky, kx, js
-      integer                    :: int, max, ns, nint1, nint, is
-      real                       :: nof
-      real                       :: xt         ! temperature used
-      real                       :: xd         ! density used
-      real                       :: fh         ! H atomic data
-      integer                    :: iopt         ! switch
-      
-      real, dimension(15)              :: densx
-      real, dimension(15)              :: tempx
-      real, dimension(5000,15,15)      :: ex
-      real, dimension(15,15)           :: r
-      real, dimension(15)               :: x
-      real, dimension(15)               :: y
-      real, dimension(5)               :: ni
-      real, dimension(5)               :: cx
-      real, dimension(5)               :: cy
-      real, dimension(5)               :: ri
-      real, dimension(2,15)            :: f
-      common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu
-      data max/4/ni/2,3,4,5,6/       ! interpolation parameters
-!          interpolation variables
-        do i=1,ndensx
-            x(i)=log10(densx(i))
-        enddo
-        do i=1,ntempx
-            y(i)=sqrt(tempx(i))
-            f(1,i)=1.0          ! f is emissivity smoothing function in temp
-            f(2,i)=y(i)
-        enddo
-            nus=0
-            nls=0
-!          set keys to locate transitions of interest
-        if((nus+nls).eq.0) then
-             ns=2
-             ks=999
-        else
-             ns=1
-             ks=(((ncut-nus)*(ncut+nus-1))/2)+nls
-        endif
-             k=(2*ntop-nll-nl+1)*(nl-nll)/2+ntop-nu+1
-
-        do it=1,ntempx
-           do id=1,ndensx
-                if(ns.eq.1) then
-                     r(it,id)=ex(k,it,id)/ex(ks,it,id)
-                else
-                     r(it,id)=ex(k,it,id)
-                endif
-           enddo
-        enddo
-!          interpolate in r-table
-        nt=1
-
-        xp=log10(xd)           ! interpolate in log(dens)
-        yp=sqrt(xt)             ! interpolate in temp**0.5
-!          find interpolation box
-        i=1
-        if(xp.lt.x(i)) then
-                goto 88
-        endif
-86      if(xp.ge.x(i).and.xp.le.x(i+1)) then
-                goto 88
-        else
-            i=i+1
-            if(i.eq.ndensx) then
-                  i = ndensx - 1
-!                     stop 'dens overflow'
-            endif
-                goto 86
-        endif
-88      i0=i
-        j=1
-        if(yp.lt.y(j)) then
-                goto 92
-        endif
-90      if(yp.ge.y(j).and.yp.le.y(j+1)) then
-                goto 92
-        else
-           j = j+1
-           if(j.eq.ntempx) then
-           j = ntempx - 1
-                goto 92
-!              stop 'temp overflow'
-           endif
-                goto 90
-        endif
-92      j0=j
-        int=max
-        nint=ni(int)             ! interpolation order
-        nint1=nint-1
-        nof=nint1/2
-!          shift i0 to nearest box boundary in each direction if nint is odd
-        if(nint.eq.3.or.nint.eq.5.or.nint.eq.7) then  ! note ODD order
-            if((xp-x(i0)).gt.(x(i0+1)-xp)) then
-                is=i0+1-nof
-            else
-                is=i0-nof
-            endif
-            if((yp-y(j0)).gt.(y(j0+1)-yp)) then
-                js=j0+1-nof
-            else
-                js=j0-nof
-            endif
-        else
-            is=i0-nof
-            js=j0-nof
-        endif
-!          ensure that interpolation box lies in table
-        if(is.lt.1) then
-            is=1
-        endif
-        if((is+nint1).gt.ndensx) then
-            is=ndensx-nint1
-        endif
-        if(js.lt.1) then
-            js=1
-        endif
-        if((js+nint1).gt.ntempx) then
-            js=ntempx-nint1
-        endif
-        do k=1,nint
-             i=is+k-1
-             cx(k)=1.0
-           do kp=1,nint
-              if(kp.ne.k) then
-                 ip=is+kp-1
-                 cx(k)=cx(k)*(xp-x(ip))/(x(i)-x(ip))
-              endif
-           enddo
-        enddo
-        do k=1,nint
-            j=js+k-1
-            cy(k)=1.0
-           do kp=1,nint
-              if(kp.ne.k) then
-                 jp=js+kp-1
-                 cy(k)=cy(k)*(yp-y(jp))/(y(j)-y(jp))
-              endif
-           enddo
-        enddo
-          rint=0.0
-        do kx=1,nint
-           do ky=1,nint
-             if((js+ky-1).gt.ntempx.or.(is+kx-1).gt.ndensx) then
-                stop 'final loop error'
-             endif
-                rrr=r(js+ky-1,is+kx-1)*f(ns,js+ky-1) ! smoothing ftn
-             if(nt.ne.0) then
-                rrr=log(rrr)
-             endif
-             rint=rint+cx(kx)*cy(ky)*rrr
-           enddo
-        enddo
-
-        ri(int)=rint
-        if(nt.ne.0) then
-           ri(int)=exp(ri(int))
-        endif
-        if(ns.eq.2) then
-           ri(int)=ri(int)/yp ! remove smoothing function = temp**.5
-        endif
-        fh=ri(max)
-!        return
-      end subroutine hlinex
-
 
     subroutine writeTau(grid)
       implicit none

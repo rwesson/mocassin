@@ -2295,6 +2295,7 @@ module grid_mod
         write(40, *) contCube(1),contCube(2), ' continuumCube'
         write(40, *) lgPhotoelectric, ' lgPhotoelectric'
         write(40, *) lgTraceHeating, ' lgTraceHeating'
+        write(40, *) lg3DextinctionMap, extMapFile, ' lg3DextinctionMap, extMapFile'
 
         ! close file
         close(40)
@@ -2523,6 +2524,8 @@ module grid_mod
       read(77, *) contCube(1),contCube(2)
       read(77, *) lgPhotoelectric
       read(77, *) lgTraceHeating
+      read(77, *) lg3DextinctionMap, extMapFile
+      
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -2557,6 +2560,7 @@ module grid_mod
          print*,  contCube(1),contCube(2), 'continuumCube'
          print*,  lgPhotoelectric, ' lgPhotoelectric'
          print*,  lgTraceHeating, ' lgTraceHeating'
+         print*,  lg3DextinctionMap, extMapFile
 
       end if
       close(77)
