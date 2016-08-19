@@ -318,7 +318,7 @@ module photon_mod
 
             end select 
 
-            if (.not.lgDust .and. enPacket%nu < ionEdge(1)) then
+            if (.not.lgDust .and. enPacket%nu < ionEdge(1)  .and. .not.enPacket%lgLine) then
 
                ! the packet escapes without further interaction
                   
