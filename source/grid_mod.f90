@@ -463,19 +463,21 @@ module grid_mod
 !            stop
 !         end if        
 
+
          allocate(viewPointPTheta(0:totAngleBinsTheta), stat = err)
          if (err /= 0) then
             print*, "Can't allocate grid memory, viewAngleP "
             stop
-         end if        
+         end if
          allocate(viewPointPPhi(0:totAngleBinsPhi), stat = err)
          if (err /= 0) then
             print*, "Can't allocate grid memory, viewAngleP "
             stop
-         end if        
- 
+         end if
+         
          viewPointPtheta = 0
          viewPointPphi = 0
+
 !         ii = 1
 !         do i = 1, nAngleBins         
 !            viewPointP(int(viewPoint(i)/dTheta)+1) = ii
@@ -1960,7 +1962,7 @@ module grid_mod
                                         & grainAbun(nspec))
                                 end do
                              end do
-                             grid(iG)%Ndust(grid(iG)%active(i,j,k)) = grid(iG)%Ndust(grid(iG)%active(i,j,k))/&
+                             grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))/&
                                   & (denominator)
                              
                           end if
