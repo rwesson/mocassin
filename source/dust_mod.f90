@@ -127,12 +127,17 @@ module dust_mod
       ! this subroutine calculates the lhs of the above.
       subroutine dustEmissionInt()
         implicit none
-        
+
+        real :: bb ! blackbody flux                
+
         integer :: i, nT, nS, ai  ! counters
         integer, parameter :: nTemps=2000
 
-        real :: bb ! blackbody flux
+        character(len=50) :: cShapeLoc
+
         
+
+
         allocate(dustEmIntegral(1:nSpecies,1:nSizes,nTemps), stat = err)
         if (err /= 0) then
            print*, "! dustEmissionInt: can't allocate dustEmissionInt memory"
@@ -140,12 +145,12 @@ module dust_mod
         end if
         dustEmIntegral = 0.
 
-        contShape = 'blackbody'
+        cShapeLoc = 'blackbody'
 
         do nT = 1, nTemps
            do i = 1, nbins
 
-              bb = getFlux(nuArray(i), real(nT), 'blackbody')
+              bb = getFlux(nuArray(i), real(nT), cShapeLoc)
 
               do nS = 1, nSpecies
                  do ai = 1, nSizes                      
@@ -158,8 +163,6 @@ module dust_mod
            end do
         end do
        
-        contShape = contShapeIn
-
         ! the hPlanck is re-introduced here (was excluded in the bb calcs)
         dustEmIntegral = dustEmIntegral*4.*hPlanck
         

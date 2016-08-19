@@ -206,9 +206,13 @@ module emission_mod
 
         ! add contribution of this cell to the integrated balmer jump
         BjumpTemp = BjumpTemp + ((emissionHI(BjumpP)&
-             &+emissionHeI(BjumpP)+emissionHeII(BjumpP))-&
+             &+emissionHeI(BjumpP)+emissionHeII(BjumpP)) *&
+             & cRyd*cRyd*nuArray(BjumpP)*nuArray(BjumpP)*1.e-8/c -&
              & (emissionHI(BjumpP-1)+emissionHeI(BjumpP-1)&
-             &+emissionHeII(BjumpP-1)))* 2.2565e11*grid%Hden(grid%active(ix,iy,iz))*dV
+             &+emissionHeII(BjumpP-1)) *&
+             & cRyd*cRyd*nuArray(BjumpP-1)*nuArray(BjumpP-1)*1.e-8/c)&
+             & *grid%Hden(grid%active(ix,iy,iz))*dV
+!             &+emissionHeII(BjumpP-1)))*2.2565e11*grid%Hden(grid%active(ix,iy,iz))*dV
 
         ! calculate the emission due to HI and HeI recombination lines
         call RecLinesEmission()
@@ -1164,7 +1168,8 @@ module emission_mod
   
         ! calculate correction for partial sums and normalization constant 
         ! triplet 2s 
-
+        ! NOTE: multiply by 1.e11 to make units of [e-25 erg/cm^3/s] as e-14 from 
+        ! rec coeff (see above). 
         correction = alpha2tS * &
              & NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*&
              &ionDenUsed(elementXref(2),2)*1.45673*hcRyd*1e11
@@ -1370,6 +1375,10 @@ module emission_mod
 
       integer :: i, n, ai ! counters
 
+      character(len=50) :: cShapeLoc
+
+      cShapeLoc = 'blackbody'
+
       grid%dustPDF(grid%active(ix,iy,iz),:)=0.
 
       do n = 1, nSpecies
@@ -1378,7 +1387,7 @@ module emission_mod
             if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. & 
                  & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
 
-               bb = getFlux(nuArray(1), grid%Tdust(n,ai,grid%active(ix,iy,iz)), 'blackbody')
+               bb = getFlux(nuArray(1), grid%Tdust(n,ai,grid%active(ix,iy,iz)), cShapeLoc)
                grid%dustPDF(grid%active(ix,iy,iz), 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
                     & grainWeight(ai)*grainAbun(n)
 
@@ -1393,7 +1402,7 @@ module emission_mod
                if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. &
                     & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
 
-                  bb = getFlux(nuArray(i), grid%Tdust(n,ai,grid%active(ix,iy,iz)), 'blackbody')
+                  bb = getFlux(nuArray(i), grid%Tdust(n,ai,grid%active(ix,iy,iz)), cShapeLoc)
                   grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i-1) + &
                        &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*grainWeight(ai)*grainAbun(n)
 
