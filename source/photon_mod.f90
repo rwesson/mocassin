@@ -332,7 +332,12 @@ module photon_mod
                   stop
                end if
               
-               idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+
+               if (enPacket%direction%x<1.e-35) then
+                  idirP = 0
+               else
+                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+               end if
                if (idirP<0) idirP=totAngleBinsPhi+idirP
                idirP=idirP+1
 
@@ -1130,7 +1135,11 @@ module photon_mod
                       stop
                    end if
 
-                   idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                   if (enPacket%direction%x<1.e-35) then
+                      idirP = 0
+                   else
+                      idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                   end if
                    if (idirP<0) idirP=totAngleBinsPhi+idirP
                    idirP=idirP+1
                    if (idirP>totangleBinsPhi) then
@@ -1539,7 +1548,12 @@ module photon_mod
                      stop
                   end if
                
-                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+
+                  if (enPacket%direction%x<1.e-35) then
+                     idirP = 0
+                  else
+                     idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                  end if
                   if (idirP<0) idirP=totAngleBinsPhi+idirP
                   idirP=idirP+1
                   
@@ -1622,7 +1636,11 @@ module photon_mod
                             stop
                          end if
                          
-                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                         if (enPacket%direction%x<1.e-35) then
+                            idirP = 0
+                         else
+                            idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                         end if
                          if (idirP<0) idirP=totAngleBinsPhi+idirP
                          idirP=idirP+1
       
