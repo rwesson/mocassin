@@ -18,7 +18,7 @@ module emission_mod
     ! units are [e-25erg/s/N_gas]
     double precision, dimension(nElements,nstages, nForLevels,nForLevels)::&
          & forbiddenLines                                          ! emissivity from heavies  rec lines
-    double precision, dimension(3:15, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
+    double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
     double precision, dimension(9)         :: HeIRecLinesS         ! emissivity from HeI sing rec lines
     double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines

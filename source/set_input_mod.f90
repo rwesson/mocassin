@@ -259,9 +259,15 @@ module set_input_mod
                 allocate(contShape(1))
                 allocate(contShapeIn(1))
                 allocate(spID(1))
-                spID(1) = 'rauch'
+                allocate(tstep(1))
                 read(unit=10, fmt=*, iostat=ios) keyword, contShape(1)
                 print*, keyword, contShape(1)
+                if (contShape(1) == 'blackbody') then
+                   spID(1) = contShape(1)
+                else
+                   spID(1) = 'rauch'
+                end if
+                tstep = 0.                
             case ("nebComposition")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, cValue
@@ -370,7 +376,7 @@ module set_input_mod
             case ("MdMh")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, keyword
-                if (keyword=="constant") then
+               if (keyword=="constant") then
                    backspace 10
                    read(unit=10, fmt=*, iostat=ios) keyword, keyword, MdMgValue
                    print*, 'MdMh constant ', MdMgValue
