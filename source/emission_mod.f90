@@ -267,7 +267,7 @@ module emission_mod
 
                     ! fits to Storey and Hummer MNRAS 272(1995)41
                     lineIntensity = lineIntensity+10**(-0.897*log10(TeUsed) + 5.05)* &
-                         & grid%elemAbun(abFileUsed,1)*ionDenUsed(elementXref(1),2)*&
+                         & grid%elemAbun(grid%abFileIndex(ix,iy,iz),1)*ionDenUsed(elementXref(1),2)*&
                          &  NeUsed*grid%Hden(grid%active(ix,iy,iz))*dV*&
                          & (1.-grid%fEscapeResPhotons(grid%active(ix,iy,iz), iRes))
 
