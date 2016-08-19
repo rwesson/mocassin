@@ -47,6 +47,8 @@ module photon_mod
         integer                        :: seedSize    ! pseudo random number generator seed 
         integer, dimension(nGrids)     :: inX,inY,inZ ! initial position indeces
         integer, pointer               :: seed(:)     ! seed array
+        integer                        :: msec        ! millisecs of the sec
+        integer                        :: dt(8)       ! date and time values
 
         integer                        :: totalEscaped  
         real                           :: gasInt      ! total number of gas interactions
@@ -55,7 +57,7 @@ module photon_mod
         real                           :: JDifTot     ! tot JDif
         real                           :: JsteTot     ! tot Jste
         real                           :: radius      ! radius
-
+        
 
 
         character(len=7)               :: chTypeD     ! character type for driver
@@ -71,6 +73,9 @@ module photon_mod
            dustSInt = 0.
         end if
 
+        call date_and_time(values=dt)
+        msec=dt(8)
+
         call random_seed(seedSize) 
 
         allocate(seed(1:seedSize), stat= ierr)
@@ -83,7 +88,7 @@ module photon_mod
 
         call random_seed(get = seed)
  
-        seed = seed + taskid
+        seed = seed + msec + taskid
 
         call random_seed(put = seed)
         
