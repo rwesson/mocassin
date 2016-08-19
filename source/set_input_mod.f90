@@ -563,9 +563,8 @@ module set_input_mod
                lginputGasMass = .true.  
                print*,"Using gasMass keyword. Be sure to specify gas density file or Hdensity 1.0"
             case default
-                print*, "! readInput: invalid keyword in model parameter input file", &
+                print*, "! readInput: unrecognised keyword in model parameter input file", &
 &                        in_file, keyword
-                stop
             end select
 
          end do

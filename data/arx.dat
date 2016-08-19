@@ -1,23 +1,42 @@
- 19
-** Atomic data from version 5.2 of the CHIANTI database **
-%energy levels:  Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
-  NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
-%theoretical energy levels: extrapolated using Mg IV, Si VI, S VIII, Ca XII.
-% Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+ 38
+** Atomic data from version 7 of the CHIANTI database **
+%Observed energy levels (n=2 levels): Edlen, B., 1983, Physica Scripta, 28, 51
+%Observed energy levels (n=3,4 levels): Lepson, J.K., Beiersdorfer, P., Behar, E., & Kahn, S.M. 2003, ApJ, 590, 604
+%Observed energy levels (4,6,23,64,65,79): Fawcett, B.C., Gabriel, A.H., & Paget, T.M. 1971, J.Phys.B, 4, 986
+%Observed energy level (10): Average from measurements of Lepson et al. (2003) and Fawcett et al. (1971)
+%Observed energy levels (96,97): Connerade, J.P., Peacock, N.J., Speer, R.J., 1971, Solar Physics, 18, 63
+%Observed energy levels (11-17,19,21,22,25-28,31-34,37,38,42,4350,51,54): Bengtsson, P., Engstroem, L., Jupen, C., 1994, Physica Scripta, 49, 297
+%Comment: The energies from Bengtsson et al 1994 have been calculated using their observed wavelengths and
+     the energies of levels 4 to 10 (2s2.2p4.3s configuration) from the sources listed above.
+%Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% Enrico Landi 1997
-%observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
-   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
-%A values: interpolated using Mg IV, Si VI, S VIII, Ca XII.
-% Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%   E. Landi - Feb 2007
+%filename: ar_10.wgfa
+%Observed energy levels (n=2 levels): Edlen, B., 1983, Physica Scripta, 28, 51
+%Observed energy levels (n=3,4 levels): Lepson, J.K., Beiersdorfer, P., Behar, E., & Kahn, S.M. 2003, ApJ, 590, 604
+%Observed energy level (10): Average from measurements of Lepson et al. (2003) and Fawcett et al. (1971)
+%Observed energy levels (4,6,23,64,65,79): Fawcett, B.C., Gabriel, A.H., & Paget, T.M. 1971, J.Phys.B, 4, 986
+%Observed energy levels (96,97): Connerade, J.P., Peacock, N.J., Speer, R.J., 1971, Solar Physics, 18, 63
+%Observed energy levels (11-17,19,21,22,25-28,31-34,37,38,42,4350,51,54): Bengtsson, P., Engstroem, L., Jupen, C., 1994, Physica Scripta, 49, 297
+%Comment: The energies from Bengtsson et al 1994 have been calculated using their observed wavelengths and
+     the energies of levels 4 to 10 (2s2.2p4.3s configuration) from the sources listed above.
+%Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%Radiative data: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% Enrico Landi 1997
-% filename: ar_10.splups
-%oscillator strengths and effective collision strengths: interpolated using Mg IV, Si VI, S VIII, and Ca XII
-%comment: the interpolated data are most accurate in the range 3.5 < LogT < 5.5.
-% Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+% E. Landi - Feb 2007
+
+%filename: ar_10.splups
+%Oscillator strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%Effective collision strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
+%comment: effective collision strengths are published for temperatures in the range  4.3 < Log T <  8.3
+%comment: effective collision strengths are USED for temperatures in the range  4.9 < Log T <  7.0
+%comment: data at very high or very low temperatures were sometimes discarded to improve the fit. At these
+     temperatures the Ar X abundance is negligible under equilibrium.
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% Enrico Landi 1997
+% E. Landi - Jan 2007
  2 23
   1  2s2.2p5 2P3/2
   2  2s2.2p5 2P1/2
@@ -45,30 +64,30 @@
  1584892.5
  2511887.0
 0
-  1  2   1.28e-01
-  0  0   1.28e-01
-  0  0   1.28e-01
-  0  0   1.28e-01
-  0  0   1.29e-01
-  0  0   1.29e-01
-  0  0   1.29e-01
-  0  0   1.29e-01
-  0  0   1.29e-01
-  0  0   1.30e-01
-  0  0   1.30e-01
-  0  0   1.32e-01
-  0  0   1.36e-01
-  0  0   1.46e-01
-  0  0   1.62e-01
-  0  0   1.84e-01
-  0  0   2.02e-01
-  0  0   2.11e-01
-  0  0   2.08e-01
-  0  0   2.01e-01
-  0  0   1.94e-01
-  0  0   1.88e-01
-  0  0   1.84e-01
+  1  2   1.32e+00
+  0  0   1.32e+00
+  0  0   1.32e+00
+  0  0   1.32e+00
+  0  0   1.31e+00
+  0  0   1.31e+00
+  0  0   1.30e+00
+  0  0   1.29e+00
+  0  0   1.27e+00
+  0  0   1.24e+00
+  0  0   1.19e+00
+  0  0   1.12e+00
+  0  0   1.02e+00
+  0  0   8.70e-01
+  0  0   7.01e-01
+  0  0   5.63e-01
+  0  0   4.68e-01
+  0  0   3.86e-01
+  0  0   3.36e-01
+  0  0   3.04e-01
+  0  0   2.81e-01
+  0  0   2.67e-01
+  0  0   2.41e-01
  0 0 0
-  1  2   1.064e+02
+  1  2   1.230e+02
   1  4        0.0
-  2  2    18110.0
+  2  2    18065.1
