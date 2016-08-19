@@ -62,6 +62,7 @@ module iteration_mod
            real                   :: tau             ! optical depth
            real                   :: totCells        ! total # of active cells 
            real                   :: totheatdust     ! total dust heating
+           real          :: echod1, echod2            ! light echo distances  
            
            integer, pointer       :: planeIonDistributionTemp(:,:) 
            integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets
@@ -975,14 +976,21 @@ module iteration_mod
                  do j = 1, yTop
                     do k = 1, grid(iG)%nz
                        if (grid(iG)%active(i,j,k)>0)  then
-                          convPercent = convPercent + grid(iG)%lgConverged(grid(iG)%active(i,j,k))
-                          totCells    = totCells + 1.
+                          if (.not.lgEcho) then 
+                             convPercent = convPercent + grid(iG)%lgConverged(grid(iG)%active(i,j,k))
+                             totCells    = totCells + 1.
+                          else ! if light echo then only count echo cells!
+                             if (grid(iG)%echoVol(i,j,k).gt.0.0) then
+                                convPercent = convPercent + grid(iG)%lgConverged(grid(iG)%active(i,j,k))
+                                totCells    = totCells + 1.
+                             end if
+                          endif
                        end if
                     end do
                  end do
               end do
 
-              convPercent               = 100.*convPercent / totCells           
+              convPercent               = 100.*convPercent / totCells
               noHitPercent              = 100.*noHitPercent(iG) / totCells
               grid(iG)%noIonBal         = 100.*noIonBalPercent(iG) / totCells
               grid(iG)%noTeBal          = 100.*noTeBalPercent(iG) / totCells 

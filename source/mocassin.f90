@@ -46,7 +46,11 @@ program MoCaSSiN
 
     real            :: test                   ! test
     integer         :: i, iGrid, err          ! allocation error status
+    real            :: etime
+    real, dimension(2) :: tarray,timing        ! cputimer 
+    integer         :: nhours, nminutes, nseconds
 
+    timing(1)=etime(tarray)/60.0
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
@@ -71,7 +75,6 @@ program MoCaSSiN
     
     ! initialize opacities x sections array
     call initXSecArray()
-
     ! set the ionzing continuum according to the contShape variable
     call setContinuum()
 
@@ -130,6 +133,13 @@ program MoCaSSiN
     end do
 
     call mpi_finalize(ierr)
+    timing(2) = etime(tarray)/60.0
+    nhours = int((timing(2)-timing(1))/60.)
+    nminutes = int(mod(timing(2)-timing(1),60.))
+    nseconds = nint(60.*((timing(2)-timing(1))-real(nhours*60)-real(nminutes)))
+
+    write(6,100)nhours,nminutes,nseconds
+    100 format('total run time per processor ',1i3.2,':',1i2.2,':',1i2.2' (HMS)')
     stop '! MoCaSSin: end simulation reached - clean exit -'
 
 end program MoCaSSiN

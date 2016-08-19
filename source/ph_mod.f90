@@ -37,19 +37,19 @@ module xSec_mod
       print*, 'in initGammaCont'
 
       close(21)
-      open(file='data/gammaHI.dat', unit=21, status='old', iostat = err, action="read")
+      open(file=trim(home)//'data/gammaHI.dat', unit=21, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHI"
          stop
       end if
       close(22)
-      open(file='data/gammaHeI.dat', unit=22, status='old', iostat = err, action="read")
+      open(file=trim(home)//'data/gammaHeI.dat', unit=22, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeI"
          stop
       end if
       close(23)
-      open(file='data/gammaHeII.dat', unit=23, status='old', iostat = err, action="read")
+      open(file=trim(home)//'data/gammaHeII.dat', unit=23, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeII"
          stop
@@ -421,7 +421,7 @@ module xSec_mod
 
          ! open data/ph1.dat file and check for errors in opening 
          close(10)
-         open(unit = 10, file = "data/ph1.dat", status = "old",&
+         open(unit = 10, file = trim(home)//"data/ph1.dat", status = "old",&
               &  position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph1.dat"
@@ -430,7 +430,7 @@ module xSec_mod
 
          ! open data/ph2.dat file and check for errors in opening  
          close(20)
-         open(unit = 20, file = "data/ph2.dat", status = "old",&
+         open(unit = 20, file = trim(home)//"data/ph2.dat", status = "old",&
               &  position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph2.dat"
@@ -834,7 +834,7 @@ module xSec_mod
         integer :: nRadii ! # of radii in Qfile
 
         character(len = 15) :: textString, dustFileType
-        character(len=40)   :: readChar, extFile ! character string readers
+        character(len=50)   :: readChar, extFile ! character string readers
         character(len=50)   :: extinctionFile
 
         print*, 'in makeDustXSec'
@@ -853,7 +853,7 @@ module xSec_mod
        do icomp = 1, nDustComponents
 
           close(13)
-          open(file =   dustSpeciesFile(icomp), action="read",unit=13, &
+          open(file = dustSpeciesFile(icomp), action="read",unit=13, &
                &position="rewind",status="old", iostat = ios)
           if (ios /= 0 ) then
              print*, "! makeDustXsec: can't open file ", dustSpeciesFile(icomp)
@@ -891,7 +891,7 @@ module xSec_mod
            if (icomp > 1) dustComPoint(icomp) = dustComPoint(icomp-1)+nSpeciesPart(icomp-1)
 
            close(13)
-           open(file =   dustSpeciesFile(icomp), action="read",unit=13, &
+           open(file = dustSpeciesFile(icomp), action="read",unit=13, &
                 & position="rewind",status="old", iostat = ios)
            if (ios /= 0 ) then
               print*, "! makeDustXsec: can't open file ", dustSpeciesFile(icomp)
@@ -902,9 +902,9 @@ module xSec_mod
            do i = 1, nSpeciesPart(icomp)
               read(13,*) extFile
               close(14)
-              open(file=extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
+              open(file=trim(home)//extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
               if (ios /= 0 ) then
-                 print*, "! makeDustXsec: can't open file ", extFile
+                 print*, "! makeDustXsec: can't open file ", trim(home)//extFile
                  stop
               end if
               read(14,*) readChar
@@ -1049,11 +1049,11 @@ module xSec_mod
            
               read(10, *) extinctionFile, grainAbun(icomp, nSpec)
               
-              open (unit=20, file=extinctionFile, iostat = ios, &
+              open (unit=20, file=trim(home)//extinctionFile, iostat = ios, &
                    &status = 'old', position = 'rewind', action="read")
               if(ios/=0) then
                  print*, '! makeDustXSec: cannot open file for&
-                      & reading ', extinctionFile
+                      & reading ', trim(home)//extinctionFile
                  stop
               end if
               
@@ -1623,7 +1623,7 @@ module xSec_mod
         xstop=x+4.*x**.3333 +2.0
         nstop=int(xstop)
         ymod=abs(y)
-        nmx=int(amax1(xstop,ymod)) + 15
+        nmx=int(max(xstop,ymod)) + 15
         dang=1.570796327/float(nang-1)
         do j = 1,nang
            theta(j)= (float(j)-1.)*dang

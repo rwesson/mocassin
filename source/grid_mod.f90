@@ -182,10 +182,10 @@ module grid_mod
 
             if ( (lgDust) .and. (.not.lgGas) ) then 
                close(72)
-               open (unit= 72,  action="read", file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
+               open (unit= 72,  action="read", file=trim(home)//"dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
                if (ios /= 0) then
-                  print*, "! initCartesianGrid: can't open dust nu grid file - dustData/nuDustRyd.dat"
+                  print*, "! initCartesianGrid: can't open dust nu grid file - ",trim(home),"dustData/nuDustRyd.dat"
                   stop
                end if
 
@@ -298,10 +298,10 @@ module grid_mod
                
                ! dust data points
                close(72)
-               open (unit= 72,  action="read", file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
+               open (unit= 72,  action="read", file=trim(home)//"dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
                if (ios /= 0) then
-                  print*, "! initCartesianGrid: can't open dust nu grid file - nuDustGrid.dat"
+                  print*, "! initCartesianGrid: can't open dust nu grid file - ",trim(home),"nuDustGrid.dat"
                   stop
                end if
 
@@ -365,6 +365,15 @@ module grid_mod
             print*, "Can't allocate grid memory, active"
             stop
         end if    
+
+        ! allocate active cells volume
+!        if (lgEcho) then
+           allocate(grid%echoVol(1:nx, 1:ny, 1:nz), stat = err)
+           if (err /= 0) then
+              print*, "Can't allocate grid memory, echoVol"
+              stop
+           end if
+!        endif
 
         ! allocate axes
 
@@ -490,7 +499,7 @@ module grid_mod
         integer :: ngridsloc
         integer, parameter :: max_points = 10000          ! safety limit
 
-        character(len=30)            :: in_file
+!        character(len=30)            :: in_file
 
         real :: radius     ! sqrt(x^2 + y^2 + z^2)
 
@@ -810,6 +819,7 @@ module grid_mod
         real                           :: surfIn       ! surface at inner radius [e36 cm^2]
         real                           :: totalMass    ! total ionized mass 
         real                           :: totalVolume  ! total active volume
+        real                      :: echoVolume, vol   ! just echo volume
 
         real, dimension(nElements) :: aWeight
         real, parameter :: amu = 1.66053e-24 ! [g]
@@ -836,7 +846,7 @@ module grid_mod
         integer                        :: yTop, xPmap  ! 2D indeces
 
                                                        ! with one of the axes
-        character(len=40)              :: readChar, extFile ! character string readers
+        character(len=40)              :: keyword      ! character string readers
 
         print*, 'in setMotherGrid'
 
@@ -860,6 +870,8 @@ module grid_mod
                  print*, "! setMotherGrid: can't open density file"
                  stop
               end if
+              read(77,*)keyword
+              if (keyword .ne. "#") backspace 77
            end if
 
         end if
@@ -1052,6 +1064,8 @@ module grid_mod
                        print*, "! setMotherGrid: can't open MdMgFile file ", MdMgFile
                        stop
                     end if
+                    read(20,*)keyword
+                    if (keyword .ne. "#") backspace 20
                     
                     if (lgMultiDustChemistry) then
                        do i = 1, grid%nx
@@ -1085,6 +1099,8 @@ module grid_mod
                        print*, "! setMotherGrid: can't open NdustFile file ", NdustFile
                        stop
                     end if
+                    read(20,*)keyword
+                    if (keyword .ne. "#") backspace 20
 
                     if (lgMultiDustChemistry) then
                        do i = 1, grid%nx
@@ -1096,10 +1112,12 @@ module grid_mod
                           end do
                        end do
                     else
+                       print*,grid%nx,yTop,grid%nz
                        do i = 1, grid%nx
                           do j = 1, yTop
                              do k = 1, grid%nz
                                 read(20, *) grid%xAxis(i), grid%yAxis(j), grid%zAxis(k), NdustTemp(i,j,k)
+!                                write(6,'(3i4,4es11.3)')i,j,k,grid%xAxis(i), grid%yAxis(j), grid%zAxis(k), NdustTemp(i,j,k)
                              end do
                           end do
                        end do
@@ -1127,7 +1145,7 @@ module grid_mod
                       radius = 1.e10*sqrt( (grid%xAxis(i)/1.e10)*(grid%xAxis(i)/1.e10) + &
 &                                        (grid%yAxis(j)/1.e10)*(grid%yAxis(j)/1.e10) + &
 &                                        (grid%zAxis(k)/1.e10)*(grid%zAxis(k)/1.e10) ) 
-                         end if
+                   end if
   
 
                    ! check if this grid point is  valid nebular point
@@ -1336,7 +1354,6 @@ module grid_mod
              end if
 
           end if
-print*, 'hello0', grid%nCells
           if (lgDust) then
 
              allocate(grid%Ndust(0:grid%nCells), stat = err)
@@ -1345,7 +1362,6 @@ print*, 'hello0', grid%nCells
                 stop
              end if
              grid%Ndust=0.
-print*, 'hello', grid%nCells
              ! be 2.02.44
              allocate(grid%dustAbunIndex(0:grid%nCells), stat = err)
              if (err /= 0) then
@@ -1365,9 +1381,9 @@ print*, 'hello', grid%nCells
              end if
 
           end if
-print* ,'a'
+!          print* ,'a'
 
-          if (lgDebug) then
+!BS10          if (lgDebug) then
              allocate(grid%Jdif(0:grid%nCells, 1:nbins), stat = err)
              if (err /= 0) then
                 print*, "! grid: can't allocate grid memory"
@@ -1396,7 +1412,7 @@ print* ,'a'
                 
              end if
              
-          end if
+!BS10          end if
 
           allocate(grid%lgConverged(0:grid%nCells), stat = err)
           if (err /= 0) then
@@ -1445,7 +1461,7 @@ print* ,'a'
                 end do
              end do
           end do
-!print*, 'b'
+!          print*, 'b'
           if (lgNeInput) then 
              grid%NeInput = grid%Hden
              ! 1.11 is just a starting guess for the ionization 
@@ -1519,10 +1535,12 @@ print* ,'a'
            totalDustMass = 0.
            totalMass = 0.
            totalVolume = 0.
+           echoVolume = 0.
 
            do i = 1, grid%nx
               do j = 1, yTop
                  do k = 1, grid%nz
+                    grid%echoVol(i,j,k)=0. ! initialize
                     if (grid%active(i,j,k)>0) then
 
                        dV = getVolume(grid,i,j,k)
@@ -1539,6 +1557,13 @@ print* ,'a'
                        end if
 
                        totalVolume = totalVolume + dV
+!
+! echoes only
+!
+                       if (lgEcho) then
+                          grid%echoVol(i,j,k)=vEcho(grid,i,j,k,echot1,echot2,vol)
+                          echoVolume = echoVolume + vol 
+                       endif
 
                        if (lgDust .and. (lgMdMg.or.lgMdMh) ) then
 
@@ -1614,7 +1639,19 @@ print*, nsp, 'here!'
               if (lgGas) then
                  print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
               end if
-              print*, 'Total volume  of the active region [e45 cm^3]: ', totalVolume
+              print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
+              if (lgEcho) then 
+                 print*, 'Total volume of the echo [e45 cm^3]: ', echoVolume*846732407.," or ",echoVolume," ly^3"
+                 open(unit=99, status='unknown', position='rewind', file='output/echo.out', action="write",iostat=ios)
+                 write(99,*)'Total volume of the active region [e45 cm^3]: ', totalVolume
+                 write(99,*)'Total volume of the echo [e45 cm^3]: ', echoVolume*846732407.," or ",echoVolume," ly^3"
+                 if (echoVolume .eq. 0.) then
+                    print*,'No dust in echo region. Stopping'
+                    write(99,*)'No dust in echo region. Stopping'
+                    stop
+                 endif
+                 close(99)
+              endif
 
            end if
               
@@ -1683,6 +1720,7 @@ print*, nsp, 'here!'
            real                           :: surfIn       ! surface at inner radius [e36 cm^2]
            real                           :: totalMass    ! total ionized mass 
            real                           :: totalVolume  ! total active volume
+           real                      :: echoVolume, vol   ! just echo volume
            real, pointer                  :: weight(:)    ! weight of grain
            
            
@@ -1919,6 +1957,14 @@ print*, nsp, 'here!'
                     dustAbunIndexTemp = 0.
                  end if
               end if
+
+              if (lgEcho) then ! allocate active cells volume
+                 allocate(grid(iG)%echoVol(1:grid(iG)%nx, 1:grid(iG)%ny, 1:grid(iG)%nz), stat = err)
+                 if (err /= 0) then
+                    print*, "Can't allocate grid memory, echoVol"
+                    stop
+                 end if
+              endif
 
               ! allocate space for HdenTemp 
               if (lgGas) then
@@ -2168,7 +2214,7 @@ print*, nsp, 'here!'
               
               allocate(grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins), stat = err)
               if (err /= 0) then
-                 print*, "! setSubGrid: can't allocate grid memory : Jste"
+                 print*, "! setSubGrid: can't allocate grid memory : escapedPackets"
                  stop
               end if
               
@@ -2198,7 +2244,7 @@ print*, nsp, 'here!'
 
               end if
 
-              if (lgDebug) then
+!BS10              if (lgDebug) then
                  allocate(grid(iG)%Jdif(0:grid(iG)%nCells, 1:nbins), stat = err)
                  if (err /= 0) then
                     print*, "! grid: can't allocate grid memory"
@@ -2227,7 +2273,7 @@ print*, nsp, 'here!'
                     
                  end if
              
-              end if
+!BS10              end if
 
               allocate(grid(iG)%lgConverged(0:grid(iG)%nCells), stat = err)
               if (err /= 0) then
@@ -2294,7 +2340,7 @@ print*, nsp, 'here!'
                              
                              ! calculate ionDen for H0
                              if (lgElementOn(1)) then
-                                grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(1),1) = H0in                                              
+                                grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(1),1) = H0in    
                                 grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(1),2) = &
                                      & 1.-grid(iG)%ionDen(grid(iG)%active(ix,iy,iz),elementXref(1),1)
                              end if
@@ -2341,7 +2387,7 @@ print*, nsp, 'here!'
               
               totalMass = 0.
               totalVolume = 0.
-           
+              echoVolume = 0.
 
               do ix = 1, grid(iG)%nx
                  do iy = 1, grid(iG)%ny
@@ -2364,6 +2410,14 @@ print*, nsp, 'here!'
                           end if
                           
                           totalVolume = totalVolume + dV
+!
+! echoes only
+!
+                          if (lgEcho) then
+                             grid(iG)%echoVol(i,j,k)=vEcho(grid(iG),i,j,k,echot1,echot2,vol)
+                             echoVolume = echoVolume + vol 
+                          endif
+
                           
                           if (lgDust .and. lgMdMg .or. lgMdMh) then
                              
@@ -2440,7 +2494,8 @@ print*, nsp, 'here!'
                     &print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
 
 
-                 print*, 'Total volume  of the active region [e45 cm^3]: ', totalVolume
+                 print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
+                 if (lgEcho) print*, 'Total volume of the echo region [e45 cm^3]: ', echoVolume
                  print*, '! Number of active cells :', grid(iG)%nCells
               end if           
 
@@ -2479,11 +2534,11 @@ print*, nsp, 'here!'
            end if
            if (associated(grid%opacity)) deallocate(grid%opacity)
            if (associated(grid%Jste)) deallocate(grid%Jste)
-           if (lgDebug) then
+!BS10           if (lgDebug) then
               if (associated(grid%Jdif)) deallocate(grid%Jdif)
               if (associated(grid%linePackets)) deallocate(grid%linePackets)
               if (associated(grid%linePDF)) deallocate(grid%linePDF)
-           end if
+!BS10           end if
            if (lgNeInput) then
                if (associated(grid%NeInput)) deallocate(grid%NeInput)
            end if
@@ -2713,7 +2768,9 @@ print*, nsp, 'here!'
         write(40, *) nstages, ' emittingGrid'
         write(40, *) lgMultistars, ' lgMultiStars'
         write(40,*)  lg2D, ' 2D geometry?'
-
+        write(40,*) "'",trim(home),"' home()"
+        write(40,*) lgEcho, echot1, echot2, echoTemp," Echo on/off"
+        write(40,*) lgNosource," NoSourceSED"
         ! close file
         close(40)
      
@@ -2965,7 +3022,9 @@ print*, nsp, 'here!'
       read(77, *) nstages
       read(77, *) lgMultistars
       read(77, *) lg2D
-
+      read(77, *) home
+      read(77, *) lgEcho, echot1, echot2, echoTemp
+      read(77,*) lgNosource
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -3012,7 +3071,9 @@ print*, nsp, 'here!'
          print*,  nstages, ' nstages'
          print*,  lgMultistars, ' lgMultiStars'
          print*,  lg2D, ' lg2D'
-
+         print*,  "'",trim(home),"' home"
+         print*,  lgEcho, echot1, echot2, echoTemp
+         print*,  lgNosource," NoSourceSED"
       end if
       close(77)
 
@@ -3171,7 +3232,7 @@ print*, nsp, 'here!'
             stop
          end if
          
-         if (lgDebug) then
+!BS10         if (lgDebug) then
             allocate(grid(iG)%Jdif(0:grid(iG)%nCells, 1:nbins), stat = err)
             if (err /= 0) then
                print*, "! grid: can't allocate grid memory"
@@ -3200,7 +3261,7 @@ print*, nsp, 'here!'
             
             grid(iG)%Jdif = 0. 
 
-         end if
+!BS10         end if
 
          allocate(grid(iG)%lgConverged(0:grid(iG)%nCells), stat = err)
          if (err /= 0) then
@@ -3508,6 +3569,105 @@ print*, nsp, 'here!'
       end do         
 
     end subroutine setStarPosition
+
+!
+! =Light Echo routines, BEKS 2010==========================================
+!
+      function vEcho(grid,xP,yP,zP,t1i,t2i,volume)
+! return the fraction of the grid cell containing an echo
+      implicit none
+      type(grid_type),intent(in) :: grid              ! the grid
+      integer, intent(in)        :: xP, yP, zP        ! cell indeces  
+      double precision :: x,y,z,dx,dy,dz,t1,t2,vfrac,vol
+      real             :: t1i,t2i,vEcho,odx,ody,odz,volume
+      double precision :: h,rho,ddx,ddy,xx,yy
+      double precision :: dfac=9.4605284e17,tfac=365.25
+      integer :: i,j
+      integer :: n=25 ! number of points in grid cell over which to integrate
+      
+! N.B. work in yrs & lt-yrs, they are easier...
+
+      x=dble(grid%xAxis(xP))/dfac
+      y=dble(grid%yAxis(yP))/dfac
+      z=dble(grid%zAxis(zP))/dfac
+
+      t1=dble(t1i)/tfac
+      t2=dble(t2i)/tfac
+
+      if ( (xP>1) .and. (xP<grid%nx) ) then
+         odx = abs(grid%xAxis(xP+1)-grid%xAxis(xP-1))/2.
+      else if ( xP==1 ) then
+         if (lgSymmetricXYZ) then
+            odx = abs(grid%xAxis(xP+1)-grid%xAxis(xP))/2.
+         else 
+            odx = abs(grid%xAxis(xP+1)-grid%xAxis(xP))
+         end if
+      else if ( xP==grid%nx ) then
+         odx = abs(grid%xAxis(xP)  -grid%xAxis(xP-1))
+      end if
+      
+      if ( (yP>1) .and. (yP<grid%ny) ) then
+         ody = abs(grid%yAxis(yP+1)-grid%yAxis(yP-1))/2.
+      else if ( yP==1 ) then
+         if (lgSymmetricXYZ) then
+            ody = abs(grid%yAxis(yP+1)-grid%yAxis(yP))/2.
+         else
+            ody = abs(grid%yAxis(yP+1)-grid%yAxis(yP))
+         end if
+      else if ( yP==grid%ny ) then
+         ody = abs(grid%yAxis(yP)  -grid%yAxis(yP-1))
+      end if
+      
+      if ( (zP>1) .and. (zP<grid%nz) ) then    
+         odz = abs(grid%zAxis(zP+1)-grid%zAxis(zP-1))/2.    
+      else if ( zP==1 ) then    
+         if (lgSymmetricXYZ) then
+            odz = abs(grid%zAxis(zP+1)-grid%zAxis(zP))/2.
+         else
+            odz = abs(grid%zAxis(zP+1)-grid%zAxis(zP))
+         end if
+      else if ( zP==grid%nz ) then    
+         odz = abs(grid%zAxis(zP)-grid%zAxis(zP-1))
+      end if
+
+      dx=dble(odx)/dfac
+      dy=dble(ody)/dfac
+      dz=dble(odz)/dfac
+      
+      vEcho=0.
+      vol=0.0
+
+! integrate all echo space inside torus
+
+      ddx=dx/dble(n)
+      ddy=dy/dble(n)
+!      write(6,'(a2,8f9.3)')'s',x,y,z,dx,dy,dz,ddx,ddy
+      do i=1,n
+         do j=1,n
+            xx=x-dx/2.+ddx/2.+dble(i-1)*ddx ! test at center of each subcell
+            yy=y-dy/2.+ddy/2.+dble(j-1)*ddy
+            rho=sqrt(xx**2+yy**2)
+            h=max((min(z+dz,zee(rho,t1))-max(z,zee(rho,t2))),0.)
+            vol=vol+h
+!            if (vol.gt.0.) write(6,'(2f8.4,x,4f8.4,x,f8.4,1pg12.4)')&
+!                 &xx,yy,zee(rho,t2),z,z+dz,zee(rho,t1),h,vol
+         enddo
+      enddo
+      volume=real(vol*ddx*ddy)
+      vEcho=real(vol*ddx*ddy/(dx*dy*dz)) ! ratio of volume in echo to grid cell
+!      if (vEcho.gt.0.) write(6,'(a2,4f9.3)')'a',x,y,z,vEcho
+
+      return
+    end function vEcho
+!
+    function zee(rho,t)
+      double precision :: zee,rho,t
+      double precision :: cl=2.998e10
+
+      zee=rho**2/(2.*t)-t/2.
+      return 
+    end function zee
+
 
 end module grid_mod
 

@@ -21,6 +21,7 @@ module update_mod
 
         real                           :: aFit, bFit   ! general fit terms
         real                           :: deltaXHI        ! delta ionDen of H0                   
+        real                           :: echod1, echod2
         real, dimension(3)             :: ions         ! # of ionizations (1 is from
                                                        ! H0 2 is from He0 and 3 is 
                                                        ! is for He+)
@@ -131,6 +132,16 @@ module update_mod
                  exit
               end if
            end do
+        end if
+
+        ! in the case of a light echo only update cells inside the echo
+        if (lgEcho) then
+           if (grid%echoVol(xP,yP,zP).eq.0.0) then
+              grid%Tdust(:,:,cellP) = echoTemp
+              TdustTemp(:,:,cellP)  = grid%Tdust(:,:,cellP)              
+              return
+           end if
+
         end if
 
         ! do not update this cell if there were no hits
@@ -1718,7 +1729,7 @@ module update_mod
             ! and the dielectronic recombination data
             if (lgFirst) then
                 close(17)
-                open (unit=17, file='data/radrec.dat', status='old',position='rewind', &
+                open (unit=17, file=trim(home)//'data/radrec.dat', status='old',position='rewind', &
                      & iostat = ios, action="read")
    
                 do ion = 4, 30
@@ -1822,7 +1833,7 @@ module update_mod
             aldroPequi=0.
 
             close(18)
-            open (unit=18, file='data/dielectronic.dat', status='old',position='rewind', &
+            open (unit=18, file=trim(home)//'data/dielectronic.dat', status='old',position='rewind', &
                  &iostat = ios, action="read")
             do i = 1, 10000
                read(unit=18, fmt=*, iostat=ios) elem, n, a, b, c, d, f, g
@@ -1851,7 +1862,7 @@ module update_mod
             t = TeUsed
 
             close(17)
-            open (unit=17, file='data/aldrovandi.dat', status='old',position='rewind', iostat = ios, action="read")
+            open (unit=17, file=trim(home)//'data/aldrovandi.dat', status='old',position='rewind', iostat = ios, action="read")
             if (ios /= 0) then
                print*, "! dielectronic: can't open file data/alrovandi.dat"
                stop

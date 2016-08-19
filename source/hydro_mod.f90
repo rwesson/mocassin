@@ -16,7 +16,7 @@ module elements_mod
       integer :: elem,ion, i
 
       close(12)
-      open(unit = 12, file = 'data/cion.dat', status='old', position='rewind')
+      open(unit = 12, file = trim(home)//'data/cion.dat', status='old', position='rewind')
       
       do elem = 1, nElements
          do ion = elem, 1, -1
@@ -38,7 +38,7 @@ module elements_mod
       integer :: elem,ion,shell,nelec,imax,i,j,ios
 
       close(12)
-      open(unit = 12, file = 'data/auger.dat', status='old', position='rewind')
+      open(unit = 12, file = trim(home)//'data/auger.dat', status='old', position='rewind')
 
       nAuger=0
       auger =0.
@@ -190,7 +190,7 @@ module elements_mod
        integer :: iline, iden, j
 
        close(13)
-       open(file='data/HeIrecLines.dat', unit = 13, status='old')
+       open(file=trim(home)//'data/HeIrecLines.dat', unit = 13, status='old')
        
        do iden = 1, 3
           do iline = 1, 34
@@ -482,12 +482,12 @@ module elements_mod
        integer           :: ios        ! I/O error status
        
        close(17)
-       open(file='data/fileNames.dat', action="read", unit=17, status='old', &
+       open(file=trim(home)//'data/fileNames.dat', action="read", unit=17, status='old', &
             & position='rewind', iostat=ios)
        
        if (ios/=0) then
           
-          print*, "! makeElements: can't open data/fileNames.dat"
+          print*, "! makeElements: can't open ",trim(home),"data/fileNames.dat"
           stop
           
        end if

@@ -34,6 +34,7 @@ module common_mod
     logical         :: lgTraceHeating = .false. ! trace thermal balance?
     logical         :: lgGrainSpiking = .true.  ! temperature spiking for small grains
     logical         :: lgEcho = .false.         ! light time travel included?
+    logical         :: lgNosource = .false.     ! exclude sources from SED?
 
     real, pointer :: gSca(:)                 ! gSca(freq)
 
@@ -57,7 +58,8 @@ module common_mod
     real            :: endtime        ! end time [sec]    
     real            :: absInt         ! total number of absorption events
     real            :: scaInt         ! total number of scattering events
-    real            :: echot1, echot2   ! light time travel parameters
+    real            :: echot1=0., echot2=0.   ! light time travel parameters
+    real            :: echoTemp=0.       ! temperature outside the illuminated parabula
     real            :: dTheta                  ! 
     real            :: dPhi                    ! 
     real            :: nu0                     ! 
@@ -132,7 +134,7 @@ module common_mod
     logical, pointer :: &
          & lgDataAvailable(:,:)! is the atomic data available for this species?
 
-    character(len=20), dimension(3:nElements, 1:10) :: &
+    character(len=50), dimension(3:nElements, 1:10) :: &
          & dataFile       ! name of the file containing the atomic data for this species
 
     integer, dimension(nElements, nElements)&
@@ -228,7 +230,7 @@ module common_mod
     type grid_type             ! derived grid type
         sequence
 
-        character(len=20) :: composition            ! chemical composition
+        character(len=50) :: composition            ! chemical composition
 
         integer :: nx                               ! size of cartesian grid in x
         integer :: ny                               ! size of cartesian grid in y
@@ -285,6 +287,8 @@ module common_mod
         real, pointer :: elemAbun(:,:)              ! elemental abundance (specified
                                                     ! by number relative to total 
                                                     ! hydrogen density)
+        real, pointer :: echoVol(:,:,:)  ! BEKS 2010. Contains volume of one
+        ! grid cell enclosed by echo.  Only used if lgEcho=.true.
     end type grid_type
 
     ! photon packet type
@@ -297,13 +301,13 @@ module common_mod
         integer       :: iG        ! grid index 
 
         real          :: nu
-
         logical       :: lgStellar
         logical       :: lgLine
     
         type(vector)  :: position
         type(vector)  :: direction
   
+
     end type photon_packet
 
     ! plot type
@@ -376,6 +380,7 @@ module common_mod
     character(len=50)  :: dustFile(2)      ! dust files
     character(len=50)  :: MdMgFile         ! name of MdMg file
     character(len=50)  :: NdustFile        ! name of Ndust file    
+    character(len=50)  :: home=''          ! home directory if specified    
     character(len=50)  :: Qfile            ! name of Qfile 
     character(len=30),pointer       :: grainLabel(:)    ! name of this species
 
