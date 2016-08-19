@@ -481,7 +481,7 @@ module iteration_mod
            end if
 
            do iG = 1, nGrids
-              allocate(escapedPacketsTemp(0:grid(iG)%nCells, 1:nbins, 0:nAngleBins), stat = err)
+              allocate(escapedPacketsTemp(0:grid(iG)%nCells, 0:nbins, 0:nAngleBins), stat = err)
               if (err /= 0) then
                  print*, "! iterateMC: can't allocate grid memory: escapedPacketsTemp", iG
                  stop
@@ -513,13 +513,13 @@ module iteration_mod
               end if
           
 
-              size =  (grid(iG)%nCells+1)*nbins*(nAngleBins+1)
+              size =  (grid(iG)%nCells+1)*(1+nbins)*(nAngleBins+1)
 
               call mpi_allreduce(grid(iG)%escapedPackets, escapedPacketsTemp, size, &
                    & mpi_real, mpi_sum, mpi_comm_world, ierr)
 
               do i = 0, grid(iG)%nCells
-                 do freq = 1, nbins                       
+                 do freq = 0, nbins                       
                     do imu = 0, nAngleBins
                        grid(iG)%escapedPackets(i, freq,imu) = escapedPacketsTemp(i, freq, imu)
                     end do

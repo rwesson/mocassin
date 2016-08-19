@@ -258,6 +258,8 @@ module set_input_mod
                 nstars=1
                 allocate(contShape(1))
                 allocate(contShapeIn(1))
+                allocate(spID(1))
+                spID(1) = 'rauch'
                 read(unit=10, fmt=*, iostat=ios) keyword, contShape(1)
                 print*, keyword, contShape(1)
             case ("nebComposition")
@@ -327,7 +329,7 @@ module set_input_mod
                 print*, keyword, LStar(1)
             case ("LPhot")
                 backspace 10
-                allocate(Lstar(1))                
+                if (.not. associated(LStar)) allocate(Lstar(1))                
                 read(unit=10, fmt=*, iostat=ios) keyword, LPhot
                 print*, keyword, LPhot
             case ("nuMax")
@@ -447,6 +449,7 @@ module set_input_mod
            stop
         else
            allocate(nPhotons(1))
+           allocate(deltaE(1))
            nPhotons(1)=nPhotonsTot
            if (.not.associated(starPosition)) then
               allocate (starPosition(1))
@@ -645,7 +648,8 @@ module set_input_mod
 
         integer                       :: ios, i, iloop,nSafeLimit=10000
 
-        real                          :: E0, nphotonsold
+        real                          :: E0
+
 
         close(13)
         open(file=infile, unit=13, iostat=ios)
@@ -658,6 +662,10 @@ module set_input_mod
         print*, "Multiple Ionising sources", nStars
         print*, "(i, Tstellar, Lstar, ContShape, Nphotons, position)"
 
+
+        allocate(deltaE(nStars))
+        allocate(spID(nStars))        
+        allocate(tStep(nStars))        
         allocate(TStellar(nStars))        
         allocate(Lstar(nStars))
         allocate(ContShape(nStars))        
@@ -669,46 +677,25 @@ module set_input_mod
         Lstar=0.
         ContShape='none'
         ContShapeIn='none'
+        spID='none'
+        tStep=0.
         nPhotons=0.
 
         do i = 1, nStars
-           read(13,*) TStellar(i), Lstar(i), ContShape(i), starPosition(i)%x, starPosition(i)%y, starPosition(i)%z
+           read(13,*) TStellar(i), Lstar(i), ContShape(i), starPosition(i)%x, starPosition(i)%y, starPosition(i)%z, &
+                & spID(i), tStep(i)
            contShapeIn(i) = contShape(i)
         end do
-
-        ! find the number of packets to be emitted by each source 
-        ! (keep E0 constant throughout the sim)
-
-        ! initial guess at Nphotons(1) -> E0
-        Nphotons(1) = NphotonsTot/nStars
-        E0 = Lstar(1)/real(Nphotons(1))
-
-        do iloop = 1, nSafelimit
-
-           nphotonsold=Nphotons(1)
-           ! find Nphotons(i)
-           do i = 2, nStars
-              Nphotons(i) = int(Lstar(i)/E0)
-           end do
         
-           ! impose the condition that NphotonsTot = Sum{Nphotons(i)} -> derive new Nphotons(1)        
-           Nphotons(1)=NphotonsTot
-           do i = 2, nStars
-              Nphotons(1) = Nphotons(1)-Nphotons(i)
-           end do
         
-           if (abs(nPhotons(1)-nphotonsold)<1) exit
-
-        end do
-
+        print*, 'i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i), deltaE(i)'
         do i = 1, nStars
-           print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i)
+           nPhotons(i) = NphotonsTot/nStars
+           deltaE(i) = Lstar(i)/nPhotons(i)
+           print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i), deltaE(i)
         end do                
 
       end subroutine setMultiPhotoSources
-
-
-
         
 end module set_input_mod
 

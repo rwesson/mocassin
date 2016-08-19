@@ -3,7 +3,7 @@
 ! Version 2.02
 module grid_mod
 
-    use common_mod             ! common variables
+    use common_mod             ! common variablesesca
     use composition_mod        ! cemical abundances 
     use constants_mod          ! physical constants
     use elements_mod           ! hydrogen data 
@@ -428,7 +428,7 @@ module grid_mod
             end do
             widFlx(nbins) =  nuArray(nbins)-nuArray(nbins-1)
             
-            ! set the 4.9 GHz pointer
+             ! set the 4.9 GHz pointer
             if (nuArray(1) <= radio4p9GHz) then
                call locate(nuArray,radio4p9GHz,radio4p9GHzP)
                if (radio4p9GHz > (nuArray(radio4p9GHzP)+nuArray(radio4p9GHzP+1))/2.) &
@@ -1186,7 +1186,7 @@ module grid_mod
              stop
           end if
 
-          allocate(grid%escapedPackets(0:grid%nCells, 1:nbins,0:nAngleBins), stat = err)
+          allocate(grid%escapedPackets(0:grid%nCells, 0:nbins,0:nAngleBins), stat = err)
           if (err /= 0) then
              print*, "! setMotherGrid: can't allocate grid memory : Jste"
              stop
@@ -1823,7 +1823,7 @@ module grid_mod
                  stop
               end if
               
-              allocate(grid(iG)%escapedPackets(0:grid(iG)%nCells, 1:nbins,0:nAngleBins), stat = err)
+              allocate(grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins), stat = err)
               if (err /= 0) then
                  print*, "! setSubGrid: can't allocate grid memory : Jste"
                  stop
@@ -2243,10 +2243,11 @@ module grid_mod
            write(42, *) "'",trim(contShapeIn(i)),"'", TStellar(i), LStar(i), nPhotons(i), &
                 & starPosition(i)%x/grid(1)%xAxis(grid(1)%nx),&
                 & starPosition(i)%y/grid(1)%yAxis(grid(1)%ny),&
-                & starPosition(i)%z/grid(1)%zAxis(grid(1)%nz)
+                & starPosition(i)%z/grid(1)%zAxis(grid(1)%nz),&
+                & trim(spID(i)), tStep(i)
         end do
 
-        write(42, *) '(contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position)'
+        write(42, *) '(contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position, spID, tstep)'
         close(42)
 
         ! general simulation parameters
@@ -2445,12 +2446,17 @@ module grid_mod
        allocate(starPosition(nStars))
        allocate(contShape(nStars))
        allocate(contShapeIn(nStars))
+       allocate(spID(nStars))
+       allocate(tStep(nStars))
+       allocate(deltaE(nStars))
+
        do i = 1, nStars
           read(72, *) contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
-               &starPosition(i)%z
+               &starPosition(i)%z,spID(i), tStep(i)
           contShapeIn(i)=contShape(i)
           print*, i, contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
-               &starPosition(i)%z
+               &starPosition(i)%z, spID(i), tStep(i)
+          deltaE(i) = Lstar(i)/nPhotons(i)
        end do
        close(72)
 
@@ -2727,7 +2733,7 @@ module grid_mod
             stop
          end if
          
-         allocate(grid(iG)%escapedPackets(0:grid(iG)%nCells, 1:nbins,0:nAngleBins), stat = err)
+         allocate(grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins), stat = err)
          if (err /= 0) then
             print*, "! resetGrid: can't allocate grid memory : Jste"
             stop

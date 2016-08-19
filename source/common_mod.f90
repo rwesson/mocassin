@@ -308,6 +308,7 @@ module common_mod
     character(len=50), pointer  :: abundanceFIle(:) ! abundance file names
     character(len=50), pointer  :: contShape(:)     ! continuumShape
     character(len=50), pointer  :: contShapeIn(:)   ! continuumShape
+    character(len=50), pointer  :: spID(:)          ! input spectrum generator ID
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
     character(len=50)  :: MdMgFile         ! name of MdMg file
@@ -363,7 +364,9 @@ module common_mod
     real               :: R_out            ! outer radius [cm]
     real               :: SEDfreq(2)       ! 
     real               :: TeStart          ! initial guess at Te for regions I and II
+    real, pointer      :: deltaE(:)        ! energy carried by a single photon
     real, pointer      :: Tstellar(:)      ! T of ionizing source [K]
+    real, pointer      :: tStep(:)         ! time step for sb99 inputs [yrs]
     real               :: XHILimit         ! convergence limit on X(HI)
     
 

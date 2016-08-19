@@ -37,12 +37,13 @@ module continuum_mod
 
         integer :: enP                       ! pointer in enArray
         integer :: err                       ! allocation error status
-        integer :: i, j, iStar, iloop        ! counters
+        integer :: i, j, k, iStar, iloop     ! counters
         integer :: ios                       ! I/O error status
         integer :: numLam
+        integer, parameter :: sb99nuLim=1221
 
         integer,dimension(nbins) :: lamCount
-        real    :: SStar                     ! stellar surface [e36 cm^2]
+        real    :: SStar, skip, time         ! stellar surface [e36 cm^2]
         real,dimension(maxLim)    :: tmp1, tmp2
 
         real, dimension(maxLim) :: enArray  ! freq array as read from input spectrum file [Hz]
@@ -82,12 +83,10 @@ module continuum_mod
            Hflux             = 0.
            inSpectrumErg     = 0.
            inSpectrumPhot    = 0.
-           inSpectrumProbDen(iStar,:) = 0.
-
-
-           filein = contShape(iStar)
-
-       
+           inSpectrumProbDen(iStar,:) = 0.          
+           
+           filein = contShape(iStar)           
+                 
            ! open file for reading
            close(12)
            open(unit = 12, file=filein, status = 'old', position = 'rewind', iostat=err)
@@ -103,80 +102,180 @@ module continuum_mod
               end do
 
 
-
            else
 
-            do j = 1, maxLim
+              select case(spID(iStar)) 
+              case ('sb99')
 
-                ! check if the end of file has been reached
-                ! NOTE: the file must be in the format of two columns
-                !       the first containing the lambda points (A) 
-                !       and the second containing the input spectrum points 
-                !       (erg/cm^2/s/A/sr). The file must be in ascending
-                !       wavenegth order. See e.g. Thomas Rauch's tables 
-                !       http://astro.uni-tuebingen.de/~rauch/
+                 ! Starburst99 input
+                 ! NOTE: the file must be in the format of 5 columns
+                 !       the first containing the time step
+                 !       the second the lambda points (A) 
+                 !       and the fourth containing the stellar spectrum points 
+                 !       (erg/s/A/sr). The file must be in ascending
+                 !       wavenegth order. 
+                 !       First 7 lines are comments
+                 ! check if the end of the file has been reached 
+                 do j = 1, 7                   
+                    read(unit=12, fmt=*) 
+                 end do
 
-                ! check if the end of the file has been reached 
-                read(unit=12, fmt=*, iostat=ios) 
-                if (ios < 0) exit ! end of file reached
+                 do j = 1, maxLim                 
 
-                backspace(12)
-                read(12, *) enArray(j), Hflux(j)
+                    read(unit=12, fmt=*, iostat=ios) time
+                    if (ios < 0) exit ! end of file reached
 
-                ! change Hflux(lambda) [erg/cm^"/s/A/sr] into Hflux(nu) [erg/cm^2/s/Hz]
+                    if (time == tStep(iStar)) then
+                       backspace(12)
+                       do k = 1, sb99nuLim                          
+                          read(12, *) time, enArray(k), skip, Hflux(k)
 
-                tmp1(j) = (Hflux(j)*(enArray(j)*1.e-8)**2.)/c/4.
+                          ! change Log L(lambda) [erg/s/A] into L(nu) [erg/s/Hz]                         
+                          tmp1(k) = (10.**(Hflux(k))*(1.e-8*enArray(k)**2.))/c
+                    
+                          ! change to Ryd 
+                          tmp2(k) = (c/(enArray(k)*1.e-8))/cRyd
 
-                ! change to Ryd 
-                tmp2(j) = (c/(enArray(j)*1.e-8))/cRyd
+                       end do
+                       exit
+                    end if
+                    
+                 end do
 
-             end do
+                 close(12)
+
+                 do i = 1,sb99nuLim
+                    
+                    Hflux(i) = tmp1(sb99nuLim-i+1)
+                    enArray(i) = tmp2(sb99nuLim-i+1)
+                    
+                 end do
              
-             close(12)
+                 do j = 1, sb99nuLim
+                    
+                    if (enArray(j) >= nuArray(1)-widflx(1)/2. .and.&
+                         & enArray(j) < nuArray(1)+widflx(1)/2.) then
+                       inSpectrumErg(1) = inSpectrumErg(1)+Hflux(j)
+                       lamCount(1) = lamCount(1)+1
+                    end if
+                    do i = 2, nbins-1
+                       if(enArray(j)>=(nuArray(i-1)+nuArray(i))/2. .and.&
+                            & enArray(j)<(nuArray(i+1)+nuArray(i))/2.) then
+                          inSpectrumErg(i) = inSpectrumErg(i)+Hflux(j)
+                          lamCount(i) = lamCount(i)+1
+                       end if
+                    end do
+                    if(enArray(j)>=nuArray(nbins)-widflx(nbins)/2. .and.&
+                         & enArray(j) < nuArray(nbins)+widflx(nbins)/2.) then
+                       inSpectrumErg(nbins) = inSpectrumErg(nbins)+Hflux(j)
+                       lamCount(nbins) = lamCount(nbins)+1
+                    end if
+                    
+                 end do
+                 
 
-             do i = 1,j-1
-                
-                Hflux(i) = tmp1(j-1-i+1)
-                enArray(i) = tmp2(j-1-i+1)
+                 do i = 1, nbins
+                    if (lamCount(i)>0) then
 
-             end do
+                       inSpectrumErg(i) = inSpectrumErg(i)/real(lamCount(i))
+                    end if
+
+                    inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
+                 end do
+                 
+                 do i = 2, nbins-1
+                    if (inSpectrumErg(i) <= 0. .and. inSpectrumErg(i-1)>0.) then
+                       do j = i+1, nbins
+                          if (inSpectrumErg(j) > 0.) then
+                             inSpectrumErg(i) = inSpectrumErg(i-1)-&
+                                  & ( (nuArray(i)-nuArray(i-1))*&
+                                  & (inSpectrumErg(i-1)-inSpectrumErg(j))/&
+                                  & (nuArray(j)-nuArray(i-1)))
+                             exit
+                          end if
+                       end do
+                    end if
+                 end do
+
+              case ('rauch')
+                 do j = 1, maxLim
+
+                    ! check if the end of file has been reached
+                    ! NOTE: the file must be in the format of two columns
+                    !       the first containing the lambda points (A) 
+                    !       and the second containing the input spectrum points 
+                    !       (erg/cm^2/s/A/sr). The file must be in ascending
+                    !       wavenegth order. See e.g. Thomas Rauch's tables 
+                    !       http://astro.uni-tuebingen.de/~rauch/
+                    
+                    ! check if the end of the file has been reached 
+                    read(unit=12, fmt=*, iostat=ios) 
+                    if (ios < 0) exit ! end of file reached
+                    
+                    backspace(12)
+                    read(12, *) enArray(j), Hflux(j)
+                    
+                    ! change Hflux(lambda) [erg/cm^"/s/A/sr] into Hflux(nu) [erg/cm^2/s/Hz]
+                    
+                    tmp1(j) = (Hflux(j)*(1.e-8*enArray(j)**2.))/c/4.
+                    
+                    ! change to Ryd 
+                    tmp2(j) = (c/(enArray(j)*1.e-8))/cRyd
+                    
+                 end do
              
-             numLam = j-1
+                 close(12)
 
-             do j = 1, numLam
-                
-                if (enArray(j) >= nuArray(1)-widflx(1)/2. .and.&
-                     & enArray(j) < nuArray(1)+widflx(1)/2.) then
-                   inSpectrumErg(1) = inSpectrumErg(1)+Hflux(j)
-                   lamCount(1) = lamCount(1)+1
-                end if
-                do i = 2, nbins-1
-                   if(enArray(j)>=(nuArray(i-1)+nuArray(i))/2. .and.&
-                        & enArray(j)<(nuArray(i+1)+nuArray(i))/2.) then
-                      inSpectrumErg(i) = inSpectrumErg(i)+Hflux(j)
-                      lamCount(i) = lamCount(i)+1
-                   end if
-                end do
-                if(enArray(j)>=nuArray(nbins)-widflx(nbins)/2. .and.&
-                     & enArray(j) < nuArray(nbins)+widflx(nbins)/2.) then
-                   inSpectrumErg(nbins) = inSpectrumErg(nbins)+Hflux(j)
-                   lamCount(nbins) = lamCount(nbins)+1
-                end if
-                
-             end do
-            
-             do i = 1, nbins
-                if (lamCount(i)>0) then
-                   inSpectrumErg(i) = inSpectrumErg(i)/real(lamCount(i))
-                end if
-                inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
-             end do
+                 do i = 1,j-1
+                    
+                    Hflux(i) = tmp1(j-1-i+1)
+                    enArray(i) = tmp2(j-1-i+1)
+                    
+                 end do
+             
+                 numLam = j-1
+                 
+                 do j = 1, numLam
+                    
+                    if (enArray(j) >= nuArray(1)-widflx(1)/2. .and.&
+                         & enArray(j) < nuArray(1)+widflx(1)/2.) then
+                       inSpectrumErg(1) = inSpectrumErg(1)+Hflux(j)
+                       lamCount(1) = lamCount(1)+1
+                    end if
+                    do i = 2, nbins-1
+                       if(enArray(j)>=(nuArray(i-1)+nuArray(i))/2. .and.&
+                            & enArray(j)<(nuArray(i+1)+nuArray(i))/2.) then
+                          inSpectrumErg(i) = inSpectrumErg(i)+Hflux(j)
+                          lamCount(i) = lamCount(i)+1
+                       end if
+                    end do
+                    if(enArray(j)>=nuArray(nbins)-widflx(nbins)/2. .and.&
+                         & enArray(j) < nuArray(nbins)+widflx(nbins)/2.) then
+                       inSpectrumErg(nbins) = inSpectrumErg(nbins)+Hflux(j)
+                       lamCount(nbins) = lamCount(nbins)+1
+                    end if
+                    
+                 end do
+                 
+                 do i = 1, nbins
+                    if (lamCount(i)>0) then
+                       inSpectrumErg(i) = inSpectrumErg(i)/real(lamCount(i))
+                    end if
+                    inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
+                 end do
+                 
+                 ! get physical flux
+                 inSpectrumErg = fourPi*inSpectrumErg
+                 inSpectrumPhot = fourPi*inSpectrumPhot
 
-             ! get physical flux
-             inSpectrumErg = fourPi*inSpectrumErg
-             inSpectrumPhot = fourPi*inSpectrumPhot
-              
-          end if
+              case default
+
+                 print*, '! setContinuum: unsupported spectrum ID', i, spID(i)
+                 stop
+
+              end select
+                 
+           end if
 
           ! set the input spectrum probability density distribution
           call setProbDen(iStar)
@@ -190,13 +289,18 @@ module continuum_mod
              RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
               
               LStar(1) = fourPi*RStar*RStar*sigma*TStellar(1)**4.
-              
+
+              deltaE(1)=Lstar(1)/nPhotons(1)
+           
               print*, "Q(H) = ", LPhot, " [e36 phot/s]"
               print*, "LStar= ", LStar(1), " [e36 erg/s]"
               print*, "RStar = ", RStar, " [e18 cm]"
-              
+              print*, "deltaE = ", deltaE, " [e36 erg/s]"
+
            else if (Lstar(1) > 0.) then ! calculate LPhot [e36 phot/s]
               
+              deltaE(1)=Lstar(1)/nPhotons(1)
+
               RStar = sqrt(Lstar(1) / (fourPi*sigma*TStellar(1)**4.))
               
               LPhot = fourPi*RStar*RStar*normConstantPhot*cRyd
@@ -204,7 +308,8 @@ module continuum_mod
               print*, "RStar = ", RStar, " [e18 cm]"
               print*, "Q(H) = ", LPhot, " [e36 phot/s]"
               print*, "LStar = ", LStar(1), " [e36erg/s]"
-              
+              print*, "deltaE = ", deltaE, " [e36 erg/s]"              
+
            end if
            
         end if

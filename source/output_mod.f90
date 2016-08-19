@@ -854,8 +854,7 @@ module output_mod
            end if
 
            ! calculate Hbeta in units of [E36 erg/sec]
-           if (lgDebug) HbetaLuminosity(iAb) = HbetaLuminosity(iAb)*Lstar(1)/float(Nphotons(1))
-
+           if (lgDebug) HbetaLuminosity(iAb) = HbetaLuminosity(iAb)
         end do
 
         ! write the lineFlux.out file          

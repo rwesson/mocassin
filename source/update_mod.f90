@@ -1807,18 +1807,20 @@ module update_mod
                if (ios < 0) exit ! end of file reached
                ion = elem + 1 - n
 
-               if (g == 0) then
-                  diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
-               else if (g == 1) then
-                  if (TeUsed < 20000.) then
+               if (ion <= nstages) then
+                  
+                  if (g == 0) then
                      diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
-                  end if
-               else if (g == 2) then
-                  if (TeUsed >= 20000.) then
-                     diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
+                  else if (g == 1) then
+                     if (TeUsed < 20000.) then
+                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
+                     end if
+                  else if (g == 2) then
+                     if (TeUsed >= 20000.) then
+                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2.)*t**(-3./2.)*exp(-f/t)
+                     end if
                   end if
                end if
- 
             end do
             close(18)
                
