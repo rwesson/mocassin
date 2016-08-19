@@ -913,7 +913,8 @@ module iteration_mod
 
               if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
                  nPhotons = nPhotons*nPhotIncrease
-                 
+                 deltaE   = deltaE/nPhotIncrease
+
                  if (taskid==0) &
                       & print*, "! iterateMC: [talk] Total number of energy packets &
                       &increased to ", nPhotons
