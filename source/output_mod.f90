@@ -1188,6 +1188,12 @@ module output_mod
            stop
         end if
         
+        open(unit=27, status='unknown', position='append', file='output/summary.out', iostat=ios)
+        if (ios /= 0) then
+           print*, "! iterationMC: can't open file for writing, summary.out"
+           stop
+        end if
+
         
         ! write ionratio.out file
         open(unit=30, status='unknown', position='rewind', file='output/ionratio.out', iostat=ios)
@@ -1243,7 +1249,9 @@ module output_mod
                  write(20, *) elem, ion,  TeVol(iAb,elem, ion)
               end do
            end do
-           
+
+           write(27,*) 'T(H+) ', TeVol(iAb,1,2), ' componenet ', iAb
+
            write(30, *) "Element      Ion        <ion>/<H+>I     <ion>/<H+>II"
            write(30, *)
            do elem = 1, nElements
@@ -1278,6 +1286,7 @@ module output_mod
         end do
 
         close(20)
+        close(27)
         close(30)
         close(60)
              

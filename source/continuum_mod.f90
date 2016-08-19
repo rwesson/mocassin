@@ -156,10 +156,10 @@ module continuum_mod
                    do iloop = 2, maxLim
                       if (enArray(iloop)>0.9) exit
                       ! extrapolate in log space 
-                      inSpectrumErg(i) = inSpectrumErg(i)+ log(Hflux(iloop)) + &
-                           & (log(Hflux(iloop))-log(Hflux(1)))*&
-                           & (log(nuarray(i))-log(enArray(iloop)))/&
-                           & (log(enArray(iloop))-log(enArray(1)))
+                      inSpectrumErg(i) = inSpectrumErg(i)+ log10(Hflux(iloop)) + &
+                           & (log10(Hflux(iloop))-log10(Hflux(1)))*&
+                           & (log10(nuarray(i))-log10(enArray(iloop)))/&
+                           & (log10(enArray(iloop))-log10(enArray(1)))
                    end do
                    iloop = iloop-1
                    inSpectrumErg(i) = 10.** (inSpectrumErg(i)/iloop)
@@ -177,10 +177,10 @@ module continuum_mod
 
                    if (enArray(enP+1)>0. .and. enArray(enP)>0..and.&
                         & Hflux(enP+1)>0. .and. Hflux(enP)>0.) then
-                      inSpectrumErg(i) = 10.**(log(Hflux(enP)) + &
-                           & (log(nuArray(i))-log(enArray(enP))) * &
-                           & (log(Hflux(enP+1))- log(Hflux(enP)))/&
-                           & (log(enArray(enP+1))-log(enArray(enP))))
+                      inSpectrumErg(i) = 10.**(log10(Hflux(enP)) + &
+                           & (log10(nuArray(i))-log10(enArray(enP))) * &
+                           & (log10(Hflux(enP+1))- log10(Hflux(enP)))/&
+                           & (log10(enArray(enP+1))-log10(enArray(enP))))
 
                    else
                       inSpectrumErg(i) = Hflux(enP) + &
