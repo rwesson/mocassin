@@ -73,6 +73,10 @@ program MoCaSSiNplot
     ! reset the 3D cartesian grid
     call resetGrid(grid3D)
 
+
+    ! prepare atomica data stuff
+    call makeElements()
+
     maxCells = grid3D(1)%nCells
     do iG = 1, ngrids
        if (grid3D(iG)%nCElls>maxCElls) maxCElls = grid3D(iG)%nCElls
@@ -227,8 +231,10 @@ program MoCaSSiNplot
                                      do ilow = 1, 10
                                         
                                         iLine = iLine+1
-                                        
+
                                         if (plot%lineNumber(plotNum) == iLine) then 
+
+                                           print*, forbiddenLines(elem,ion,iup,ilow), elem,ion,iup,ilow
                                            plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                                 & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
                                            
