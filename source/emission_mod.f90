@@ -3347,15 +3347,18 @@ module emission_mod
 
                   do icount = 1, safeLimit
 
+
+
                      ! check if we are in a subgrid
                      if (grids(gPin)%active(xP,yP,zP)<0) then                
-
+                        
+                        
                         gPmother = gP
                         xPmother = xP
                         yPmother = yP
                         zPmother = zP                        
                         
-                        gP = abs(grids(gP)%active(xP,yP,zP))
+                        gP = abs(grids(gPin)%active(xP,yP,zP))
 
                         ! where are we in the sub-grid?
                         call locate(grids(gP)%xAxis, rVec%x, xP)
@@ -3680,7 +3683,7 @@ module emission_mod
                            end if
                         end if
 
-
+                        
                         if (rVec%y >= grids(gP)%yAxis(grids(gP)%ny)+grids(gP)%geoCorrY .or. yP>grids(gP)%ny) then
                            
                            if (gP==1) then
@@ -3696,10 +3699,11 @@ module emission_mod
                               print*, '! setResLineEscapeProb: insanity occured - invalid gP', gP
                               stop
                            end if
-
+                           
                         end if
-                        if (rVec%x <= grids(gP)%xAxis(1) .or. xP<1) then
 
+                        if (rVec%x <= grids(gP)%xAxis(1) .or. xP<1) then
+                           
                            if (gP==1) then	                       
 !                         rVec%x = -rVec%x 
                               xP=1
@@ -3715,6 +3719,7 @@ module emission_mod
                               stop
                            end if
                         end if
+
                         if (rVec%x >=  grids(gP)%xAxis(grids(gP)%nx) .or. xP>grids(gP)%nx)then
 
                            if (gP==1) then
@@ -3733,6 +3738,7 @@ module emission_mod
                            end if
 
                         end if
+
                         if (rVec%z <= grids(gP)%zAxis(1) .or.zP<1) then
 
                            if (gP==1) then
@@ -3751,6 +3757,7 @@ module emission_mod
                            end if
 
                         end if
+
                         if (rVec%z >=  grids(gP)%zAxis(grids(gP)%nz) .or. zP>grids(gP)%nz)then
 
                            if (gP==1) then
@@ -3767,7 +3774,7 @@ module emission_mod
                               print*, '! setResLineEscapeProb: insanity occured - invalid gP', gP
                               stop
                            end if
-                      
+                           
                         end if
                     
                      end if
@@ -3778,31 +3785,6 @@ module emission_mod
                           & (rVec%z/1.e10)*(rVec%z/1.e10))
 
                      if ( radius >= R_out .and. R_out >= 0. ) exit
-
-                     if (.not.lgPlaneIonization) then
-                        
-                        if ( (abs(rVec%x) >= grids(gP)%xAxis(grids(gP)%nx)+grids(gP)%geoCorrX) .or.&
-                             &(abs(rVec%y) >= grids(gP)%yAxis(grids(gP)%ny)+grids(gP)%geoCorrY) .or.&
-                             &(abs(rVec%z) >= grids(gP)%zAxis(grids(gP)%nz)+grids(gP)%geoCorrZ) .or. &
-                             & xP>grids(gP)%nx .or. yP>grids(gP)%ny .or. zP>grids(gP)%nz  ) then
-
-
-                           if ((gP==1) .or.  (radius >= R_out .and. R_out >= 0.)) then
-                              if (xP > grids(gP)%nx) xP = grids(gP)%nx
-                              if (yP > grids(gP)%ny) yP = grids(gP)%ny
-                              if (zP > grids(gP)%nz) zP = grids(gP)%nz
-                              exit
-                           else if (gP>1) then
-                              xP = xPmother
-                              yP = yPmother
-                              zP = zPmother
-                              gP = gPmother
-                           else
-                              print*, '! setResLineEscapeProb: insanity occured - invalid gP - ', gP
-                              stop
-                           end if
-                        end if
-                     end if
 
                      if (lgSymmetricXYZ .and. gP == 1) then
                         if (lgPlaneIonization) then
@@ -3826,6 +3808,55 @@ module emission_mod
                         end if
                      end if
 
+
+                     if (.not.lgPlaneIonization) then
+                        
+                        if ( (abs(rVec%x) >= grids(gP)%xAxis(grids(gP)%nx)+grids(gP)%geoCorrX) .or.&
+                             &(abs(rVec%y) >= grids(gP)%yAxis(grids(gP)%ny)+grids(gP)%geoCorrY) .or.&
+                             &(abs(rVec%z) >= grids(gP)%zAxis(grids(gP)%nz)+grids(gP)%geoCorrZ) .or. &
+                             & xP>grids(gP)%nx .or. yP>grids(gP)%ny .or. zP>grids(gP)%nz  ) then
+
+                           
+                           if ((gP==1) .or.  (radius >= R_out .and. R_out >= 0.)) then
+                              if (xP > grids(gP)%nx) xP = grids(gP)%nx
+                              if (yP > grids(gP)%ny) yP = grids(gP)%ny
+                              if (zP > grids(gP)%nz) zP = grids(gP)%nz
+                              exit
+                           else if (gP>1) then
+                              xP = xPmother
+                              yP = yPmother
+                              zP = zPmother
+                              gP = gPmother
+                           else
+                              print*, '! setResLineEscapeProb: insanity occured - invalid gP - ', gP
+                              stop
+                           end if
+                           
+                        end if
+                        if ( .not. lgSymmetricXYZ .and. ( rVec%x < grids(gP)%xAxis(1) .or.&
+                             & rVec%y < grids(gP)%yAxis(1) .or.&
+                             & rVec%z < grids(gP)%zAxis(1) .or. &
+                             & xP<1.or. yP<1 .or. zP<1 )) then
+                           
+                           if (gP==1) then
+                              if (xP < 1) xP = 1
+                              if (yP < 1) yP = 1 
+                              if (zP < 1) zP = 1
+                              exit
+                           else if (gP>1) then
+                              xP = xPmother
+                              yP = yPmother
+                              zP = zPmother
+                              gP = gPmother
+                           else
+                              print*, '! setResLineEscapeProb: insanity occured - invalid gP - ', gP
+                              stop
+                           end if
+                                                    
+                        end if
+                     end if
+
+
                      if (gP>1) then
 
                         if ( ( (rVec%x <= grids(gP)%xAxis(1) .or. xP<1) .and. uHat%x <=0.) .or. & 
@@ -3840,16 +3871,19 @@ module emission_mod
 
                         end if
                         
-                     end if               
+                     end if
                   end do
+
                   if (iCount>=10000) then
                      print*, '! setResLineEscapeProb: safeLimit exceeded in tau loop', icount, safelimit                     
                   end if
 
-                  if (tau_mu <= 0.) &
-                       & print*, '! setResLineEscapeProb: [warning] tau_mu <= 0. ', &
-                       & tau_mu, uHat, xPin,yPin,zPin, cellP, xp,yp,zp
-
+                  if (tau_mu <= 0.) then
+                     tau_mu = 0.
+                     if (lgTalk) &
+                          & print*, '! setResLineEscapeProb: [warning] tau_mu <= 0. ', &
+                          & tau_mu, uHat, xPin,yPin,zPin, cellP, xp,yp,zp
+                  end if
 
                   
                   ! calculate direction-dependent escape probability according to Kwan & Krolik 1981
