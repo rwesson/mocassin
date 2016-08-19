@@ -202,7 +202,7 @@ module iteration_mod
            print*, 'emissionDriver in'
            
            ! check if min convergence was reached to carry out resonant line transfer
-           if (lgDust .and. convPercent>=resLinesTransfer .and. lgResLinesFirst &
+           if (lgDust .and. lgGas .and. convPercent>=resLinesTransfer .and. lgResLinesFirst &
                 &.and. (.not.nIterateMC==1)) then
 
               call initResLines(grid(1:nGrids))
@@ -368,7 +368,7 @@ module iteration_mod
               end if
 
               ! check if min convergence was reached to carry out resonant line transfer
-              if (lgDust .and. convPercent>=resLinesTransfer .and. lgResLinesFirst &
+              if (lgDust .and. lgGas .and. convPercent>=resLinesTransfer .and. lgResLinesFirst &
                    &.and. (.not.nIterateMC==1)) then
 
                  if (iG==nGrids) lgResLinesFirst = .false.
@@ -832,7 +832,7 @@ module iteration_mod
               
            end do
            
-           dustHeatingBudget = 0.
+           if (lgDust .and. convPercent>=resLinesTransfer .and. lgGas) dustHeatingBudget = 0.
 
            totCells = 0
            do iG =1,nGrids

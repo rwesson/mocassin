@@ -1937,7 +1937,7 @@ module grid_mod
                                 MhMg=0.
                                 do elem = 1, nElements
                                    ! transform to MdMg
-                                   MhMg = MhMg+grid(iG)%elemAbun(grid(iG)%abFileIndex(i,j,k),elem)*&
+                                   MhMg = MhMg+grid(iG)%elemAbun(grid(iG)%abFileIndex(ix,iy,iz),elem)*&
                                         & aWeight(elem)
                                 end do
                                 MhMg = 1./MhMg                             
