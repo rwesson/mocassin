@@ -521,6 +521,9 @@ module output_mod
                                       forbVol(0,elem,ion,iup,ilow) = &
                                            & forbVol(0,elem,ion,iup,ilow) + &
                                            & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                                      print*,'HEFL',elem,ion,iup,ilow,forbiddenLines(elem,ion,iup,ilow),HdenUsed,dV
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                                    end do
                                 end do
                              end if
@@ -1136,6 +1139,7 @@ module output_mod
            write(10, *)
            do elem = 3, nElements
               do ion = 1, min(elem+1, nstages)
+
                  if (.not.lgElementOn(elem)) exit
                  if (lgDataAvailable(elem,ion)) then
                     if (elem==26 .and.  ion==2) then
@@ -2490,13 +2494,19 @@ module output_mod
 
       open(unit=16,file='output/SED.out',status='unknown', position='rewind',iostat=ios, action="write")              
       if (ios /= 0) then
-         print*, "! writeSED: Cannot open file for writing"
+         print*, "! writeSED: Cannot open output/SED.out for writing"
          stop
       end if
 
+!      open(unit=116,file='output/sourceSED.out',status='unknown', position='rewind',iostat=ios, action="write")              
+!      if (ios /= 0) then
+!         print*, "! writeSED: Cannot open output/sourceSED.out for writing"
+!         stop
+!      end if
+
       allocate(SED(1:nbins,0:nAngleBins), stat=err)
       allocate(sSED(1:nbins,0:nAngleBins), stat=err)
-      allocate(dSED(1:nbins,0:nAngleBins), stat=err)
+!      allocate(dSED(1:nbins,0:nAngleBins), stat=err)
       if (err /= 0) then
          print*, "! writeSED: can't allocate array memory: SED"
          stop
@@ -2504,13 +2514,17 @@ module output_mod
 
 
       SED=0.
-      sSED=0.
-      dSED=0.
+!      sSED=0.
+!      dSED=0.
 
       write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
       write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
       write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            ' 
      write(16,*) '                                       [Jy * pc^2]              '
+
+!      write(116,*) 'Spectral energy distribution of sources: ' 
+!      write(116,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            ' 
+!     write(116,*) '                                       [Jy * pc^2]              '
 
       totalE=0.
 
@@ -2529,6 +2543,15 @@ module output_mod
                do k = 1, grid(iG)%nz
                 ijk = grid(iG)%active(i,j,k)
                 if (ijk.gt.0) then 
+!                   do ic=1,nStars
+!                      if (grid(iG)%active(starIndeces(ic,1),&
+!                           &starIndeces(ic,2),starIndeces(ic,3)).eq.ijk) then
+!                         do imu = 0, nAngleBins
+!                            sSED(freq,imu)=sSED(freq,imu)+&
+!                                 &grid(iG)%escapedPackets(ijk,freq,imu)
+!                         end do
+!                      endif
+!                   enddo
                    if (.not.lgEcho) then
                       if (lgNosource) then ! exclude source if requested
                          do ic=1,nStars
@@ -2571,17 +2594,20 @@ module output_mod
          
          if (lgSymmetricXYZ) then
             SED(freq,0) = SED(freq,0)*8.
+!            sSED(freq,0) = sSED(freq,0)*8.
             SED(freq,1:nanglebins) = SED(freq,1:nanglebins)*4.
          endif
 
 
          totalE = totalE +  SED(freq,0)
             
-         SED(freq,0) = SED(freq,0)/(4.*Pi*3.08*3.08) ! dilute - user must still divide by D^2 in pc
+         ! dilute the SEDs -  user must still divide by D^2 in pc
+         ! the 1.e18 is absorbed later
+         SED(freq,0) = SED(freq,0)/(4.*Pi*3.08*3.08) 
 !         sSED(freq,0) = sSED(freq,0)/(4.*Pi*3.08*3.08) 
-                                                     ! the 1.e18 is absorbed later
+         ! convert to Jy
          SED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15*widflx(freq))
-!         sSED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15)*1.e-9
+!         sSED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15)*widflx(freq)
            
 
          do imu = 1, nAngleBins
@@ -2602,6 +2628,8 @@ module output_mod
 
          write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu), imu=0,nAngleBins )
 !         write(6,'(a1,1pg12.4,4es12.4)')"d",c/(nuArray(freq)*fr1Ryd)*1.e4,widflx(freq),SED(freq,0),sSED(freq,0),dSED(freq,0)
+
+!         write(116,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, sSED(freq,0)
 
       end do
 
@@ -2648,9 +2676,11 @@ module output_mod
       end if
 
       close(16)
-
+!      close(116)
 
       if (associated(SED)) deallocate(SED)
+      if (associated(sSED)) deallocate(sSED)
+      if (associated(dSED)) deallocate(dSED)
 
       print*, 'out writeSED...'
 

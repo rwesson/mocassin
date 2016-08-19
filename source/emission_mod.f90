@@ -2154,7 +2154,7 @@ module emission_mod
 
     ! open file containing atomic data
     close(11)
-    open(unit=11,  action="read", file = file_name, status="old", position="rewind", &
+    open(unit=11,  action="read", file = trim(home)//file_name, status="old", position="rewind", &
          & iostat = ios)
 
     if (ios /= 0) then
@@ -2617,7 +2617,7 @@ module emission_mod
     
     ! open file containing atomic data
     close(11)
-    open(unit=11,  action="read", file = file_name, status="old", position="rewind", &
+    open(unit=11,  action="read", file = trim(home)//file_name, status="old", position="rewind", &
          & iostat = ios)
     if (ios /= 0) then
        print*, "! equilibrium: can't open file: ", file_name

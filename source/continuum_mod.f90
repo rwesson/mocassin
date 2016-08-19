@@ -52,7 +52,7 @@ module continuum_mod
         real(kind=8), dimension(maxLim)  :: Hflux    ! flux array as read from input spectrum file [erg/cm^2/s/Hz/sr]
 
   
-        print*, 'in setContinuum', contShape
+        print*, 'in setContinuum ', contShape
 
         ios = 0
 
@@ -335,7 +335,8 @@ module continuum_mod
               print*, "deltaE = ", deltaE(1), " [e36 erg/s]"              
 
            end if
-           
+          
+ 
         end if
 
         if (Ldiffuse>0. .and. nPhotonsDiffuse>0 ) then

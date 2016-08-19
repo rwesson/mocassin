@@ -543,7 +543,7 @@ module elements_mod
              if(.not.lgElementOn(elem)) exit
 
              close(18)
-             open(file=dataFile(elem,ion), unit=18, action="read", status='old', &
+             open(file=trim(home)//dataFile(elem,ion), unit=18, action="read", status='old', &
                   & position='rewind', iostat=ios)
 
              if (ios == 0) then
