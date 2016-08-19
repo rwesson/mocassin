@@ -785,7 +785,8 @@ module photon_mod
                
                if (nuP>nbins) then
                    print*, "! newPhotonPacket: insanity occured in dust emitted photon &
-                       &nuP assignment (nuP,xP(gP),yP(gP),zP(gP),activeP)", nuP, xP(gP),yP(gP),zP(gP), &
+                       &nuP assignment (iphot, nuP,xP(gP),yP(gP),zP(gP),activeP)", iphot, &
+                       & nuP, xP(gP),yP(gP),zP(gP), &
                        & grid(gP)%active(xP(gP),yP(gP),zP(gP))
                    print*, "dustPDF: ", grid(gP)%dustPDF(grid(gP)%active(xP(gP),yP(gP),zP(gP)),:)
                    print*, "grain T: ", grid(gP)%Tdust(:,0,grid(gP)%active(xP(gP),yP(gP),zP(gP)))

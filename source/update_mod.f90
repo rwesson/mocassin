@@ -1930,13 +1930,6 @@ module update_mod
 
                   call locate(dustEmIntegral(nS,ai,:), dustAbsIntegral, iT)
 
-                  if (iT<ntemps) then
-                     if (dustAbsIntegral>(dustEmIntegral(nS,ai,it)+dustEmIntegral(nS,ai,it+1))/2.) &                          
-                          & it=it+1
-                  else
-                     print*, '! getDustT: [warning] grain sublimes', ns, ai, ntemps,dustEmIntegral(nS,ai,it), dustAbsIntegral
-                  end if
-                  
                   if (iT<=0) then
                      print*, "getDustT: [warning] temperature of grain = 0. K!!!!"
                      print*, cellP
@@ -1953,7 +1946,7 @@ module update_mod
                           & (real(iT+1)-real(iT))/(dustEmIntegral(nS,ai,iT+1)-&
                           & dustEmIntegral(nS,ai,iT))
                   end if
-                  
+
                   if (lgTraceHeating.and.taskid==0) then
                      write(57,*) 'Radiative cooling: ', dustEmIntegral(ns,ai,iT)
                      write(57,*) 'Grain temperature: ', grid%Tdust(nS,ai,cellP), &

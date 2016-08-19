@@ -125,8 +125,7 @@ module common_mod
     real, pointer :: grainVn(:)             ! potential of neutral grain
     real, pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
     real, pointer :: rho(:)                 ! intrinsic density (nspecies)    
-    real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)
-        
+    real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
 
     ! linear increments
     real, pointer :: dl(:)
@@ -310,7 +309,8 @@ module common_mod
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
     character(len=50)  :: MdMgFile         ! name of MdMg file
-    character(len=50)  :: NdustFile         ! name of Ndust file    
+    character(len=50)  :: NdustFile        ! name of Ndust file    
+    character(len=50)  :: Qfile            ! name of Qfile 
     character(len=30),pointer       :: grainLabel(:)    ! name of this species
 
     integer,pointer    :: viewPointPtheta(:), viewPointPphi(:)       ! viewing angles

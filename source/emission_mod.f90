@@ -65,6 +65,8 @@ module emission_mod
 
         grid = grids(iG)
 
+        cellPUsed = grid%active(ix, iy, iz)
+
         ! check whether this cell is outside the nebula
         if (grid%active(ix, iy, iz)<=0) return  
 
@@ -72,8 +74,6 @@ module emission_mod
         if (lgDust .and. .not.lgGas) call setDustPDF()
 
         if (.not.lgGas) return
-
-        cellPUsed = grid%active(ix, iy, iz)
 
         ! find the physical properties of this cell
         ionDenUsed= grid%ionDen(cellPUsed, :, :)
@@ -1507,7 +1507,7 @@ module emission_mod
                           & grainWeight(ai)*grainAbun(n)
                      
                   end if
-                  
+
                end do
                
             end if
@@ -1744,7 +1744,6 @@ module emission_mod
 
          if (mdUdt <= ch) then
             A(if,if+1) = A(if,if+1)*1.d-20 
-!            write(*,*), "! qHeat: Heat lost in bin ", if+1
             A(if+2,if+1) = A(if+2,if+1) + (ch-mdUdt)/dU(if+1)
          else
             A(if,if+1)=A(if,if+1) - ch/dU(if+1)

@@ -156,6 +156,7 @@ module dust_mod
 
                     dustEmIntegral(nS,ai,nT) = dustEmIntegral(nS,ai,nT)+& 
                          & xSecArray(dustAbsXsecP(nS,ai)+i-1)*bb*fr1Ryd*widFlx(i)
+
                  end do
 
               end do
@@ -163,7 +164,6 @@ module dust_mod
            
         end do
 
-       
         ! the hPlanck is re-introduced here (was excluded in the bb calcs)
         dustEmIntegral = dustEmIntegral*hPlanck*4.
         

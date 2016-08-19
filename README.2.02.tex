@@ -92,6 +92,8 @@
 \noindent{\bf \large 0. What's new}\\
 \\
 \paragraph {from 2.01 to 2.02} Grain charge calculations. Photoelectric heating from dust grains. Gas-grain collisions. Tspiking. 
+PAH optical constants included. Dust optical constant data can be entered in terms of Qs (lambda dependent and radius dependent).
+Please refer to {\it Input file} section of this manual. 
 See new keywords: {\it traceHeating}, {\it quantumHeatGrain}, {\it quantumHeatGrainParameters}, 
 {\it noPhotoelectric}
 \\
@@ -449,7 +451,7 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 		     $[$0. 0. etc..$]$\\
     
 \paragraph    {dustFile string1 string2} : names dust data files - \\
-                     string1 = optical data (n, k)  file\\
+                     string1 = grain species file\\
                      string2 = grain size info file\\
 		     $[$"none", "none"$]$\\
 
@@ -743,8 +745,8 @@ $[.false.]$\\
     The names of these two files must be specified in the input.in file following
     the keyword dustFile. 
     The dust species file should contain a first line specifying how many species are 
-    to be included, and then successive lines containing the names of the optical data (n,k) 
-    file and the relative abundance of the species. \\
+    to be included, and then successive lines containing the names of the optical data (n,k or Qs) 
+    file and the relative abundance of the species. \\    
 \noindent    e.g. for a pure silicate model (using the Draine and Lee 1984 data) :\\
 \noindent        1\\
 \noindent       'dustData/sil-dl.nk' 1.0\\
@@ -1118,6 +1120,7 @@ $[.false.]$\\
    The grain temperature spiking routines included in {\sc mocassin} are based on the Guhathakurta \& Draine (1989 ApJ 345, 230) method. This is a very powerful method and allows the time-efficient computation of the time-dependent grain temperatures due to quantum heating. For the limitations of the method also see Siebenmorgen et al. (1992 A\&A 266, 501). The temperature spikes only affect the output SED from dust grains, it is therefore advisable not to include these time consuming procedures until the model has almost converged in the case of gas+grain simulations (keep a high value of real2 - see keyword description). In the gas of dust only models, it is worth to have the procedures working right from the start since the convergence criterion is then based on dust temperatures and therefore one must take this effect into account right from the start in order to avoid copnvergence fluctuations. It is in general not worth running the quantum heating routines on large grains that are unlikely to spike. For a discussion of the general cases when quantum heating routines must be considered pls see Siebenmorgen et al. (1992 A\&A 266, 501). \\
 
 At present the grain temperature spiking routines are only implemented for carbonaceous or silicate grains. {\it mocassin} will expect to be told what type of grain he is dealing with when calculating the spiking. This is done by adding a -capital- 'S' or 'C' at the beginnig of the species label in the optical constants file. e.g. for the Draine \& Laor (1993) silicates data (dustData/sil-dlaor.nk): \\
+ nk\\
  {\bf S}sil\_dl  1400. 3.3  0.588 20.077\\
  0.10000E-02 0.99956E+00 0.97380E-04\\
  0.10120E-02 0.99955E+00 0.10160E-03\\

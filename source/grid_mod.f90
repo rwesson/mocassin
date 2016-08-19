@@ -45,6 +45,8 @@ module grid_mod
         
         real                 :: nuStepSizeLoc
 
+        real, pointer        :: nuTemp(:)
+
         print*, "in initCartesianGrid"
         
         elemLabel = (/'*H','He','Li','Be','*B','*C','*N','*O','*F','Ne','Na','Mg',&
@@ -185,6 +187,7 @@ module grid_mod
                do i = 1, 10000000
                   if (i<=nbins+1) then
                      read(unit=72,fmt=*,iostat=ios) nuArray(i)
+                     if (nuArray(i)>nuMax) exit ! nuMax reached
                      if (ios < 0) exit ! end of file reached
                   else
                      print*, "! initCartesianGrid: nbins is smaller that the number of &
@@ -195,8 +198,17 @@ module grid_mod
                
                nbins = i-1
                print*, "! initCartesianGrid: nbins reset to ", nbins
-               
+
                close(72)
+               
+               allocate (nuTemp(1:nbins))
+               nuTemp = nuArray(1:nbins)
+               if (associated(nuArray)) deallocate(nuArray)
+               allocate (nuArray(1:nbins))
+               nuArray = nuTemp
+               if (associated(nuTemp)) deallocate(nuTemp)
+
+
 
             else if (lgGas .and. (.not.lgDust)) then
 
@@ -934,6 +946,7 @@ module grid_mod
                     print*, "! setMotherGrid: can't open file ", extFile
                     stop
                  end if
+                 read(14,*) readChar
                  read(14,*) readChar, readReal, rho(i), grainVn(i), MsurfAtom(i)
                  close(14)
               end do

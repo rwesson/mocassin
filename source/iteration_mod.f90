@@ -171,7 +171,6 @@ module iteration_mod
                                            & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
                                            & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
                                            & xSecArray(dustScaXsecP(nS,ai)+freq-1)
-!                                           & xSecArray(dustScaXsecP(nS,ai)+freq-1)
                                       grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
                                            & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
                                            & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
@@ -256,7 +255,7 @@ module iteration_mod
                     end do
                  end do
               end do
-              
+
               print*, 'emissionDriver out'
 
               if (taskid==0 .and. lgWritePss) close(89)
@@ -332,6 +331,7 @@ module iteration_mod
               end if
 
               if (lgDust .and. .not.lgGas) then
+
                  call mpi_allreduce(grid(iG)%dustPDF, dustPDFTemp, size, mpi_real&
                       &, mpi_sum, mpi_comm_world, ierr)
 

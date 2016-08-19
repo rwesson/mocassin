@@ -1,10 +1,5 @@
- ==============================================================
-  Optical constants for glassy pyroxene (Mg_0.5 Fe_0.5 SiO_3)
-  Data from Dorschner et al. (1995) Astron.Astrophys. 300, 503            
-  Range 0.2 - 500 mic,  109 entries.              [MN; May'99]
- ==============================================================
-     wavelength         n             k    
-      (micron)         (-)           (-)  
+nk
+glpyrMg50
     2.00000E-01    1.69200E+00    1.26100E-01
     2.20000E-01    1.68200E+00    1.59452E-01
     2.40000E-01    1.68266E+00    1.70723E-01
@@ -114,3 +109,11 @@
     1.00000E+02    2.69035E+00    2.20000E-01
     2.00000E+02    2.69035E+00    1.10000E-01
     5.00000E+02    2.69035E+00    4.40000E-02
+
+ ==============================================================
+  Optical constants for glassy pyroxene (Mg_0.5 Fe_0.5 SiO_3)
+  Data from Dorschner et al. (1995) Astron.Astrophys. 300, 503            
+  Range 0.2 - 500 mic,  109 entries.              [MN; May'99]
+ ==============================================================
+     wavelength         n             k    
+      (micron)         (-)           (-)  

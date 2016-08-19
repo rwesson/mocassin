@@ -27,12 +27,12 @@ tvlct,[  0,255, 255,  0,  0,255,255,  0,255,125,125,  0,  0,255],$ ;red
       [  0,255,   0,  0,255,  0,255,255,  0,  0,255,125,255,125]   ;blue
 
 rout=3.27e17
-mocassinfile='SED.out'
+mocassinfile='SED1.out'
 mocassinfile1='SED1.out'
 Lstar = 26.4e36 
 r_r1=1000.
 
-data=fltarr(3,700)
+data=fltarr(3,102)
 openr,lun,mocassinfile,/get_lun
 nothing=' '
 readf, lun, nothing
@@ -42,7 +42,7 @@ readf, lun, nothing
 readf,lun,data
 close,lun 
 free_lun,lun
-data1=fltarr(3,700)
+data1=fltarr(3,102)
 openr,lun,mocassinfile1,/get_lun
 nothing=' '
 readf, lun, nothing
@@ -66,7 +66,7 @@ plot,data(0,*), data(2,*),xrange=[1.e-4,0.4],yrange=[1.e-6,1],psym=-1,xtitle='nu
 plot,data(1,*), data(2,*) ,psym=-1,xtitle='lambda [um]', ytitle='relative flux',title='p=0, tau=1',xrange=[0., 10.],yrange=[0.,1.],/xsty
 
 
-plot,data(1,*), data(2,*) ,xrange=[0.12,1000],psym=-1,xtitle='lambda [um]', ytitle='relative flux',title='tau(1um)=1',/xsty,/xlog,/ylog
+plot,data(1,*), data(2,*) ,xrange=[0.,1000.],psym=-1,xtitle='lambda [um]', ytitle='relative flux',title='tau(1um)=1',/xsty,/xlog,/ylog
 oplot,data1(1,*), data1(2,*) ,col=!col.red,psym=0
 
 ones=fltarr(105)
