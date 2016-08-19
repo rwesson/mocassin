@@ -100,7 +100,7 @@ module set_input_mod
         NeStart       = 0.
         nuMax         = 15.
         nuMin         = 1.001e-5
-        nuStepSize    = 0.05
+        nuStepSize    = 0.075
         resLinesTransfer = 101.
         Rnx           = -1.
         Rny           = -1.

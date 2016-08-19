@@ -417,7 +417,7 @@ module elements_mod
        ! read in the file names for the atomica data
        ! (even the non existing ones.. never know might add them later)
        do elem = 3, nElements
-          do ion = 1, min(elem+1, nstages)
+          do ion = 1, min(elem+1, 10)
 
              read(17, '(A20)') dataFile(elem, ion)
 
