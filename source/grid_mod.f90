@@ -392,6 +392,10 @@ module grid_mod
             end if
 
             lgFirst = .false.
+
+            ! initialize the continuum gamma coeffs
+            call initGammaCont()
+
          end if
 
         ! allocate active cells pointers

@@ -28,6 +28,140 @@ module xSec_mod
 
     contains
 
+    subroutine initGammaCont()
+      implicit none
+
+      integer :: err ! allocation, i/o error
+      integer :: ntkold, itk, i
+
+      print*, 'in initGammaCont'
+
+      close(21)
+      open(file='data/gammaHI.dat', unit=21, status='old', iostat = err)
+      if (err /= 0) then
+         print*, "! initGammaCont: can't open file: data/gammaHI"
+         stop
+      end if
+      close(22)
+      open(file='data/gammaHeI.dat', unit=22, status='old', iostat = err)
+      if (err /= 0) then
+         print*, "! initGammaCont: can't open file: data/gammaHeI"
+         stop
+      end if
+      close(23)
+      open(file='data/gammaHeII.dat', unit=23, status='old', iostat = err)
+      if (err /= 0) then
+         print*, "! initGammaCont: can't open file: data/gammaHeII"
+         stop
+      end if
+
+      read(21, *) nTkGamma, nlimGammaHI
+      ntkold=nTkGamma
+      read(22, *) nTkGamma, nlimGammaHeI
+      if (ntkold /= ntkGamma) then
+         print*, '! initGammaCont: the number of temperature points must &
+              & be the same  for all gammas'
+         stop
+      end if
+      read(23, *) nTkGamma, nlimGammaHeII
+      if (ntkold /= ntkGamma) then
+         print*, '! initGammaCont: the number of temperature points must &
+              & be the same  for all gammas'
+         stop
+      end if
+
+      allocate(tkGamma(nTkGamma), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -0"
+         stop
+      end if 
+      allocate(nuGammaHI(nlimGammaHI), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -01"
+         stop
+      end if 
+      allocate(nuGammaHeI(nlimGammaHeI), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -02"
+         stop
+      end if 
+      allocate(nuGammaHeII(nlimGammaHeII), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -03"
+         stop
+      end if 
+
+      allocate(HINuEdgeP(nlimGammaHI), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -03"
+         stop
+      end if 
+      allocate(HeINuEdgeP(nlimGammaHeI), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -03"
+         stop
+      end if 
+      allocate(HeIINuEdgeP(nlimGammaHeII), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -03"
+         stop
+      end if 
+
+      read (21,*) tkGamma
+      read (22,*) tkGamma
+      read (23,*) tkGamma
+
+      ! allocate logGammaHI, logGammaHeI, logGammaHeII
+      allocate(logGammaHI(nTkGamma, nlimGammaHI), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -1"
+         stop
+      end if
+      allocate(logGammaHeI(nTkGamma, nlimGammaHeI), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -2"
+         stop
+      end if
+      allocate(logGammaHeII(nTkGamma, nlimGammaHeII), stat=err)
+      if (err /= 0) then
+         print*, "! initGammaCont: Cannot allocate grid array -3"
+         stop
+      end if
+
+      do i = 1, nlimGammaHI
+         read(21,*) nuGammaHI(i), (logGammaHI(itk, i), itk=1, nTkGamma)         
+         call locate(nuArray, nuGammaHI(i), HINuEdgeP(i))
+         if (nuGammaHI(i) > (nuArray(HINuEdgeP(i))+nuArray(HINuEdgeP(i)+1))/2.) &
+              & HINuEdgeP(i) = HINuEdgeP(i)+1
+      end do
+      logGammaHI = log10(logGammaHI)
+      do i = 1, nlimGammaHeI
+         read(22,*) nuGammaHeI(i), (logGammaHeI(itk,i), itk=1, nTkGamma)         
+         call locate(nuArray, nuGammaHeI(i), HeINuEdgeP(i))
+         if (nuGammaHeI(i) > (nuArray(HeINuEdgeP(i))+nuArray(HeINuEdgeP(i)+1))/2.) &
+              & HeINuEdgeP(i) = HeINuEdgeP(i)+1
+
+      end do
+      logGammaHeI = log10(logGammaHeI)
+      do i = 1, nlimGammaHeII
+         read(23,*) nuGammaHeII(i), (logGammaHeII(itk,i), itk=1, nTkGamma)         
+         call locate(nuArray, nuGammaHI(i), HeIINuEdgeP(i))
+         if (nuGammaHeII(i) > (nuArray(HeIINuEdgeP(i))+nuArray(HeIINuEdgeP(i)+1))/2.) &
+              & HeIINuEdgeP(i) = HeIINuEdgeP(i)+1
+      end do
+      logGammaHeII = log10(logGammaHeII)
+      close(21)
+      close(22)
+      close(23)
+
+      HINuEdgeP(1) = 1      
+      HeINuEdgeP(1) = 1
+      HeIINuEdgeP(1) = 1
+
+      print*, 'out initGammaCont'
+
+    end subroutine initGammaCont
+
     subroutine initXSecArray()
         implicit none
 

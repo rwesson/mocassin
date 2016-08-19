@@ -36,6 +36,12 @@ module common_mod
     real            :: totPercent=0.           ! 
     real            :: NeUsed, TeUsed, HdenUsed ! local properties of the gas
 
+    integer, pointer  :: HINuEdgeP(:)     ! pointers to the HI, HeI and HeII 
+    integer, pointer  :: HeINuEdgeP(:)    ! series edges in nuArray
+    integer, pointer  :: HeIINuEdgeP(:)   !
+
+    integer :: nlimGammaHI,nlimGammaHeI, nlimGammaHeII, ntkGamma
+
     integer :: nIterateMC = 1                  ! current MC interation # 
 
     integer :: nflux = 1                       ! number of energy bins to the high energy end 
@@ -101,6 +107,9 @@ module common_mod
     real, dimension(7, 30, 30) :: ph2
     real, dimension(nElements) :: aWeight
     real, dimension(450) :: ionEdge 
+
+    real, pointer :: logGammaHI(:,:),logGammaHeI(:,:),logGammaHeII(:,:), tkGamma(:), nuGammaHI(:),&
+         & nuGammaHeI(:),nuGammaHeII(:)
 
     ! dust arrays
     real, pointer :: TdustSublime(:)        ! sublimation T (nspecies)

@@ -334,17 +334,11 @@ module emission_mod
         integer            :: i, j            ! counters
         integer            :: ios             ! I/O error status
         integer            :: iup, ilow       ! counters
-        integer, parameter :: nEdgesHI  = 11  ! number of series edges included in the HI data
-        integer, parameter :: nEdgesHeI = 8   ! number of series edges included in the HeI data 
-        integer, parameter :: nEdgesHeII= 11  ! number of series edges included in the HeII data 
         integer            :: nElec           ! number of electrons in the ion
         integer            :: nTemp           ! =1 if 5000K<Te<10000K, =2 if 10000K<Te<20000K
         integer            :: outShell        ! outer shell number (1 for k-shell)
         integer            :: xSecP           ! pointer to phot x sec of ion M in xSecArray
 
-        integer, dimension(2*nEdgesHI)  :: HINuEdgeP   ! pointers to the HI, HeI and HeII 
-        integer, dimension(2*nEdgesHeI) :: HeINuEdgeP  ! series edges in nuArray
-        integer, dimension(2*nEdgesHeII):: HeIINuEdgeP !
 
         real, dimension(3)              :: statW      ! g0/g1 for HI, HeI and HeII
 
@@ -356,133 +350,70 @@ module emission_mod
              & phXSecHeI,&                            ! phot x sec for HeI
              & phXSecHeII,&                           ! phot x sec for HeII 
              & phXSecM                                ! phot x sec for ion M
-        double precision, dimension(2*nEdgesHI,3)  :: gHI         ! gamma [e-40 erg/Hz] for HI, HeI and
-        double precision, dimension(2*nEdgesHeI,3) :: gHeI        ! HeII at T=5,10,20 e3K
-        double precision, dimension(2*nEdgesHeII,3):: gHeII       !
-        double precision, dimension(2*nEdgesHI)    :: logGammaHI  ! log10(gamma)
-        double precision, dimension(2*nEdgesHeI)   :: logGammaHeI ! log10(gamma)
-        double precision, dimension(2*nEdgesHeII)  :: logGammaHeII! log10(gamma)
-        real, dimension(2*nEdgesHI)    :: nuEdge      ! freq [Ryd] at the series edge (used
-                                                      ! for HI, HeI and HeII)
+        real, pointer :: logGammaHIloc(:), logGammaHeIloc(:), logGammaHeIIloc(:)
+                                                      ! gamma [e-40 erg/Hz] for HI, HeI and HeII
      
-        ! read in the f-b coefficients for T=5000, 10000 and 20000 K
-        ! Ferland,PASP 92(1980)596 
-        ! Osterbrock,tbl 4.8
-
-        ! HI 11 series edges
-        close(90)
-        open(unit = 90, file = "data/gammaHI.dat", status = "old",&
-             & position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! fb_ff: can't open file: data/gammaHI.dat"
+        allocate (logGammaHIloc(nlimGammaHI), stat=err)
+        if (err /= 0) then
+            print*, "! fb_ff: can't allocate array memory"
             stop
         end if
-        do i = 1, 2*nEdgesHI
-            read(unit = 90, fmt = *) nuEdge(i), gHI(i,1),  gHI(i,2), &
-                 & gHI(i,3)
-            call locate(nuArray, nuEdge(i), HINuEdgeP(i))            
-        end do
-        HINuEdgeP(1) = 1       
-
-        ! HeI 8 series edges
-        close(91)
-        open(unit = 91, file = "data/gammaHeI.dat", status = "old",&
-             & position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! fb_ff: can't open file: data/gammaHeI.dat"
+        allocate (logGammaHeIloc(nlimGammaHeI), stat=err)
+        if (err /= 0) then
+            print*, "! fb_ff: can't allocate array memory"
             stop
         end if
-        do i = 1, 2*nEdgesHeI
-            read(unit = 91, fmt = *) nuEdge(i), gHeI(i,1),  gHeI(i,2)&
-                 &, gHeI(i,3)
-            call locate(nuArray, nuEdge(i), HeINuEdgeP(i))
-        end do
-        HeINuEdgeP(1) = 1 
-
-        ! HeII 11 series edges
-        close(92)
-        open(unit = 92, file = "data/gammaHeII.dat", status = "old",&
-             & position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! fb_ff: can't open file: data/gammaHeII.dat"
+        allocate (logGammaHeIIloc(nlimGammaHeII), stat=err)
+        if (err /= 0) then
+            print*, "! fb_ff: can't allocate array memory"
             stop
         end if
-        do i = 1, 2*nEdgesHeII
-            read(unit = 92, fmt = *) nuEdge(i), gHeII(i,1),  gHeII(i&
-                 &,2), gHeII(i,3)
-            call locate(nuArray, nuEdge(i), HeIINuEdgeP(i))
-        end do
-        HeIINuEdgeP(1) = 1
 
-        ! close files 
-        close(90)
-        close(91)
-        close(92)
+        logGammaHIloc = 0.
+        logGammaHeIloc = 0.
+        logGammaHeIIloc = 0.
 
         ! interpolate the coefficients in Temperature (linear in log-log)
         
         ! check what coefficients are needed for the local electron Temperature
         lgTeOut = .false. ! (re)initialize out of range Te flag 
-        if (TeUsed < 5000.) then
+        if (TeUsed <= tkGamma(1)) then
             lgTeOut = .true.
-            do i = 1, 2*nEdgesHI
-                logGammaHI(i) = log10(gHI(i, 1))
-            end do
-            do i = 1, 2*nEdgesHeI
-                logGammaHeI(i) = log10(gHeI(i, 1))
-            end do
-            do i = 1, 2*nEdgesHeII
-                logGammaHeII(i) = log10(gHeII(i, 1))
-            end do   
-        else if (TeUsed < 10000.) then
-            nTemp = 1
-        else if (TeUsed < 20000.) then
-            nTemp = 2
-        else ! Te > 20000.
+            logGammaHIloc = logGammaHI(1,:)
+            logGammaHeIloc = logGammaHeI(1,:)
+            logGammaHeIIloc = logGammaHeII(1,:)
+        else if (TeUsed >= tkGamma(ntkGamma)) then
             lgTeOut = .true.
-            do i = 1, 2*nEdgesHI
-                logGammaHI(i) = log10(gHI(i, 3))
+            logGammaHIloc = logGammaHI(ntkGamma,:)
+            logGammaHeIloc = logGammaHeI(ntkGamma,:)
+            logGammaHeIIloc = logGammaHeII(ntkGamma,:)
+         else
+            call locate (tkGamma, TeUsed, nTemp)
+            factor = log10(TeUsed/tkGamma(nTemp))
+            do i = 1, nlimGammaHI
+               aFit = (logGammaHI(nTemp+1,i)-logGammaHI(nTemp,i))/ &
+                    & log10(tkGamma(ntemp+1)/tkGamma(ntemp))
+               logGammaHIloc(i) = logGammaHI(nTemp,i) + aFit * factor
             end do
-            do i = 1, 2*nEdgesHeI
-                logGammaHeI(i) = log10(gHeI(i, 3))
+            do i = 1, nlimGammaHeI
+               aFit = (logGammaHeI(nTemp+1,i)-logGammaHeI(nTemp,i))/ &
+                    & log10(tkGamma(ntemp+1)/tkGamma(ntemp))
+               logGammaHeIloc(i) = logGammaHeI(nTemp,i) + aFit * factor
             end do
-            do i = 1, 2*nEdgesHeII
-                logGammaHeII(i) = log10(gHeII(i, 3))
-            end do   
+            do i = 1, nlimGammaHeII
+               aFit = (logGammaHeII(nTemp+1,i)-logGammaHeII(nTemp,i))/ &
+                    & log10(tkGamma(ntemp+1)/tkGamma(ntemp))
+               logGammaHeIIloc(i) = logGammaHeII(nTemp,i) + aFit * factor
+            end do
         end if
 
-        ! carry out interpolation in temperature (if 5000K<Te<20000K)
-        if (.not.lgTeOut) then    ! if Te is within the  range
-            factor = log10(TeUsed/(float(nTemp)*5000.))
-            do i = 1, 2*nEdgesHI            
-                aFit = log10(gHI(i, nTemp+1)/gHI(i, nTemp))/ log10(2.)
-                logGammaHI(i) = log10(gHI(i, nTemp)) + aFit * factor
-            end do
-            do i = 1, 2*nEdgesHeI
-                aFit = log10(gHeI(i, nTemp+1)/gHeI(i, nTemp))/&
-                     & log10(2.)
-                logGammaHeI(i) = log10(gHeI(i, nTemp)) + aFit * factor
-            end do
-            do i = 1, 2*nEdgesHeII
-               ! in the following log10(a)-log10(b) has to be used
-               ! instead of 
-               ! log10(a/b) to avoid division by 0 caused by
-               ! underflow occuring for gHeII(22,1)=8.08e-39. 
-               ! This problem does not occur on a supercomputer
-                aFit = ( log10(gHeII(i, nTemp+1))-log10(gHeII(i,&
-                     & nTemp)) )/ log10(2.)
-                logGammaHeII(i) = log10(gHeII(i, nTemp)) + aFit *&
-                     & factor
-            end do
-        end if
 
         ! calculate f-b and f-f emissivity of HI, HeI and HeII 
-
         ! interpolate between the edges in nu, for the HI, HeI and
         ! HeII series 
 
         ! calculate gammaHI (nu<1.Ryd)
-        do i = 1, nEdgesHI
+        do i = 1, nlimGammaHI/2
             iup  = HINuEdgeP(2*i)
             ilow = HINuEdgeP(2*i - 1)
             if (iup == ilow) then
@@ -491,18 +422,19 @@ module emission_mod
                      & nuArray(iup)
                 stop
             end if
-            aFit = (logGammaHI(2*i)-logGammaHI(2*i - 1)) /&
+            aFit = (logGammaHIloc(2*i)-logGammaHIloc(2*i - 1)) /&
                  & (nuArray(iup) - nuArray(ilow))
             ! carry out interpolation between edges
             do j = ilow, iup-1
-                gammaHI(j) = logGammaHI(2*i)+aFit* (nuArray(j)&
+                gammaHI(j) = logGammaHIloc(2*i)+aFit* (nuArray(j)&
                      &-nuArray(iup))
                 gammaHI(j) = 10.**gammaHI(j)
             end do
         end do
 
-        ! calculate gammaHeI (nu<1.8Ryd)
-        do i = 1, nEdgesHeI
+        ! calculate gammaHeI (nu<0.799Ryd)
+        ! note that we are not going all the way up to 1.8ryd.. can be changed 
+        do i = 1, nlimGammaHeI/2
             iup  = HeINuEdgeP(2*i)
             ilow = HeINuEdgeP(2*i - 1)
             if (iup == ilow) then       
@@ -511,18 +443,18 @@ module emission_mod
                      & nuArray(iup) 
                 stop
             end if 
-            aFit = (logGammaHeI(2*i)-logGammaHeI(2*i - 1)) /&
+            aFit = (logGammaHeIloc(2*i)-logGammaHeIloc(2*i - 1)) /&
                  & (nuArray(iup) - nuArray(ilow))
             ! carry out interpolation between edges
             do j = ilow, iup-1
-                gammaHeI(j) = logGammaHeI(2*i)+aFit* (nuArray(j)&
+                gammaHeI(j) = logGammaHeIloc(2*i)+aFit* (nuArray(j)&
                      &-nuArray(iup))
                 gammaHeI(j) = 10.**gammaHeI(j)  
             end do
         end do 
 
         ! calculate gammaHeII (nu<4.0Ryd)
-        do i = 1, nEdgesHeII
+        do i = 1, nlimGammaHeII/2
             iup  = HeIINuEdgeP(2*i)   
             ilow = HeIINuEdgeP(2*i - 1)
             if (iup == ilow) then
@@ -531,17 +463,19 @@ module emission_mod
                      & nuArray(iup)
                 stop
             end if
-            aFit = (logGammaHeII(2*i)-logGammaHeII(2*i - 1)) /&
+
+            aFit = (logGammaHeIIloc(2*i)-logGammaHeIIloc(2*i - 1)) /&
                  & (nuArray(iup) - nuArray(ilow))  
             ! carry out interpolation between edges
             do j = ilow, iup-1
-                gammaHeII(j) = logGammaHeII(2*i)+aFit* (nuArray(j)&
+
+                gammaHeII(j) = logGammaHeIIloc(2*i)+aFit* (nuArray(j)&
                      &-nuArray(iup))
                 gammaHeII(j) = 10.**gammaHeII(j)
             end do
         end do
         
-        ! calculate f-b emission for HI  (nu > 1.), for HeI (nu > 1.8 Ryd) 
+        ! calculate f-b emission for HI  (nu > 1.), for HeI (nu > 1.8 Ryd)
         ! and for HeII (nu > 4.0 Ryd) by means of Milne relation 
         ! - note the ff contribution will then need to be added separately 
         ! so set up the free free coefficients
@@ -562,7 +496,8 @@ module emission_mod
             ! add the free free contribution
             gammaHI(i) = gammaHI(i)+ffCoeff1(i)
             ! calculate gammaHeI
-            if (i >= HeIPnuP) then
+!            if (i >= HeIPnuP) then
+            if (i >= HeINuEdgeP(nlimGammaHeI) ) then
                 expFactor = exp( (-nuArray(i) + nuArray(HeIPnuP)) * hcRyd_k / TeUsed)
                 phXSecHeI = xSecArray(i-HeIPnuP+1+HeISingXSecP(1)-1)
 
@@ -570,7 +505,7 @@ module emission_mod
 &                          factor * expFactor * 1.e20 *1.e20
                 ! add the free free contribution
                 gammaHeI(i) = gammaHeI(i) + ffCoeff1(i)
-                if (i >= HeIIPnuP) then
+                if (i >= HeIINuEdgeP(nlimGammaHeII)) then
                     expFactor  = exp( (-nuArray(i) + nuArray(HeIIPnuP)) * hcRyd_k / TeUsed)
                     phXSecHeII = xSecArray(i-HeIIPnuP+1+HeIIXSecP(1)-1)
                     gammaHeII(i) = fourPi * phXSecHeII * statW(3) * hcRyd * constant*&
