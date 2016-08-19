@@ -1,6 +1,5 @@
 ! Copyright (C) 2005 Barbara Ercolano 
-!
-! Version 2.02
+!! Version 2.02
 module output_mod
     use common_mod
     use constants_mod
