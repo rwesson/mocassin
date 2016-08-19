@@ -11,7 +11,7 @@ module common_mod
     integer, pointer :: lgConvergedTemp(:)  ! temporary converged? flag
     integer, pointer :: lgBlackTemp(:)      ! temporary converged? flag
 
-    logical         :: lgTau=.false.            ! get tau?
+    logical         :: lgEquivalentTau          ! calculate equivalent tau?
     logical         :: lgWarm=.false.           ! warm started?
     logical         :: lgNeInput=.false.        ! Ne distribution entered
     logical         :: lgResLinesFirst = .true. ! first time the res lines transfer proc is called? 
@@ -131,6 +131,10 @@ module common_mod
     real, pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
     real, pointer :: rho(:)                 ! intrinsic density (nspecies)    
     real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
+    real, pointer :: SEDnoExt(:)            ! SED no extinction
+    real, pointer :: equivalentTau(:)       ! SED no extinction
+
+
 
     ! linear increments
     real, pointer :: dl(:)
@@ -237,8 +241,8 @@ module common_mod
     type photon_packet
 
         integer       :: nuP       ! pointer
-        integer, dimension(maxGrids) & 
-             & :: xP,yP,zP         ! grids position indeces
+        integer, dimension(2) & 
+             & :: xP,yP,zP         ! grids position indeces 1= mother 2=sub
         integer, dimension(2) :: origin ! 1=ig, 2=icell
         integer       :: iG        ! grid index 
 
@@ -339,6 +343,7 @@ module common_mod
                       &:: nxIn,nyIn, nzIn  ! x, y and z dimensions of the grids
     integer            :: nStars           ! number of ionising sources
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
+    integer            :: emittingGrid     ! grid emiting illuminating radiation [0 for all]
     integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z
 
     real               :: fillingFactor    ! filling factor epsilon

@@ -1343,8 +1343,6 @@ module emission_mod
 
         grid%recPDF(cellPUsed, :) = grid%recPDF(cellPUsed, :)/grid%recPDF(cellPUsed, nbins)
 
-        grid%recPDF(cellPUsed, nbins) = 1.
-
 
         ! calculate the PDF for recombination and forbidden lines
         if (lgDebug) then 
@@ -1457,7 +1455,8 @@ module emission_mod
 
       cShapeLoc = 'blackbody'
 
-      grid%dustPDF(grid%active(ix,iy,iz),:)=0.
+      grid%dustPDF(cellPused,:)=0.
+
       do n = 1, nSpecies
          do ai = 1, nSizes
 
@@ -1525,12 +1524,11 @@ module emission_mod
          
          grid%dustPDF(cellPused,i) = &
               & grid%dustPDF(cellPUsed,i-1)+grid%dustPDF(cellPUsed,i)
-         
+
       end do
+
       grid%dustPDF(cellPused,:) = &    
            grid%dustPDF(cellPused,:)/grid%dustPDF(cellPused,nbins)
-
-      grid%dustPDF(cellPused,nbins) = 1.
 
     end subroutine setDustPDF
 
@@ -2088,7 +2086,7 @@ module emission_mod
          & pointer :: n(:), n2(:) ! level population arrays
 
     
-    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
+    real                 :: alphaTotal(100)           ! maximum 100-level ion
     real                 :: a_fit, b_fit              !         
     real                 :: qomInt                    ! interpolated value of qom
     real,    pointer     :: logTemp(:)                ! log10 temperature points array
@@ -2164,13 +2162,6 @@ module emission_mod
     
     ! allocate space for transition probability  array
     allocate(a(nLev, nLev), stat = err)
-    if (err /= 0) then 
-       print*, "! equilibrium: can't allocate a array memory"
-       stop
-    end if
-
-    ! allocate space for transition probability  array
-    allocate(alphaTotal(nLev), stat = err)
     if (err /= 0) then 
        print*, "! equilibrium: can't allocate a array memory"
        stop
@@ -2351,7 +2342,13 @@ module emission_mod
        else
           alphaTotal(1) = 1.
        end if
-                  
+           
+       if (nLev>100) then
+          print*, '! equilibrium: alphaTotal set to a &
+               &max 100 level atom, please expand'
+          stop
+       end if
+       
        alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
        
     end do
@@ -2449,7 +2446,6 @@ module emission_mod
     end do
     
     ! deallocate arrays
-    if( associated(alphaTotal) ) deallocate(alphaTotal)
     if( associated(label) ) deallocate(label)
     if( associated(logTemp) ) deallocate(logTemp)
     if( associated(a) ) deallocate(a)

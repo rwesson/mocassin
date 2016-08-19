@@ -99,7 +99,6 @@ module dust_mod
          call dustEmissionInt()
          lgFirstDustEm=.false.
       end if
-
       lgDust = .true.
 
 
@@ -158,10 +157,8 @@ module dust_mod
 
                  do i = 1, nbins
                     bb = getFlux(nuArray(i), real(nT), cShapeLoc)
-
                     dustEmIntegral(nS,ai,nT) = dustEmIntegral(nS,ai,nT)+& 
                          & xSecArray(dustAbsXsecP(nS,ai)+i-1)*bb*fr1Ryd*widFlx(i)
-
                  end do
 
               end do

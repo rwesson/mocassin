@@ -44,7 +44,8 @@ program MoCaSSiN
 
     type(grid_type) :: grid3D(maxGrids)       ! the 3D Cartesian  grid
 
-    integer         :: iGrid, err             ! allocation error status
+    real            :: test                   ! test
+    integer         :: i, iGrid, err          ! allocation error status
 
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
@@ -102,15 +103,17 @@ program MoCaSSiN
     ! set local diffuse ionisation field
     if (Ldiffuse>0.) then
        if (taskid==0) print*, '! mocassin: calling setLdiffuse'
+       call setLdiffuse(grid3D(1:nGrids))
+       test=0.
        do iGrid = 1, nGrids
-          call setLdiffuse(grid3D(iGrid))
+          do i = 1, grid3D(igrid)%ncells
+             test = test+grid3d(igrid)%LdiffuseLoc(i)
+          end do
        end do
        if (taskid==0) then
-          print*, '! mocassin: setLdiffuse done'
+          print*, '! mocassin: setLdiffuse done, total Ldiffuse: ', test
        end if
     end if
-
-
 
     if (taskid==0) print*, '! mocassin: calling MCIterationDriver'    
     ! start the Monte Carlo simulation

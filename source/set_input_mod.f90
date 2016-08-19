@@ -1,6 +1,5 @@
 ! Copyright (C) 2005 Barbara Ercolano 
-! Changed: nuStepSize increased from 0.05 to 0.075 for high-energy-mocassin (nw2006)
-! 
+!
 ! Version 2.02
 module set_input_mod
     use common_mod
@@ -52,7 +51,6 @@ module set_input_mod
         lg1D          = .false.
         lgDustScattering = .true.
         lgSymmetricXYZ= .false.
-        lgTau         = .false.
 
         nPhotonsDiffuse = 0        
         nStars        = 0
@@ -102,7 +100,7 @@ module set_input_mod
         NeStart       = 0.
         nuMax         = 15.
         nuMin         = 1.001e-5
-        nuStepSize    = 0.075
+        nuStepSize    = 0.05
         resLinesTransfer = 101.
         Rnx           = -1.
         Rny           = -1.
@@ -140,14 +138,13 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
-            case("getTau")
-               backspace 10
-               print*, keyword
-               lgTau = .true.
+            case ("getEquivalentTau")
+               lgEquivalentTau = .true.               
+               print*, keyword, lgEquivalentTau
             case ("diffuseSource") 
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse
-               print*, keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse
+               read(unit=10, fmt=*, iostat=ios) keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse, emittingGrid
+               print*, keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse, emittingGrid
             case ("traceHeating")
                lgTraceHeating = .true.
                print*, keyword, lgTraceHeating
@@ -347,12 +344,12 @@ module set_input_mod
                 print*, keyword, H0Start
             case ("LStar")
                 backspace 10
-                allocate(Lstar(1))
+                allocate(Lstar(0:1))
                 read(unit=10, fmt=*, iostat=ios) keyword, LStar(1)
                 print*, keyword, LStar(1)
             case ("LPhot")
                 backspace 10
-                if (.not. associated(LStar)) allocate(Lstar(1))                
+                if (.not. associated(LStar)) allocate(Lstar(0:1))                
                 read(unit=10, fmt=*, iostat=ios) keyword, LPhot
                 print*, keyword, LPhot
             case ("nuMax")
@@ -476,6 +473,11 @@ module set_input_mod
            nPhotons(1)=nPhotonsTot
 
            if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
+              if (nStars<1) then
+                 if(.not.associated(contShape)) allocate(contShape(0:0))
+                 if(.not.associated(spID)) allocate(spID(0:0))
+                 if(.not.associated(LStar)) allocate(LStar(0:0))
+              end if
               deltaE(0) = Ldiffuse/nPhotonsDiffuse
               contShape(0) = shapeDiffuse
               if (contShape(0) == 'blackbody') then
@@ -652,6 +654,8 @@ module set_input_mod
           subroutine readGridList(filename)
             implicit none
             
+            real                          :: skipR
+
             character(len=50), intent(in) :: filename
             character(len=50)             ::  skipC            
 
@@ -668,8 +672,8 @@ module set_input_mod
             end if
             
             do i = 2, nGrids
-               read(17, *) skip, nxIn(i), nyIn(i), nzIn(i), skipC
-              read(17, *) skip, skip, skip,skip, skip, skip
+              read(17, *) skip, nxIn(i), nyIn(i), nzIn(i), skipC, skipR
+              read(17, *) skipR, skipR, skipR, skipR, skipR, skipR
 
             end do
             close(17)

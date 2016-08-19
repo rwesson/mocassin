@@ -58,7 +58,6 @@ program MoCaSSiNplot
 
     logical         :: lgContinuum    ! 
 
-
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
@@ -178,15 +177,14 @@ program MoCaSSiNplot
 
 
                          ! HI rec lines
-
-                         iLine = 0
-                         do ilow = 2, 8
-                            do iup = ilow+1, 30
+                         do iup = 3, 15
+                            do ilow = 2, min0(8,iup-1)
+                               
+                               iLine = iLine+1
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & HIRecLines(iup,ilow)*HdenUsed*dV
-                               iLine = iLine+1
                                
                             end do
                          end do

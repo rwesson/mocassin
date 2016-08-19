@@ -79,6 +79,7 @@ module iteration_mod
            integer                :: cellLoc(3)      ! local cell counters
            integer                :: gpLoc           ! local grid counter
            integer                :: ii,jj,kk        ! counters
+           integer                :: ngridloc
 
            allocate(noHitPercent(nGrids))
            allocate(noIonBalPercent(nGrids))
@@ -162,42 +163,49 @@ module iteration_mod
               if (lgDust) then
                  grid(iG)%scaOpac = 0.
                  grid(iG)%absOpac = 0.
-                 do i = 1, grid(iG)%nx
-                    do j = 1, grid(iG)%ny
-                       do k = 1, grid(iG)%nz
-                          
-                          if (grid(iG)%active(i,j,k)>0) then
-                             do nS = 1, nSpecies
-                                do ai = 1, nSizes                                
-                                   if (grid(iG)%Tdust(nS,ai,grid(iG)%active(i,j,k))<TdustSublime(nS)) then
-                                      do freq = 1, nbins 
-                                         grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) = &
-                                              & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
-                                              & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
-                                              & xSecArray(dustScaXsecP(nS,ai)+freq-1)
-                                         grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
-                                              & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
-                                              & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
-                                              & xSecArray(dustAbsXsecP(nS,ai)+freq-1)
-                                      end do
-                                   end if
-                                end do
-                             end do
-                             
-                             do freq = 1, nbins
-                                grid(iG)%opacity(grid(iG)%active(i,j,k),freq) = &
-                                     &grid(iG)%opacity(grid(iG)%active(i,j,k),freq) + &
-                                     & (grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + &
-                                     &grid(iG)%absOpac(grid(iG)%active(i,j,k),freq))
-                             end do
-                          end if
 
+                 if((nIterateMC==1 .and. lgEquivalentTau)) then
+                    grid(iG)%scaOpac = 0.
+                    grid(iG)%absOpac = 0.
+                 else
+                    do i = 1, grid(iG)%nx
+                       do j = 1, grid(iG)%ny
+                          do k = 1, grid(iG)%nz
+                             
+                             if (grid(iG)%active(i,j,k)>0) then
+                                do nS = 1, nSpecies
+                                   do ai = 1, nSizes                                
+                                      if (grid(iG)%Tdust(nS,ai,grid(iG)%active(i,j,k))<TdustSublime(nS)) then
+                                         do freq = 1, nbins 
+                                            grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) = &
+                                                 & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
+                                                 & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
+                                                 & xSecArray(dustScaXsecP(nS,ai)+freq-1)
+                                            grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
+                                                 & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
+                                                 & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
+                                                 & xSecArray(dustAbsXsecP(nS,ai)+freq-1)
+                                         end do
+                                      end if
+                                   end do
+                                end do
+                                
+                                do freq = 1, nbins
+                                   grid(iG)%opacity(grid(iG)%active(i,j,k),freq) = &
+                                        &grid(iG)%opacity(grid(iG)%active(i,j,k),freq) + &
+                                        & (grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + &
+                                        &grid(iG)%absOpac(grid(iG)%active(i,j,k),freq))
+                                end do
+                             end if
+                             
+                          end do
                        end do
                     end do
-                 end do
+                 end if
+                 
               end if
               if (taskid==0) print*, '! iterateMC: dust contribution to total opacity added ',iG                            
-
+              
            end do ! ngrids
 
            call mpi_barrier(mpi_comm_world, ierr)
@@ -342,6 +350,9 @@ module iteration_mod
                  do i = 0, grid(iG)%nCells
                     do freq = 1, nbins
                        grid(iG)%dustPDF(i,freq) = dustPDFTemp(i,freq)
+!if (nIterateMC>1 .and. ig == 181 .and. i==9) then
+!print*,i, grid(iG)%dustPDF(i,freq)
+!end if
                     end do
                  end do
 
@@ -458,9 +469,14 @@ module iteration_mod
 
            if (Ldiffuse>0.) then
               
-!              do gpLoc = 1, nGrids
-              do gpLoc = 1, 1
-                 if(taskid==0) print*, 'iterateMC: Starting transfer for diffuse source ', gpLoc
+              if (emittingGrid>0) then                 
+                 ngridloc = emittingGrid
+              else
+                 ngridloc = ngrids
+              end if
+
+              do gpLoc = 1, nGridloc
+                 if(taskid==0) print*, 'iterateMC: Starting transfer for diffuse source grid: ', gpLoc
                  do ii = 1,grid(gpLoc)%nx
                     do jj = 1,grid(gpLoc)%ny
                        do kk = 1,grid(gpLoc)%nz
@@ -497,6 +513,7 @@ module iteration_mod
 
            end if
 
+print*, 'here'
 
            if (lgPlaneIonization) then
 
@@ -659,7 +676,7 @@ module iteration_mod
            end do
 
 
-           if (lgDust) then
+           if (lgDust .and. (nIterateMC>1 .or. .not.lgEquivalentTau)) then
               print*, "! iterateMC: [Interactions] : total -- abs -- sca: "
               print*, "! iterateMC: [Interactions] ", absInt+scaInt, " -- ", &
                    &  absInt*100./(absInt+scaInt),"% -- ", &
@@ -871,7 +888,7 @@ module iteration_mod
            if (nGrids>1) then
 !              print*, " ! iterateMC: integratePathTau stuff still not implemented for multiple grids.... skipping"
            else
-              if (lgTau) call writeTau(grid)
+              call writeTau(grid)
            end if
 
            ! decide over final convergence of the model
@@ -903,15 +920,17 @@ module iteration_mod
 
               if (taskid == 0) then
                  if (nIterateMC == 1) then
-                    open(unit=21, status='unknown',  action="write",position='rewind', file='output/summary.out', iostat=ios)
+                    close(21)
+                    open(unit=21, status='unknown', position='rewind', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
-                       print*, "! iterationMC: can't open file for writing, summary.out"
+                       print*, "! iterationMC: can't open file for writing, summary.out -1"
                        stop
                     end if
                  else
-                    open(unit=21, status='unknown',  action="write",position='append', file='output/summary.out', iostat=ios)
+                    close(21)
+                    open(unit=21, status='unknown', position='append', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
-                       print*, "! iterationMC: can't open file for writing, summary.out"
+                       print*, "! iterationMC: can't open file for writing, summary.out -2"
                        stop
                     end if
                  end if                

@@ -1,5 +1,4 @@
 ! Copyright (C) 2005 Barbara Ercolano 
-! Line 421: Ionisation stages number changed from 7 to 10 to read in 10 stages from ion list file (nw2006)
 !
 ! Version 2.02
 module elements_mod
@@ -418,7 +417,7 @@ module elements_mod
        ! read in the file names for the atomica data
        ! (even the non existing ones.. never know might add them later)
        do elem = 3, nElements
-          do ion = 1, min(elem+1, 10)
+          do ion = 1, min(elem+1, nstages)
 
              read(17, '(A20)') dataFile(elem, ion)
 

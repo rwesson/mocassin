@@ -322,9 +322,7 @@ module output_mod
 
                     ! check this cell is in the ionized region
                     if ((grid(iG)%active(i, j, k)>0)) then
-                       if (grid(iG)%lgBlack(grid(iG)%active(i,j,k))<1 .and. lgInSlit .and.& 
-                            & (grid(iG)%Ne(grid(iG)%active(i,j,k))- grid(iG)%Hden(grid(iG)%active(i,j,k)))/ &
-                            & grid(iG)%Hden(grid(iG)%active(i,j,k))> -.95) then
+                       if (grid(iG)%lgBlack(grid(iG)%active(i,j,k))<1 .and. lgInSlit ) then
 
                        ! find the physical properties of this cell
                        cellPUsed       = grid(iG)%active(i,j,k)
@@ -825,9 +823,8 @@ module output_mod
                     resLinesVolCorr(iAb, iRes) = resLinesVolCorr(iAb, iRes)/HbetaVol(iAb)
                  end do
 
+                 if (lgRecombination) recLinesFlux(iAb,:,:) = recLinesFlux(iAb,:,:)/HbetaVol(iAb)
               end if
-
-              if (lgRecombination) recLinesFlux(iAb,:,:) = recLinesFlux(iAb,:,:)/HbetaVol(iAb)
 
            end if
 
@@ -1294,192 +1291,186 @@ module output_mod
         close(27)
         close(30)
         close(60)
-
-
-        if (lgTau) then
              
-           ! find the run of the optical depths from the illuminated
-           ! surface to the edge of the nebula 
-           
-           ! polar direction
-           
-           ! define initial position
-           aVec%x = 0.
-           aVec%y = 0.
-           aVec%z = 0.
-           
-           ! define direction
-           uHat%x = 0.
-           uHat%y = 0.
-           uHat%z = 1.
-           
-           ! allocate space for temporary optical depth arrays
-           allocate (absTau(1:maxTau), stat = err)
-           if (err /= 0) then
-              print*, "! adjustGrid: can't allocate array memory"
-              stop
-           end if
-           allocate (lambda(1:maxTau), stat = err)
-           if (err /= 0) then
-              print*, "! adjustGrid: can't allocate array memory"
-              stop
-           end if
-           
-           open(unit=70, file='output/tau.out', status='unknown', position='rewind',action="write", iostat = ios)
-           
-           
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-           nTau   = 0
-           
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
-           
-           
-           write(70, *) " Optical depth from the centre to the edge of the nubula "
+        ! find the run of the optical depths from the illuminated
+        ! surface to the edge of the nebula 
         
-           write(70,*) " Polar direction "
-           
-           write(70,*) " tau(H) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-             
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-           
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
+        ! polar direction
         
-           write(70,*) " tau(He) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-           
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-           
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
-           
-           write(70,*) " tau(He+) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-        
-           ! equatorial direction (along y axis)
-        
-           ! define initial position
-           aVec%x = 0.
-           aVec%y = 0.
-           aVec%z = 0.
-           
-           ! define direction
-           uHat%x = 0.
-           uHat%y = 1.
-           uHat%z = 0.
-
-
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
+        ! define initial position
+        aVec%x = 0.
+        aVec%y = 0.
+        aVec%z = 0.
           
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
+        ! define direction
+        uHat%x = 0.
+        uHat%y = 0.
+        uHat%z = 1.
         
-           write(70,*) " Equatorial Direction (along y-axis) "
-           
-           write(70,*) " tau(H) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-           
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-           
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
-           
-           write(70,*) " tau(He) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-           
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-        
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
-           
-           write(70,*) " tau(He+) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-          
-           ! equatorial (x-axis)
-        
-           ! define initial position
-           aVec%x = 0.
-           aVec%y = 0.
-           aVec%z = 0.
-        
-           ! define direction
-           uHat%x = 1.
-           uHat%y = 0.
-           uHat%z = 0.
-          
-
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-          
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
-          
-           write(70,*) " Equatorial Direction (along x-axis) "
-           
-           write(70,*) " tau(H) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-           
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-        
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
-           
-           write(70,*) " tau(He) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-        
-           ! initialize arrays with zero
-           absTau = 0.
-           lambda = 0.
-           
-           ! find the optical depth
-           call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
-          
-           write(70,*) " tau(He+) "
-           do i = 1, nTau
-              write(70, *) lambda(i), absTau(i)
-           end do
-        
-           close (70)
-        
-           ! free the space allocated to the temp arrays
-           if (associated(absTau)) deallocate(absTau)
-           if (associated(lambda)) deallocate(lambda)
-
+        ! allocate space for temporary optical depth arrays
+        allocate (absTau(1:maxTau), stat = err)
+        if (err /= 0) then
+           print*, "! adjustGrid: can't allocate array memory"
+           stop
         end if
+        allocate (lambda(1:maxTau), stat = err)
+        if (err /= 0) then
+           print*, "! adjustGrid: can't allocate array memory"
+           stop
+        end if
+        
+        open(unit=70, file='output/tau.out', status='unknown', position='rewind',action="write", iostat = ios)
+             
+        
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        nTau   = 0
 
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
+          
+        
+        write(70, *) " Optical depth from the centre to the edge of the nubula "
+        
+        write(70,*) " Polar direction "
+
+        write(70,*) " tau(H) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+             
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
+        
+        write(70,*) " tau(He) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+        
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
+        
+        write(70,*) " tau(He+) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+        
+        ! equatorial direction (along y axis)
+        
+        ! define initial position
+        aVec%x = 0.
+        aVec%y = 0.
+        aVec%z = 0.
+        
+        ! define direction
+        uHat%x = 0.
+        uHat%y = 1.
+        uHat%z = 0.
+
+
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+          
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
+        
+        write(70,*) " Equatorial Direction (along y-axis) "
+        
+        write(70,*) " tau(H) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+        
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
+          
+        write(70,*) " tau(He) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+          
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
+          
+        write(70,*) " tau(He+) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+          
+        ! equatorial (x-axis)
+        
+        ! define initial position
+        aVec%x = 0.
+        aVec%y = 0.
+        aVec%z = 0.
+        
+        ! define direction
+        uHat%x = 1.
+        uHat%y = 0.
+        uHat%z = 0.
+          
+
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+          
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 1., nTau, absTau, lambda)
+          
+        write(70,*) " Equatorial Direction (along x-axis) "
+        
+        write(70,*) " tau(H) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+          
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 1.8, nTau, absTau, lambda)
+        
+        write(70,*) " tau(He) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+        
+        ! initialize arrays with zero
+        absTau = 0.
+        lambda = 0.
+        
+        ! find the optical depth
+        call integratePathTau(grid, aVec, uHat, 4., nTau, absTau, lambda)
+          
+        write(70,*) " tau(He+) "
+        do i = 1, nTau
+           write(70, *) lambda(i), absTau(i)
+        end do
+        
+        close (70)
+        
+        ! free the space allocated to the temp arrays
+        if (associated(absTau)) deallocate(absTau)
+        if (associated(lambda)) deallocate(lambda)
         if (associated(HIVol)) deallocate(HIVol)
         if (associated(HeISVol)) deallocate(HeISVol)
         if (associated(HeITVol)) deallocate(HeITVol)
@@ -2517,7 +2508,7 @@ module output_mod
 
       ! 0.55um = 0.165690899
       ! 1.00um = 0.0912 
-      nuR = 0.0912
+      nuR = 0.16569
 !      nuR = 0.0912
       
 
@@ -2526,7 +2517,7 @@ module output_mod
  
      
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 1,0,0 - nu = 0.0912 Ryd -> lambda = 1.0 um"
+      write(73, *) " direction: 1,0,0 - nu = 0.166 Ryd -> lambda = 0.55 um"
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2552,7 +2543,7 @@ module output_mod
  
      
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 1,1,1 - nu = 0.0911 Ryd -> lambda = 1.0 um"
+      write(73, *) " direction: 1,1,1 -  nu = 0.166 Ryd -> lambda = 0.55 um"
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2573,7 +2564,8 @@ module output_mod
       call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
       
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 0,1,0 - lambda = 1.00 um"
+      write(73, *) " direction: 0,1,0 -  nu = 0.166 Ryd -> lambda = 0.55 um"
+      
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2597,7 +2589,8 @@ module output_mod
       call integratePathTau(grid, aVec, uHat, nuR, nTau, outTau, lambda)
       
       write(73, *) " Optical depth from the centre to the edge of the nubula "
-      write(73, *) " direction: 0,0,1 - nu = 0.0911 => lambda = 1.00 um"
+      write(73, *) " direction: 0,0,1 -  nu = 0.166 Ryd -> lambda = 0.55 um"
+      
       
       do i = 1, nTau
          write(73, *) lambda(i), outTau(i)
@@ -2681,6 +2674,30 @@ module output_mod
               & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
 
       end do
+
+      if (lgEquivalentTau .and. nIterateMC==1) then
+         SEDnoExt = SED(:,0)
+      elseif (lgEquivalentTau .and. nIterateMC>1) then
+
+         open (unit=74,file='output/equivalentTau.out',action='write', position='rewind',&
+              & iostat=ios, status='unknown')
+
+         do freq = 1, nbins
+            if (SEDnoExt(freq)>0. .and. SED(freq,0)>0.) then
+               equivalentTau(freq) = log(SEDnoExt(freq)/SED(freq,0))
+            else
+               equivalentTau(freq) = -1
+            end if
+
+            write(74,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, equivalentTau(freq), SEDnoExt(freq)
+            
+         end do
+
+         close(74)
+
+
+      end if
+
 
       write(16,*) ' '
       write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE

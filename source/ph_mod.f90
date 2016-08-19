@@ -1411,11 +1411,11 @@ module xSec_mod
              &chi1,apsi0,apsi1,apsi,fn,chi,p,t
         
         integer              :: nang,j,nstop,nmx,i,n,nn,rn,jj
-        
+
         nang = 2
         dx=x
         y=x*refrel
-        
+
         ! series terminated after nstop terms
         ! ___________________________________________________________________
         xstop=x+4.*x**.3333 +2.0
@@ -1426,7 +1426,10 @@ module xSec_mod
         do j = 1,nang
            theta(j)= (float(j)-1.)*dang
            amu(j)=cos(theta(j))
+
         end do
+
+
         ! __________________________________________________________________
         ! logarithmic derivative d(j) calculated by downward recurrence
         ! beginning with initial value 0.0 + i*0.0 at j = nmx
@@ -1436,6 +1439,7 @@ module xSec_mod
         do n=1,nn
            rn=nmx-n+1
            d(nmx-n)=(rn/y)-(1./(d(nmx-n+1)+rn/y))
+
         end do
         do j=1,nang
            pi0(j)=0.0
@@ -1465,27 +1469,39 @@ module xSec_mod
       do 
          dn=n
          rn=n
+
          fn=(2.*rn+1.)/(rn*(rn+1.))
          psi=(2.*dn-1.)*psi1/dx-psi0
          apsi=psi
          chi=(2.*rn-1.)*chi1/x -  chi0
          xi = cmplx(apsi,-chi)
+
+
          an=(d(n)/refrel+rn/x)*apsi - apsi1
+
          an=an/((d(n)/refrel+rn/x)*xi - xi1)
+
          bn=(refrel *d(n)+rn/x)*apsi - apsi1
+
          bn=bn/((refrel*d(n)+rn/x)*xi - xi1)
+
          qsca=qsca+(2.*rn+1.)*(cabs(an)*cabs(an)+cabs(bn)*cabs(bn))
+
          do j=1,nang
+
             jj=2*nang-j
             pii(j)=pi1(j)
             tau(j)=rn*amu(j)*pii(j) - (rn+1.)*pi0(j)
+
             p=(-1.)**(n-1)
             s1(j)=s1(j)+fn*(an*pii(j)+bn*tau(j))
             t=(-1.)**n
             s2(j)=s2(j) + fn*(an*tau(j)+bn*pii(j))
+
             if (j == jj) exit
             s1(jj)=s1(jj) + fn*(an*pii(j)*p + bn*tau(j)*t)
             s2(jj)=s2(jj) + fn*(an*tau(j)*t + bn*pii(j)*p)
+
          end do
          psi0=psi1
          psi1=psi
@@ -1493,6 +1509,7 @@ module xSec_mod
          chi0=chi1
          chi1=chi
          xi1=cmplx(apsi1,-chi1)
+
          n=n+1
          rn=n
          do j=1,nang
@@ -1500,6 +1517,7 @@ module xSec_mod
             pi1(j)=pi1(j) - rn*pi0(j)/(rn-1.)
             pi0(j) = pii(j)
          end do
+
          if (n-1-nstop>=0) exit
       end do
 
