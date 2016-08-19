@@ -154,12 +154,6 @@ module update_mod
            NeUsed     = grid%Ne(cellP)
            ionDenUsed = grid%ionDen(cellP, :, :)
 
-           allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
-           if (err /= 0) then
-              print*, "! updateCell: can't allocate array memory"
-              stop
-           end if
-
 
            ! save present value of H0 abundance in XOldHI
            XOldHI = grid%ionDen(cellP,elementXref(1),1)
@@ -317,8 +311,6 @@ module update_mod
                  &grid%Ne(cellP),  " N_gas: ", &
                  &grid%Hden(cellP)
          end if
-
-         if (associated(forbiddenLines)) deallocate(forbiddenLines)
 
       else
 

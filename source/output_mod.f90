@@ -106,11 +106,6 @@ module output_mod
 
         ! allocate and initialize arrays and variables
 
-        allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
-        if (err /= 0) then
-           print*, "! outputGas: can't allocate array memory"
-           stop
-        end if
         
         if (convPercent >= resLinesTransfer .and. lgDust) then
            allocate(resLinesVol(0:nAbComponents, 1:nResLines), stat=err)
@@ -1475,7 +1470,6 @@ module output_mod
         close (70)
         
         ! free the space allocated to the temp arrays
-        if (associated(forbiddenLines)) deallocate(forbiddenLines)
         if (associated(absTau)) deallocate(absTau)
         if (associated(lambda)) deallocate(lambda)
         if (associated(HIVol)) deallocate(HIVol)

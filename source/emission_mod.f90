@@ -16,8 +16,6 @@ module emission_mod
     double precision, pointer :: emissionHeII(:)                   ! HeII continuum emission coefficient  
 
     ! units are [e-25erg/s/N_gas]
-    double precision, save,pointer::&
-         & forbiddenLines(:,:,:,:)                                 ! emissivity from heavies  rec lines
     double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
     double precision, dimension(9)         :: HeIRecLinesS         ! emissivity from HeI sing rec lines
     double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
@@ -31,7 +29,7 @@ module emission_mod
 
     integer                             :: abFileUsed  ! abundance file index used
     integer                             :: cellPUsed   !  cell index
-
+        logical,save :: lgFloc=.true.                ! 
     contains
 
     ! this is the subroutine to drive the calculation 
@@ -46,7 +44,7 @@ module emission_mod
         type(grid_type)                :: grid
 
         ! local variables
-        logical,save :: lgF=.true.                ! 
+
         integer :: ncutoff= 0                ! see clrate
         integer :: err                       ! allocation error status
         integer :: i, n                      ! counters
@@ -94,14 +92,6 @@ module emission_mod
              NeUsed = 1.e-5
         end if
 
-        if (lgF) then
-           allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
-           if (err /= 0) then
-              print*, "! emissionDriver: can't allocate array memory"
-              stop
-           end if
-           lgF = .false.
-        end if
 
         ! allocate space for emissionHI, emissionHeI and emissionHeII
         allocate(emissionHI(nbins), stat = err)
@@ -248,7 +238,6 @@ module emission_mod
         end if
 
         ! deallocate arrays
-!        if ( associated(forbiddenLines) ) deallocate(forbiddenLines) 
         if ( associated(emissionHI) ) deallocate(emissionHI)
         if ( associated(emissionHeI) ) deallocate(emissionHeI)
         if ( associated(emissionHeII) ) deallocate(emissionHeII)
@@ -2289,7 +2278,6 @@ module emission_mod
     tnij = 0.
     x = 0.d0
     y = 0.
-
     ! read labels
     do i = 1, nLev
        read(11, '(A20)') label(i)
@@ -2350,7 +2338,6 @@ module emission_mod
        g(i) = gx
        e(i) = ex
     end do
-
     ! read power law fit coefficients [e-13 cm^3/s]
     ! and calculate total recombination coefficient
     ! (direct + cascades)
@@ -2410,7 +2397,6 @@ module emission_mod
           qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
        end do
     end do
-
     ! set up x
     do i= 2, nLev
        do j = 1, nLev
@@ -2460,7 +2446,6 @@ module emission_mod
           end if
        end do
     end do
-
     ! deallocate arrays
     if( associated(alphaTotal) ) deallocate(alphaTotal)
     if( associated(label) ) deallocate(label)
@@ -2478,7 +2463,6 @@ module emission_mod
     if( associated(e) ) deallocate(e)
     if( associated(g) ) deallocate(g)
     if( associated(qom) ) deallocate(qom)
-
   end subroutine equilibrium
 
   ! this procedure performs the solution of linear equations

@@ -135,6 +135,8 @@ module common_mod
     real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)       
     real, pointer :: SEDnoExt(:)            ! SED no extinction
     real, pointer :: equivalentTau(:)       ! SED no extinction
+    double precision, save,pointer::&
+         & forbiddenLines(:,:,:,:)                                 ! emissivity from heavies  rec lines
 
 
 

@@ -80,6 +80,12 @@ module grid_mod
            if (lgGas) then
               ! set chemical abundances according to the grid%composition
               ! variable  given 
+              allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
+              if (err /= 0) then
+                 print*, "! emissionDriver: can't allocate array memory"
+                 stop
+              end if
+
               call setComposition(grid)
 
            else
@@ -1924,8 +1930,9 @@ print*, 'here'
                     print*, "! setSubGrid: can't allocate grid memory : LdiffuseLoc "
                     stop
                  end if
-              end if              
               grid(iG)%LdiffuseLoc=0.
+              end if              
+
 
               allocate(grid(iG)%opacity(0:grid(iG)%nCells, 1:nbins), stat = err)
               if (err /= 0) then
