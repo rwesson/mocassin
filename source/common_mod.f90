@@ -41,8 +41,10 @@ module common_mod
 
     real            :: dTheta                  ! 
     real            :: dPhi                    ! 
+    real            :: nu0                     ! 
     real            :: totalDustMass 
     real            :: convPercent=0.          ! total convergence percentage
+    real            :: pwlIndex = 0.           ! power law input spectrum index
     real            :: totPercent=0.           ! 
     real            :: minaQHeat = 0.          ! min radius for Q Heat in [um]
     real            :: NeUsed, TeUsed, HdenUsed ! local properties of the gas
@@ -95,8 +97,8 @@ module common_mod
          & :: HeIIlevNuP = 0.  ! pointer to the nth HeII level in nuArray
 
    
-    logical, dimension(3:nElements, 1:nstages) :: &
-         & lgDataAvailable! is the atomic data available for this species?
+    logical, pointer :: &
+         & lgDataAvailable(:,:)! is the atomic data available for this species?
 
     character(len=20), dimension(3:nElements, 1:10) :: &
          & dataFile       ! name of the file containing the atomic data for this species
@@ -345,6 +347,8 @@ module common_mod
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
     integer            :: emittingGrid     ! grid emiting illuminating radiation [0 for all]
     integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z, 4=gp
+    integer            :: nstages          ! # of ionisation stages to be included
+
 
     real               :: fillingFactor    ! filling factor epsilon
     real               :: contCube(2)      ! continuum cube

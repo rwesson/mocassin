@@ -69,6 +69,7 @@ module set_input_mod
         nGrids        = 1
         NdustValue     = 0.
         NdustFile      = "none"
+        nstages        = 7
 
         ! qheat
         Tmax           =700.
@@ -90,6 +91,7 @@ module set_input_mod
         dustFile      = "none"
         gridList      = "none"
 
+        nu0           = 0.  
         Ldiffuse      = 0. 
         Tdiffuse      = 0.
         shapeDiffuse  = "none"
@@ -138,6 +140,17 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case("nstages")
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, nstages
+               if (nstages>10) then
+                  print*, " !out_in: Max 10 ionisation stages allowed. &
+                       &If more are required (and you have the relevant atomic data), &
+                       & please update the data/ directory (and let B. Ercolano know ;-) &
+                       & and edit the data/fileNames.dat file"  
+                  stop
+               end if
+               print*, keyword, nstages
             case ("getEquivalentTau")
                lgEquivalentTau = .true.               
                print*, keyword, lgEquivalentTau
@@ -221,9 +234,9 @@ module set_input_mod
                print*, keyword, nAbComponents, (abundanceFile(j), j=1,nAbComponents)
             case ("planeIonization")
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, meanField
+               read(unit=10, fmt=*, iostat=ios) keyword, meanField, nu0
                lgPlaneIonization = .true.
-               print*, keyword, meanField
+               print*, keyword, meanField, nu0
                allocate(Lstar(1))
                Lstar=0.
             case ("autoPackets")
@@ -275,8 +288,14 @@ module set_input_mod
                 allocate(tstep(0:1))
                 contShape = 'none'
                 read(unit=10, fmt=*, iostat=ios) keyword, contShape(1)
-                print*, keyword, contShape(1)
-                if (contShape(1) == 'blackbody') then
+                if (contShape(1) == 'powerlaw') then
+                   backspace 10
+                   read(unit=10, fmt=*, iostat=ios) keyword, contShape(1), pwlIndex                   
+                   print*, keyword, contShape(1), pwlIndex                   
+                else
+                   print*, keyword, contShape(1)
+                end if
+                if (contShape(1) == 'blackbody' .or. contShape(1) == 'powerlaw') then
                    spID(1) = contShape(1)
                 else
                    spID(1) = 'rauch'
@@ -462,6 +481,14 @@ module set_input_mod
 
         close(10)
 
+        allocate(lgDataAvailable(3:nElements, 1:nstages), stat=err)
+        if (err /= 0) then
+           print*, '! readInput: allocation error for lgDataAvailable pointer'
+           stop
+        end if
+
+
+
         if (lgMultiStars) then
            call setMultiPhotoSources(multiPhotoSources)
         else if (lgMultiStars .and. nStars==1) then
@@ -480,7 +507,7 @@ module set_input_mod
               end if
               deltaE(0) = Ldiffuse/nPhotonsDiffuse
               contShape(0) = shapeDiffuse
-              if (contShape(0) == 'blackbody') then
+              if (contShape(0) == 'blackbody' .or. contShape(0) == 'powerlaw') then
                  spID(0) = contShape(0)
               else
                  spID(0) = 'rauch'
@@ -567,7 +594,7 @@ module set_input_mod
            print*, "! readInput [warning]: plane ionizing field specified - cannot use&
                 & symmetricXYZ - removed."
            lgSymmetricXYZ = .false.
-        else if (TStellar(1) == 0. .and. Tdiffuse==0.) then
+        else if (TStellar(1) == 0. .and. Tdiffuse==0. .and. contShape(1) /= 'powerlaw') then
             print*, "! readInput: TStellar missing from model parameter input file" 
             stop
         else if (R_in < 0.) then
@@ -627,7 +654,7 @@ module set_input_mod
             stop
         else if (nuMin > 1.4e-6) then
             print*, "! readInput [waring]:  nuMin  in model parameter input &
-                 & file is too small to include 5GHz flux calculations", in_file,nuMin            
+                 & file is too large to include 5GHz flux calculations", in_file,nuMin            
         else if (R_out < 0.) then
             print*, "! readInput: invalid R_out  in model parameter input &
                  & file", in_file, R_out
@@ -738,7 +765,7 @@ module set_input_mod
         if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
            deltaE(0) = Ldiffuse/nPhotonsDiffuse
            contShape(0) = shapeDiffuse
-           if (contShape(0) == 'blackbody') then
+           if (contShape(0) == 'blackbody' .or. contShape(0) == 'powerlaw') then
               spID(0) = contShape(0)
            else
               spID(0) = 'rauch'

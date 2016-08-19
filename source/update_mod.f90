@@ -154,6 +154,13 @@ module update_mod
            NeUsed     = grid%Ne(cellP)
            ionDenUsed = grid%ionDen(cellP, :, :)
 
+           allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
+           if (err /= 0) then
+              print*, "! updateCell: can't allocate array memory"
+              stop
+           end if
+
+
            ! save present value of H0 abundance in XOldHI
            XOldHI = grid%ionDen(cellP,elementXref(1),1)
 
@@ -223,11 +230,12 @@ module update_mod
                   end if
 
                   if ((phXSec < 1.e-35) ) then
-                     print*, "! updateCell: [warning] bad xSec value &
-                          & exiting loop (j, phXSec)",&
-                          & nuArray(j), phXSec
-                     exit
-                  end if
+!                     print*, "! updateCell: [warning] bad xSec value &
+!                          & exiting loop (j, phXSec)",&
+!                          & nuArray(j), phXSec
+!                     exit
+                     phXSec = 0.
+                 end if
 
                   if ((nuArray(j) < 1.e-35) ) then
                      print*, "! updateCell: insane nu value (j, nuArray(j)", &
@@ -309,6 +317,8 @@ module update_mod
                  &grid%Ne(cellP),  " N_gas: ", &
                  &grid%Hden(cellP)
          end if
+
+         if (associated(forbiddenLines)) deallocate(forbiddenLines)
 
       else
 
@@ -1282,7 +1292,7 @@ module update_mod
                 if (.not.lgElementOn(elem)) exit
 
                 if (lgDataAvailable(elem, ion)) then
-                   
+                  
                    if (ion<nstages) then
                       call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1), &
                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
@@ -1290,7 +1300,6 @@ module update_mod
                       call equilibrium(dataFile(elem, ion), 0., &
                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
                    end if
-                   
                    forbiddenLines(elem, ion, :, :) = forbiddenLines(elem, ion, :, :)*& 
                         & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
                         & ionDenUsed(elementXref(elem), ion)
@@ -1931,7 +1940,7 @@ module update_mod
                   end if
 
                   call locate(dustEmIntegral(nS,ai,:), dustAbsIntegral, iT)
-
+                  
                   if (iT<=0) then
                      print*, "getDustT: [warning] temperature of grain = 0. K!!!!"
                      print*, cellP

@@ -91,6 +91,8 @@
 
 \noindent{\bf \large 0. What's new}\\
 \\
+\paragraph{from 2.02.28 to 2.02.29} bug fixed with mocassinPlot.
+\paragraph{from 2.02.14 to 2.02.28} countless bugs fixed, most regarding the application of multigrids and of multiple ionisation sources. Previous syntax for multigrids and multiple sources is obsolete. Please check relevant sections. New autmatic contShape allowed {\it powerlaw}. Plane ionisation cases: energy threshold option introduced -- see planeIonization. New keywords: {\it nstages}, {\it getEquivalentTau}.
 \paragraph{from 2.02.12 to 2.02.14} diffuse ionisation source included see diffuseSource keyword. V 2.02.13 was skipped as it includes extinction map routines - redundant - and also it has a higher number of Hlevels so it runs slower. 
 
 \paragraph {from 2.01 to 2.02}  ionising stellar atmosphere files from  http://astro.uni-tuebingen.de/~rauch can now be directly read into MOCASSIN (but please manually remove the header). Grain charge calculations. Photoelectric heating from dust grains. Gas-grain collisions. Tspiking. 
@@ -144,6 +146,9 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
    Several other makefiles created for a number of different platforms are also included
    (e.g. makefile.sun etc..); these are only given as further examples and are not 
    being mantained.\\
+
+   Whatever you do PLEASE be careful with aggressive optimization switches. -O5 seems to work fine on all platforms
+   so far, but -fsimple=2 gives serious problems. {\bf ALWAYS RUN A BENCHMARK CASE WHEN COMPILING ON A NEW PLATFORM!!}.
 
    There are four drivers for MOCASSIN: \\
 \indent    mocassin: the main mocassin driver that is used to start a new simulation.\\
@@ -387,10 +392,16 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 		     this keyword will result in no continuum cube being written out. \\
 		     $[$-1.$]$		     
 
-\paragraph   {contShape} 'string': The shape of the ionising continuum. The default value is 
+\paragraph   {contShape} 'string' [optional: real]: The shape of the ionising continuum. The default value is 
 		     'blackbody', in which case the ionising stellar continuum is 
 		     approximated by the Planck function for the stellar 
-		     temperature defined by the keyword Stellar. If a stellar 
+		     temperature defined by the keyword Stellar. If 'string' == 'powerlaw'
+		     then this must be followed by a real number indicating the index of the 
+		     power law distribution such that $F_{\nu} \propto \nu^{-index}$. E.g. 
+		     {\it contShape powerlaw 1. } will generate an input spectrum following a $\nu^{^-1}$
+		     distribution. Note that the final result will be normalised to the luminosity entered. 
+		     The power law keyword is not compatiblewith the Lphot keyword, but only with the Lstar keyword.
+		     If a stellar 
 		     atmosphere data file is to be used, the 'string' must specify 
 		     the path of the external file containing the data. For example 
 		     contShape NLTE140lg65 tells the program to look for the 
@@ -469,6 +480,11 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 \paragraph    {fillingFactor real1} : real1 can assume all values from 0. to 1. to defines the gas 
                      volume (and/or dust) filling factor\\
                      $[$1.$]$\\
+
+\paragraph    {getEquivalentTau} : Logical switch to enable equivalent optical depth calculations 
+(see Ercolano et al. 2006, in prep) - useful for diffuse/multiple and non-centrally located ionisation/
+illumination sources \\
+                     $[$.false.$]$\\
 
 \paragraph    {getTau} : Logical switch to enable optical depth calculations and output - may be 
                      time consuming for large grids\\
@@ -613,6 +629,9 @@ $[.false.]$\\
 		     Carlo simulation and it has to be specified for each model.\\
 		     $[*]$ \\
 
+\paragraph   { nStages integer}: This is the number of ionisation stages to be used in the model.Max allowed is currently 10. If you have the atomic data necessary and would like to use more than 10 ionisation stages please contact me, or if you are confident you can edit the data/fileNames.dat and include the new data files to the poole. \\
+		     $[7]$ \\
+
 \paragraph   { nuMax real  }    : High limit of the frequency mesh in units of $[Ryd]$\\
 		     $[15.]$\\
 
@@ -634,10 +653,11 @@ $[.false.]$\\
                     files can easily be recovered using the mocassinOutput driver. \\
                     $[.false.]$\\
 		    
-\paragraph  {  planeIonization real1} : this keyword is used when the ionisation source is from a 
+\paragraph  {  planeIonization real1 real2} : this keyword is used when the ionisation source is from a 
                     plane and not from a point source. real1 must contain the value 
-		    of the ionizing flux (constant at each point on the plane) in units of 
-		    [$erg/s/cm^2$]. When this keyword is specified the density distribution
+		    of the incident ionizing flux above nu = real2 [Ryd] (constant at each point on the plane) in units of 
+		    [$phot/s/cm^2$]. If real2 =0. then the real1 is assumed to be the bolometric flux. 
+		    When this keyword is specified the density distribution
 		    must be defined via the densityFile option. The ionizing plane is the 
 		    x-z plane. the energy packets are reflected when they hit the y-z and
 		    the y-x planes and can escape from the x-z planes. (This can be easily 
@@ -952,6 +972,10 @@ $[.false.]$\\
    (and accurate) formal solution will only be employed. \\
 
 \noindent{\large   5.2 Running multiple spatial grids}\\
+
+   {\bf WARNING: This section is out of date -- new help is in the process of being 
+   written as we speak -- almost ;-) . Please email me if you want to use multiple grids 
+   and need some help be@star.ucl.ac.uk}\\
    
    From Version 2.00 onwards you can choose to run simulations including multiple 
    spatial sampling. A typical example of when this would be need is for the modelling

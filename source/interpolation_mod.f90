@@ -3,6 +3,42 @@
 ! Version 2.02
 module interpolation_mod
     contains
+
+    subroutine sortUp(arr)
+      implicit none
+      
+      real, dimension(:), intent(inout) :: arr
+      real, pointer :: tmp(:)
+
+      real       :: min
+      
+
+      integer    :: i, j
+      integer    :: n ! size 
+
+      n = size(arr)
+
+      allocate(tmp(n))
+      
+      min = 1.e30
+      do i = 1, n
+         if (arr(i) < min) min = arr(i)
+      end do
+      tmp(1) = min
+      do j = 2, n
+         min = 1.e30
+         do i = 1, n
+            if (arr(i) < min .and. arr(i) > tmp(j-1)) min = arr(i)
+         end do
+         tmp(j) = min
+      end do
+      
+      arr = tmp
+      
+      deallocate(tmp)
+
+    end subroutine sortUp            
+      
  
     ! subroutine locate uses the method of bisection   
     ! given an array xa of length n, and given a value x,

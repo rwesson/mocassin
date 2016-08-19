@@ -32,16 +32,16 @@ OPT1 = -O3
 OPT2 = -CB -g 
 
 mocassin:
-	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS)
+	$(F90) $(OPT2) -o mocassin $(source1) $(LIBS)
 
 mocassinWarm:
-	$(F90) $(OPT1) -o mocassinWarm $(source2) $(LIBS) 
+	$(F90) $(OPT2) -o mocassinWarm $(source2) $(LIBS) 
 
 mocassinOutput:
 	$(F90) $(OPT1) -o mocassinOutput $(source3) $(LIBS) 
 
 mocassinPlot:
-	$(F90) $(OPT1) -o mocassinPlot $(source4) $(LIBS) 
+	$(F90) $(OPT2) -o mocassinPlot $(source4) $(LIBS) 
 
 clean:
 	/bin/rm *.o *~ *.mod mocassin mocassinWarm mocassinOutput mocassinPlot

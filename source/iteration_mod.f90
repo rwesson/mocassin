@@ -513,7 +513,6 @@ module iteration_mod
 
            end if
 
-print*, 'here'
 
            if (lgPlaneIonization) then
 
@@ -525,10 +524,10 @@ print*, 'here'
               planeIonDistributionTemp = 0
 
               size = grid(1)%nx*grid(1)%nz
-           
+
               call mpi_allreduce(planeIonDistribution, planeIonDistributionTemp, size, &
                    & mpi_integer, mpi_sum, mpi_comm_world, ierr)
-              
+
               planeIonDistribution = planeIonDistributionTemp
 
               if (taskid ==0) then

@@ -567,6 +567,15 @@ module photon_mod
                initPhotonPacket%direction%y = 1.
                initPhotonPacket%direction%z = 0.
 
+               if (initPhotonPacket%xP(igpi) >  grid(gP)%xAxis(grid(gP)%nx) .or. &
+                    & initPhotonPacket%zP(igpi) >  grid(gP)%zAxis(grid(gP)%nz)) then
+                  print*, "! initPhotonPacket: insanity in planeIonisation init"
+                  print*, igpi, initPhotonPacket%xP(igpi),  grid(gP)%xAxis(grid(gP)%nx), &
+                       & initPhotonPacket%zP(igpi), grid(gP)%zAxis(grid(gP)%nz),  random, initPhotonPacket%position%z
+
+                  stop
+               end if
+
                 planeIonDistribution(initPhotonPacket%xP(igpi),initPhotonPacket%zP(igpi)) = &
                      & planeIonDistribution(initPhotonPacket%xP(igpi),initPhotonPacket%zP(igpi)) + 1
 
@@ -664,11 +673,11 @@ module photon_mod
                else 
                   exit                  
                end if
-            end do
+            end do            
 
-            if (nuP<nbins) then
-               if (random>(probDen(nuP+1)+probDen(nuP))/2.) nuP=nuP+1
-            end if
+!            if (nuP<nbins) then
+!               if (random>(probDen(nuP+1)+probDen(nuP))/2.) nuP=nuP+1
+!            end if
 
             if (nuP>=nbins) then
                print*, 'random: ', random
@@ -747,7 +756,7 @@ module photon_mod
                    print*, "! newPhotonPacket: insanity occured in stellar photon &
                         &nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(igpn),yP(igpn),zP(igpn), &
                         & grid(starIndeces(iStar,4))%active(xP(igpn),yP(igpn),zP(igpn))
-                   print*, "inSpectrumProbDen: ",iStar,inSpectrumProbDen(iStar,:)
+                   print*, "inSpectrumProbDen: ",iStar,inSpectrumProbDen(iStar,:), nuP
                    stop
                 end if
                 

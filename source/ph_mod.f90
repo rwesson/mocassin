@@ -113,8 +113,6 @@ module xSec_mod
       read (22,*) (tkGamma(i), i=1,ntkgamma)
       read (23,*) (tkGamma(i), i=1,ntkgamma)
 
-
-
       ! allocate logGammaHI, logGammaHeI, logGammaHeII
       allocate(logGammaHI(nTkGamma, nlimGammaHI), stat=err)
       if (err /= 0) then

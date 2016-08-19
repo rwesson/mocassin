@@ -22,6 +22,7 @@ program MoCaSSiNplot
 
     type(plot_type) :: plot           ! the plot
 
+    real(kind=8),pointer    :: flinePlot(:,:,:,:)
     real, pointer   :: image(:,:,:,:)    
 
     real, pointer   :: linePDFTemp(:,:)
@@ -70,6 +71,7 @@ program MoCaSSiNplot
 
     filename = 'input/plot.in'
 
+
     ! reset the 3D cartesian grid
     call resetGrid(grid3D)
 
@@ -82,6 +84,15 @@ program MoCaSSiNplot
     do iG = 1, ngrids
        if (grid3D(iG)%nCElls>maxCElls) maxCElls = grid3D(iG)%nCElls
     end do       
+
+    print*, nstages
+    allocate(flinePlot(nElements,nstages, nForLevels,nForLevels), stat=err)
+    if (err /= 0) then
+       print*, "! emissionDriver: can't allocate array memory"
+       stop
+    end if
+    flinePlot = 0.
+
 
     ! read the file into the plot variable
     plot = readPlot(filename)
@@ -141,7 +152,7 @@ program MoCaSSiNplot
        do i = 1, grid3D(iG)%nx
           do j = 1, grid3D(iG)%ny
              do k = 1, grid3D(iG)%nz
-             
+
                 ! find the volume of this cell 
                 dV = getVolume(grid3D(iG), i,j,k)
 
@@ -161,31 +172,30 @@ program MoCaSSiNplot
                    
                    ! calculate the emission due to HI and HeI rec lines
                    call RecLinesEmission()
-                   
+
                    ! calculate the emission due to the heavy elements
                    ! forbidden lines
                    call forLines()
-                   
+
                    ! find the volume of this cell 
                    dV = getVolume(grid3D(iG), i,j,k)
-                   
+
                    do plotNum = 1, plot%nPlots
-                      
+
                       if (plot%lgLine(plotNum)) then
                       
                          ! initialise line number counter
-                         iLine = 0
+                         iLine = 1
 
 
                          ! HI rec lines
-                         do iup = 3, 15
-                            do ilow = 2, min0(8,iup-1)
-                               
-                               iLine = iLine+1
+                         do ilow = 2,8
+                            do iup = ilow+1, 30
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & HIRecLines(iup,ilow)*HdenUsed*dV
+                               iLine = iLine+1
                                
                             end do
                          end do
@@ -193,32 +203,37 @@ program MoCaSSiNplot
                          ! HeI singlets
                          do l = 1, 9
                             
-                            iLine = iLine+1
+
 
                             if (plot%lineNumber(plotNum) == iLine) &
                                  & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
                                  & HeIRecLinesS(l)*HdenUsed*dV
+                            iLine = iLine+1
+
                          end do
                          
                          ! HeI triplets
                          do l = 1, 11
                             
-                            iLine = iLine+1
+
                             
                             if (plot%lineNumber(plotNum) == iLine) &
                                  & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
                                  & HeIRecLinesT(l)*HdenUsed*dV
+                            iLine = iLine+1
+
                          end do
                          
                          ! HeII rec lines
                          do iup = 3, 30
                             do ilow = 2, min0(16, iup-1)
                                
-                               iLine = iLine+1
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & HeIIRecLines(iup,ilow)*HdenUsed*dV
+                               iLine = iLine+1
+
                             end do
                          end do
                          
@@ -230,19 +245,20 @@ program MoCaSSiNplot
                                if (lgDataAvailable(elem,ion)) then
                                   
                                   
-                                  do iup = 1, 10
-                                     do ilow = 1, 10
+                                  do iup = 1, nforlevels
+                                     do ilow = 1, nforlevels
                                         
-                                        iLine = iLine+1
 
                                         if (plot%lineNumber(plotNum) == iLine) then 
 
-                                           print*, forbiddenLines(elem,ion,iup,ilow), elem,ion,iup,ilow
+                                           print*, flinePlot(elem,ion,iup,ilow), elem,ion,iup,ilow
                                            plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                                                & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+                                                & flinePlot(elem,ion,iup,ilow)*HdenUsed*dV
                                            
                                         end if
                                         
+                                        iLine = iLine+1
+
                                      end do
                                   end do
                                end if
@@ -404,7 +420,7 @@ program MoCaSSiNplot
     call freePlot(plot)
     
     if (associated(ionDenUsed)) deallocate(ionDenUsed)
-       
+    if (associated(fLinePlot)) deallocate(fLinePlot)
     
 
     call mpi_finalize(ierr)
@@ -527,6 +543,8 @@ program MoCaSSiNplot
 
            read(77, *) lineORcont, code, freq1, freq2
 
+print*, lineORcont, code, freq1, freq2
+
            ! assume freq1 and freq2 are wavelengths in Angstroms
            freq1 = 910.998/freq1
            freq2 = 910.998/freq2
@@ -555,6 +573,8 @@ program MoCaSSiNplot
         ! close file
         close(77)
 
+        print*, 'out readPlot'
+
       end function readPlot
 
       subroutine freePlot(plot)
@@ -579,25 +599,24 @@ program MoCaSSiNplot
         integer                     :: elem, ion ! counters
           
         ! re-initialize forbiddenLines
-        forbiddenLines = 0.
+        fLinePlot = 0.
         
         do elem = 3, nElements
            do ion = 1, min(elem+1, nstages)
               if (.not.lgElementOn(elem)) exit
                 
               if (lgDataAvailable(elem, ion)) then
-                 
-                 if (ion<nstages) then
+
+                 if (ion<min(elem+1,nstages)) then
                     call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1), &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
+                         & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                  else
                     call equilibrium(dataFile(elem, ion), 0., &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
+                         & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                  end if
-                 
-                 forbiddenLines(elem, ion, :, :) =forbiddenLines(elem, ion, :, :)*grid3D(iG)%elemAbun(abFileIndexUsed,elem)*&
+
+                 flinePlot(elem, ion, :, :) =flinePlot(elem,ion,:,:)*grid3D(iG)%elemAbun(abFileIndexUsed,elem)*&
                       & ionDenUsed(elementXref(elem), ion)
-                 
               end if
 
            end do
@@ -609,7 +628,7 @@ program MoCaSSiNplot
         !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence 
         !          the right units are obtained by multiplying by 1.9865e-16*1e25 
         !          which is 1.9865*1e9 
-        forbiddenLines = forbiddenLines*1.9865e9
+        flinePlot = flinePlot*1.9865e9
 
       end subroutine forLines
     

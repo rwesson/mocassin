@@ -106,6 +106,12 @@ module output_mod
 
         ! allocate and initialize arrays and variables
 
+        allocate(forbiddenLines(nElements,nstages, nForLevels,nForLevels), stat=err)
+        if (err /= 0) then
+           print*, "! outputGas: can't allocate array memory"
+           stop
+        end if
+        
         if (convPercent >= resLinesTransfer .and. lgDust) then
            allocate(resLinesVol(0:nAbComponents, 1:nResLines), stat=err)
            if (err /= 0) then
@@ -1469,6 +1475,7 @@ module output_mod
         close (70)
         
         ! free the space allocated to the temp arrays
+        if (associated(forbiddenLines)) deallocate(forbiddenLines)
         if (associated(absTau)) deallocate(absTau)
         if (associated(lambda)) deallocate(lambda)
         if (associated(HIVol)) deallocate(HIVol)
@@ -2113,8 +2120,13 @@ module output_mod
 
 !        close(94)
 
-        ! calculate Hbeta 
+        ! calculate Hbeta
+        if (TeUsed > 26000.) then
+           print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
+                & calculations may be uncertain"
+        end if
         Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+
         ! fits to Storey and Hummer MNRAS 272(1995)41
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
@@ -2123,8 +2135,9 @@ module output_mod
         hb = fh
         do ilow = 2, 8
            do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)              
               HIRecLines(iup, ilow) = (fh/hb)*Hbeta
+print*, iup,ilow,TeUsed,  HIRecLines(iup, ilow), fh,hb,hbeta
            enddo
         enddo
 

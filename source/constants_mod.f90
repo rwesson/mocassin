@@ -48,7 +48,6 @@ module constants_mod
     integer, parameter :: nHeIlevel = 9             ! number of levels in the HeI singlets 
     integer, parameter :: nHeIIlevel = 9            ! number of levels in the HeII singlets    
     integer, parameter :: NnuMax = 3000             ! limit to the possible number of energy bins (nbins) 
-    integer, parameter :: nstages = 7               ! number of ionization stages 
     integer, parameter :: xSecMax = 1000000         ! max limit to xSecArray 
     integer, parameter :: nTemps=3000
 

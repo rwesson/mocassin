@@ -6,7 +6,6 @@ module grid_mod
     use common_mod             ! common variablesesca
     use composition_mod        ! cemical abundances 
     use constants_mod          ! physical constants
-    use continuum_mod          ! ionising field
     use elements_mod           ! hydrogen data 
     use interpolation_mod      ! interpolation maths
     use pathIntegration_mod    ! path integration
@@ -45,8 +44,7 @@ module grid_mod
 
         real, dimension(450) :: ordered
         real, dimension(17)  :: seriesEdge
-
-        real                 :: nuMinArray, nuMaxArray        
+        
         real                 :: dradio
         real                 :: nuStepSizeLoc
 
@@ -137,6 +135,7 @@ module grid_mod
                          
                         ! get threshold energy
                         ionEdge(nEdges) = ph1(1,elem, nElec, outShell)/RydtoEv
+
                      else if (elem == 1) then ! HI
             
                         ionEdge(nEdges) = 0.999434
@@ -158,9 +157,25 @@ module grid_mod
                end do
 
                nEdges = nEdges -1
-print*, nedges
-               call sortUp(ionEdge(1:nEdges))
-print*, 'here'
+
+               ! initialise ordering array
+               ordered  = 1.e20
+            
+               do i = 1, nEdges
+                  if (i == 1) then
+                     do j = 1, nEdges
+                        if (ionEdge(j) < ordered(1)) ordered(1) = ionEdge(j)
+                     end do
+                  else
+                     do j = 1, nEdges
+                        if ( (ionEdge(j) < ordered(i)) .and. (ionEdge(j) > ordered(i-1)) ) &
+                             & ordered(i) = ionEdge(j)
+                     end do
+                  end if
+               end do
+            
+               ionEdge = ordered
+
             end if
 
 
@@ -197,90 +212,124 @@ print*, 'here'
                nuArray = nuTemp
                if (associated(nuTemp)) deallocate(nuTemp)
 
+
+
             else if (lgGas .and. (.not.lgDust)) then
 
-               ! first count how many edge, thresholds etc
-               if (nuMin<radio4p9GHz) then
-                  nuArray(1)     = radio4p9GHz
-                  nuCount = 2
-               else
-                  nuCount = 1
-               end if
+               iCount         = 1
+               nuArray(1)     = nuMin
+               nuCount        = 1
 
-               nuMinArray = nuMin
-               nuMaxArray = nuMax
-               ! H series edges 
-               do i = 1, nSeries 
-                  nuArray(nuCount) = seriesEdge(i)
-                  nuArray(nuCount+1) = seriesEdge(i)- 0.0003
-                  nuArray(nuCount+2) = seriesEdge(i)+ 0.0003
-                  if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
-                  if ( nuArray(nuCount) > nuMaxArray ) then
-                     nuMaxArray= nuArray(nuCount)
-                     print*, 'initCartesianGrid [warning]: H series - nuMaxArray increased to ', nuMaxArray, i
+               nradio         = nbins/70
+               dradio         = abs((log10(nuMin+nuStepSize/8.)-log10(nuMin)) /real(nradio-1.))
+
+
+               lgAssigned=.false.
+               do i = 1, nradio
+                  nuCount = nuCount+1
+                  nuArray(nuCount) = 10.**(log10(nuArray(nuCount-1))+dradio)
+
+                  if (.not.lgAssigned .and. nuArray(1) < radio4p9GHz .and. &
+                       & nuArray(nuCount)>radio4p9GHz) then
+                     nuArray(nuCount) = radio4p9GHz
+                     lgAssigned = .true.
                   end if
-                  nuCount = nuCount+3
+
+                  if (nuArray(nuCount)>nuStepSize/8.) then
+                     if (nuCount > 1) then
+                        nuCount = nuCount-1
+                        exit
+                     else 
+                        exit
+                     end if
+                  end if
 
                end do
-               ! IP Thresholds
-               do i = 1, nEdges
-                  if (ionEdge(i) < nuMaxArray) then
-                     nuArray(nuCount) = ionEdge(i)
-                     nuArray(nuCount+1) = ionEdge(i)- 0.0003
-                     nuArray(nuCount+2) = ionEdge(i)+ 0.0003
-                     if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
-                     nuCount = nuCount+3
-                  end if
-               end do
-
-               ! build the log energy mesh
-               iCount = nbins-nuCount+1
-               nuStepSize = (log10(nuMaxArray)-log10(nuMinArray))/(iCount-1)
-               nuArray(nuCount) = nuMinArray
-               do i = nuCount+1, nbins                  
-                  nuArray(i) = 10.**(log10(nuArray(i-1))+nuStepSize)
-               enddo
-
-               ! now sort in ascending order
-               call sortUp(nuArray)
-
-            else if (lgDust .and. lgGas) then
-
-               ! first count how many edge, thresholds etc
-               if (nuMin<radio4p9GHz) then
-                  nuArray(1)     = radio4p9GHz
-                  nuCount = 2
-               else
-                  nuCount = 1
-               end if
-
-               nuMinArray = nuMin
-               nuMaxArray = nuMax
-               ! H series edges 
-               do i = 1, nSeries 
-                  nuArray(nuCount) = seriesEdge(i)
-                  nuArray(nuCount+1) = seriesEdge(i)- 0.0003
-                  nuArray(nuCount+2) = seriesEdge(i)+ 0.0003
-                  if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
-                  if ( nuArray(nuCount) > nuMaxArray ) then
-                     nuMaxArray= nuArray(nuCount)
-                     print*, 'initCartesianGrid [warning]: H series - nuMaxArray increased to ', nuMaxArray, i
-                  end if
-                  nuCount = nuCount+3
-
-               end do
-               ! IP Thresholds
-               do i = 1, nEdges
-                  if (ionEdge(i) < nuMaxArray) then
-                     nuArray(nuCount) = ionEdge(i)
-                     nuArray(nuCount+1) = ionEdge(i)- 0.0003
-                     nuArray(nuCount+2) = ionEdge(i)+ 0.0003
-                     if ( nuArray(nuCount) < nuMinArray ) nuMinArray= nuArray(nuCount)- 0.0006
-                     nuCount = nuCount+3
+              
+               do i = 1, maxLim
+                  if (iCount <= nSeries) then
+                      if (seriesEdge(iCount) > nuArray(nuCount)) then
+                        if (seriesEdge(iCount) >= nuArray(nuCount)+nuStepSize/4.) then
+                           nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/8.
+                           nuCount = nuCount+1
+                        else
+                           nuArray(nuCount+1) = seriesEdge(iCount) - 0.0003
+                           nuCount = nuCount+1
+                           if (nuCount >= nbins) then
+                              print*, '! initCartesianGrid [warning]: energy of series #',  iCount, &
+                                   &                                       ' is too high'
+                              exit
+                           else 
+                              nuArray(nuCount+1) = seriesEdge(iCount)
+                              nuCount = nuCount+1
+                              iCount = iCount+1
+                           end if
+                        end if
+                     else
+                        print*, '! initCartesianGrid [warning]: energy of series #', iCount, &
+                             &                                ' is too low'
+                        iCount = iCount+1
+                     end if
+                  else
+                     do j = 1, maxLim
+                        nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/2.
+                        nuCount = nuCount+1
+                        if (nuArray(nuCount) >= (ionEdge(1)-0.05) ) exit
+                     end do
+                     exit
                   end if
                end do
                
-               ! dust data points
+             
+               iCount = 1  ! ionization edges counter
+
+               do i = 1, maxLim
+                  
+                  if (nuCount >= nbins) then
+                     print*, '! initCartesianGrid: insufficient number of bins', &
+                          & icount, nedges, nucount
+                     stop
+                     exit
+                  end if
+                  
+                  if (iCount < nEdges) then
+                     
+                     if (ionEdge(iCount) > nuArray(nuCount)) then
+                        if (ionEdge(iCount) >= (nuArray(nuCount)+ nuStepSize)) then
+                           nuArray(nuCount+1) = nuArray(nuCount) + nuStepSize/2.
+                           nuCount = nuCount+1
+                        else
+                           nuArray(nuCount+1) = ionEdge(iCount) - 0.0003
+                           nuCount = nuCount+1
+                           if (nuCount >= maxLim) then
+                              print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount,&
+                                   & ' is too high, nu = ', nuCount,&
+                                   & ' and max = ', maxLim
+                           else
+                              nuArray(nuCount+1) = ionEdge(iCount)
+                              nuCount = nuCount+1
+                              iCount  = iCount+1
+                           end if
+                        end if
+                     else
+                        print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount, &
+                             &                                ' is too low'
+                        iCount = iCount+1
+                     end if
+                  else
+
+                     nuStepSizeLoc = ((log10(real(nuMax)))-log10(real(nuArray(nuCount))))/(real(nbins-nuCount))
+print*, nuMax, nuCount, nbins, nuCount
+print*, nuStepSizeLoc
+
+                     do j = nuCount+1, nbins
+                        nuArray(j) = real(nuArray(nuCount))*(10.**(nuStepSizeLoc*(j-nuCount)))                     
+                     end do
+                  end if
+               end do
+               
+            else if (lgDust .and. lgGas) then
+
                close(72)
                open (unit= 72,  action="read", file="dustData/nuDustRyd.dat", status = "old", position = "rewind", &
                     & iostat = ios)
@@ -291,8 +340,7 @@ print*, 'here'
 
                do i = 1, 10000000
                   if (i<=nbins) then
-                     read(unit=72,fmt=*,iostat=ios) nuArray(nuCount)
-                     nuCount = nuCount+1
+                     read(unit=72,fmt=*,iostat=ios) nuArray(i)
                      if (ios < 0) exit ! end of file reached
                      if (nuArray(i)>= seriesEdge(1)) exit
                   else
@@ -304,23 +352,90 @@ print*, 'here'
 
                close(72)
 
-               ! build the log energy mesh
-               iCount = nbins-nuCount+1
-               nuStepSize = (log10(nuMaxArray)-log10(nuMinArray))/(iCount-1)
-               nuArray(nuCount) = nuMinArray
-               do i = nuCount+1, nbins                  
-                  nuArray(i) = 10.**(log10(nuArray(i-1))+nuStepSize)
-               enddo
+               iCount         = 1
+               nuCount        = i-3
 
-               ! now sort in ascending order
-               call sortUp(nuArray)               
+               do i = 1, maxLim
+                  if (iCount <= nSeries) then
+                     if (seriesEdge(iCount) > nuArray(nuCount)) then
+                        if (seriesEdge(iCount) >= nuArray(nuCount)+nuStepSize/4.) then
+                           nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/8.
+                           nuCount = nuCount+1
+                        else
+                           nuArray(nuCount+1) = seriesEdge(iCount) - 0.0003
+                           nuCount = nuCount+1
+                           if (nuCount >= nbins) then
+                              print*, '! initCartesianGrid [warning]: energy of series #',  iCount, &
+                                   &                                       ' is too high'
+                              exit
+                           else 
+                              nuArray(nuCount+1) = seriesEdge(iCount)
+                              nuCount = nuCount+1
+                              iCount = iCount+1
+                           end if
+                        end if
+                     else
+                        print*, '! initCartesianGrid [warning]: energy of series #', iCount, &
+                             &                                ' is too low'
+                        iCount = iCount+1
+                     end if
+                  else
+                     do j = 1, maxLim
+                        nuArray(nuCount+1) = nuArray(nuCount)+nuStepSize/2.
+                        nuCount = nuCount+1
+                        if (nuArray(nuCount) >= (ionEdge(1)-0.05) ) exit
+                     end do
+                     exit
+                  end if
+               end do
+               
+             
+               iCount = 1  ! ionization edges counter
+
+               do i = 1, maxLim
+                  
+                  if (nuCount >= nbins) exit
+                  
+                  if (iCount < nEdges) then
+                     
+                     if (ionEdge(iCount) > nuArray(nuCount)) then
+                        if (ionEdge(iCount) >= (nuArray(nuCount)+ nuStepSize)) then
+                           nuArray(nuCount+1) = nuArray(nuCount) + nuStepSize/2.
+                           nuCount = nuCount+1
+                        else
+                           nuArray(nuCount+1) = ionEdge(iCount) - 0.0003
+                           nuCount = nuCount+1
+                           if (nuCount >= maxLim) then
+                              print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount,&
+                                   &                                        ' is too high'
+                           else
+                              nuArray(nuCount+1) = ionEdge(iCount)
+                              nuCount = nuCount+1
+                              iCount  = iCount+1
+                           end if
+                        end if
+                     else
+                        print*, '! initCartesianGrid [warning]: energy of ionization edge #', iCount, &
+                             &                                ' is too low'
+                        iCount = iCount+1
+                     end if
+                  else
+
+
+                     nuStepSizeLoc = (log(real(nuMax))-log(real(nuCount)))/(real(nbins-nuCount))
+
+                     do j = nuCount+1, nbins
+                        nuArray(j) = 10.**(nuCount + nuStepSizeLoc*(j-nuCount))
+                     
+                     end do
+                  end if
+               end do
 
             end if
 
             widFlx(1) = nuArray(2)-nuArray(1)
             do i = 2, nbins-1
                widFlx(i) = (nuArray(i+1)-nuArray(i-1))/2.
-               print*, i, nuArray(i), widFlx(i)
             end do
             widFlx(nbins) =  nuArray(nbins)-nuArray(nbins-1)
             
@@ -493,7 +608,7 @@ print*, 'here'
         if (lg1D) lgSymmetricXYZ = .false.
 
         if (lgPlaneIonization) then
-           allocate(planeIonDistribution(grid(1)%nx,grid(1)%nz), stat = err)
+           allocate(planeIonDistribution(grid(1)%nx,grid(1)%ny), stat = err)
            if (err /= 0) then
               print*, "! setMotherGrid: can't allocate dl memory"
               stop
@@ -780,7 +895,6 @@ print*, 'here'
         real                           :: H0in         ! estimated H0 at the inner radius for regionI
         real, pointer                  :: MdMg(:,:,:)  ! Md/Mg
         real                           :: MhMg         ! mass oh hydrogen over mass of gas
-        real                           :: norm, scale  ! normalisation and scaling for meanField
         real                           :: radius       ! distance from the origin
         real                           :: random       ! random nmumber 
         real                           :: readReal     ! real number reader
@@ -801,7 +915,6 @@ print*, 'here'
         integer                        :: ios, err     ! I/O and allocation error status
         integer                        :: elem, ion    ! counters
         integer                        :: nspec, ai    ! counters
-        integer                        :: nu0P         ! 
         integer                        :: RinP         ! pointer to the inner radius intercept  
                                                        ! with one of the axes
         character(len=40)              :: readChar, extFile ! character string readers
@@ -1015,6 +1128,8 @@ print*, 'here'
 
            end if
 
+print*, 'active: '
+
           ! set active cells pointers
           grid%nCells = 0
           do i = 1, grid%nx
@@ -1041,10 +1156,10 @@ print*, 'here'
                       end if
 
                    end if
-
+print*, i,j,k,radius, R_in,R_out, grid%active(i,j,k)
                    if (grid%active(i,j,k) <= 0 .and. lgDust ) NdustTemp(i,j,k) = 0.
                    if (grid%active(i,j,k) <= 0 .and. lgGas ) HdenTemp(i,j,k) = 0.
-
+print*,  HdenTemp(i,j,k)
                    if (lgDust .and. lgGas) then
                       if (HdenTemp(i,j,k) > 0. .or. NdustTemp(i,j,k)>0.) then
                          grid%nCells = grid%nCells + 1
@@ -1150,9 +1265,8 @@ print*, 'here'
                 print*, "! setMotherGrid: can't allocate grid memory : LdiffuseLoc "
                 stop
              end if
-             grid%LdiffuseLoc=0.
           end if
-
+          grid%LdiffuseLoc=0.
 
           allocate(grid%opacity(0:grid%nCells, 1:nbins), stat = err)
           if (err /= 0) then
@@ -1276,6 +1390,7 @@ print*, 'here'
                       end if
                       if (lgDust) grid%Ndust(grid%active(i,j,k)) = NdustTemp(i,j,k)
                    end if
+print*, i,j,k,grid%active(i,j,k)
                 end do
              end do
           end do
@@ -1440,38 +1555,10 @@ print*, 'here'
               
            ! if we are using a plane parallel ionization then we must find the luminosity 
            ! of the ionizing plane from the input meanField
-           if (lgPlaneIonization) then
+           if (lgPlaneIonization) &
+                & Lstar(1) = (meanField/1.e36)*grid%xAxis(grid%nx)*grid%zAxis(grid%nz)
 
-              print*, 'Flux above ', nu0, ' is ', meanField
-
-              if (nu0 > 0.) then
-                 call locate(nuArray, nu0, nu0P) 
-                 if (nu0P >= nbins .or. nu0P <1) then
-                    print*, "! setMotherGrid: insanity in nu0P", nu0P, nuArray(i), nuArray(nbins)
-                    stop
-                 end if
-                 norm = 0.
-                 do i = nu0P, nbins
-                    norm = norm+inSpectrumPhot(i)*widflx(i)
-                 end do
-                 scale  = meanField/norm
-                 norm = 0.
-                 do i = 1, nbins
-                    norm = norm+inSpectrumErg(i)*widFlx(i)
-                 end do
-                 meanField = norm*scale
-              end if
-
-              print*, 'Flux bolometric is ', meanField              
-
-              Lstar(1) = (meanField/1.e36)*grid%xAxis(grid%nx)*grid%zAxis(grid%nz)
-              deltaE(1) = Lstar(1)/nPhotons(1)
-           end if
-                 
-           if (taskid == 0) then
-              print*, 'Total ionizing flux :', Lstar(1)
-              print*, 'deltaE :', deltaE(1)
-           end if
+           if (taskid == 0) print*, 'Total ionizing flux :', Lstar(1)
 
            print*, 'out setMotherGrid'
 
@@ -2373,7 +2460,6 @@ print*, 'here'
                 & starPosition(i)%y/grid(1)%yAxis(grid(1)%ny),&
                 & starPosition(i)%z/grid(1)%zAxis(grid(1)%nz),&
                 & trim(spID(i)), tStep(i)
-           if (contShapeIn(i)=='powerlaw') write(42,*) pwlIndex
         end do
 
         write(42, *) '(contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position, spID, tstep)'
@@ -2429,7 +2515,6 @@ print*, 'here'
         write(40, *) shapeDiffuse, ' shapeDiffuse'
         write(40, *) nPhotonsDiffuse, 'nPhotonsDiffuse'
         write(40, *) emittingGrid, ' emittingGrid'
-        write(40, *) nstages, ' emittingGrid'
         ! close file
         close(40)
      
@@ -2542,8 +2627,7 @@ print*, 'here'
       integer                        :: i,j,k ! counters
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
-      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7
-      real, pointer                  :: p(:)                                        
+      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7,p(nstages)                                        
       integer :: iCount, nuCount, iG, ai      ! counters
       integer :: g0,g1
       integer :: nEdges  
@@ -2590,12 +2674,9 @@ print*, 'here'
           read(72, *) contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
                &starPosition(i)%z,spID(i), tStep(i)
           contShapeIn(i)=contShape(i)
-          if (contShape(i)=='powerlaw') read(72,*) pwlIndex
           print*, i, contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
                &starPosition(i)%z, spID(i), tStep(i)
-          print*, pwlIndex
           deltaE(i) = Lstar(i)/nPhotons(i)
-          print*, 'deltaE', deltaE(i), i 
        end do
        close(72)
 
@@ -2669,7 +2750,6 @@ print*, 'here'
          deltaE(0) = Ldiffuse/nPhotonsDiffuse
       end if
       read(77, *) emittingGrid
-      read(77, *) nstages
 
 
       if (taskid == 0) then
@@ -2710,15 +2790,9 @@ print*, 'here'
          print*,  shapeDiffuse, ' shapeDiffuse'
          print*,  nPhotonsDiffuse, ' nPhotonsDiffuse'
          print*,  emittingGrid, ' emittingGrid'
-         print*,  nstages, ' nstages'
-
       end if
       close(77)
-
-      allocate(p(nstages))
-      p=0.
-      allocate(lgDataAvailable(3:nElements, nstages))
-
+         
       close(89)
       open(unit=89, file='output/grid0.out',  action="read",position='rewind',  &
            &          status='old', iostat = err)
@@ -2771,13 +2845,12 @@ print*, 'here'
          ! initialize cartesian grid
          call initCartesianGrid(grid(iG),nxIn(iG), nyIn(iG), nzIn(iG)) 
          
-         
          if (iG>1) then
             grid(iG)%elemAbun = grid(1)%elemAbun
          end if
-print*, '1'
+
          if (lgPlaneIonization .and. iG==1) then
-            allocate(planeIonDistribution(grid(iG)%nx,grid(iG)%nz), stat = err)
+            allocate(planeIonDistribution(grid(iG)%nx,grid(iG)%ny), stat = err)
             if (err /= 0) then
                print*, "! setMotherGrid: can't allocate dl memory"
                stop
@@ -2838,7 +2911,7 @@ print*, '1'
             grid(iG)%totalLines = 0.
             
          end if
-print*, '2'
+
          if (Ldiffuse>0.) then
             allocate(grid(iG)%LdiffuseLoc(0:grid(iG)%nCells), stat = err)
             if (err /= 0) then
@@ -2898,7 +2971,7 @@ print*, '2'
             grid(iG)%Jdif = 0. 
 
          end if
-print*, '3'
+
          allocate(grid(iG)%lgConverged(0:grid(iG)%nCells), stat = err)
          if (err /= 0) then
             print*, "Can't allocate memory to lgConverged array"
@@ -2916,7 +2989,7 @@ print*, '3'
             print*, "! resetGrid: can't allocate grid memory : Jste"
             stop
          end if
-print*, '4'
+
          if (lgDust) then
             allocate(grid(iG)%Ndust(0:grid(iG)%nCells), stat = err)
             if (err /= 0) then
@@ -2947,7 +3020,7 @@ print*, '4'
          grid(iG)%Jste = 0.        
          grid(iG)%lgConverged = 0
          grid(iG)%lgBlack = 0
-print*, '5'
+
          ! axis points
          do i = 1, grid(iG)%nx
             read(89, *) grid(iG)%xAxis(i)
@@ -2958,7 +3031,7 @@ print*, '5'
          do i = 1, grid(iG)%nz
             read(89, *) grid(iG)%zAxis(i)
          end do
-print*, '6'
+
          ! read the rest of the files into grid 
          do i = 1, grid(iG)%nx
             do j = 1, grid(iG)%ny
@@ -3008,7 +3081,7 @@ print*, '6'
                end do
             end do
          end do
-print*, '7'
+
          ! find geometric corrections
          grid(iG)%geoCorrX = (grid(iG)%xAxis(grid(iG)%nx) - grid(iG)%xAxis(grid(iG)%nx-1))/2.
          if (.not. lg1D) then
@@ -3020,7 +3093,7 @@ print*, '7'
          end if
          if (taskid == 0) print*, "Geometric grid corrections at grid: ", iG, &
            & grid(iG)%geoCorrX, grid(iG)%geoCorrY, grid(iG)%geoCorrZ
-print*, '8'
+
          ! find linear increment
          dl(iG) =  abs(grid(iG)%xAxis(2) - grid(iG)%xAxis(1))
          do i = 2, grid(iG)%nx-1
@@ -3058,7 +3131,7 @@ print*, '8'
          close(78)
          close(79)
       end if
-print*, '9'
+
       if (lgDust) close(88)
 
       ! locate the origin of the axes
@@ -3067,8 +3140,6 @@ print*, '9'
       call locate(grid(1)%zAxis, 0., kOrigin)
 
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
-
-      if (associated(p)) deallocate(p)
 
     end subroutine resetGrid      
 

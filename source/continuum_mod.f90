@@ -25,6 +25,8 @@ module continuum_mod
     integer             :: nuP                     ! frequency pointer
     integer             :: lymanP                  ! frequency pointer to Lyman limit
 
+    logical, save       :: lgF=.true.
+
     contains
 
 
@@ -58,16 +60,19 @@ module continuum_mod
         lamCount=0
         
         ! initialize arrays 
-        allocate(inSpectrumErg(nbins), stat = err)
-        if (err /= 0) then
-            print*, "! setContinuum: can't allocate grid memory"
-            stop
+        if (lgF) then
+           allocate(inSpectrumErg(nbins), stat = err)
+           if (err /= 0) then
+              print*, "! setContinuum: can't allocate grid memory"
+              stop
+           end if
+           allocate(inSpectrumPhot(nbins), stat = err)                
+           if (err /= 0) then    
+              print*, "setContinuum: can't allocate grid memory"    
+              stop    
+           end if
+           lgF = .false.
         end if
-        allocate(inSpectrumPhot(nbins), stat = err)                
-        if (err /= 0) then    
-            print*, "setContinuum: can't allocate grid memory"    
-            stop    
-        end if      
         allocate(inSpectrumProbDen(0:nStars,nbins), stat = err)
         if (err /= 0) then
             print*, "setContinuum: can't allocate grid memory"
@@ -298,6 +303,11 @@ module continuum_mod
        if (nStars==1) then
           if (LPhot > 0. ) then  ! calculate Lstar [e36 erg/s]
              
+             if (contShape(1) == 'powerlaw') then
+                print*, '! setContinuum: powerlaw do not allow Lphot. Please resubmit with Lstar.'
+                stop
+             end if
+
              RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
               
               LStar(1) = fourPi*RStar*RStar*sigma*TStellar(1)**4.
@@ -309,18 +319,21 @@ module continuum_mod
               print*, "RStar = ", RStar, " [e18 cm]"
               print*, "deltaE = ", deltaE, " [e36 erg/s]"
 
-           else if (Lstar(1) > 0.) then ! calculate LPhot [e36 phot/s]
+           else if (Lstar(1) > 0. ) then ! calculate LPhot [e36 phot/s]
               
               deltaE(1)=Lstar(1)/nPhotons(1)
 
-              RStar = sqrt(Lstar(1) / (fourPi*sigma*TStellar(1)**4.))
+              if (contShape(1) /= 'powerlaw') then
+                 RStar = sqrt(Lstar(1) / (fourPi*sigma*TStellar(1)**4.))
               
-              LPhot = fourPi*RStar*RStar*normConstantPhot*cRyd
+                 LPhot = fourPi*RStar*RStar*normConstantPhot*cRyd
               
-              print*, "RStar = ", RStar, " [e18 cm]"
-              print*, "Q(H) = ", LPhot, " [e36 phot/s]"
-              print*, "LStar = ", LStar(1), " [e36erg/s]"
-              print*, "deltaE = ", deltaE, " [e36 erg/s]"              
+                 print*, "RStar = ", RStar, " [e18 cm]"
+                 print*, "Q(H) = ", LPhot, " [e36 phot/s]"
+                 print*, "LStar = ", LStar(1), " [e36erg/s]"
+              end if
+
+              print*, "deltaE = ", deltaE(1), " [e36 erg/s]"              
 
            end if
            
@@ -329,9 +342,6 @@ module continuum_mod
         if (Ldiffuse>0. .and. nPhotonsDiffuse>0 ) then
            deltaE(0) = Ldiffuse/nPhotonsDiffuse
         end if
-
-        if (associated(inSpectrumErg)) deallocate(inSpectrumErg)
-        if (associated(inSpectrumPhot)) deallocate(inSpectrumPhot)
 
         print*, 'out setContinuum'
 
@@ -382,6 +392,15 @@ module continuum_mod
             getFlux = constant*energy*energy*energy/&
                     & denominator
 
+            return
+
+         case ("powerlaw")
+
+            if (energy>=nuMin .and. energy <= nuMax) then
+               getFlux = energy**(-pwlIndex)
+            else
+               getFlux = 0.
+            end if
             return
 
         case default
@@ -476,7 +495,7 @@ module continuum_mod
            normConstantPhot = Pi*normConstantPhot*hPlanck
         end if
 
-        if (associated(inSpSumErg)) deallocate(inSpSumErg)
+
         if (associated(inSpSumPhot)) deallocate(inSpSumPhot)
 
       end subroutine setProbDen
