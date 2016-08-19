@@ -841,10 +841,6 @@ module grid_mod
                                      & ) .and. &
                                      & grid(iG)%zAxis(k)<grid(jG)%zAxis(grid(jG)%nz) ) then
                                    grid(iG)%active(i,j,k) = -jG
-!print*, jG
-!print*, grid(iG)%xAxis(i) , grid(jG)%xAxis(1), grid(jG)%xAxis(grid(jG)%nx)
-!print*, grid(iG)%yAxis(j) , grid(jG)%yAxis(1), grid(jG)%yAxis(grid(jG)%ny)
-!print*, grid(iG)%zAxis(k) , grid(jG)%zAxis(1), grid(jG)%zAxis(grid(jG)%nz)
 
                                 end if
 
@@ -872,8 +868,7 @@ module grid_mod
            end do
 
         end if
-!stop
-        call setStarPosition(grid(1)%xAxis,grid(1)%yAxis,grid(1)%zAxis)
+
 
         print*, "out fillGrid"
         
@@ -1630,7 +1625,7 @@ module grid_mod
               if (.false.) then
 
               call locate(grid(grid(iG)%motherP)%xAxis, grid(iG)%xAxis(1), edgeP)
-!print*, edgeP,grid(grid(iG)%motherP)%xAxis, grid(iG)%xAxis(1)
+
               if (edgeP>=grid(grid(iG)%motherP)%nx) then
                  print*, 'setSubGrids : edgeP for lower x boundary equals to nx of the mother grid'
                  stop
@@ -1656,7 +1651,7 @@ module grid_mod
               end if
 
               call locate(grid(grid(iG)%motherP)%xAxis, grid(iG)%xAxis(grid(iG)%nx), edgeP)
-!print*, edgeP, grid(grid(iG)%motherP)%xAxis, grid(iG)%xAxis(grid(iG)%nx)
+
               if (edgeP==grid(grid(iG)%motherP)%nx) then
 
                  delta = grid(grid(iG)%motherP)%xAxis(edgeP)-&
@@ -1681,11 +1676,6 @@ module grid_mod
               if (taskid==0) then 
                  print*, 'setSubGrids : x1,x2,iG: ',  grid(iG)%xAxis(1),  grid(iG)%xAxis(grid(iG)%nx), iG
               end if
-
-
-!              delta = (grid(iG)%xAxis(grid(iG)%nx)-grid(iG)%xAxis(1))/(2.*real(grid(iG)%nx))
-!              grid(iG)%xAxis(1) = grid(iG)%xAxis(1)+delta
-!              grid(iG)%xAxis(grid(iG)%nx) = grid(iG)%xAxis(grid(iG)%nx)-delta
 
               call locate(grid(grid(iG)%motherP)%yAxis, grid(iG)%yAxis(1), edgeP)
 
@@ -1742,9 +1732,6 @@ module grid_mod
                  print*, 'setSubGrids : y1,y2,iG: ',  grid(iG)%yAxis(1),  grid(iG)%yAxis(grid(iG)%ny)
               end if
 
-!              delta = (grid(iG)%yAxis(grid(iG)%ny)-grid(iG)%yAxis(1))/(2.*real(grid(iG)%ny))
-!              grid(iG)%yAxis(1) = grid(iG)%yAxis(1)+delta
-!              grid(iG)%yAxis(grid(iG)%ny) = grid(iG)%yAxis(grid(iG)%ny)-delta
 
               call locate(grid(grid(iG)%motherP)%zAxis, grid(iG)%zAxis(1), edgeP)
 
@@ -1802,9 +1789,6 @@ module grid_mod
               end if
 
            end if
-!              delta = (grid(iG)%zAxis(grid(iG)%nz)-grid(iG)%zAxis(1))/(2.*real(grid(iG)%nz))
-!              grid(iG)%zAxis(1) = grid(iG)%zAxis(1)+delta
-!              grid(iG)%zAxis(grid(iG)%nz) = grid(iG)%zAxis(grid(iG)%nz)-delta
 
               close(72)
               open (unit= 72, file=dFileRead,  action="read", status = "old", position = "rewind", &
@@ -1839,7 +1823,6 @@ module grid_mod
                  do iy = 1, grid(iG)%ny
                     do iz = 1, grid(iG)%nz
                        
-print*, ix,iy,iz
                        if (lg1D) then
                           print*, "! setSubGrids: No 1D option with multiple grids!!"
                           stop
@@ -1876,9 +1859,7 @@ print*, ix,iy,iz
 
                        x = grid(iG)%xAxis(1)+x*(grid(iG)%xAxis(grid(iG)%nx)-grid(iG)%xAxis(1))
                        y = grid(iG)%yAxis(1)+y*(grid(iG)%yAxis(grid(iG)%ny)-grid(iG)%yAxis(1))
-print*, z
                        z = grid(iG)%zAxis(1)+z*(grid(iG)%zAxis(grid(iG)%nz)-grid(iG)%zAxis(1))
-print*, z, grid(iG)%zAxis(1), grid(iG)%zAxis(grid(iG)%nz)
 
                        if (ix == grid(iG)%nx) then
                           if ( abs(x-grid(iG)%xAxis(ix)) >= abs(grid(iG)%xAxis(ix)-grid(iG)%xAxis(ix-1))  ) then
@@ -3148,15 +3129,15 @@ print*, z, grid(iG)%zAxis(1), grid(iG)%zAxis(grid(iG)%nz)
       call locate(grid(1)%yAxis, 0., jOrigin)
       call locate(grid(1)%zAxis, 0., kOrigin)
 
-      call setStarPosition(grid(1)%xAxis,grid(1)%yAxis,grid(1)%zAxis)
-      
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
 
     end subroutine resetGrid      
 
-    subroutine setStarPosition(xA,yA,zA)
+    subroutine setStarPosition(xA,yA,zA,grid)
       implicit none
       
+      type(grid_type), intent(inout) :: grid(maxGrids)  ! the 3d grids
+
       real, dimension(:) :: xA,yA,zA
       
       Integer :: i, xP,yP,zP, nxA,nyA,nzA
@@ -3165,7 +3146,7 @@ print*, z, grid(iG)%zAxis(1), grid(iG)%zAxis(grid(iG)%nz)
       nyA = size(yA)
       nzA = size(zA)
 
-      allocate(starIndeces(nStars,3))
+      allocate(starIndeces(nStars,4))
 
       do i = 1, nStars
 
@@ -3174,23 +3155,67 @@ print*, z, grid(iG)%zAxis(1), grid(iG)%zAxis(grid(iG)%nz)
          starPosition(i)%z = starPosition(i)%z*zA(nzA)
 
          call locate(xA, starPosition(i)%x, xP)
-         if (starPosition(i)%x > & 
-              & (xA(xP)+xA(xP+1))/2.) &
-              xP=xP+1
-         
+         if (xP<nxA) then
+            if (starPosition(i)%x > & 
+                 & (xA(xP)+xA(xP+1))/2.) &
+                 xP=xP+1
+         end if
+
          call locate(yA, starPosition(i)%y, yP)
-         if (starPosition(i)%y > &
-              & (yA(yP)+yA(yP+1))/2.) &
-              yP=yP+1
-         
+         if (yP<nyA) then         
+            if (starPosition(i)%y > &
+                 & (yA(yP)+yA(yP+1))/2.) &
+                 yP=yP+1
+         end if
+
          call locate(zA, starPosition(i)%z, zP)
-         if (starPosition(i)%z > & 
-              & (zA(zP)+zA(zP+1))/2.) &
-              zP=zP+1
+         if (zP<nzA) then   
+            if (starPosition(i)%z > & 
+                 & (zA(zP)+zA(zP+1))/2.) &
+                 zP=zP+1
+         end if
          
-         starIndeces(i,1) = xP
-         starIndeces(i,2) = yP
-         starIndeces(i,3) = zP
+         
+         if (grid(1)%active(xp,yp,zp)>=0) then
+            starIndeces(i,1) = xP
+            starIndeces(i,2) = yP
+            starIndeces(i,3) = zP
+            starIndeces(i,4) = 1
+
+         else
+
+            starIndeces(i,4) = abs(grid(1)%active(xp,yp,zp))
+
+            nxA = grid(starIndeces(i,4))%nx
+            nyA = grid(starIndeces(i,4))%ny
+            nzA = grid(starIndeces(i,4))%nz
+
+            call locate(grid(starIndeces(i,4))%xAxis, starPosition(i)%x, xP)
+            if (xP<nxA) then
+               if (starPosition(i)%x > & 
+                    & (grid(starIndeces(i,4))%xAxis(xP)+grid(starIndeces(i,4))%xAxis(xP+1))/2.) &
+                    xP=xP+1
+            end if
+            
+            call locate(grid(starIndeces(i,4))%yAxis, starPosition(i)%y, yP)
+            if (yP<nyA) then         
+               if (starPosition(i)%y > &
+                    & (grid(starIndeces(i,4))%yAxis(yP)+grid(starIndeces(i,4))%yAxis(yP+1))/2.) &
+                    yP=yP+1
+            end if
+
+            call locate(grid(starIndeces(i,4))%zAxis, starPosition(i)%z, zP)
+            if (zP<nzA) then   
+               if (starPosition(i)%z > & 
+                    & (grid(starIndeces(i,4))%yAxis(zP)+grid(starIndeces(i,4))%yAxis(zP+1))/2.) &
+                    zP=zP+1
+            end if
+
+            starIndeces(i,1) = xP
+            starIndeces(i,2) = yP
+            starIndeces(i,3) = zP
+
+         end if
 
       end do         
 

@@ -101,6 +101,8 @@ module photon_mod
            if (iStar>=1) then
 
               chTypeD = "stellar"              
+              
+
               call energyPacketRun(chTypeD, starPosition(iStar))
 
            else if (iStar==0) then
@@ -298,11 +300,9 @@ module photon_mod
 
                 
                 ! create the packet        
-                if (present(gP)) then
-                   enPacket = newPhotonPacket(chType=chType, gP=gP, difSource=difSourceL)
-                else
-                   enPacket = newPhotonPacket(chType=chType, gP=1, difSource=difSourceL)
-                end if
+                if (.not.present(gP)) gP=1
+
+                enPacket = newPhotonPacket(chType=chType, gP=gP, difSource=difSourceL)
 
             ! if the photon is diffuse
 
@@ -413,6 +413,15 @@ module photon_mod
                               
                else
 
+                  if (enPacket%origin(1) == 0) then 
+                     print*, '! energyPacketRun: enPacket%origin(1) ==0'
+                     stop
+                  end if
+                  if (enPacket%origin(2) < 0) then 
+                     print*, '! energyPacketRun: enPacket%origin(2) < 0'
+                     stop
+                  end if
+
                   grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                        & enPacket%nuP,0) = &
                        & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
@@ -481,7 +490,7 @@ module photon_mod
                print*, "! initPhotonPacket: insane gridp pointer"
                stop
             end if
-
+           
             initPhotonPacket%nuP      = nuP       
            
             initPhotonPacket%lgStellar = lgStellar
@@ -581,11 +590,10 @@ module photon_mod
                      & initPhotonPacket%direction%z = -initPhotonPacket%direction%z
             end if
 
-
             initPhotonPacket%origin(1) = gP
             initPhotonPacket%origin(2) = grid(gP)%active(initPhotonPacket%xP(igpi),&
                  & initPhotonPacket%yP(igpi), initPhotonPacket%zP(igpi))                           
-
+            
 
         end function initPhotonPacket
 
@@ -688,12 +696,11 @@ module photon_mod
             integer, optional, dimension(2),intent(in) :: xP, yP, & 
                  & zP                                            ! cartesian axes indeces    
             integer, optional, intent(in)      :: difSource(3)  ! grid and cell indeces
-            integer, optional                  :: gP
+            integer, optional, intent(inout)   :: gP
             integer                            :: igpn           ! grid pointe 1=motehr, 2=sub
             logical                            :: lgLine_loc=.false.! line photon?
 
             real                               :: random         ! random number
-
 
             if (present(gP)) then
                if (gP==1) then
@@ -721,21 +728,25 @@ module photon_mod
                         stop
                     end if
                 end if 
-                if (present(gP) ) then
-                    if( gP /= 1) then
-                        print*, "! newPhotonPacket: stellar photon packet must&
-                             & start from mother grid"
-                        stop
-                    end if
-                end if 
-                
+
+!                gP = starIndeces(iStar,4)
+
+                if (starIndeces(iStar,4) == 1) then
+                   igpn = 1
+                else if (starIndeces(iStar,4) > 1) then
+                   igpn = 2
+                else
+                   print*,  "! newPhotonPacket: insane grid pointer -star position- "
+                   stop
+                end if
+
                 ! determine the frequency of the newly created photon packet
                 call getNu2(inSpectrumProbDen(iStar,1:nbins), nuP)
-                
+
                 if (nuP>=nbins) then
                    print*, "! newPhotonPacket: insanity occured in stellar photon &
                         &nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(igpn),yP(igpn),zP(igpn), &
-                        & grid(gP)%active(xP(igpn),yP(igpn),zP(igpn))
+                        & grid(starIndeces(iStar,4))%active(xP(igpn),yP(igpn),zP(igpn))
                    print*, "inSpectrumProbDen: ",iStar,inSpectrumProbDen(iStar,:)
                    stop
                 end if
@@ -750,11 +761,26 @@ module photon_mod
                 orX(igpn) = starIndeces(iStar,1)
                 orY(igpn) = starIndeces(iStar,2)
                 orZ(igpn) = starIndeces(iStar,3)
-                if (present(gP)) then
-                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gP)
-                else
-                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, 1)
-                end if
+
+!                if (present(gP)) then
+                   if (grid(starIndeces(iStar,4))%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
+                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -1-" 
+                      print*, "chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp"
+                      print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp
+                      stop
+                   end if
+
+                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, starIndeces(iStar,4))
+
+!                else
+!                   if (grid(1)%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
+!                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -2- "
+!                      print*, "chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp"
+!                      print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, '1'
+!                      stop
+!                   end if
+!                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, 1)
+!                end if
                 if (newPhotonPacket%nu>1.) then
                    Qphot = Qphot + deltaE(iStar)/(2.1799153e-11*newPhotonPacket%nu)
                 end if
@@ -795,12 +821,18 @@ module photon_mod
                 orZ(igPn) = difSource(3)
 
                 ! initialize the new photon packet
+                if (grid(gP)%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
+                   print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -3-"
+                   print*, "chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp"
+                   print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp
+                   stop
+                end if
                 newPhotonPacket = initPhotonPacket(nuP, positionLoc, .false., .false., orX,&
                      & orY, orZ, gP)
 
             ! if the photon is diffuse
             case ("diffuse")
-               
+
                 ! check that gas is present in the grid
                 if (.not.lgGas) then
                    print*, "! newPhotonPacket: diffuse packet cannot be created in a no gas grid"
@@ -858,6 +890,13 @@ module photon_mod
                    end if
 
                    ! initialize the new photon packet
+                   if (grid(gP)%active(xP(igpn), yp(igpn), zp(igpn)) < 0.) then
+                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -4-"
+                      print*, "chType, nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp"
+                      print*, chType, nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp
+                      stop
+                   end if
+
                    newPhotonPacket = initPhotonPacket(nuP, position, .true., .false., xP, yP, zP, gP)
                 else 
                     ! continuum photon
@@ -881,6 +920,13 @@ module photon_mod
                     end if
 
                     ! initialize the new photon packet
+                   if (grid(gP)%active(xP(igpn), yp(igpn), zp(igpn)) < 0.) then
+                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -5-"
+                      print*, "chType, nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp"
+                      print*, chType, nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp
+                      stop
+                   end if
+
                     newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
                 end if
 
@@ -947,6 +993,13 @@ module photon_mod
                end if
 
                ! initialize the new photon packet
+                   if (grid(gP)%active(xP(igpn), yp(igpn), zp(igpn)) < 0.) then
+                      print*, "! newPhotonPacket: new packet cannot be emitted from re-mapped cell -6-"
+                      print*, "chType, nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp"
+                      print*, chType, nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp
+                      stop
+                   end if
+
                newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
 
             ! if the photon packet type is wrong or missing
@@ -993,6 +1046,7 @@ module photon_mod
 
           logical                         :: lgScattered ! is the packet scattering with dust?
           logical                         :: lgReturn
+
 
           if (enPacket%iG == 1) then
              igpp = 1
@@ -1531,6 +1585,13 @@ module photon_mod
                       enPacket%yP(igpp) = yP
                       enPacket%zP(igpp) = zP            
                       
+                      if (grid(gP)%active(enPacket%xp(igpp), enPacket%yp(igpp), enPacket%zp(igpp)) < 0.) then
+                         print*, "! pathSegment: new packet cannot be emitted from re-mapped cell -1-"
+                         print*, "nuP, starPosition(iStar), .false., .true., xp,yp,zp, gp"
+                         print*, nuP, starPosition(iStar), .false., .true.,  xp,yp,zp, gp
+                         stop
+                      end if
+
                       enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., .false., enPacket%xP(1:2), &
                            & enPacket%yP(1:2), enPacket%zP(1:2), gP)
                       
@@ -1593,9 +1654,9 @@ module photon_mod
                 ! keep track of where you are on mother grid
                 if (gP>1) then
 
-                   if (enPacket%xP(1) < 0 .or. & 
-                        & enPacket%yP(1) < 0 .or. & 
-                        & enPacket%zP(1) < 0 ) then
+                   if (enPacket%xP(1) <= 0 .or. & 
+                        & enPacket%yP(1) <= 0 .or. & 
+                        & enPacket%zP(1) <= 0 ) then
 
                       ! locate where we are at on the mother grid
                       call locate(grid(grid(gP)%motherP)%xAxis, rvec%x, enPacket%xP(1))
@@ -1621,7 +1682,7 @@ module photon_mod
 
                       
                    else
-
+                      
                       if (vHat%x>0.) then
                          if ( enPacket%xP(1) < grid(grid(gP)%motherP)%nx ) then
                             if ( rVec%x > (grid(grid(gP)%motherP)%xAxis(enPacket%xP(1))+& 

@@ -344,7 +344,7 @@ module common_mod
     integer            :: nStars           ! number of ionising sources
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
     integer            :: emittingGrid     ! grid emiting illuminating radiation [0 for all]
-    integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z
+    integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z, 4=gp
 
     real               :: fillingFactor    ! filling factor epsilon
     real               :: contCube(2)      ! continuum cube

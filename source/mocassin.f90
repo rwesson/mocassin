@@ -77,6 +77,8 @@ program MoCaSSiN
 
     call fillGrid(grid3D(1:nGrids))
 
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
+
     if (taskid==0) then
        do iGrid = 1, nGrids
           print*, 'Grid : ', iGrid 

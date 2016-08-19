@@ -44,6 +44,8 @@ program MoCaSSiNwarm
     ! reset the 3D cartesian grid
     call resetGrid(grid3D)
 
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis,grid3D)      
+
     ! initialize opacities x sections array
     call initXSecArray()
 
