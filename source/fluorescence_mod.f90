@@ -863,7 +863,7 @@ module fluorescence_mod
                    else if (random <= probSca) then
                       lgScattered = .true.         
                    else
-                      print*, '! fluoPathSegment: insanity occured and scattering/absorption &
+                      print*, '! fluoPathSegment: insanity occurred and scattering/absorption &
                            & decision stage.'
                       stop
                    end if
@@ -973,7 +973,7 @@ module fluorescence_mod
                                end if
                             else
                                if ( rVec%x > grid(grid(gP)%motherP)%xAxis(enPacket%xP(1))) then
-!                            print*, '! fluoPathSegment: insanity occured at mother grid transfer (x axis +)', & 
+!                            print*, '! fluoPathSegment: insanity occurred at mother grid transfer (x axis +)', & 
 !                                 & rVec%x, gP, grid(gP)%motherP
 !                            stop
                                end if
@@ -986,7 +986,7 @@ module fluorescence_mod
                                end if
                             else
                                if (rVec%x < grid(grid(gP)%motherP)%xAxis(1)) then
-!                            print*, '! fluoPathSegment: insanity occured at mother grid transfer (x axis-)',&  
+!                            print*, '! fluoPathSegment: insanity occurred at mother grid transfer (x axis-)',&  
 !                                 & rVec%x, gP, grid(gP)%motherP
 !                            stop
                                end if
@@ -1000,7 +1000,7 @@ module fluorescence_mod
                                end if
                             else
                                if ( rVec%y > grid(grid(gP)%motherP)%yAxis( enPacket%yP(1))) then
-!                            print*, '! fluoPathSegment: insanity occured at mother grid transfer (y axis +)',&
+!                            print*, '! fluoPathSegment: insanity occurred at mother grid transfer (y axis +)',&
 !                                 & rVec%y, gP, grid(gP)%motherP
 !                            stop
                                end if
@@ -1013,7 +1013,7 @@ module fluorescence_mod
                                end if
                             else
                                if (rVec%y < grid(grid(gP)%motherP)%yAxis(1)) then
-!                            print*, '! fluoPathSegment: insanity occured at mother grid transfer (y axis -)', & 
+!                            print*, '! fluoPathSegment: insanity occurred at mother grid transfer (y axis -)', & 
 !                                 & rVec%y, gP, grid(gP)%motherP
 !                            stop
                                end if
@@ -1027,7 +1027,7 @@ module fluorescence_mod
                                end if
                             else
                                if ( rVec%z > grid(grid(gP)%motherP)%zAxis( enPacket%zP(1))) then
-!                            print*, '! fluoPathSegment: insanity occured at mother grid transfer (z axis +)', &
+!                            print*, '! fluoPathSegment: insanity occurred at mother grid transfer (z axis +)', &
 !                                 & rVec%z, gP, grid(gP)%motherP
 !                            stop
                                end if
@@ -1040,7 +1040,7 @@ module fluorescence_mod
                                end if
                             else
                                if (rVec%z < grid(grid(gP)%motherP)%zAxis(1)) then
-!                        print*, '! fluoPathSegment: insanity occured at mother grid transfer (z axis -)', &
+!                        print*, '! fluoPathSegment: insanity occurred at mother grid transfer (z axis -)', &
 !                             & rVec%z, gP, grid(gP)%motherP
 !                        stop
                                end if
@@ -1064,7 +1064,7 @@ module fluorescence_mod
                       else if ( (dS == dSz) .and. (vHat%z < 0.) ) then
                          zP = zP-1
                       else
-                         print*, '! fluoPathSegment: insanity occured in dS assignement &
+                         print*, '! fluoPathSegment: insanity occurred in dS assignment &
                               & [dS,dSx,dSy,dSz,vHat]', dS,dSx,dSy,dSz,vHat
                       end if
                    else
@@ -1091,7 +1091,7 @@ module fluorescence_mod
                             zP = enPacket%zP(grid(gP)%motherP)
                             gP = grid(gP)%motherP
                          else
-                            print*, '! fluoPathSegment: insanity occured - invalid gP', gP
+                            print*, '! fluoPathSegment: insanity occurred - invalid gP', gP
                             stop
                          end if
                          
@@ -1109,7 +1109,7 @@ module fluorescence_mod
                             zP =  enPacket%zP(grid(gP)%motherP)
                             gP = grid(gP)%motherP
                          else
-                            print*, '! fluoPathSegment: insanity occured - invalid gP', gP
+                            print*, '! fluoPathSegment: insanity occurred - invalid gP', gP
                             stop
                          end if
 
@@ -1269,7 +1269,7 @@ module fluorescence_mod
                            gP = 1
                            igpp = 1
                         else
-                           print*, '! fluoPathSegment: insanity occured - invalid gP', gP
+                           print*, '! fluoPathSegment: insanity occurred - invalid gP', gP
                            stop
                         end if
                         
@@ -1288,7 +1288,7 @@ module fluorescence_mod
                            gP = 1
                            igpp = 1
                         else
-                           print*, '! fluoPathSegment: insanity occured - invalid gP', gP
+                           print*, '! fluoPathSegment: insanity occurred - invalid gP', gP
                            stop
                         end if
                         
@@ -1616,7 +1616,7 @@ module fluorescence_mod
 
                            end if
                         else
-                           print*, '! fluoPathSegment: insanity occured - invalid gP - ', gP
+                           print*, '! fluoPathSegment: insanity occurred - invalid gP - ', gP
                            stop
                         end if
                         

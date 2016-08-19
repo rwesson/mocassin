@@ -203,7 +203,7 @@ module elements_mod
        close(13)
      end subroutine readHeIRecLines
      
-     ! this subroutine assignes continuum energy pointers 
+     ! this subroutine assigns continuum energy pointers 
      ! to shells for all atoms     
      subroutine setShells(nElem)
          implicit none

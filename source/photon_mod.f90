@@ -824,7 +824,7 @@ module photon_mod
                 call getNu2(inSpectrumProbDen(iStar,1:nbins), nuP)
 
                 if (nuP>=nbins) then
-                   print*, "! newPhotonPacket: insanity occured in stellar photon &
+                   print*, "! newPhotonPacket: insanity occurred in stellar photon &
                         &nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(igpn),yP(igpn),zP(igpn), &
                         & grid(starIndeces(iStar,4))%active(xP(igpn),yP(igpn),zP(igpn))
                    print*, "inSpectrumProbDen: ",iStar,inSpectrumProbDen(iStar,:), nuP
@@ -832,7 +832,7 @@ module photon_mod
                 end if
                 
                 if (nuP < 1) then
-                    print*, "! newPhotonPacket: insanity occured in stellar photon &
+                    print*, "! newPhotonPacket: insanity occurred in stellar photon &
 &                               nuP assignment"
                     stop
                 end if
@@ -866,14 +866,14 @@ module photon_mod
                 call getNu2(inSpectrumProbDen(0,1:nbins), nuP)
 
                 if (nuP>=nbins) then
-                   print*, "! newPhotonPacket: insanity occured in extra diffuse photon &
+                   print*, "! newPhotonPacket: insanity occurred in extra diffuse photon &
                         & nuP assignment (nuP,gp,activeP)", nuP, gp
                    print*, "difSpectrumProbDen: ", inSpectrumProbDen(0,:)
                    stop
                 end if
 
                 if (nuP < 1) then
-                   print*, "! newPhotonPacket: insanity occured in extra diffuse photon &
+                   print*, "! newPhotonPacket: insanity occurred in extra diffuse photon &
                         & nuP assignment (nuP,gp,activeP)", nuP, gp,grid(gP)%active(xP(igpn),yP(igpn),zP(igpn))
                    print*, "difSpectrumProbDen: ", inSpectrumProbDen(0,:)
                    stop
@@ -931,7 +931,7 @@ module photon_mod
                       call getNu2( grid(gP)%linePDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),:), nuP )
 
                       if (nuP < 1) then
-                         print*, "! newPhotonPacket: insanity occured in line photon &
+                         print*, "! newPhotonPacket: insanity occurred in line photon &
                               & nuP assignment"
                          stop
                       end if
@@ -960,7 +960,7 @@ module photon_mod
                     call getNu2(grid(gP)%recPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),1:nbins), nuP)
 
                     if (nuP>=nbins) then
-                       print*, "! newPhotonPacket: insanity occured in diffuse photon &
+                       print*, "! newPhotonPacket: insanity occurred in diffuse photon &
                        & nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(igPn),yP(igPn),zP(igPn),&
                        &  grid(gP)%active(xP(igPn),yP(igPn),zP(igPn))
                        print*, "recPDF: ", grid(gP)%recPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),1:nbins)
@@ -968,7 +968,7 @@ module photon_mod
                     end if
 
                     if (nuP < 1) then
-                        print*, "! newPhotonPacket: insanity occured in diffuse photon &
+                        print*, "! newPhotonPacket: insanity occurred in diffuse photon &
                              & nuP assignment", nuP, xP(igPn),yP(igPn),zP(igPn), & 
                              & grid(gP)%active(xP(igPn),yP(igPn),zP(igPn))
                        print*, "recPDF: ", grid(gP)%recPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),:)
@@ -1016,7 +1016,7 @@ module photon_mod
                call getNu2(grid(gP)%dustPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),1:nbins), nuP)
 
                if (nuP>=nbins) then
-                   print*, "! newPhotonPacket: insanity occured in dust emitted photon &
+                   print*, "! newPhotonPacket: insanity occurred in dust emitted photon &
                        &nuP assignment (iphot, nuP,xP(gP),yP(gP),zP(gP),activeP)", iphot, &
                        & nuP, xP(igPn),yP(igPn),zP(igPn), &
                        & grid(gP)%active(xP(igPn),yP(igPn),zP(igPn))
@@ -1026,7 +1026,7 @@ module photon_mod
                 end if
 
                if (nuP < 1) then
-                  print*, "! newPhotonPacket: insanity occured in dust emitted photon &
+                  print*, "! newPhotonPacket: insanity occurred in dust emitted photon &
                        &nuP assignment", nuP,xP(igPn),yP(igPn),zP(igPn), grid(gP)%active(xP(igPn),yP(igPn),zP(igPn))
                   print*, "dustPDF: ", grid(gP)%dustPDF(grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)),1:nbins)
                   print*, "grain T: ", grid(gP)%Tdust(:, 0, grid(gP)%active(xP(igPn),yP(igPn),zP(igPn)))
@@ -1684,7 +1684,7 @@ module photon_mod
                    else if (random <= probSca) then
                       lgScattered = .true.         
                    else
-                      print*, '! pathSegment: insanity occured at the scattering/absorption&
+                      print*, '! pathSegment: insanity occurred at the scattering/absorption&
                            & decision stage.'
                       print*,'gP,xP,yP,zP,nuP'
                       print*,gP,xP,yP,zP,nuP
@@ -1803,7 +1803,7 @@ module photon_mod
                    absInt = absInt + 1.
                    
                    if (.not.lgGas) then
-                      print*, "! pathSegment: Insanity occured - no gas present when no dust interaction"
+                      print*, "! pathSegment: Insanity occurred - no gas present when no dust interaction"
                       stop
                    end if
                    
@@ -1880,7 +1880,7 @@ module photon_mod
                             end if
                          else
                             if ( rVec%x > grid(grid(gP)%motherP)%xAxis(enPacket%xP(1))) then
-!                            print*, '! pathSegment: insanity occured at mother grid transfer (x axis +)', & 
+!                            print*, '! pathSegment: insanity occurred at mother grid transfer (x axis +)', & 
 !                                 & rVec%x, gP, grid(gP)%motherP
 !                            stop
                             end if
@@ -1893,7 +1893,7 @@ module photon_mod
                             end if
                          else
                             if (rVec%x < grid(grid(gP)%motherP)%xAxis(1)) then
-!                            print*, '! pathSegment: insanity occured at mother grid transfer (x axis-)',&  
+!                            print*, '! pathSegment: insanity occurred at mother grid transfer (x axis-)',&  
 !                                 & rVec%x, gP, grid(gP)%motherP
 !                            stop
                             end if
@@ -1907,7 +1907,7 @@ module photon_mod
                             end if
                          else
                             if ( rVec%y > grid(grid(gP)%motherP)%yAxis( enPacket%yP(1))) then
-!                            print*, '! pathSegment: insanity occured at mother grid transfer (y axis +)',&
+!                            print*, '! pathSegment: insanity occurred at mother grid transfer (y axis +)',&
 !                                 & rVec%y, gP, grid(gP)%motherP
 !                            stop
                             end if
@@ -1920,7 +1920,7 @@ module photon_mod
                             end if
                          else
                             if (rVec%y < grid(grid(gP)%motherP)%yAxis(1)) then
-!                            print*, '! pathSegment: insanity occured at mother grid transfer (y axis -)', & 
+!                            print*, '! pathSegment: insanity occurred at mother grid transfer (y axis -)', & 
 !                                 & rVec%y, gP, grid(gP)%motherP
 !                            stop
                             end if
@@ -1934,7 +1934,7 @@ module photon_mod
                             end if
                          else
                             if ( rVec%z > grid(grid(gP)%motherP)%zAxis( enPacket%zP(1))) then
-!                            print*, '! pathSegment: insanity occured at mother grid transfer (z axis +)', &
+!                            print*, '! pathSegment: insanity occurred at mother grid transfer (z axis +)', &
 !                                 & rVec%z, gP, grid(gP)%motherP
 !                            stop
                             end if
@@ -1947,7 +1947,7 @@ module photon_mod
                             end if
                          else
                             if (rVec%z < grid(grid(gP)%motherP)%zAxis(1)) then
-!                        print*, '! pathSegment: insanity occured at mother grid transfer (z axis -)', &
+!                        print*, '! pathSegment: insanity occurred at mother grid transfer (z axis -)', &
 !                             & rVec%z, gP, grid(gP)%motherP
 !                        stop
                             end if
@@ -1971,7 +1971,7 @@ module photon_mod
                    else if ( (dS == dSz) .and. (vHat%z < 0.) ) then
                       zP = zP-1
                    else
-                      print*, '! pathSegment: insanity occured in dS assignement &
+                      print*, '! pathSegment: insanity occurred in dS assignement &
                            & [dS,dSx,dSy,dSz,vHat]', dS,dSx,dSy,dSz,vHat
                    end if
                 else
@@ -1998,7 +1998,7 @@ module photon_mod
                          zP = enPacket%zP(grid(gP)%motherP)
                          gP = grid(gP)%motherP
                       else
-                         print*, '! pathSegment: insanity occured - invalid gP', gP
+                         print*, '! pathSegment: insanity occurred - invalid gP', gP
                          stop
                       end if
                       
@@ -2016,7 +2016,7 @@ module photon_mod
                          zP =  enPacket%zP(grid(gP)%motherP)
                          gP = grid(gP)%motherP
                       else
-                         print*, '! pathSegment: insanity occured - invalid gP', gP
+                         print*, '! pathSegment: insanity occurred - invalid gP', gP
                          stop
                       end if
                       
@@ -2212,7 +2212,7 @@ module photon_mod
                          gP = 1
                          igpp = 1
                       else
-                         print*, '! pathSegment: insanity occured - invalid gP', gP
+                         print*, '! pathSegment: insanity occurred - invalid gP', gP
                          stop
                       end if
                   
@@ -2231,7 +2231,7 @@ module photon_mod
                          gP = 1
                          igpp = 1
                       else
-                         print*, '! pathSegment: insanity occured - invalid gP', gP
+                         print*, '! pathSegment: insanity occurred - invalid gP', gP
                          stop
                       end if
                       
@@ -2664,7 +2664,7 @@ module photon_mod
 
                      end if
                   else
-                     print*, '! pathSegment: insanity occured - invalid gP - ', gP
+                     print*, '! pathSegment: insanity occurred - invalid gP - ', gP
                      stop
                   end if
 
