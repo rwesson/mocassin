@@ -1015,7 +1015,7 @@ module iteration_mod
                  end if                
                  
                  print*, "! iterateMC:  Summary] Iteration ",nIterateMC,'; ', &
-                      &int(convPercent),"% conveged cells in grid ", iG
+                      &int(convPercent),"% converged cells in grid ", iG
                  print*, "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
                       &int(noHitPercent(iG)),"% no hit cells in grid ", iG
                  print*, "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
@@ -1023,7 +1023,7 @@ module iteration_mod
                  print*, "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
                       &int(grid(iG)%noTeBal),"% Te balance not reached in grid", iG
                  write(21,*) "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
-                      &int(convPercent),"% conveged cells in grid ", iG
+                      &int(convPercent),"% converged cells in grid ", iG
                  write(21,*) "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
                       &int(noHitPercent(iG)),"% no hit cells in grid ", iG
                  write(21,*) "! iterateMC: [Summary] Iteration ",nIterateMC,'; ', &
