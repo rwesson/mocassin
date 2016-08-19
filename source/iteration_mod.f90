@@ -948,6 +948,13 @@ module iteration_mod
            
 !******************************************************************************
 
+           if (nGrids>1) then
+!              print*, " ! iterateMC: integratePathTau stuff still not implemented for multiple grids.... skipping"
+           else
+              call writeTauNu(grid)
+           end if
+
+
            ! decide over final convergence of the model
            
            ! reinitialize convPercent and totCells           

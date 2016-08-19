@@ -2345,6 +2345,131 @@ module output_mod
 !        return
       end subroutine hlinex
 
+    subroutine writeTauNu(grid)
+      implicit none
+
+      type(grid_type), intent(in) :: grid(*)
+
+      type(vector) :: aVec, uHat        
+      
+      real, pointer :: outTau(:)
+      real          :: nuR
+
+      integer :: nTau, err, i, ios
+
+      ! find the run of the optical depths from the illuminated
+      ! surface to the edge of the nebula
+            
+      ! allocate space for temporary optical depth arrays
+      allocate (outTau(1:nbins), stat = err)
+      if (err /= 0) then
+         print*, "! adjustGrid: can't allocate array memory"
+         stop
+      end if
+
+      close(73)
+
+      open(unit=73, file='output/tauNu.out', status='unknown', position='rewind', iostat = ios, action="write")
+
+
+      ! initialize arrays with zero
+      outTau = 0.
+
+      do i = 1, nbins
+        
+         aVec%x = 0.
+         aVec%y = 0.
+         aVec%z = 0.      
+
+         uHat%x = 1.
+         uHat%y = 0.
+         uHat%z = 0.
+         
+         ! find the optical depth
+         call integratePathTauNu(grid, aVec, uHat, i, outTau(i))
+
+      end do
+ 
+     
+      write(73, *) " Optical depth from the centre to the edge of the nubula "
+      write(73, *) " direction: 1,0,0"
+      write(73, *) " lambda [um]    tau(R_max) "
+      
+      do i = 1, nbins
+         write(73, *) (c/(nuArray(i)*fr1Ryd))*1.e4, outTau(i)
+      end do
+      
+      write(73,*) ' '
+
+      ! initialize arrays with zero
+      outTau = 0.
+
+      do i = 1, nbins
+        
+         aVec%x = 0.
+         aVec%y = 0.
+         aVec%z = 0.      
+
+         uHat%x = 0.
+         uHat%y = 0.
+         uHat%z = 1.
+         
+         ! find the optical depth
+         call integratePathTauNu(grid, aVec, uHat, i, outTau(i))
+
+      end do
+ 
+     
+      write(73, *) " Optical depth from the centre to the edge of the nubula "
+      write(73, *) " direction: 0,0,1"
+      write(73, *) " lambda [um]    tau(R_max) "
+      
+      do i = 1, nbins
+         write(73, *) (c/(nuArray(i)*fr1Ryd))*1.e4, outTau(i)
+      end do
+      
+      write(73,*) ' '
+
+      ! initialize arrays with zero
+      outTau = 0.
+
+      do i = 1, nbins
+        
+         aVec%x = 0.
+         aVec%y = 0.
+         aVec%z = 0.      
+
+         uHat%x = 0.
+         uHat%y = 1.
+         uHat%z = 0.
+         
+         ! find the optical depth
+         call integratePathTauNu(grid, aVec, uHat, i, outTau(i))
+
+      end do
+ 
+     
+      write(73, *) " Optical depth from the centre to the edge of the nubula "
+      write(73, *) " direction: 0,1,0"
+      write(73, *) " lambda [um]    tau(R_max) "
+      
+      do i = 1, nbins
+         write(73, *) (c/(nuArray(i)*fr1Ryd))*1.e4, outTau(i)
+      end do
+      
+      write(73,*) ' '
+
+
+
+
+
+      close(73)
+      
+      if(associated(outTau)) deallocate(outTau)
+
+    end subroutine writeTauNu
+
+
     subroutine writeSED(grid)
       implicit none
 
@@ -2379,10 +2504,10 @@ module output_mod
 
       SED=0.
 
-      write(16,*) '#Spectral energy distribution at the surface of the nebula: ' 
-      write(16,*) '#  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
-      write(16,*) '#   nu [Ryd]        lambda [um]         F(nu)*D^2            '
-      write(16,*) '#                                       [Jy * pc^2]              '
+      write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
+      write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
+      write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            '
+      write(16,*) '                                       [Jy * pc^2]              '
 
       totalE=0.
 
@@ -2508,18 +2633,18 @@ module output_mod
 
 
       write(16,*) ' '
-      write(16,*) '#Total energy radiated out of the nebula [e36 erg/s]:', totalE
+      write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE
       print*, 'Total energy radiated out of the nebula [e36 erg/s]:', totalE, Lstar, nphotons
 !      write(16,*) 'All SEDs given per unit direction'
 !      write(16,*) 'To obtain total emission over all directions must multiply by Pi'
 
-      write(16,*) '#dTheta: ', dTheta
-      write(16,*) '#dPhi: ', dPhi
+      write(16,*) 'dTheta: ', dTheta
+      write(16,*) 'dPhi: ', dPhi
       
 
       write(16,*) ' '
       if (nuArray(1)<radio4p9GHzP) then
-         write(16,*) '#Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
+         write(16,*) 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
               & SED(radio4p9GHzP,0)*Pi*1.e23/(nuArray(radio4p9GHzP)*fr1Ryd)
          print*, 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
               & SED(radio4p9GHzP,0)*Pi*1.e23/(nuArray(radio4p9GHzP)*fr1Ryd)

@@ -30,19 +30,28 @@ F90  = mpif90
 LIBS =	-lm
 OPT1 = -ipo
 OPT2 = -CB -g 
-XTRA = -I/usr/include/mpich2-x86_64/ -L/usr/lib64/mpich2
 
 mocassin:
-	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS) $(XTRA)
+	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS)
 
 mocassinWarm:
-	$(F90) $(OPT1) -o mocassinWarm $(source2) $(LIBS) $(XTRA)
+	$(F90) $(OPT1) -o mocassinWarm $(source2) $(LIBS) 
 
 mocassinOutput:
-	$(F90) $(OPT1) -o mocassinOutput $(source3) $(LIBS) $(XTRA)
+	$(F90) $(OPT2) -o mocassinOutput $(source3) $(LIBS) 
 
 mocassinPlot:
-	$(F90) $(OPT1) -o mocassinPlot $(source4) $(LIBS) $(XTRA)
+	$(F90) $(OPT2) -o mocassinPlot $(source4) $(LIBS) 
 
 clean:
 	/bin/rm *.o *~ *.mod mocassin mocassinWarm mocassinOutput mocassinPlot
+
+
+ 
+
+
+
+
+
+
+
