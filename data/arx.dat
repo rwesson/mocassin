@@ -1,4 +1,4 @@
- 20
+ 19
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels:  Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -12,7 +12,6 @@
 % Produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
-
 % filename: ar_10.splups
 %oscillator strengths and effective collision strengths: interpolated using Mg IV, Si VI, S VIII, and Ca XII
 %comment: the interpolated data are most accurate in the range 3.5 < LogT < 5.5.

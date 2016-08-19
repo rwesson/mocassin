@@ -1,4 +1,4 @@
- 31
+30
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: NIST database (http://physics.nist.gov/cgi-bin/AtData/main_asd)
 %theoretical energy levels: Aggarwal, K.M., & Keenan, F.P., 1998, J.Phys.B, 31, 4545
@@ -18,7 +18,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % P.R. Young - 23-May-03
-
 %filename: al_2.splups
 %effective collision strengths: Aggarwal, K.M., & Keenan, F.P., 1994, J.Phys.B, 27, 5321
 %effective collision strengths between triplet states: Aggarwal, K.M., & Keenan, F.P., 1998, J.Phys.B, 31, 4545

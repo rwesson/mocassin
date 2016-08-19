@@ -1,4 +1,4 @@
- 35
+ 34
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (n=2): Edlen, B., 1985, Phys.Scripta, 31, 345
 %energy levels (n=3): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
@@ -22,7 +22,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 % 
 % E.Landi and P.R.Young 2000
-
 %filename: ca_15.splups
 %oscillator strengths: are taken from "superstructure" using a 3
    configuration model of the ion, which was shown to closely match the

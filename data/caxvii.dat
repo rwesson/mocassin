@@ -1,4 +1,4 @@
- 35
+ 34
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: J. Sugar, C. Corliss, 1985, J.Phys.Chem.Ref.Data., 14, Supplement 2
 %energy levels (11,12,17,18,19,20,22,23,24,25,26,29): Kelly, R.L., 1987, J.Phys.Chem.Ref.Data, 16, Suppl. 1
@@ -25,7 +25,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % n=2 levels: E.Landi May 2001; n=3 levels: K.P.Dere Jun 1997
-
 %filename: ca_17.splups
 %Oscillator strengths (1 - 10): Dufton, P.L., Kingston, A.E., Scott, N.S., 1983, J.Phys.B, 16, 3053
 %Effective collision strengths (1 - 10): Dufton, P.L., Kingston, A.E., Scott, N.S., 1983, J.Phys.B, 16, 3053

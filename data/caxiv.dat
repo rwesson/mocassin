@@ -1,4 +1,4 @@
- 35
+ 34
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (1-6): Feldman et al, 2000, ApJ, 544, 508
 %Observed energy levels (6-15): Edlen, 1984, Phys.Scripta, 30, 135
@@ -25,7 +25,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 % 
 % Enrico Landi - April 2004
-
 %filename: ca_14.splups
 %Collision strengths: Landi & Bhatia, 2005, ADNDT, in press
 %Oscillator strengths: Landi & Bhatia, 2005, ADNDT, in press

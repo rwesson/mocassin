@@ -1,4 +1,4 @@
- 39
+ 36
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (3,5,17,23,27,31,33,35,37,55,70): Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 
     1999, NIST Database for Atomic Spectroscopy, Version 2.0, NIST Standard Reference Database 61.
@@ -18,18 +18,15 @@
 %oscillator strengths transitions involving the ground level: Zhang, H. et al., ADNDT, 1987, 37, 17
 %oscillator strengths transitions among the 2p53l configurations: Hibbert, Le Dourneuf, Mohan, ADNDT, 1993, 53, 23
 % All other radiative data: SSTRUCT calculation, with a 15 configuration model including:
-
             2s2.2p6,
             2s2.2p5{3s, 3p, 3d}, 2s.2p6{3s, 3p, 3d}
             2s2.2p5{4s, 4p, 4d, 4f}, 2s.2p6{4s, 4p, 4d, 4f}
-
 %comment: SSTRUCT radiative data have been corrected for the differences between experimental
           and theoretical energy levels, where possible.
 %comment: negative wavelengths have been computed using theoretical energy levels.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi 2000
-
 %filename: ca_11.splups
 %oscillator strengths transitions involving the ground level: Zhang, H. et al., ADNDT, 1987, 37, 17
 %oscillator strengths transitions among the 2p53l configurations: Hibbert, Le Dourneuf, Mohan, ADNDT, 1993, 53, 23

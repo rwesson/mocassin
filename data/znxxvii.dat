@@ -1,4 +1,4 @@
- 18
+ 17
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Theoretical energy levels: Zhang, Sampson, ADNDT, 1992 , 52, 143
 %Experimental energy levels: Edlen, B., Phys. Scr., 1983, 28, 51.
@@ -10,7 +10,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi 1997
-
 %filename: zn_27.splups
 %oscillator strengths: Zhang, Sampson, 1992, ADNDT, 52, 143
 %collision strengths: Zhang, Sampson, 1992, ADNDT, 52, 143

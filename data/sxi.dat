@@ -1,4 +1,4 @@
- 29
+ 28
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (n=2): Edlen, B., 1985, Phys. Scr., 31, 345
 %Observed energy levels (22-24,37,39-43,45,46,67,72): Ralchenko Y., Jou, F.C., Kelleher, D.E., Kramida, A.E., 
@@ -19,7 +19,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  E. Landi - March 2005
-
 %filename: s_11.splups
 %Oscillator strengths: from the 9-conf model of Landi & Bhatia 2003, ApJ, 149, 251
 %Effective collision strengths levels 1-6: Conlon, Keenan & Aggarwal, 1992, Phys. Scripta, 45,309

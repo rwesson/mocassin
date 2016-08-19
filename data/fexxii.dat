@@ -1,4 +1,4 @@
- 50
+ 49
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (2): Feldman, U., Curdt, W., Landi, E., Wilhelm, K., 2000, ApJ, 544, 508
 %Observed energy levels (3,4,5): Sandlin, G.D., Bruekner, G.E., Scherrer, V.E., Tousey, R., 1976, ApJ, 205, L47
@@ -36,7 +36,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Mar 2005
-
 %filename: fe_22.splups
 %oscillator strengths (1-204): Badnell, N.R., Griffin, D.C., Mitnik, D.M., 2001, J.Phys.B, 34, 5071
 %oscillator strengths (205-513): Landi & Gu, 2005, ApJ, in press

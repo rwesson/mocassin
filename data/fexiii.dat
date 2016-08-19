@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 % filename: fe_13.elvlc
 %observed energy levels(1-3): Penn & Kuhn, 1994, ApJ, 434, 807
@@ -21,7 +21,6 @@
 %
 %   Peter Young - 16-Jun-2003
 %Prepared for the CHIANTI database by Peter Young, 16-Jun-2003
-
 %filename: fe_13.splups
 %oscillator strengths: SUPERSTRUCTURE calculation (see file fe_13.wgfa for details)
 % effective collision strengths: Gupta, G.P., Tayal, S.S., 1998, ApJ, 506, 464

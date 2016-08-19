@@ -1,4 +1,4 @@
- 27
+ 26
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energies:
     v.3.0.3 of the online NIST database
@@ -13,7 +13,6 @@
     Biemont, E., & Hansen, J.E., 1986, Phys. Scripta, 34, 116
 %Observed energies:
     From ca_5.elvlc file.
-
 %file: ca_5.splups
 %produced for the CHIANTI database by Peter Young, 9-Jun-2006
 %Upsilons: 

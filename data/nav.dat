@@ -1,4 +1,4 @@
- 19
+ 18
 ** Atomic data from version 5.2 of the CHIANTI database **
 %experimental energy levels: Edlen, B., 1984, Phys. Scripta, 30, 145.
 %theoretical energy levels: interpolated using NeIV,MgVI,SiVIII,S X,ArXII,CaXIV.
@@ -10,7 +10,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   Enrico Landi 1997
-
 %filename: na_5.splups
 %oscillator strengths: interpolated using Ne IV, Mg VI, Si VIII, S X, Ar XII, Ca XIV
 %collision strengths: interpolated using Ne IV, Mg VI, Si VIII, S X, Ar XII, Ca XIV

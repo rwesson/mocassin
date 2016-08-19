@@ -1,4 +1,4 @@
- 26
+ 25
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels:  Kelly, R. L., 1987, J. Phys. Chem. Ref. Data 16, Suppl. 1.     
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
@@ -13,7 +13,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   K.P. Dere   Sep 1999
-
 %filename:  n_5.splups
 %oscillator strengths: W.L. Wiese, M.W. Smith, B. M. Glennon, 'Atomic Transition Probabilities',
    Vol I, Hydrogen Through Neon, NSRDS-NBS 4, 1966

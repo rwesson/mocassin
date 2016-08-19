@@ -1,4 +1,4 @@
- 21
+ 20
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels:  Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
@@ -13,7 +13,6 @@
 %
 %   Enrico Landi 1997
 % Peter Young, 17-Jul-2006, updated with Tachiev & Froese Fischer data.
-
 %filename: na_3.splups
 %oscillator strengths: interpolated using Ne II, Mg IV, Si VI, S VIII
 %effective collision strengths: interpolated using Ne II, Mg IV, Si VI, S VIII

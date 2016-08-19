@@ -1,4 +1,4 @@
- 39
+ 38
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energies (n=2,3,4): Del Zanna, Chidichimo, Mason, 2005, A&A, 432, 1137
 %observed energy levels (n=5): Shirai,T., et al, 2000, J.Phys.Chem.Ref.Data, Monograph 8
@@ -26,7 +26,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  G. Del Zanna and E. Landi - June 23 2005
-
 %filename: fe_23.splups
 %oscillator strengths (levels 1-98): Del Zanna, Mason, 2005, A&A, 430, 331 (scattering calculation)
 %oscillator strengths (levels 99-166): Landi & Gu, 2005, ApJ, in press

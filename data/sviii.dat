@@ -1,4 +1,4 @@
- 22
+ 21
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C. and Zalubas, R., 1983, J. Phys. Chem. Ref. Data, 12, 323.
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
@@ -12,7 +12,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  K.P.Dere 1995
-
 %filename: s_8.splups
 %oscillator strengths: Blackford, H.M.S., Hibbert, A., 1994, ADNDT, 58, 101
 %collision strengths: Mohan, M., Baluja, K.L., Hibbert, A., 1987, J.Phys.B, 20, 2565

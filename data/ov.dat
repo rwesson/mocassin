@@ -1,4 +1,4 @@
- 25
+ 24
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energies: Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %theoretical energies: Berrington, K.A., private communication, 13-Mar-2003
@@ -7,7 +7,6 @@
 %  P.R.Young - 13-Mar-2003
 %observed energies: Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, NIST Physical Reference Data
 %A-values and oscillator strengths for all transitions involving levels > 20, and also transitions 3-9, 4-9,
-
 %filename: o_5.splups
 %theoretical energies: Berrington, K.A., private communication, 13-Mar-03
 %gf-values: Berrington, K.A., private communication, 13-Mar-03

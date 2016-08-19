@@ -1,4 +1,4 @@
- 44
+ 43
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, NIST Database 
    for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
@@ -32,7 +32,6 @@ For the forbidden transitions amongst the ground levels, the A-values
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  Peter Young, Mar 2003
-
 %filename: s_2.splups
 %oscillator strengths: from .wgfa file
 %effective collision strengths: Ramsbottom C.A., Bell K.L., Stafford R.P., 1996, ADNDT 63, 57

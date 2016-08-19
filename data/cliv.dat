@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 %prepared for the CHIANTI database
 %observed energy levels:
@@ -15,7 +15,6 @@
    derived from energies in .elvlc file
 %history:
    Ver.1, 20-Jun-2006, Peter Young
-
 %file:  cl_4.splups
 %prepared for the CHIANTI database
 %Upsilons: 

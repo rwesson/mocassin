@@ -1,4 +1,4 @@
- 51
+ 48
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels(1-4,7-9,15,23): Sugar & Corliss, 1985, J.Phys.Chem.Ref.Data, 14, Suppl.2
 %energy levels(18-20,22,24-26): Sugar, Kaufman & Rowan, 1992, J.Opt.Soc.America B
@@ -19,20 +19,17 @@
 %observed energy levels(5,12,13): Kelly, 1987, J.Phys.Chem.Ref.Data, 16, Suppl.1
 %A values: obtained from `superstructure' using a 35 configuration model
 %Comment: the following configurations were included:
-
  	3s2 {3p2, 3p3d, 3d2, 3p4s, 3p4p, 3p4d, 3p4f, 3d4s, 3d4p, 3d4d, 3d4f}
         3s2 {3p5s, 3p5p, 3p5d, 3p5f, 4p4d, 4p2} 	
         3s3p2 {3d, 4s, 4p, 4d, 4f}
  	3p3 {3d, 4s, 4p, 4d, 4f} 	
         3s3d3, 3p23d2, 3s3p3, 3s3p3d2
  	3p4, 4p4, 3s4p3, 3p3d3
-
 %comment: as with Fe XIII, level 17 is metastable and magnetic quadrupole
     transitions down to the ground are important. 
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %    P.R.Young and E.Landi 1999
-
 %filename: ni_15.splups
 %collision and oscillator strengths: H.E. Mason (unpublished)
 %comment: a 4 configuration target was used in Mason's calculation, with

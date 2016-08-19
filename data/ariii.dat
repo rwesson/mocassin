@@ -1,4 +1,4 @@
- 22
+ 21
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Prepared for CHIANTI by Peter Young, 3-Jun-2006
 %Observed energies:
@@ -11,7 +11,6 @@
     Biemont, E., & Hansen, J.E., 1986, Physica Scripta, 34, 116
 %Observed energies:
     From ar_3.elvlc file.
-
 %file:  ar_3.splups
 %Prepared for CHIANTI by Peter Young, 5-Jun-2006
 %Upsilons:

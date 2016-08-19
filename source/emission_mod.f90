@@ -28,6 +28,7 @@ module emission_mod
 
     integer                             :: abFileUsed  ! abundance file index used
     integer                             :: cellPUsed   !  cell index
+    integer                             :: nspE
         logical,save :: lgFloc=.true.                ! 
     contains
 
@@ -63,10 +64,17 @@ module emission_mod
 
         grid = grids(iG)
 
-        cellPUsed = grid%active(ix, iy, iz)
-
         ! check whether this cell is outside the nebula
         if (grid%active(ix, iy, iz)<=0) return  
+
+        cellPUsed = grid%active(ix, iy, iz)
+        if (lgMultiDustChemistry) then
+           nspE = grid%dustAbunIndex(cellPUsed)
+        else
+           nspE = 1
+        end if
+
+
 
         ! set the dust emission PDF
         if (lgDust .and. .not.lgGas) call setDustPDF()
@@ -90,7 +98,6 @@ module emission_mod
         if (NeUsed < 1.e-5) then
              NeUsed = 1.e-5
         end if
-
 
         ! allocate space for emissionHI, emissionHeI and emissionHeII
         allocate(emissionHI(nbins), stat = err)
@@ -174,9 +181,12 @@ module emission_mod
         ffCoeff2       = 0.
 
 
+
         ! calculates the H, He and heavy ions f-b and f-f emission
         ! coefficients
         call fb_ff()
+
+
 
         ! calculate two photon emission coefficients for HI, HeI and
         ! HeII
@@ -260,19 +270,18 @@ module emission_mod
         real                :: lineIntensity
 
         integer             :: iRes, imul, n, ai
-        
-
-        species: do n = 1, nSpecies
+                
+        species: do n = 1, nSpeciesPart(nspE) 
            do ai = 1, nSizes
 
               if (grid%Tdust(n,ai,cellPUsed)>0. .and. & 
-                   & grid%Tdust(n,ai,cellPUsed)<TdustSublime(n)) exit species
+                   & grid%Tdust(n,ai,cellPUsed)<TdustSublime(dustComPoint(nspE)-1+n)) exit species
 
 
            end do
         end do species 
 
-        if (n>nSpecies) then
+        if (n>nSpeciesPart(nspE)) then
            ! all grains have sublimed
            grid%resLinePackets(cellPUsed) = 0
            return
@@ -862,6 +871,7 @@ module emission_mod
         real                       :: x1, x2
 
 
+        T4 = TeUsed / 10000.
 
         ! do hydrogenic ions first
 
@@ -939,10 +949,6 @@ module emission_mod
         end if
 
         ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
-        T4 = TeUsed / 10000.
-        if (T4 < 0.5) T4=0.5
-        if (T4 > 2.0) T4=2.0
-
         if (denint>0.and.denint<3) then
            do i = 1, 34
               x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
@@ -1072,6 +1078,7 @@ module emission_mod
         real, pointer     :: sumDiffuseHeI(:)  ! summation terms for HeI emission   
         real, pointer     :: sumDiffuseHeII(:) ! summation terms for HeII emission   
 
+        integer           :: dcp                ! local dustComPointer
         integer           :: elem, ion          ! counters
         integer           :: err                ! allocation error status
         integer           :: j2TsP              ! pointer to 2s triplet state in nuArray
@@ -1102,6 +1109,7 @@ module emission_mod
             print*, "! setDiffusePDF: can't allocate recPDF array memory"
             stop  
         end if
+
 
 
         ! assign pointers for the He line photons
@@ -1142,9 +1150,6 @@ module emission_mod
         ! calculate effective recombination coefficients to triplet states[e-14 cm^3/s]
         ! Benjamin, SKillman and mits, 1999, ApJ 514, 307
         T4 = TeUsed*1.e-4
-        if (T4 < 0.5) T4=0.5
-        if (T4 > 2.0) T4=2.0
-
         alpha2tS = 27.2*(T4**(-0.678))       
   
         ! calculate correction for partial sums and normalization constant 
@@ -1193,8 +1198,11 @@ module emission_mod
             normHeII = normHeII + HeIILyman(i)
         end do
 
+
         ! calculate dust emission
         if (lgDust) then
+
+           dcp = dustComPoint(nspE)        
 
            allocate(sumDiffuseDust(1:nbins), stat = err)
            if (err /= 0) then
@@ -1205,9 +1213,9 @@ module emission_mod
            sumDiffuseDust = 0.
            normDust       = 0.           
            do ai = 1, nSizes                 
-              do nS = 1, nSpecies
+              do nS = 1, nSpeciesPart(nspE)
 
-                 if (grid%Tdust(nS,ai,cellPUsed)<TdustSublime(nS)) then
+                 if (grid%Tdust(nS,ai,cellPUsed)<TdustSublime(dcp-1+nS)) then
 
                     if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
                          & convPercent>minConvQheat .and. nIterateMC>1) then
@@ -1234,10 +1242,10 @@ module emission_mod
                              treal = Tspike(iT)
                              bb = getFlux(nuArray(freq), treal, cShapeLoc)                     
                              sumDiffuseDust(freq) = sumDiffuseDust(freq) + &
-                                  &  xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
-                                  & grainWeight(ai)*grainAbun(nS)*Pspike(iT)
-                             normDust = normDust+xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
-                                  & grainWeight(ai)*grainAbun(nS)*Pspike(iT)
+                                  &  xSecArray(dustAbsXsecP(dcp-1+nS,ai)+freq-1)*bb*widFlx(freq)*&
+                                  & grainWeight(ai)*grainAbun(nspE, nS)*Pspike(iT)
+                             normDust = normDust+xSecArray(dustAbsXsecP(dcp+nS-1,ai)+freq-1)*bb*widFlx(freq)*&
+                                  & grainWeight(ai)*grainAbun(nspE, nS)*Pspike(iT)
                           end do
                        end do
 
@@ -1246,10 +1254,10 @@ module emission_mod
                        do freq = 1, nbins 
                           bb = getFlux(nuArray(freq), grid%Tdust(nS,ai,cellPUsed), cShapeLoc)                  
                           sumDiffuseDust(freq) = sumDiffuseDust(freq) + &
-                               &  xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
-                               & grainWeight(ai)*grainAbun(nS)
-                          normDust = normDust+xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
-                               & grainWeight(ai)*grainAbun(nS)
+                               &  xSecArray(dustAbsXsecP(dcp-1+nS,ai)+freq-1)*bb*widFlx(freq)*&
+                               & grainWeight(ai)*grainAbun(nspE,nS)
+                          normDust = normDust+xSecArray(dustAbsXsecP(dcp-1+nS,ai)+freq-1)*bb*widFlx(freq)*&
+                               & grainWeight(ai)*grainAbun(nspE, nS)
                        end do
                     end if
                  end if
@@ -1263,7 +1271,6 @@ module emission_mod
            normDust = normDust*const*grid%Ndust(cellPUsed)/grid%Hden(cellPUsed)
 
         end if
-
 
         ! Total normalization constant
         normalize = normHI + normHeI + normHeII
@@ -1291,7 +1298,7 @@ module emission_mod
         end do
 
         ! Sum  up energy in forbidden lines
-            
+
         normFor = 0.
         do elem = 3, nElements
            do ion = 1, min(elem+1, nstages)
@@ -1467,7 +1474,7 @@ module emission_mod
       real (kind=8) :: tg
       real(kind=8),dimension(nTbins) :: Tspike,Pspike
 
-      integer :: i, n, ai, iT ! counters
+      integer :: i, n, ai, iT, dcp ! counters
 
       character(len=50) :: cShapeLoc
 
@@ -1476,18 +1483,20 @@ module emission_mod
 
       cShapeLoc = 'blackbody'
 
+      dcp = dustComPoint(nspE)
+
       grid%dustPDF(grid%active(ix,iy,iz),:)=0.
-      do n = 1, nSpecies
+      do n = 1, nSpeciesPart(nspE)
          do ai = 1, nSizes
 
             if (grid%Tdust(n,ai,cellPUsed) >0. .and. & 
-                 & grid%Tdust(n,ai,cellPused)<TdustSublime(n)) then
+                 & grid%Tdust(n,ai,cellPused)<TdustSublime(dcp-1+n)) then
             
                do i = 1, nbins
    
                   if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
                        & convPercent>minConvQheat.and. nIterateMC>1) then
-                  
+
                      tg =  grid%Tdust(n,ai,cellPused)
                      call qHeat(n, ai,tg,Tspike,Pspike)                                    
                   
@@ -1495,8 +1504,9 @@ module emission_mod
                         treal = Tspike(iT)
                         bb = getFlux(nuArray(i), treal, cShapeLoc)
                         grid%dustPDF(cellPUsed, i) = grid%dustPDF(cellPUsed, i)+ & 
-                             & xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*&
-                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)                     
+                             & xSecArray(dustAbsXsecP(dcp-1+n,ai)+i-1)*bb*widFlx(i)*&
+                             & grainWeight(ai)*&
+                             & grainAbun(nspE, n)*Pspike(iT)                     
                      end do
                      
                   else
@@ -1504,36 +1514,10 @@ module emission_mod
                      treal = grid%Tdust(n,ai,cellPused)
                      bb = getFlux(nuArray(i), treal, cShapeLoc)
                      grid%dustPDF(cellPused, i) = grid%dustPDF(cellPused, i)+&
-                          & xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*&
-                          & grainWeight(ai)*grainAbun(n)
+                          & xSecArray(dustAbsXsecP(n+dcp-1,ai)+i-1)*bb*widFlx(i)*&
+                          & grainWeight(ai)*grainAbun(nspE, n)
                   end if
                end do
-
-!               do i = 2,nbins
-!                  
-!                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and.& 
-!                    & convPercent>minConvQheat .and. nIterateMC>1) then
-!                     
-!                     do iT=1,nTbins
-!                        treal = Tspike(iT)
-!                        bb = getFlux(nuArray(i), treal, cShapeLoc)                     
-!                        grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
-!                             &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i-1)*& 
-!                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)
-!                     end do
-!                  
-!                  else
-!                     
-!                     treal = grid%Tdust(n,ai,cellPused)
-!                     bb = getFlux(nuArray(i), treal, cShapeLoc)
-!                     grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
-!                          &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i-1)*& 
-!                          & grainWeight(ai)*grainAbun(n)
-!                     
-!                  end if
-!
-!               end do
-
                
             end if
          end do
@@ -1563,7 +1547,7 @@ module emission_mod
 
       real ::  tbase
       integer, intent(in) :: ns, na
-      integer             :: i,j,ii,if
+      integer             :: i,j,ii,if, dcp
       integer             :: wlp,wllp,wlsp,natom
       
       character(len=1)    :: sorc
@@ -1586,6 +1570,7 @@ module emission_mod
       integer :: ifreq
       character(len=50) :: chvarloc
 
+      dcp = dustComPoint(nspE)
      
       ! radiation field at this location in Flambdas
       if (lgDebug) then
@@ -1598,7 +1583,7 @@ module emission_mod
          radField(ifreq) = radField(ifreq)/(widflx(ifreq)*fr1ryd)
  
         temp1(ifreq) = (radField(ifreq)* (nuArray(ifreq)*fr1Ryd)**2.)/(c)
-         temp2(ifreq) = xSecArray(dustAbsXSecP(ns,na)+ifreq-1)
+         temp2(ifreq) = xSecArray(dustAbsXSecP(ns+dcp-1,na)+ifreq-1)
       end do
       do ifreq=1, nbins
          radField(ifreq) = temp1(nbins-ifreq+1)
@@ -1633,14 +1618,14 @@ module emission_mod
             print*, '! qHeat: invalid value for natom', sorc, na,natom, grainRadius(na)
          end if
          
-         mgrain = (4.*Pi/3.0)*(grainRadius(na)**3.)*rho(ns)*1.e-12
+         mgrain = (4.*Pi/3.0)*(grainRadius(na)**3.)*rho(dcp-1+ns)*1.e-12
          
       case ('C')  ! carbonaceous
          natom = 0.454*3.*1.e12*grainRadius(na)**3.
          if (natom<=0) then
             print*, '! qHeat: invalid value for natom', sorc, na,natom, grainRadius(na)
          end if
-         mgrain = (4.*Pi/3.0)*(grainRadius(na)**3.)*rho(ns)*1.e-12
+         mgrain = (4.*Pi/3.0)*(grainRadius(na)**3.)*rho(dcp-1+ns)*1.e-12
       case default
          qheatTemp = tg 
          return               
@@ -1782,10 +1767,13 @@ module emission_mod
 
 
       ! find the B(f,j) terms
+
       B=0.
       do ii = 1, nTbins
+
          B(nTbins,ii) = A(nTbins,ii)
          do if = nTbins-1, ii+1,-1
+
             B(if,ii) = B(if+1,ii)+A(if,ii) ! G&D p233
          end do
       end do
@@ -1794,6 +1782,7 @@ module emission_mod
       do if = 2, nTbins
          sumBx = 0.
          do j = 1, if-1
+
             sumBx = sumBx + B(if,j)*x(j)
          end do
 
@@ -1845,7 +1834,10 @@ module emission_mod
       integer, intent(in) :: ns, ai ! grain species and size pointers
       integer :: iT,ifreq ! pointer to dust temp in dust temp array
       integer :: cutoffP ! pointer to energy cutoff in nuarray
-      
+      integer :: dcp
+
+      dcp = dustComPoint(nspE)
+
       cutoff = 9.11e-5
       
       if (cutoff<nuArray(1)) then
@@ -1878,7 +1870,7 @@ module emission_mod
       ! calculate absorption integral
       dustAbsIntegral = 0.
       do i = 1, cutoffP
-         dustAbsIntegral =  dustAbsIntegral + xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)/Pi
+         dustAbsIntegral =  dustAbsIntegral + xSecArray(dustAbsXsecP(dcp-1+nS,ai)+i-1)*radField(i)/Pi
       end do
       
       
@@ -2158,23 +2150,23 @@ module emission_mod
        print*, "! equilibrium: can't open file: ", file_name
        stop
     end if
-    
+
     ! read reference heading
     read(11, *) numLines
     do i = 1, numLines
        read(11, '(78A1)') text
+
     end do
     
     ! read number of levels and temperature points available
     read(11, *) nLev, nTemp
-    
+
     if (nLev > size(fLineEm(1,:))) then
        print*, '! equilibrium: model ion has more levels than &
             &allowed by nForLevels - please enlarge', nLev, &
             & size(fLineEm(1,:)),  nForLevels, file_name
        stop
     end if
-
 
     ! allocate space for labels array
     allocate(label(nLev), stat = err)
@@ -2247,6 +2239,7 @@ module emission_mod
     end if
 
     ! allocate space for x array
+
     allocate(x(nLev, nLev), stat = err)
     if (err /= 0) then
        print*, "! equilibrium: can't allocate x array memory"
@@ -2287,7 +2280,7 @@ module emission_mod
        print*, "! equilibrium: can't allocate n2 array memory"
        stop
     end if
-    
+
     ! zero out arrays
     a = 0.
     cs = 0.
@@ -2319,7 +2312,7 @@ module emission_mod
     
     ! read iRats
     read(11, *) iRats
-    
+
     k=0
     if (iRats == 1) then
        do i = 1, safeLim
@@ -2387,7 +2380,7 @@ module emission_mod
           end do
        end do
     end if
-
+!print*, 'e'    
     ! read statistical weights, energy levels [1/cm]
     do j = 1, nLev
        read(11, *) i, gx, ex
@@ -2459,33 +2452,40 @@ module emission_mod
           qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
        end do
     end do
+
+    
     ! set up x
     do i= 2, nLev
        do j = 1, nLev
+
           
           x(1,:) = 1.
 !          y = 0.
           y(1)   = 1.
-          
+
           if (j /= i) then
+
              x(i, j) = x(i, j) + Ne*qeff(j, i)
              x(i, i) = x(i, i) - Ne*qeff(i, j)
              if (j > i) then
+
                 x(i, j) = x(i, j) + a(j, i)
              else 
+
                 x(i, i) = x(i, i) - a(i, j)
              end if
           end if
        end do
        
        ! when coefficients are available use the following:
+
        y(i) = -Ne*ionDenUp*alphaTotal(i)
     end do
 
     call luSlv(x, y, nLev)
 
     n = y
-    
+
     sumN = 0.d0
     do i = 1, nLev
        sumN = sumN+n(i)
@@ -2508,6 +2508,7 @@ module emission_mod
           end if
        end do
     end do
+
     ! deallocate arrays
     if( associated(alphaTotal) ) deallocate(alphaTotal)
     if( associated(label) ) deallocate(label)
@@ -2525,6 +2526,7 @@ module emission_mod
     if( associated(e) ) deallocate(e)
     if( associated(g) ) deallocate(g)
     if( associated(qom) ) deallocate(qom)
+
   end subroutine equilibrium
 
   subroutine equilibrium1(file_name, ionDenUp, Te, Ne, fLineEm, wav)
@@ -3005,13 +3007,16 @@ module emission_mod
           b(j) = b(j) - b(i)*a(j, i)/ a(i, i)
        end do
     end do
+
     b(n) = b(n) / a(n,n)
     do i = 1, n-1
        k = n-i
        l = k+1
        do j = l, n
+
           b(k) = b(k) - b(j)*a(k, j)
        end do
+
        b(k) = b(k) / a(k,k)
     end do
   end subroutine reslv
@@ -3231,6 +3236,7 @@ module emission_mod
       integer             :: ndirx, ndiry,ndirz ! number of directions to sample tau
       
       logical             :: lgTest
+
 
       lgTest = .false.
      

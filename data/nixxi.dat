@@ -1,4 +1,4 @@
- 27
+ 26
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (n=2,3 levels): Shirai,J., Musgrove,A., Wiese,W.L.,2000, J.Phys.Chem.Ref.Data, Monograph 8
 %theoretical energy levels (n=2,3 levels): Bhatia, A.K., Landi, E., unpublished SUPERSTRUCTURE calculation
@@ -19,7 +19,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 % 
 % E. Landi - May 2003
-
 %filename: ni_21.splups
 %Oscillator strengths: Bhatia, A.K., Landi, E., Mason, H.E. 2003, ADNDT, 83, 71
 %Collision strengths: Bhatia, A.K., Landi, E., Mason, H.E. 2003, ADNDT, 83, 71

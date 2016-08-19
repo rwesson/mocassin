@@ -1,4 +1,4 @@
- 32
+ 31
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (levels 2,3): Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L., 2000, J.Phys.Chem.Ref.Data, Monograph 8
 %Observed energy levels: from the line list of Landi & Phillips 2005, ApJ, in press
@@ -17,7 +17,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Mar 2005
-
 %filename: fe_18.splups
 %oscillator strengths: Landi & Gu 2005, ApJ, in press
 %oscillator strengths (above ionization): Bautista, M.A., Mendoza, C., Kallman, T.R., Palmeri, P., 2004, A&A, 418, 1171

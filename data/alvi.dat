@@ -1,4 +1,4 @@
- 19
+ 18
 ** Atomic data from version 5.2 of the CHIANTI database **
 %experimental energy levels: Edlen, B., 1983, Phys. Scr., 28, 51
 %theoretical energy levels: Landi, E., 2005, A&A, 434, 365
@@ -10,7 +10,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi - May 2004
-
 %filename: al_6.splups
 %effective collision strengths ground levels: Butler and Zeippen, 1994, AASS, 108, 1
 %effective collision strengths allowed trans.: interpolated using Ne III,Mg V,Si VII,S IX,Ar XI,Ca XIII

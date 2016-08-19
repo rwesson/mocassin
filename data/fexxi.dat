@@ -1,4 +1,4 @@
- 47
+ 46
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels (2,4): Feldman, U., Curdt, W., Landi, E., Wilhelm, K., 2000, ApJ, 544, 508
 %Observed energy levels (3,5 to 21): Feldman, U., Curdt, W., Landi, E., Wilhelm, K., 2000, ApJ, 544, 508 and 
@@ -31,7 +31,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Mar 2005
-
 %filename: fe_21.splups
 %oscillator strengths (levels 1-158,162,164,166,171,237-274): Badnell, N.R., Griffin, D.C., 2001, J.Phys.B, 34, 681
 %gf values other levels: computed with the Flexible Atomic Code - Gu, M.F., 2003, ApJ, 582, 1241

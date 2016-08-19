@@ -1,4 +1,4 @@
- 36
+ 33
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995,
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
@@ -13,10 +13,8 @@
 %comment: The Nussbaumer A-values are used for the transitions between levels 
    1 to 5, i.e., the forbidden and intercombination transitions. Nahar 
    did not calculate A-values for these transitions.
-
    Nahar only gave gf values. These were converted to A-values by using 
    the experimental energy separation.
-
    Table A of Nahar gives a useful comparison of his gf values with 
    those from previous calculations and experiment.
 %comment: correction on 11-Jun-03, Peter Young
@@ -26,7 +24,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   P.R.Young - Jun 2003
-
 %filename: si_2.splups
 %oscillator strengths: Nahar S.N., 1998, ADNDT 68, 183
 %oscillator strengths: Nussbaumer H., 1977, A&A 58, 291

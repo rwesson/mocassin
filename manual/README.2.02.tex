@@ -26,7 +26,7 @@
 \vspace{3cm}
 
 \centerline
-{LAST MODIFIED: 22/05/2007}
+{LAST MODIFIED: 19/09/2008}
 
 
 
@@ -92,6 +92,13 @@
 
 \noindent{\bf \large 0. What's new}\\
 \\
+\paragraph{from 2.02.49 to 2.02.50} 2D option implemented. Does not work with multigrids. 
+\paragraph{from 2.02.48 to 2.02.49} removed the tau.out output, now mocassin produces tauNu.out output, which is the tau(nu) at the edge of the grid in the three axial directions starting from the origin of the axes. 
+\paragraph{from 2.02.47 to 2.02.48} removed bad Chianti data and reformatted data comments to be more portable.
+\paragraph{from 2.02.46 to 2.02.47} the lgIsotropic option is now carried through to the mocassinWarm start routine
+\paragraph{from 2.02.45 to 2.02.46} added unisotropic scattering - the <cos theta>  are calculated directly from the dielectric constants through MIE theory and make use of the Heyney Greenstein  phase function - polarisation not included but would be trivial at this point. Isotropic scattering case is still available via the inclusion of the keyword isotropicScattering
+\paragraph{from 2.02.44 to 2.02.45} fixed bug that caused mocassin to 
+hang after convergence has been reached
 \paragraph{from 2.02.43 to 2.02.44} fixed bug in HeI rec lines routine
 (extrapolation beyond atomic data temperature limits caused
 inappropriate He I recombination line ratios- only affected HeI
@@ -506,7 +513,7 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
                      $[$1.$]$\\
 
 \paragraph    {getEquivalentTau} : Logical switch to enable equivalent optical depth calculations 
-(see Ercolano et al. 2006, in prep) - useful for diffuse/multiple and non-centrally located ionisation/
+(see Ercolano et al. 2007) - useful for diffuse/multiple and non-centrally located ionisation/
 illumination sources \\
                      $[$.false.$]$\\
 
@@ -535,7 +542,10 @@ illumination sources \\
                      from the local Ne values by taking into account the local 
 		     ionisation structure. \\
 		     $[$.false.$]$\\
-
+\paragraph    {isotropicScattering} : This keyword activates the logical switch that turns off unisotropic scattering 
+                     (implemented via the Heyney-Greenstein phase function - with <cos theta> calculated from the dielectric 
+                      constants via MIE theory).\\
+		     $[$.false.$]$\\                      
 \paragraph    {LPhot real	  }   : This is the number of hydrogen-ionizing photons emitted by 
 		     the source per unit time, which is generally referred to as 
 		     Q(H$^0$), in the literature, with units of [E36 $sec^{-1}$]. If this 
@@ -845,6 +855,8 @@ $[.false.]$\\
     and SED.out are all produced by the output\_mod module. \\
     The plot.out and grid4.out files are produced by the mocassinPlot file\\
 
+    
+
 \paragraph{    ionratio.out}
     Ionratio.out contains the volume averaged ionic fractions. Different authors 
     is the past have used slightly different definitions of this quantity in their 
@@ -881,15 +893,29 @@ $[.false.]$\\
     If a multi-chemistry model is being run (see section 3.1), then the results 
     will be given for each individual component.\\ 
 
+
+\paragraph{ equivalentTau.out} Plese see Section 2.3 of Ercolano, Barlow and Sugerman 
+    (2007) for a description of this quantity. The first column contains 
+    Energy [Ryd]  the second column contains wavelength [um] the third column contains 
+    equivalent tau [see paper] and the fourth column contains  F$_{lambda}^0$ [see paper]. 
+    Note that in the case of diffuse illumination this is the only meaningful quantity - 
+    see discussion in paper.\\
     
+\paragraph{    tauNu.out}
+The file tauNu.out contains the frequency dependent optical depth tau(nu) [which includes ALL opacity sources] at the edge of the grid in the three positive axial directions starting from the origin of the axes. 
+\\
+
 \paragraph{    tau.out}
+    THIS FILE IS NOT PRODUCED ANYMORE IN VERSIONS >= 2.02.49 PLEASE CONTACT BE IF YOU NEED IT. 
     The file tau.out contains the run of the optical depth from the centre of the 
     nebula to the outer edge along the three axial directions. The optical depths 
     are calculated at the neutral hydrogen ionisation threshold, nu = 1.0 Ryd 
     (13.6 eV), at the neutral Helium ionisation threshold, nu = 1.8 Ryd, and at 
     the singly ionised Helium ionisation threshold, nu = 4.0 Ryd. The first column 
     of the file gives the distance in [cm] from the centre of the nebula and the 
-    second column gives the optical depth from the centre to that point. \\
+    second column gives the optical depth from the centre to that point. This file
+    is not always calculated correctly if the internal switches arenot set up properly. 
+    Please use equivalentTau. See description above.\\    
 
 \paragraph{    ionDen.out}
     The file ionDen.out contains the ionic fractions at each grid cell. The first 
@@ -906,6 +932,7 @@ $[.false.]$\\
     directions); the following columns contain the SED emerging in any given 
     line of sight as requested by the user in the input.in file with the 
     inclination keyword.\\
+
 
 \paragraph{    The grid files and photoSource.out}
     As we have already mentioned elsewhere, grid files are also written out 

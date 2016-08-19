@@ -54,6 +54,11 @@ module grid_mod
 
         print*, "in initCartesianGrid"
         
+        nullUnitVector%x = 1.
+        nullUnitVector%y = 0.
+        nullUnitVector%z = 0.
+
+
         elemLabel = (/'*H','He','Li','Be','*B','*C','*N','*O','*F','Ne','Na','Mg',&
              &'Al','Si','*P','*S','Cl','Ar','*K','Ca','Sc','Ti','*V','Cr','Mn','Fe',&
              &'Co','Ni','Cu','Zn'/)
@@ -506,7 +511,7 @@ module grid_mod
         if (lgPlaneIonization) then
            allocate(planeIonDistribution(grid(1)%nx,grid(1)%nz), stat = err)
            if (err /= 0) then
-              print*, "! setMotherGrid: can't allocate dl memory"
+              print*, "! fillGrid: can't allocate dl memory"
               stop
            end if
            planeIonDistribution = 0
@@ -803,8 +808,13 @@ module grid_mod
         real, parameter :: amu = 1.66053e-24 ! [g]
 
         real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
-        real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density array
+        real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density arra
+        real, pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust abundance index array
+        real, pointer                  :: twoDscaleJTemp(:)
+        
 
+
+        integer                        :: icomp 
         integer                        :: i,j,k        ! counters
         integer                        :: index        ! general index
         integer                        :: iOrigin,&    ! indeces of the origin of the grid
@@ -812,8 +822,12 @@ module grid_mod
         integer                        :: ios, err     ! I/O and allocation error status
         integer                        :: elem, ion    ! counters
         integer                        :: nspec, ai    ! counters
+        integer                        :: nsp          ! pointer
         integer                        :: nu0P         ! 
         integer                        :: RinP         ! pointer to the inner radius intercept  
+
+        integer                        :: yTop, xPmap  ! 2D indeces
+
                                                        ! with one of the axes
         character(len=40)              :: readChar, extFile ! character string readers
 
@@ -843,10 +857,18 @@ module grid_mod
 
         end if
 
+
+        if (lg2D) then
+           yTop = 1
+        else
+           yTop = grid%ny
+        end if                
+
+
         grid%active = 1
         if (lgGas) then
            do i = 1, grid%nx
-              do j = 1, grid%ny
+              do j = 1, yTop
                  do k = 1, grid%nz
                     
                     ! set density 
@@ -924,47 +946,87 @@ module grid_mod
 
               NdustTemp = 0.              
 
-              ! set grains mass density [g/cm^3]
-
-              close(13)
-              open(file =   dustFile(1), action="read",unit=13, position="rewind",status="old", iostat = ios)
-              if (ios /= 0 ) then
-                 print*, "! setMotherGrid: can't open file ", dustFile(1)
-                 stop
-              end if
-              read(13, *) nSpecies              
-              allocate(rho(1:nSpecies), stat = err)
-              if (err /= 0) then
-                 print*, "! setMotherGrid: can't allocate rho memory"
-                 stop
-              end if
-              rho=0.
-              allocate(grainVn(1:nSpecies), stat = err)
-              if (err /= 0) then
-                 print*, "! setMotherGrid: can't allocate grainVn memory"
-                 stop
-              end if
-              grainVn=0.
-              allocate(MsurfAtom(1:nSpecies), stat = err)
-              if (err /= 0) then
-                 print*, "! setMotherGrid: can't allocate surfAtom memory"
-                 stop
-              end if
-              MsurfAtom=0
-
-              do i = 1, nSpecies
-                 read(13,*) extFile
-                 open(file=extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
-                 if (ios /= 0 ) then
-                    print*, "! setMotherGrid: can't open file ", extFile
+              if (lgMultiDustChemistry) then
+                 allocate(dustAbunIndexTemp(1:grid%nx,1:grid%ny,1:grid%nz), stat = err)
+                 if (err /= 0) then
+                    print*, "! setMotherGrid: can't allocate dustAbunIndexTemp memory"
                     stop
                  end if
-                 read(14,*) readChar
-                 read(14,*) readChar, readReal, rho(i), grainVn(i), MsurfAtom(i)
-                 close(14)
-              end do
-              close(13)
+                 dustAbunIndexTemp = 0.              
+              end if
 
+              ! set grains mass density [g/cm^3]
+!              allocate(dustComPoint(nDustComponents))
+!              dustComPoint = 0
+!              dustComPoint(1) = 1
+
+!              nSpecies = 0
+!              nSpeciesMax = 0
+!print*, 'heer', ndustcomponents
+!              do icomp = 1, nDustComponents
+!print*, icomp
+!                 close(13)
+!                 open(file =   dustSpeciesFile(icomp), action="read",unit=13, &
+!                      &position="rewind",status="old", iostat = ios)
+!                 if (ios /= 0 ) then
+!                    print*, "! setMotherGrid: can't open file ", dustSpeciesFile(icomp)
+!                    stop
+!                 end if
+!                 read(13, *) nSpeciesPart(icomp)
+!print*, nspeciespart(icomp)
+!                 close(13)
+!                 nSpecies = nSpecies+nSpeciesPart(icomp)
+!print*, nspecies
+!                 if (nSpeciesMax < nSpeciesPart(icomp)) nSpeciesMax = nSpeciesPart(icomp)
+!print*, nspeciesmax
+!              end do
+!
+!              allocate(rho(1:nSpecies), stat = err)
+!              if (err /= 0) then
+!                 print*, "! setMotherGrid: can't allocate rho memory"
+!                 stop
+!              end if
+!              rho=0.
+!              allocate(grainVn(1:nSpecies), stat = err)
+!              if (err /= 0) then
+!                 print*, "! setMotherGrid: can't allocate grainVn memory"
+!                 stop
+!              end if
+!              grainVn=0.
+!              allocate(MsurfAtom(1:nSpecies), stat = err)
+!              if (err /= 0) then
+!                 print*, "! setMotherGrid: can't allocate surfAtom memory"
+!                 stop
+!              end if
+!              MsurfAtom=0
+!              
+!              do icomp = 1, nDustComponents
+!                 if (icomp > 1) dustComPoint(icomp) = dustComPoint(icomp-1)+nSpeciesPart(icomp)
+!                 close(13)
+!                 open(file =   dustSpeciesFile(icomp), action="read",unit=13, &
+!                      & position="rewind",status="old", iostat = ios)
+!                 if (ios /= 0 ) then
+!                    print*, "! setMotherGrid: can't open file ", dustSpeciesFile(icomp)
+!                    stop
+!                 end if
+!                 read(13, *) nSpeciesPart(icomp)              
+!
+!                 do i = 1, nSpeciesPart(icomp)
+!                    read(13,*) extFile
+!                    close(14)
+!                    open(file=extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
+!                    if (ios /= 0 ) then
+!                       print*, "! setMotherGrid: can't open file ", extFile
+!                       stop
+!                    end if
+!                    read(14,*) readChar
+!                    read(14,*) readChar, readReal, rho(dustComPoint(icomp)+i-1), grainVn(dustComPoint(icomp)+i-1), &
+!                         &MsurfAtom(dustComPoint(icomp)+i-1)
+!                    close(14)
+!                 end do
+!                 close(13)
+!              end do
+!
               if (lgMdMg .or. lgMdMh) then
 
                  allocate(MdMg(1:grid%nx,1:grid%ny,1:grid%nz), stat = err)
@@ -984,23 +1046,29 @@ module grid_mod
                        stop
                     end if
                     
-                    do i = 1, grid%nx
-                       do j = 1, grid%ny
-                          do k = 1, grid%nz
-                             read(20, *) index, index, index, MdMg(i,j,k)
+                    if (lgMultiDustChemistry) then
+                       do i = 1, grid%nx
+                          do j = 1, yTop
+                             do k = 1, grid%nz
+                                read(20, *) index, index, index, MdMg(i,j,k), dustAbunIndexTemp(i,j,k)
+                             end do
                           end do
                        end do
-                    end do
-                    
+                    else                    
+                       do i = 1, grid%nx
+                          do j = 1, yTop
+                             do k = 1, grid%nz
+                                read(20, *) index, index, index, MdMg(i,j,k)
+                             end do
+                          end do
+                       end do
+                    end if
                     close(20)
                  end if
 
-!                 ! set grain mass density [g/cm^3]
-!                 rho = (/3.2, 3.2, 3.2, 2.2, 2.2, 2.0, 3.2/)
-
               else
-              ! Ndust was directly defined by  the user
 
+                 ! Ndust was directly defined by  the user
                  if (lgDustConstant) then
                     NdustTemp = NdustValue
                  else
@@ -1011,25 +1079,38 @@ module grid_mod
                        stop
                     end if
 
-                    do i = 1, grid%nx
-                       do j = 1, grid%ny
-                          do k = 1, grid%nz
-                             read(20, *) grid%xAxis(i), grid%yAxis(j), grid%zAxis(k), NdustTemp(i,j,k)
+                    if (lgMultiDustChemistry) then
+                       do i = 1, grid%nx
+                          do j = 1, yTop
+                             do k = 1, grid%nz
+                                read(20, *) grid%xAxis(i), grid%yAxis(j), &
+                                     & grid%zAxis(k), NdustTemp(i,j,k), dustAbunIndexTemp(i,j,k)
+                             end do
                           end do
                        end do
-                    end do
-
+                    else
+                       do i = 1, grid%nx
+                          do j = 1, yTop
+                             do k = 1, grid%nz
+                                read(20, *) grid%xAxis(i), grid%yAxis(j), grid%zAxis(k), NdustTemp(i,j,k)
+                             end do
+                          end do
+                       end do
+                    end if
                     close(20)
                  end if
 
               end if              
 
            end if
+           
+           if (lg2D) grid%yAxis = grid%xAxis             
+
 
           ! set active cells pointers
           grid%nCells = 0
           do i = 1, grid%nx
-             do j = 1, grid%ny
+             do j = 1, yTop
                 do k = 1, grid%nz
 
                    ! calculate radius
@@ -1053,7 +1134,11 @@ module grid_mod
 
                    end if
 
-                   if (grid%active(i,j,k) <= 0 .and. lgDust ) NdustTemp(i,j,k) = 0.
+                   if (grid%active(i,j,k) <= 0 .and. lgDust ) then
+                      NdustTemp(i,j,k) = 0.
+                      if (lgMultiDustChemistry) dustAbunIndexTemp(i,j,k) = 0.
+                   end if
+
                    if (grid%active(i,j,k) <= 0 .and. lgGas ) HdenTemp(i,j,k) = 0.
 
                    if (lgDust .and. lgGas) then
@@ -1064,6 +1149,7 @@ module grid_mod
                          grid%active(i,j,k) = 0
                          HdenTemp(i,j,k) = 0.
                          NdustTemp(i,j,k) = 0.
+                         if (lgMultiDustChemistry) dustAbunIndexTemp(i,j,k) = 0.
                       end if
                    else if ( lgDust .and. (.not.lgGas) ) then
                       if (NdustTemp(i,j,k)>0.) then
@@ -1072,6 +1158,7 @@ module grid_mod
                       else
                          grid%active(i,j,k) = 0
                          NdustTemp(i,j,k) = 0.
+                         if (lgMultiDustChemistry) dustAbunIndexTemp(i,j,k) = 0.
                       end if
                    else if ( (.not.lgDust) .and. lgGas) then 
                       if (HdenTemp(i,j,k) > 0.) then
@@ -1090,6 +1177,52 @@ module grid_mod
                 end do
              end do
           end do
+
+
+          allocate(TwoDscaleJtemp(grid%nCells))
+          TwoDscaleJtemp = 1.
+
+
+          if (lg2D) then
+             do i = 1, grid%nx
+                do j = 2, grid%ny
+                   do k = 1, grid%nz
+                      radius = 1.e10*sqrt( (grid%xAxis(i)/1.e10)*&
+                           &(grid%xAxis(i)/1.e10) + &
+                           &(grid%yAxis(j)/1.e10)*(grid%yAxis(j)/1.e10) ) 
+
+                      call locate(grid%xAxis, radius, xPmap)
+                      if (xPmap < grid%nx) then
+                         if (radius >= (grid%xAxis(xPmap)+grid%xAxis(xPmap+1))/2.) &
+                              & xPmap = xPmap+1
+                      end if
+                      grid%active(i,j,k) = grid%active(xPmap, 1, k)
+                      
+                      if (grid%active(xPmap,1,k)>0) &
+                           & TwoDScaleJtemp(grid%active(xPmap,1,k)) = &
+                           & TwoDScaleJtemp(grid%active(xPmap,1,k))+1.
+                      
+                   end do
+                end do
+             end do
+
+             grid%nCells = 0
+             do i = 1,  grid%nx
+                do k = 1,  grid%nz
+                   if (grid%active(i,1,k) > 0) grid%nCells = grid%nCells +1                   
+
+                end do
+             end do
+
+             allocate(TwoDscaleJ(grid%nCells))
+             do i = 1, grid%nCells
+                TwoDscaleJ(i) = TwoDscaleJtemp(i)
+             end do
+             deallocate(TwoDscaleJtemp)
+
+          end if
+
+
 
           print*, '! setMotherGrid: active cells :', grid%nCells
 
@@ -1196,7 +1329,7 @@ module grid_mod
              end if
 
           end if
-
+print*, 'hello0', grid%nCells
           if (lgDust) then
 
              allocate(grid%Ndust(0:grid%nCells), stat = err)
@@ -1205,6 +1338,15 @@ module grid_mod
                 stop
              end if
              grid%Ndust=0.
+print*, 'hello', grid%nCells
+             ! be 2.02.44
+             allocate(grid%dustAbunIndex(0:grid%nCells), stat = err)
+             if (err /= 0) then
+                print*, "! grid: can't allocate dustAbunIndex memory"
+                stop
+             end if
+             grid%dustAbunIndex=0.
+             ! be 2.02.44 end
              
              if (.not.lgGas) then
                 allocate(grid%dustPDF(0:grid%nCells, 1:nbins), stat = err)
@@ -1216,6 +1358,7 @@ module grid_mod
              end if
 
           end if
+print* ,'a'
 
           if (lgDebug) then
              allocate(grid%Jdif(0:grid%nCells, 1:nbins), stat = err)
@@ -1277,7 +1420,7 @@ module grid_mod
           grid%lgBlack = 0           
 
           do i = 1, grid%nx
-             do j = 1, grid%ny
+             do j = 1, yTop
                 do k = 1, grid%nz
                    if (grid%active(i,j,k)>0) then
 
@@ -1285,12 +1428,17 @@ module grid_mod
                          grid%Hden(grid%active(i,j,k)) = HdenTemp(i,j,k)
                          grid%Te(grid%active(i,j,k)) = TeStart
                       end if
-                      if (lgDust) grid%Ndust(grid%active(i,j,k)) = NdustTemp(i,j,k)
+                      if (lgDust) then
+                         grid%Ndust(grid%active(i,j,k)) = NdustTemp(i,j,k)
+                         if (lgMultiDustChemistry) &
+                              & grid%dustAbunIndex(grid%active(i,j,k)) = &
+                              &dustAbunIndexTemp(i,j,k)
+                      end if
                    end if
                 end do
              end do
           end do
-
+!print*, 'b'
           if (lgNeInput) then 
              grid%NeInput = grid%Hden
              ! 1.11 is just a starting guess for the ionization 
@@ -1303,7 +1451,7 @@ module grid_mod
              H0in  = 1.e-5
 
              do i = 1, grid%nx
-                do j = 1, grid%ny
+                do j = 1, yTop
                    do k = 1, grid%nz
                       
                       if (grid%active(i,j,k)>0 ) then
@@ -1352,6 +1500,7 @@ module grid_mod
 
            if (lgDust) then
               if(associated(NdustTemp)) deallocate(NdustTemp)
+              if(lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
            end if
 
            ! set up atomic weight array
@@ -1365,7 +1514,7 @@ module grid_mod
            totalVolume = 0.
 
            do i = 1, grid%nx
-              do j = 1, grid%ny
+              do j = 1, yTop
                  do k = 1, grid%nz
                     if (grid%active(i,j,k)>0) then
 
@@ -1408,11 +1557,18 @@ module grid_mod
 
                           denominator = 0.
 
-                          do nspec = 1, nSpecies
+                          if (lgMultiDustChemistry) then
+                             nsp = grid%dustAbunIndex(grid%active(i,j,k))
+                          else
+                             nsp = 1
+                          end if
+print*, nsp, 'here!'
+                          do nspec = 1, nSpeciesPart(nsp)
                              do ai = 1, nSizes
                                 denominator = denominator + &
-                                     & (1.3333*Pi*( (grainRadius(ai)*1.e-4)**3)*rho(nspec)*grainWeight(ai)*&
-                                     & grainAbun(nspec))
+                                     & (1.3333*Pi*( (grainRadius(ai)*1.e-4)**3)*&
+                                     & rho(dustComPoint(nsp)+nspec-1)*grainWeight(ai)*&
+                                     & grainAbun(nsp, nspec))
                              end do
                           end do
                           grid%Ndust(grid%active(i,j,k)) = grid%Ndust(grid%active(i,j,k))/&
@@ -1421,12 +1577,18 @@ module grid_mod
 
                        ! calculate total dust mass
                        if (lgDust) then
+                          if (lgMultiDustChemistry) then
+                             nsp = grid%dustAbunIndex(grid%active(i,j,k))
+                          else
+                             nsp = 1
+                          end if
 
                           do ai = 1, nsizes
-                             do nspec = 1, nspecies
+                             do nspec = 1, nspeciesPart(nsp)
                                 totalDustMass = totalDustMass + &
-                                     &(1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*rho(nspec)*grainWeight(ai)*&
-                                     & grainAbun(nspec))*grid%Ndust(grid%active(i,j,k))*dV
+                                     &(1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*&
+                                     & rho(dustComPoint(nsp)-1+nspec)*grainWeight(ai)*&
+                                     & grainAbun(nsp,nspec))*grid%Ndust(grid%active(i,j,k))*dV
 
                              end do
                           end do
@@ -1519,6 +1681,7 @@ module grid_mod
            
            real, pointer                  :: HdenTemp(:,:,:) ! temporary Hden
            real, pointer                  :: NdustTemp(:,:,:) ! temporary dust number density array
+           real, pointer                  :: dustAbunIndexTemp(:,:,:) ! temporary dust number density array
            
            integer                        :: edgeP        ! subgrid edge pointer on mothergrid
            integer                        :: i,j,k,iG,ai  ! counters
@@ -1529,6 +1692,7 @@ module grid_mod
            integer                        :: ios, err     ! I/O and allocation error status
            integer                        :: elem, ion    ! counters
            integer                        :: nspec, nsize ! counters
+           integer                        :: nsp          ! pointer
            integer                        :: NgrainSize   ! number of grain sizes
            integer                        :: RinP         ! pointer to the inner radius intercept  
                                                        ! with one of the axes
@@ -1739,6 +1903,14 @@ module grid_mod
                     stop
                  end if
                  NdustTemp = 0.
+                 if (lgMultiDustChemistry) then
+                    allocate(dustAbunIndexTemp(1:grid(iG)%nx,1:grid(iG)%ny,1:grid(iG)%nz), stat = err)
+                    if (err /= 0) then
+                       print*, "! setSubGrids: can't allocate dustAbunIndexTemp memory for subGrid", iG
+                       stop
+                    end if
+                    dustAbunIndexTemp = 0.
+                 end if
               end if
 
               ! allocate space for HdenTemp 
@@ -1763,32 +1935,65 @@ module grid_mod
                        end if
                        
                        if (.not.lgMultiChemistry) then
-                          
-                          if (lgGas .and. lgDust) then
-                             read(72, *) x,y,z, HdenTemp(ix,iy,iz), NdustTemp(ix,iy,iz)
-                          else if (lgGas .and. .not. lgDust) then
-                             read(72, *) x,y,z, HdenTemp(ix,iy,iz)
-                          else if (.not.lgGas .and. lgDust) then
-                             read(72, *) x,y,z, NdustTemp(ix,iy,iz)
-                          else
-                             print*, "! setSubGrids: No gas or dust with multiple grids!!"
-                             stop
-                          end if
-                                                          
-                       else
 
-                          if (lgGas .and. lgDust) then
-                             read(72, *) x,y,z, HdenTemp(ix,iy,iz), NdustTemp(ix,iy,iz),grid(iG)%abFileIndex(ix,iy,iz)
-                          else if (lgGas .and. .not. lgDust) then
-                             read(72, *) x,y,z, HdenTemp(ix,iy,iz),grid(iG)%abFileIndex(ix,iy,iz)
-                          else if (.not.lgGas .and. lgDust) then
-                             print*, '! setSubGrids: gas must be present when the multichemistry option is used'
-                             stop
+                          if (lgMultiDustChemistry) then
+
+                             if (lgGas .and. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz), &
+                                     & NdustTemp(ix,iy,iz), dustAbunIndexTemp(ix,iy,iz)
+!print*, x,y,z, HdenTemp(ix,iy,iz), NdustTemp(ix,iy,iz), dustAbunIndexTemp(ix,iy,iz)
+
+                             else if (lgGas .and. .not. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz)
+                             else if (.not.lgGas .and. lgDust) then
+                                read(72, *) x,y,z, NdustTemp(ix,iy,iz), dustAbunIndexTemp(ix,iy,iz)
+                             else
+                                print*, "! setSubGrids: No gas or dust with multiple grids!!"
+                                stop
+                             end if
+
                           else
-                             print*, "! setSubGrids: No gas or dust with multiple grids and multichemistry!!"
-                             stop
+
+                             if (lgGas .and. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz), NdustTemp(ix,iy,iz)
+                             else if (lgGas .and. .not. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz)
+                             else if (.not.lgGas .and. lgDust) then
+                                read(72, *) x,y,z, NdustTemp(ix,iy,iz)
+                             else
+                                print*, "! setSubGrids: No gas or dust with multiple grids!!"
+                                stop
+                             end if
+
                           end if
+                       else
                           
+                          if (lgMultiDustChemistry) then
+                             
+                             if (lgGas .and. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz), NdustTemp(ix,iy,iz),&
+                                     &grid(iG)%abFileIndex(ix,iy,iz), dustAbunIndexTemp(ix,iy,iz)
+                             else if (.not.lgGas .and. lgDust) then
+                                print*, '! setSubGrids: gas must be present when the multichemistry option is used'
+                                stop
+                             else
+                                print*, "! setSubGrids: No gas or dust with multiple grids and multichemistry!!"
+                                stop
+                             end if
+                          else
+                             if (lgGas .and. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz), NdustTemp(ix,iy,iz),grid(iG)%abFileIndex(ix,iy,iz)
+                             else if (lgGas .and. .not. lgDust) then
+                                read(72, *) x,y,z, HdenTemp(ix,iy,iz),grid(iG)%abFileIndex(ix,iy,iz)
+                             else if (.not.lgGas .and. lgDust) then
+                                print*, '! setSubGrids: gas must be present when the multichemistry option is used'
+                                stop
+                             else
+                                print*, "! setSubGrids: No gas or dust with multiple grids and multichemistry!!"
+                                stop
+                             end if
+
+                          end if
                        end if
 
                        x = grid(iG)%xAxis(1)+x*(grid(iG)%xAxis(grid(iG)%nx)-grid(iG)%xAxis(1))
@@ -1837,7 +2042,10 @@ module grid_mod
 
                        end if
                        
-                       if (grid(iG)%active(ix,iy,iz) <= 0 .and. lgDust ) NdustTemp(ix,iy,iz) = 0.
+                       if (grid(iG)%active(ix,iy,iz) <= 0 .and. lgDust ) then
+                          NdustTemp(ix,iy,iz) = 0.
+                          if (lgMultiDustChemistry) dustAbunIndexTemp(ix,iy,iz) = 0.
+                       end if
                        if (grid(iG)%active(ix,iy,iz) <= 0 .and. lgGas ) HdenTemp(ix,iy,iz) = 0.
 
                        if (lgDust .and. lgGas) then
@@ -1848,34 +2056,35 @@ module grid_mod
                              grid(iG)%active(ix,iy,iz) = 0
                              HdenTemp(ix,iy,iz) = 0.
                              NdustTemp(ix,iy,iz) = 0.
+                             if (lgMultiDustChemistry) dustAbunIndexTemp(ix,iy,iz) = 0.
                           end if
                        else if ( lgDust .and. (.not.lgGas) ) then
                           if (NdustTemp(ix,iy,iz)>0.) then
-                              grid(iG)%nCells =  grid(iG)%nCells + 1
-                              grid(iG)%active(ix,iy,iz) =  grid(iG)%nCells
-                           else
-                              grid(iG)%active(ix,iy,iz) = 0
-                              NdustTemp(ix,iy,iz) = 0.
-                           end if
-                        else if ( (.not.lgDust) .and. lgGas) then                            
-                           if (HdenTemp(ix,iy,iz) > 0.) then
-                               grid(iG)%nCells =  grid(iG)%nCells + 1
-                               grid(iG)%active(ix,iy,iz) =  grid(iG)%nCells
-                            else
-                               grid(iG)%active(ix,iy,iz) = 0
-                               HdenTemp(ix,iy,iz) = 0.
-                            end if
-                         else
-
-                            print*, '! setSubGrids: no gas and no dust? The grid is empty.'
-                            stop
-                         end if                       
-
-                       end do
-                   end do
-                end do
+                             grid(iG)%nCells =  grid(iG)%nCells + 1
+                             grid(iG)%active(ix,iy,iz) =  grid(iG)%nCells
+                          else
+                             grid(iG)%active(ix,iy,iz) = 0
+                             NdustTemp(ix,iy,iz) = 0.
+                             if (lgMultiDustChemistry) dustAbunIndexTemp(ix,iy,iz) = 0.
+                          end if
+                       else if ( (.not.lgDust) .and. lgGas) then                            
+                          if (HdenTemp(ix,iy,iz) > 0.) then
+                             grid(iG)%nCells =  grid(iG)%nCells + 1
+                             grid(iG)%active(ix,iy,iz) =  grid(iG)%nCells
+                          else
+                             grid(iG)%active(ix,iy,iz) = 0
+                             HdenTemp(ix,iy,iz) = 0.
+                          end if
+                       else
+                          
+                          print*, '! setSubGrids: no gas and no dust? The grid is empty.'
+                          stop
+                       end if
+                    end do
+                 end do
+              end do
               
-                close(72)
+              close(72)
 
               ! allocate grid arrays
               
@@ -1964,6 +2173,13 @@ module grid_mod
                  end if
                  grid(iG)%Ndust=0.
 
+                 allocate(grid(iG)%dustAbunIndex(0:grid(iG)%nCells), stat = err)
+                 if (err /= 0) then
+                    print*, "! grid: can't allocate dustAbunIndex memory"
+                    stop
+                 end if
+                 grid(iG)%dustAbunIndex=0.
+
                  if (.not.lgGas) then
                     allocate(grid(iG)%dustPDF(0:grid(iG)%nCells, 1:nbins), stat = err)
                     if (err /= 0) then
@@ -2042,8 +2258,11 @@ module grid_mod
                              grid(iG)%Hden(grid(iG)%active(ix,iy,iz)) = HdenTemp(ix,iy,iz)*denfac
                              grid(iG)%Te(grid(iG)%active(ix,iy,iz)) = TeStart
                           end if
-                          if (lgDust) grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = NdustTemp(ix,iy,iz)*denfac
-                          
+                          if (lgDust) then
+                             grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = NdustTemp(ix,iy,iz)*denfac
+                             if (lgMultiDustChemistry) grid(iG)%dustAbunIndex(grid(iG)%active(ix,iy,iz)) = &
+                                  & dustAbunIndexTemp(ix,iy,iz)*denfac                          
+                          end if
                        end if
                     end do
                  end do
@@ -2110,6 +2329,7 @@ module grid_mod
 
               if (lgDust) then
                  if(associated(NdustTemp)) deallocate(NdustTemp)
+                 if (lgMultiDustChemistry .and. associated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
               end if
               
               totalMass = 0.
@@ -2161,12 +2381,19 @@ module grid_mod
                                  & *grid(iG)%Hden(grid(iG)%active(ix,iy,iz))
 
                              denominator = 0.
+                             
+                             if (lgMultiDustChemistry) then
+                                nsp = grid(iG)%dustAbunIndex(grid(iG)%active(ix,iy,iz))
+                             else
+                                nsp = 1
+                             end if
 
-                             do nspec = 1, nSpecies
+                             do nspec = 1, nSpeciesPart(nsp)
                                 do ai = 1, nSizes
                                    denominator = denominator + &
-                                        & (1.3333*Pi*( (grainRadius(ai)*1.e-4)**3)*rho(nspec)*grainWeight(ai)*&
-                                        & grainAbun(nspec))
+                                        & (1.3333*Pi*( (grainRadius(ai)*1.e-4)**3)*&
+                                        & rho(dustComPoint(nsp)-1+nspec)&
+                                        &*grainWeight(ai)*grainAbun(nsp,nspec))
                                 end do
                              end do
                              grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))/&
@@ -2177,11 +2404,19 @@ module grid_mod
                           ! calculate total dust mass
                           if (lgDust) then
 
+                             if (lgMultiDustChemistry) then
+                                nsp = grid(iG)%dustAbunIndex(grid(iG)%active(ix,iy,iz))
+                             else
+                                nsp = 1
+                             end if
+
                              do ai = 1, nsizes
-                                do nspec = 1, nspecies
+                                do nspec = 1, nspeciesPart(nsp)
                                    totalDustMass = totalDustMass + &
-                                        &(1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*rho(nspec)*grainWeight(ai)*&
-                                        & grainAbun(nspec))*grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))*dV
+                                        &(1.3333*Pi*((grainRadius(ai)*1.e-4)**3)*&
+                                        & rho(dustComPoint(nsp)-1+nspec)*&
+                                        & grainWeight(ai)*grainAbun(nsp,nspec)&
+                                        & *grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))*dV)
                                 end do
                              end do
                           end if
@@ -2216,6 +2451,8 @@ module grid_mod
               if(associated(grid%scaOpac)) deallocate(grid%scaOpac)
               if(associated(grid%Ndust)) deallocate(grid%Ndust)
               if(associated(grid%Tdust)) deallocate(grid%Tdust)
+              if (lgMultiChemistry .and. associated(grid%dustAbunIndex)) &
+                   &  deallocate(grid%dustAbunIndex)
               if (.not.lgGas) then
                  if(associated(grid%dustPDF)) deallocate(grid%dustPDF)
               end if
@@ -2261,6 +2498,7 @@ module grid_mod
            integer                     :: ion                 ! ion counter
            integer                     :: ios                 ! I/O error status
            integer                     :: i,j,k,iG,ai         ! counters
+           integer                     :: yTop                ! 2D index
 
            print* , 'in writeGrid'
 
@@ -2312,9 +2550,16 @@ module grid_mod
                  write(21,*) grid(iG)%zAxis(i)
               end do
 
+              if (iG>1 .or. (.not. lg2D)) then
+                 yTop = grid(iG)%ny
+              else if (iG == 1 .and. lg2D) then
+                 yTop = 1
+              end if
+
+
               ! write the rest of the grid to files
               do i = 1, grid(iG)%nx
-                 do j = 1, grid(iG)%ny
+                 do j = 1, yTop
                  do k = 1, grid(iG)%nz
 
                     cellP = grid(iG)%active(i,j,k)
@@ -2343,10 +2588,14 @@ module grid_mod
                        end do
                     end if
                     if (lgDust) then
-
-                       write(50, *) grid(iG)%Ndust(cellP)                          
+                       
+                       if (lgMultiChemistry) then                          
+                          write(50, *) grid(iG)%Ndust(cellP), grid(iG)%dustAbunIndex(cellP)               
+                       else
+                          write(50, *) grid(iG)%Ndust(cellP)
+                       end if
                        do ai = 0, nSizes
-                          write(50, *) (grid(iG)%Tdust(elem,ai,cellP),' ', elem=0,nSpecies)
+                          write(50, *) (grid(iG)%Tdust(elem,ai,cellP),' ', elem=0,nSpeciesMax)
                        end do
 
                     end if
@@ -2421,11 +2670,24 @@ module grid_mod
         write(40, *) lgOutput, ' lgOutput'
         write(40, *) dxSlit,dySlit,' dxSlit,dySlit'
         write(40, *) lgDust, lgDustConstant, ' lgDust, lgDustConstant'
-        write(40, *) '"',trim(dustFile(1)),'"', ' dustFile'
+        write(40, *) lgMultiDustChemistry, nDustCOmponents, ' lgMultiDustChemistry, nDustComponents'
+        if (lgDust) then
+           do i = 1, nDustComponents
+              write(40, *) '"',trim(dustSpeciesFile(i)),'"', ' dustFile'
+           end do
+        else
+           write(40, *) 'none', ' dustFile'
+        end if
         write(40, *) '"',trim(dustFile(2)),'"', ' dustFile'
         write(40, *) lgGas, ' lgGas'
         write(40, *) lgRecombination, ' lgRecombination'
-        write(40, *) nSpecies, nSizes, 'nSpecies, nSizes'
+        if (lgDust) then
+           write(40, *) nSpeciesMax, nSpecies, nSizes, ' nSpeciesMax, nSpecies, nSizes'
+           write(40, *) (nSpeciesPart(i), i=1, nDustComponents) , ' Partial nspecies'
+        else
+           write(40, *) 1, 1, 1, ' nSpeciesMax, nSpecies, nSizes'
+           write(40, *) 1, ' Partial nspecies'
+        end if
         write(40, *) resLinesTransfer, 'resLinesTransfer'
         write(40, *) lgDustScattering, 'lgDustScattering'
         write(40, *) nAngleBins, ' nAngleBins'
@@ -2443,6 +2705,8 @@ module grid_mod
         write(40, *) emittingGrid, ' emittingGrid'
         write(40, *) nstages, ' emittingGrid'
         write(40, *) lgMultistars, ' lgMultiStars'
+        write(40,*)  lg2D, ' 2D geometry?'
+
         ! close file
         close(40)
      
@@ -2555,7 +2819,7 @@ module grid_mod
       integer                        :: i,j,k ! counters
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
-      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7
+      real                           :: p0,p00,p1,p2,p3,p4,p5,p6,p7, ind
       real, pointer                  :: p(:)                                        
       integer :: iCount, nuCount, iG, ai      ! counters
       integer :: g0,g1
@@ -2563,13 +2827,16 @@ module grid_mod
       integer :: nElec
       integer :: outshell
       integer :: totCells, totcellsloc
+      integer :: yTop, xPmap
         
+
       integer, parameter :: maxLim = 10000
       integer, parameter :: nSeries = 17
       
       real, dimension(450) :: ordered
       real, dimension(17)  :: seriesEdge
-      
+      real                 :: radius
+
       real                 :: nuStepSizeLoc
 
       p=0.
@@ -2649,11 +2916,15 @@ module grid_mod
       read(77, *) lgOutput
       read(77, *) dxSlit, dySlit
       read(77, *) lgDust, lgDustConstant
-      read(77, *) dustFile(1)
+      read(77, *) lgMultiDustChemistry, nDustComponents
+      do i = 1, nDustComponents
+         read(77, *) dustSpeciesFile(i)
+      end do
       read(77, *) dustFile(2)
       read(77, *) lgGas
       read(77, *) lgRecombination
-      read(77, *) nSpecies, nSizes
+      read(77, *) nSpeciesMax,nSpecies, nSizes
+      read(77, *) (nSpeciesPart(i), i = 1, nDustComponents)
       read(77, *) resLinesTransfer
       read(77, *) lgDustScattering
       read(77, *) nAngleBins
@@ -2684,6 +2955,8 @@ module grid_mod
       read(77, *) emittingGrid
       read(77, *) nstages
       read(77, *) lgMultistars
+      read(77, *) lg2D
+
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -2707,14 +2980,18 @@ module grid_mod
          print*,  lgOutput, ' lgOutput'
          print*,  dxSlit, dySlit, ' dxSlit, dySlit'
          print*,  lgDust, lgDustConstant, ' lgDust, lgDustConstant'
-         print*,  dustFile(1), ' dustFiles'
+         print*,  lgMultiDustChemistry, nDustComponents, ' lgMultiDustChemistry, nDustComponents'
+         do i =1 , nDustComponents
+            print*,  dustSpeciesFile(i), ' dustFiles'
+         end do
          print*,  dustFile(2)
          print*,  lgGas, ' lgGas'
          print*,  lgRecombination, ' lgRecombination'
-         print*,  nSpecies, nSizes
-         print*,  resLinesTransfer
-         print*,  lgDustScattering
-         print*,  nAngleBins
+         print*,  nSPeciesMax, nSpecies, nSizes, ' nSPeciesMax, nSpecies, nSizes'
+         print*,  (nSpeciesPart(i), i = 1, nDustComponents)
+         print*,  resLinesTransfer, ' resLinesTransfer'
+         print*,  lgDustScattering, ' lgDustScattering'
+         print*,  nAngleBins, ' nAngleBins'
          print*,  contCube(1),contCube(2), 'continuumCube'
          print*,  lgPhotoelectric, ' lgPhotoelectric'
          print*,  lgTraceHeating, ' lgTraceHeating'
@@ -2725,6 +3002,8 @@ module grid_mod
          print*,  emittingGrid, ' emittingGrid'
          print*,  nstages, ' nstages'
          print*,  lgMultistars, ' lgMultiStars'
+         print*,  lg2D, ' lg2D'
+
       end if
       close(77)
 
@@ -2792,7 +3071,7 @@ module grid_mod
          if (lgPlaneIonization .and. iG==1) then
             allocate(planeIonDistribution(grid(iG)%nx,grid(iG)%nz), stat = err)
             if (err /= 0) then
-               print*, "! setMotherGrid: can't allocate dl memory"
+               print*, "! resetMotherGrid: can't allocate dl memory"
                stop
             end if
             planeIonDistribution = 0
@@ -2936,7 +3215,7 @@ module grid_mod
                print*, "Can't allocate grid memory, Ndust"
                stop
             end if
-            allocate(grid(iG)%Tdust(0:nSpecies, 0:nSizes, 0:grid(iG)%nCells), stat = err)
+            allocate(grid(iG)%Tdust(0:nSpeciesMax, 0:nSizes, 0:grid(iG)%nCells), stat = err)
             if (err /= 0) then
                print*, "Can't allocate grid memory, Tdust"
                stop
@@ -2974,7 +3253,7 @@ module grid_mod
 
          ! read the rest of the files into grid 
          do i = 1, grid(iG)%nx
-            do j = 1, grid(iG)%ny
+            do j = 1, yTOp
                do k = 1, grid(iG)%nz
                   
                   read(89, *) grid(iG)%active(i,j,k), p0,p00
@@ -3011,9 +3290,15 @@ module grid_mod
                   end if
                   
                   if (lgDust) then
-                     read(88, *) p00
+                     if (lgMultiDustChemistry) then
+                        read(88, *) p00, ind
+                        grid(iG)%dustAbunIndex(cellP) = ind
+                     else
+                        read(88, *) p00
+                     end if
+                     
                      do ai = 0, nSizes
-                        read(88, *) (grid(iG)%Tdust(elem,ai,cellP), elem = 0,nSpecies)
+                        read(88, *) (grid(iG)%Tdust(elem,ai,cellP), elem = 0,nSpeciesMax)
                      end do
                      grid(iG)%Ndust(cellP) = p00
                   end if
@@ -3021,6 +3306,38 @@ module grid_mod
                end do
             end do
          end do
+
+
+
+         if (lg2D .and. iG==1) then
+            allocate(TwoDscaleJ(grid(iG)%nCells))
+            TwoDscaleJ = 1.
+
+            do i = 1, grid(ig)%nx
+               do j = 2, grid(ig)%ny
+                  do k = 1, grid(ig)%nz
+                     radius = 1.e10*sqrt( (grid(ig)%xAxis(i)/1.e10)*&
+                          &(grid(ig)%xAxis(i)/1.e10) + &
+                          &(grid(ig)%yAxis(j)/1.e10)*(grid(ig)%yAxis(j)/1.e10) ) 
+                      
+                     call locate(grid(ig)%xAxis, radius, xPmap)
+                     if (xPmap < grid(ig)%nx) then
+                        if (radius >= (grid(ig)%xAxis(xPmap)+grid(ig)%xAxis(xPmap+1))/2.) &
+                             & xPmap = xPmap+1
+                     end if
+                     grid(ig)%active(i,j,k) = grid(ig)%active(xPmap, 1, k)
+                     
+                     if (grid(ig)%active(xPmap,1,k)>0) &
+                          & TwoDScaleJ(grid(ig)%active(xPmap,1,k)) = &
+                          & TwoDScaleJ(grid(ig)%active(xPmap,1,k))+1.
+                      
+                   end do
+                end do
+             end do             
+          end if
+
+ 
+
 
          ! find geometric corrections
          grid(iG)%geoCorrX = (grid(iG)%xAxis(grid(iG)%nx) - grid(iG)%xAxis(grid(iG)%nx-1))/2.

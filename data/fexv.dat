@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Experimental energy levels (1 to 45): Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L.,2000, J.Phys.Chem.Ref.Data, Monograph 8
 %Experimental energy levels (31,32): Eissner, W., Galavis, M.E., Mendoza, C., Zeippen, C.J., 1999, A&AS, 137, 165
@@ -20,7 +20,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Aug 2005
-
 %filename: fe_15.splups
 %gf values: Landi & Gu, 2005, ApJ, in press
 %Effective collision strengths (levels 1-45): Berrington, K.A., Ballance, C.P., Griffin, D.C., & Badnell, N.R. 2005, J.Ph.B, 38, 1667

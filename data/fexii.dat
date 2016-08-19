@@ -1,4 +1,4 @@
- 27
+ 26
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Del Zanna and Mason, 2005,  A&A, 433, 731
 %theoretical energy levels (second column): Storey, Del Zanna, Mason, Zeippen, 2005,  A&A, 433, 717 (scattering calculation)
@@ -16,7 +16,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   Giulio Del Zanna - June 7 2005
-
 %filename: fe_12.splups
 %oscillator strengths: Storey, Del Zanna, Mason, Zeippen, 2005,  A&A, 433, 717 (scattering calculation)
 %effective collision strengths: Storey, Del Zanna, Mason, Zeippen, 2005,  A&A, 433, 717

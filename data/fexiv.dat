@@ -1,4 +1,4 @@
- 54
+ 49
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Churilov S.S., Levashov V.E., 1993, Physica Scripta 48, 425
 %observed energy levels: Redfors A., Litzen U., 1989, J.Opt.Soc.Am.B 6, #8, 1447
@@ -22,15 +22,12 @@
      described on p.679 of Storey, Mason & Saraph (1996, A&A 309, 677) 
      and labelled by them as the "extended basis". In Storey, Mason & 
      Young, this basis is referred to as "basis 3".
-
      The wavelengths for transitions involving level 16 were derived 
      using the "best guess" energy for level 16 given in the 3rd energy
      column of the .elvlc file.
-
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %    Peter Young,    Feb 99
-
 filename: fe_14.splups
 %effective collision strengths: Storey P.J., Mason H.E., Young P.R., 2000, A&ASS 141, 285
 %comment: effective collision strengths were given in the temperature range 5.5 < Log T < 7.2
@@ -40,12 +37,10 @@ filename: fe_14.splups
     Although data for the 1-2 transition was calculated by Storey, Mason 
     & Young (1999), that presented in Storey, Mason & Saraph (1996) is 
     considered more accurate.
-
     Only transitions involving levels 1, 2 and 21 are tabulated here. These 
     are the only levels with significant population. Inclusion of all of the 
     other Fe XIV transitions has negligible effects on the level balance of 
     the ion.
-
     For the gf values, I have used those calculated in the "basis 1" model 
     of the ion, which is the one used for the collisional calculation. 
     Note that the gf values in the .wgfa file are from the more accurate 

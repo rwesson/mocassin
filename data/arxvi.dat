@@ -1,4 +1,4 @@
- 30
+ 29
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (1-24): Kelly,R.L., 1987, J.Phys.Chem.Ref.Data 16, Suppl. 1.     
 %Theoretical energy levels (1-24): Zhang,H.L.,Sampson,D.H.,Fontes,C.J., 1990, ADNDT, 44, 31.
@@ -21,7 +21,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 % 
 % E. Landi and K.P.Dere - Nov 1999
-
 %filename: ar_16.splups
 %oscillator strengths and collision strengths: Zhang, Sampson, Fontes, 1990, ADNDT, 44, 31
 %Innershell collision strengths: Goett, S.J., Sampson, D.H., 1983, ADNDT, 29, 535

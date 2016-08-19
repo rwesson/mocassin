@@ -1,4 +1,4 @@
- 17
+ 16
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels: Edlen, B., 1985, Physica Scripta, 31, 345
 % theoretical energy levels: Dere K.P, Mason H.E., Widing K.G., Bhatia A.K., ApJSS, 1979, 40, 341
@@ -10,7 +10,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E.Landi 2000
-
 %filename: ar_13.splups
 %oscillator strengths and collision strengths: Dere K.P, Mason H.E., Widing K.G., Bhatia A.K., 1979, ApJSS, 40, 341
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration

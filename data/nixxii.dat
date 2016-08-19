@@ -1,4 +1,4 @@
- 21
+ 20
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels: Edlen, 1984, Phys.Scripta, 30, 135 
 %Theoretical energy levels (1- 15): Zhang, Sampson, ADNDT, 1999, 72, 153
@@ -13,7 +13,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic database collaboration
 %
 % G. Del Zanna, May 2001
-
 %filename: ni_22.splups
 %oscillator strengths: Zhang, Sampson, 1999, ADNDT, 72, 153
 %collision strengths: Zhang, Sampson, 1999, ADNDT, 72, 153

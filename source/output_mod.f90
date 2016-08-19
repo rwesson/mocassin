@@ -2132,11 +2132,44 @@ module output_mod
         real                       :: hb          ! emissivity of H 4->2
         real                       :: fh          ! emissivity of H
 
+
+        T4 = TeUsed / 10000.
+
+        ! do hydrogenic ions first
+
+         
+        ! read in HI recombination lines [e-25 ergs*cm^3/s] 
+        ! (Storey and Hummer MNRAS 272(1995)41)
+!        close(94)
+!        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+!        if (ios /= 0) then
+!            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
+!            stop
+!        end if
+!        do iup = 15, 3, -1
+!            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
+!        end do
+
+!        close(94)
+
+        ! calculate Hbeta 
+        ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        ! fits to Storey and Hummer MNRAS 272(1995)41
+!        Hbeta = 10**(-0.870*log10Te + 3.57)
+!        Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
+
+        ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
+!        do iup = 15, 3, -1
+!            do ilow = 2, min0(8, iup-1)
+!                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
+!            end do
+!        end do    
+
         ! calculate Hbeta
-        if (TeUsed > 26000.) then
-           print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
-                & calculations may be uncertain"
-        end if
+!        if (TeUsed > 26000.) then
+!           print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
+!                & calculations may be uncertain"
+!        end if
         Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
 
         ! fits to Storey and Hummer MNRAS 272(1995)41
@@ -2198,12 +2231,7 @@ module output_mod
            denint=3
         end if
 
-
         ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
-        T4 = TeUsed / 10000.
-        if (T4 < 0.5) T4=0.5
-        if (T4 > 2.0) T4=2.0
-
         if (denint>0.and.denint<3) then
            do i =1, 34
               x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)

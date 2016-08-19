@@ -455,7 +455,7 @@ module photon_mod
         end subroutine energyPacketRun
 
         ! this function initializes a photon packet
-        function initPhotonPacket(nuP,  position, lgLine, lgStellar, xP, yP, zP, gP)
+        function initPhotonPacket(nuP,  position, direction, lgLine, lgStellar, xP, yP, zP, gP, lgHg)
             implicit none
 
             type(photon_packet)      :: initPhotonPacket  ! the photon packet
@@ -469,14 +469,18 @@ module photon_mod
             integer                  :: igpi              ! grid pointer 1=mother, 2=sub
 
 
-            logical, intent(in)      :: lgLine, lgStellar ! line, stellar packet?
-
+            logical, intent(in)      :: lgLine, lgStellar,&
+                 & lgHG ! line, stellar packet Heyney-Greenstein?
+            
             type(vector), intent(in) :: position          ! the position at which the photon
                                                           ! packet is created    
+            type(vector), intent(in) :: direction
             ! local variables
 
             integer                  :: i, irepeat        ! counter
 
+
+            initPhotonPacket%direction = direction
 
             initPhotonPacket%position = position
 
@@ -510,93 +514,117 @@ module photon_mod
             initPhotonPacket%yP  = yP
             initPhotonPacket%zP  = zP
 
-
-            ! cater for plane parallel ionization case
-            if (initPhotonPacket%lgStellar .and. lgPlaneIonization) then
+            if (.not.lgHG .or. lgIsotropic .or. initPhotonPacket%lgStellar) then
+               ! cater for plane parallel ionization case
+               if (initPhotonPacket%lgStellar .and. lgPlaneIonization) then
                
-               ! get position
-               
-               ! x-direction
-               call random_number(random)
-               random = 1. - random
-               initPhotonPacket%position%x = &
+                  ! get position
+                  
+                  ! x-direction
+                  call random_number(random)
+                  random = 1. - random
+                  initPhotonPacket%position%x = &
                     & -(grid(gP)%xAxis(2)-grid(gP)%xAxis(1))/2. + random*( &
                     & (grid(gP)%xAxis(2)-grid(gP)%xAxis(1))/2.+&
                     & (grid(gP)%xAxis(grid(gP)%nx)-grid(gP)%xAxis(grid(gP)%nx-1))/2.+&
                     & grid(gP)%xAxis(grid(gP)%nx))
-               if (initPhotonPacket%position%x<grid(gP)%xAxis(1)) &
-                    & initPhotonPacket%position%x=grid(gP)%xAxis(1)
-               if (initPhotonPacket%position%x>grid(gP)%xAxis(grid(gP)%nx)) & 
-                    initPhotonPacket%position%x=grid(gP)%xAxis(grid(gP)%nx)
+                  if (initPhotonPacket%position%x<grid(gP)%xAxis(1)) &
+                       & initPhotonPacket%position%x=grid(gP)%xAxis(1)
+                  if (initPhotonPacket%position%x>grid(gP)%xAxis(grid(gP)%nx))&
+                       & initPhotonPacket%position%x=grid(gP)%xAxis(grid(gP)%nx)
+                       
+                  call locate(grid(gP)%xAxis, initPhotonPacket%position%x,&
+                       & initPhotonPacket%xP(igpi))
+                  if (initPhotonPacket%xP(igpi) < grid(gP)%nx) then
+                     if (initPhotonPacket%position%x >= &
+                          &(grid(gP)%xAxis(initPhotonPacket%xP(igpi))+&
+                          & grid(gP)%xAxis(initPhotonPacket%xP(igpi)+1))/2.) &
+                          & initPhotonPacket%xP(igpi) = initPhotonPacket%xP(igpi)+1
+                  end if
+                  
+                  ! y-direction
+                  initPhotonPacket%position%y = 0.
+                  initPhotonPacket%yP(igpi) = 1
+                  
+                  ! z-direction
+                  call random_number(random)
+                  random = 1. - random
+                  initPhotonPacket%position%z = -&
+                       & (grid(gP)%zAxis(2)-grid(gP)%zAxis(1))/2. &
+                       & + random*( &
+                       & (grid(gP)%zAxis(2)-grid(gP)%zAxis(1))/2.+&
+                       & (grid(gP)%zAxis(grid(gP)%nz)-&
+                       & grid(gP)%zAxis(grid(gP)%nz-1))/2.+&
+                       & grid(gP)%zAxis(grid(gP)%nz))
+                  if (initPhotonPacket%position%z<grid(gP)%zAxis(1)) & 
+                       & initPhotonPacket%position%z=grid(gP)%zAxis(1)
+                  if (initPhotonPacket%position%z>&
+                       & grid(gP)%zAxis(grid(gP)%nz)) & 
+                       & initPhotonPacket%position%z=&
+                       & grid(gP)%zAxis(grid(gP)%nz)
+                  
+                  call locate(grid(gP)%zAxis, &
+                       & initPhotonPacket%position%z, initPhotonPacket%zP(igpi))
+                  if (initPhotonPacket%zP(igpi) < grid(gP)%nz) then 
+                     if (initPhotonPacket%position%z >= &
+                          & (grid(gP)%xAxis(initPhotonPacket%zP(igpi))+&
+                          & grid(gP)%zAxis(initPhotonPacket%zP(igpi)+1))&
+                          & /2.) initPhotonPacket%zP(igpi) =& 
+                          & initPhotonPacket%zP(igpi)+1
+                  end if
+                  
+                  if (initPhotonPacket%xP(igpi)<1) &
+                       & initPhotonPacket%xP(igpi)=1             
+                  if (initPhotonPacket%zP(igpi)<1) &
+                       & initPhotonPacket%zP(igpi)=1
+                  
+                  ! direction is parallel to y-axis direction
+                  initPhotonPacket%direction%x = 0.
+                  initPhotonPacket%direction%y = 1.
+                  initPhotonPacket%direction%z = 0.
+                  
+                  if (initPhotonPacket%xP(igpi) >  &
+                       & grid(gP)%xAxis(grid(gP)%nx) .or. &
+                       & initPhotonPacket%zP(igpi) >  &
+                       & grid(gP)%zAxis(grid(gP)%nz)) then
+                     print*, "! initPhotonPacket: insanity in &
+                          & planeIonisation init"
+                     print*, igpi, initPhotonPacket%xP(igpi),  &
+                          & grid(gP)%xAxis(grid(gP)%nx), &
+                          & initPhotonPacket%zP(igpi), &
+                          & grid(gP)%zAxis(grid(gP)%nz),  random, &
+                          & initPhotonPacket%position%z
+                     
+                     stop
+                  end if
+                  
+                  planeIonDistribution(initPhotonPacket%xP(igpi),&
+                       & initPhotonPacket%zP(igpi)) = &
+                       & planeIonDistribution(initPhotonPacket%xP(igpi),&
+                       & initPhotonPacket%zP(igpi)) + 1
+                  
+               else
+                  
+                  do irepeat = 1, 1000000
+                     ! get a random direction
+                     initPhotonPacket%direction = randomUnitVector()
+                     if (initPhotonPacket%direction%x/=0. .and. & 
+                          & initPhotonPacket%direction%y/=0. .and. & 
+                          & initPhotonPacket%direction%z/=0.) exit
+                  end do
 
-               call locate(grid(gP)%xAxis, initPhotonPacket%position%x, initPhotonPacket%xP(igpi))
-               if (initPhotonPacket%xP(igpi) < grid(gP)%nx) then
-                  if (initPhotonPacket%position%x >= (grid(gP)%xAxis(initPhotonPacket%xP(igpi))+&
-                       & grid(gP)%xAxis(initPhotonPacket%xP(igpi)+1))/2.) &
-                       & initPhotonPacket%xP(igpi) = initPhotonPacket%xP(igpi)+1
                end if
 
-               ! y-direction
-               initPhotonPacket%position%y = 0.
-               initPhotonPacket%yP(igpi) = 1
-
-               ! z-direction
-               call random_number(random)
-               random = 1. - random
-               initPhotonPacket%position%z = -(grid(gP)%zAxis(2)-grid(gP)%zAxis(1))/2. + random*( &
-                    & (grid(gP)%zAxis(2)-grid(gP)%zAxis(1))/2.+&
-                    & (grid(gP)%zAxis(grid(gP)%nz)-grid(gP)%zAxis(grid(gP)%nz-1))/2.+&
-                    & grid(gP)%zAxis(grid(gP)%nz))
-               if (initPhotonPacket%position%z<grid(gP)%zAxis(1)) & 
-                    & initPhotonPacket%position%z=grid(gP)%zAxis(1)
-               if (initPhotonPacket%position%z>grid(gP)%zAxis(grid(gP)%nz)) & 
-                    & initPhotonPacket%position%z=grid(gP)%zAxis(grid(gP)%nz)
-
-              call locate(grid(gP)%zAxis, initPhotonPacket%position%z, initPhotonPacket%zP(igpi))
-               if (initPhotonPacket%zP(igpi) < grid(gP)%nz) then               
-                  if (initPhotonPacket%position%z >= (grid(gP)%xAxis(initPhotonPacket%zP(igpi))+&
-                       & grid(gP)%zAxis(initPhotonPacket%zP(igpi)+1))/2.) initPhotonPacket%zP(igpi) =& 
-                       & initPhotonPacket%zP(igpi)+1
+               if ((lgSymmetricXYZ) .and. initPhotonPacket%lgStellar &
+                    & .and. .not.lgMultistars) then
+                  if (initPhotonPacket%direction%x<0.) &
+                       & initPhotonPacket%direction%x = -initPhotonPacket%direction%x
+                  if (initPhotonPacket%direction%y<0.) &
+                       & initPhotonPacket%direction%y = -initPhotonPacket%direction%y
+                  if (initPhotonPacket%direction%z<0.) &
+                       & initPhotonPacket%direction%z = -initPhotonPacket%direction%z
                end if
 
-               if (initPhotonPacket%xP(igpi)<1) initPhotonPacket%xP(igpi)=1             
-               if (initPhotonPacket%zP(igpi)<1) initPhotonPacket%zP(igpi)=1
-
-               ! direction is parallel to y-axis direction
-               initPhotonPacket%direction%x = 0.
-               initPhotonPacket%direction%y = 1.
-               initPhotonPacket%direction%z = 0.
-
-               if (initPhotonPacket%xP(igpi) >  grid(gP)%xAxis(grid(gP)%nx) .or. &
-                    & initPhotonPacket%zP(igpi) >  grid(gP)%zAxis(grid(gP)%nz)) then
-                  print*, "! initPhotonPacket: insanity in planeIonisation init"
-                  print*, igpi, initPhotonPacket%xP(igpi),  grid(gP)%xAxis(grid(gP)%nx), &
-                       & initPhotonPacket%zP(igpi), grid(gP)%zAxis(grid(gP)%nz),  random, initPhotonPacket%position%z
-
-                  stop
-               end if
-
-                planeIonDistribution(initPhotonPacket%xP(igpi),initPhotonPacket%zP(igpi)) = &
-                     & planeIonDistribution(initPhotonPacket%xP(igpi),initPhotonPacket%zP(igpi)) + 1
-
-             else
-
-                do irepeat = 1, 1000000
-                   ! get a random direction
-                   initPhotonPacket%direction = randomUnitVector()
-                   if (initPhotonPacket%direction%x/=0. .and. & 
-                        & initPhotonPacket%direction%y/=0. .and. & 
-                        & initPhotonPacket%direction%z/=0.) exit
-                end do
-            end if
-
-            if ((lgSymmetricXYZ) .and. initPhotonPacket%lgStellar .and. .not.lgMultistars) then
-                if (initPhotonPacket%direction%x<0.) &
-                     & initPhotonPacket%direction%x = -initPhotonPacket%direction%x
-                if (initPhotonPacket%direction%y<0.) &
-                     & initPhotonPacket%direction%y = -initPhotonPacket%direction%y
-                if (initPhotonPacket%direction%z<0.) &
-                     & initPhotonPacket%direction%z = -initPhotonPacket%direction%z
             end if
 
             initPhotonPacket%origin(1) = gP
@@ -779,7 +807,13 @@ module photon_mod
                       stop
                    end if
 
-                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, starIndeces(iStar,4))
+                   newPhotonPacket = initPhotonPacket(nuP, &
+                        &starPosition(iStar), nullUnitVector,.false., .true., &
+                        & orX,orY,orZ, &
+                        & starIndeces(iStar,4), .false.)
+
+
+!                   newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, starIndeces(iStar,4))
 
 !                else
 !                   if (grid(1)%active(orX(igpn), orY(igpn), orZ(igpn)) < 0.) then
@@ -836,8 +870,13 @@ module photon_mod
                    print*, chType, nuP, starPosition(iStar), .false., .true., orX,orY,orZ, gp
                    stop
                 end if
-                newPhotonPacket = initPhotonPacket(nuP, positionLoc, .false., .false., orX,&
-                     & orY, orZ, gP)
+!                newPhotonPacket = initPhotonPacket(nuP, positionLoc, .false., .false., orX,&
+!                     & orY, orZ, gP)
+
+                newPhotonPacket = initPhotonPacket(nuP, positionLoc, &
+                     & nullUnitVector,.false., .false., orX,&
+                     & orY, orZ, gP, .false.)
+
 
             ! if the photon is diffuse
             case ("diffuse")
@@ -906,7 +945,10 @@ module photon_mod
                       stop
                    end if
 
-                   newPhotonPacket = initPhotonPacket(nuP, position, .true., .false., xP, yP, zP, gP)
+
+                   newPhotonPacket = initPhotonPacket(nuP, position, &
+                        & nullUnitVector, .true., .false., xP, yP, zP, gP, .false.)
+!                   newPhotonPacket = initPhotonPacket(nuP, position, .true., .false., xP, yP, zP, gP)
                 else 
                     ! continuum photon
 
@@ -936,7 +978,12 @@ module photon_mod
                       stop
                    end if
 
-                    newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
+!                    newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
+ 
+
+                    newPhotonPacket = initPhotonPacket(nuP, position, nullUnitVector,&
+                         & .false., .false., xP, yP, zP, gP, .false.)
+
                 end if
 
             case ("dustEmi")
@@ -1009,7 +1056,12 @@ module photon_mod
                       stop
                    end if
 
-               newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
+!               newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
+
+               newPhotonPacket = initPhotonPacket(nuP, position, nullUnitVector,&
+                    & .false., .false., xP, yP, zP, gP, .false.)
+
+ 
 
             ! if the photon packet type is wrong or missing
             case default
@@ -1043,6 +1095,7 @@ module photon_mod
           real                            :: random   ! random number
           real                            :: tauCell  ! local tau
 
+          integer                         :: icomp
           integer                         :: idirT,idirP ! direction cosine counters
           integer                         :: i, j, nS ! counter
           integer                         :: xP,yP,zP ! cartesian axes indeces
@@ -1128,7 +1181,7 @@ module photon_mod
              safeLimit=5000
           else
 !             safeLimit=500000
-             safeLimit=1000
+             safeLimit=500
           end if
 
           do i = 1, safeLimit
@@ -1573,19 +1626,35 @@ module photon_mod
 
                       scaInt = scaInt + 1.                           
                       
-                      do nS = 1, nSpecies
-                         if (grainabun(nS)>0. .and. grid(gP)%Tdust(nS, 0, & 
-                              & grid(gP)%active(xP,yP,zP))<TdustSublime(nS)) exit
-                      end do
-                      if (nS>7) then
-                         print*, "! pathSegment: packet scatters with dust at position where all &
-                              &grains have sublimed."
-                         print*, xP,yP,zP, grid(gP)%active(xP,yP,zP), tauCell, absTau, passProb
-                         stop
-                      end if                      
+                      if (lgMultiDustChemistry) then
+                         do nS = 1, nSpeciesPart(grid(gP)%dustAbunIndex(grid(gP)%active(xP,yP,zP)))
+                            if (grainabun(grid(gP)%dustAbunIndex(grid(gP)%active(xP,yP,zP)),nS)>0. &
+                                 &.and. grid(gP)%Tdust(nS, 0, & 
+                                 & grid(gP)%active(xP,yP,zP))<TdustSublime(dustComPoint(&
+                                 &grid(gP)%dustAbunIndex(grid(gP)%active(xP,yP,zP)))-1+nS)) exit
+                         end do
+                         if (nS>nSpeciesPart(grid(gP)%dustAbunIndex(grid(gP)%active(xP,yP,zP)))) then
+                            print*, "! pathSegment: packet scatters with dust at position where all &
+                                 &grains have sublimed -1-."
+                            print*, xP,yP,zP, grid(gP)%active(xP,yP,zP), tauCell, absTau, passProb
+                            stop
+                         end if
+                      else
+                         do nS = 1, nSpeciesPart(1)
+                            if (grainabun(1,nS)>0. &
+                                 &.and. grid(gP)%Tdust(nS, 0, & 
+                                 & grid(gP)%active(xP,yP,zP))<TdustSublime(dustComPoint(&
+                                 &1)-1+nS)) exit
+                         end do
+                         if (nS>nSpeciesPart(1)) then
+                            print*, "! pathSegment: packet scatters with dust at position where all &
+                                 &grains have sublimed -2-."
+                            print*, xP,yP,zP, grid(gP)%active(xP,yP,zP), tauCell, absTau, passProb
+                            stop
+                         end if
+                      end if
 
-                      ! packet is scattered by the grain
-                         
+                      ! packet is scattered by the grain                         
                       ! calculate new direction
                       ! for now assume scattering is isotropic, when phase
                       ! function is introduced the following must be changed                         
@@ -1601,8 +1670,12 @@ module photon_mod
                          stop
                       end if
 
-                      enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., .false., enPacket%xP(1:2), &
-                           & enPacket%yP(1:2), enPacket%zP(1:2), gP)
+
+                      enPacket = initPhotonPacket(enPacket%nuP, rVec, enPacket%direction, .false., .false., enPacket%xP(1:2), &
+                           & enPacket%yP(1:2), enPacket%zP(1:2), gP, .true.)
+                      
+                      if (.not.lgIsotropic .and. .not.enPacket%lgStellar) &
+                           &call hg(enPacket)
                       
                       
                       vHat%x = enPacket%direction%x
@@ -2515,6 +2588,171 @@ module photon_mod
    
  end subroutine pathSegment
  
+
+ subroutine hg(inpacket)
+ 
+   implicit none
+ 
+   type(photon_packet), intent(inout) :: inpacket
+   
+   real :: nxp,nyp,nzp
+   real :: sint,cost,sinp,cosp,phi
+   real :: costp,sintp,phip
+   real :: bmu,b,ri1,ri3,cosi3,sini3,cosb2,sinbt,sini2,bott,cosdph
+   real :: cosi2,sin2i3,sin2i2,cos2i3,cos2i2,sin2,cos2,sin2cos1
+   real :: cos2sin1,cosi1,sini1,sin2i1,cos2i1
+   real :: random
+   real :: hgg, g2
+   
+   nxp = inpacket%direction%x
+   nyp = inpacket%direction%y
+   nzp = inpacket%direction%z
+ 
+   cost = inpacket%direction%z
+   sint = sqrt(1.-cost*cost)
+
+   sinp = inpacket%direction%y/sint
+   cosp = inpacket%direction%x/sint
+   phi  = acos(cosp)
+ 
+   costp=cost
+   sintp=sint
+   phip=phi
+ 
+   hgg = gSca(inpacket%nuP)
+   g2 = hgg*hgg
+ 
+ 
+   ! henyey-greenstein 
+   call random_number(random)
+
+   bmu= ((1.+g2)-((1.-g2)/(1.-hgg+2.*hgg*random))**2)/(2.*hgg)
+
+   cosb2=bmu**2
+   b=cosb2-1.
+ 
+   if(abs(bmu) > 1.) then
+      if(bmu>1.) then
+         bmu=1.
+         cosb2=1.
+         b=0.
+      else
+         bmu=-1.
+         cosb2=1.
+         b=0.
+      end if
+   end if
+   sinbt=sqrt(1.-cosb2)
+   call random_number(random)
+ 
+   ri1=twoPi*random
+   
+
+
+   if(ri1>pi) then
+      ri3=twoPi-ri1
+      cosi3=cos(ri3)
+      sini3=sin(ri3)
+      sin2i3=2.*sini3*cosi3
+      cos2i3=2.*cosi3*cosi3-1.
+ 
+ 
+      if(abs(bmu)==1.) return
+      
+      cost=costp*bmu+sintp*sinbt*cosi3
+
+      if(abs(cost)<1.) then
+         sint=abs(sqrt(1.-cost*cost))
+         sini2=sini3*sintp/sint
+         bott=sint*sinbt
+         cosi2=costp/bott-cost*bmu/bott
+      else
+         sint=0.
+         sini2=0.
+         if(cost.ge.1.)  cosi2=-1.
+         if(cost.le.-1.) cosi2=1.
+      end if
+ 
+      cosdph=-cosi2*cosi3+sini2*sini3*bmu
+      if(abs(cosdph)>1.) then
+         if(cosdph>1.) then
+            cosdph=1.
+         else
+            cosdph=-1.
+         end if
+      end if
+      phi=phip+acos(cosdph)
+      if(phi>twoPi) phi=phi-twoPi
+      if(phi<0.)    phi=phi+twoPi
+ 
+      sin2i2=2.*sini2*cosi2
+      cos2i2=2.*cosi2*cosi2-1.
+      sin2=sin2i2*sin2i3
+      cos2=cos2i2*cos2i3
+      sin2cos1=sin2i2*cos2i3
+      cos2sin1=cos2i2*sin2i3
+ 
+      
+   else  
+ 
+      cosi1=cos(ri1)
+      sini1=sin(ri1)
+      sin2i1=2.*sini1*cosi1
+      cos2i1=2.*cosi1*cosi1-1.
+ 
+      if(abs(bmu)==1.) return
+ 
+      cost=costp*bmu+sintp*sinbt*cosi1
+
+      if(abs(cost)<1.) then
+         sint=abs(sqrt(1.-cost*cost))
+         sini2=sini1*sintp/sint
+         bott=sint*sinbt
+         cosi2=costp/bott-cost*bmu/bott
+      else
+         sint=0.
+         sini2=0.
+         if(cost.ge.1.)  cosi2=-1.
+         if(cost.le.-1.) cosi2=1.
+      end if
+ 
+      cosdph=-cosi1*cosi2+sini1*sini2*bmu
+      if(abs(cosdph)>1.) then
+         if(cosdph>1.) then
+            cosdph=1.
+         else
+            cosdph=-1.
+         end if
+      end if
+      phi=phip-acos(cosdph)
+      if(phi>twoPi) phi=phi-twoPi
+      if(phi<0.)    phi=phi+twoPi
+      
+      sin2i2=2.*sini2*cosi2
+      cos2i2=2.*cosi2*cosi2-1.
+      sin2=sin2i2*sin2i1
+      cos2=cos2i2*cos2i1
+      sin2cos1=sin2i2*cos2i1
+      cos2sin1=cos2i2*sin2i1
+ 
+   end if
+ 
+ 
+   cosp=cos(phi)
+   sinp=sin(phi)
+   
+   nxp=sint*cosp
+   nyp=sint*sinp
+   nzp=cost
+ 
+ 
+   inpacket%direction%x =  nxp 
+   inpacket%direction%y =  nyp 
+   inpacket%direction%z =  nzp 
+                  
+ end subroutine hg
+
+
 
 end subroutine energyPacketDriver
 

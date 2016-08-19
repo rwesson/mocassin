@@ -1,4 +1,4 @@
- 27
+ 26
 ** Atomic data from version 5.2 of the CHIANTI database **
 %Observed energy levels: Edlen, 1984, Phys.Scripta, 30, 135 
 %Theoretical energy levels (1-15): Zhang, Sampson, ADNDT, 1999, 72, 153
@@ -16,7 +16,6 @@
 %produced as part of the Arcetri/Cambridge/NRL atomic data base collaboration
 %
 % G. Del Zanna, May 2001.
-
 %filename: zn_24.splups
 %oscillator strengths (levels 1 - 15): Zhang, Sampson, 1999, ADNDT, 72, 153
 %oscillator strengths (levels 16 - 72 only from the ground): Bhatia,A.K., Seely,J.F., Feldman,U., 1989, ADNDT, 43, 99

@@ -1,4 +1,4 @@
- 32
+ 31
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (n=2): Edlen, B., 1985, Physica Scripta, 31, 345
 %energy levels (n=3): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
@@ -16,7 +16,6 @@
 %
 %   E.Landi 1995
 % Peter Young, 17-Jul-2006 - updated ground configuration A-values.
-
 %filename: si_9.splups
 %oscillator strengths: Bhatia, A.K., Doschek, G.A., 1993, ADNDT, 55, 281
 %collision strengths: Bhatia, A.K., Doschek, G.A., 1993, ADNDT, 55, 281

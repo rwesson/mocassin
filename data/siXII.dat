@@ -1,4 +1,4 @@
- 32
+ 31
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels (1-24): Martin, W.C., Zalubas, R., 1983, J. Phys. Chem. Ref. Data, 12, 323.
 %Innershell observed energy levels: Fuhr, J.R., et al., "NIST Atomic Spectra Database" Ver. 2.0, 
@@ -22,7 +22,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 % 
 %  E. Landi and K.P. Dere - Nov 1999
-
 %filename: si_12.splups
 %oscillator strengths: H.L.Zhang, D.H.Sampson, C.J.Fontes, 1990, ADNDT, 44, 31
 %oscillator strengths innershell transitions: Goett, S.J., Sampson, D.H., 1983, ADNDT, 29, 535

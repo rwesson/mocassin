@@ -1,4 +1,4 @@
- 23
+ 22
 ** Atomic data from version 5.2 of the CHIANTI database **
 %energy levels (n=2): Edlen, B., 1985, Physica Scripta, 31, 345
 %energy levels (n=3): Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
@@ -15,7 +15,6 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  Enrico Landi, 2000
-
 %filename: mg_7.splups
 %oscillator strengths: Bhatia, A.K., Doschek, G.A., 1995, ADNDT, 60, 145
 %collision strengths: Bhatia, A.K., Doschek, G.A., 1995, ADNDT, 60, 145

@@ -786,8 +786,6 @@ module xSec_mod
 
               do i = elementP(nElem,nIon , shell, 1), elementP(nElem,nIon , shell, 2)
 
-!print*, nelem, nion, nelec, shell, i, i-elementP(nElem,nIon , shell, 1)+ elementP(nElem,nIon , shell, 3), elementP(nElem,nIon , shell, 1), elementP(nElem,nIon , shell, 3)
-
                  energy = max( nuArray(i)*RydToeV, ph1(1, nElem, nElec, shell) )
                  call phFitEl(nElem, nElec, shell, energy, xSec)
                  xSecArrayTemp(i-elementP(nElem,nIon , shell, 1)+&
@@ -809,20 +807,9 @@ module xSec_mod
       ! makes dust xsections [cm^2] ( pi a^2 Q )
       subroutine makeDustXsec()
 
-        character(len = 15) :: textString, dustFileType
-        character(len=50)   :: extinctionFile
-
-        integer :: err ! allocation error status
-        integer :: i, j, iwav, n, iSize ! counter
-        integer :: ios ! I/O error status
-        integer :: iP ! array pointer
-        integer :: nSpec, ai ! counter
-        integer :: nn, iskip ! counter
-        integer :: Nwav, NwavOld ! # of wavelength points used
-        integer :: nRadii ! # of radii in Qfile
-
         real :: intValue ! interpolated value
         real :: normWeight ! normalization constant for grain size weighting
+        real :: readReal     ! real number reader
         real :: value ! general value variable
         real, pointer :: da(:)
         real, pointer :: tmp1(:), tmp2(:), tmp3(:), agrain(:), tmp11(:,:), tmp22(:,:),&
@@ -837,33 +824,49 @@ module xSec_mod
         real, pointer :: Ere(:), Eim(:) 
         real, pointer :: temp(:)
 
+        integer :: err ! allocation error status
+        integer :: i, j, iwav, n, iSize, icomp ! counter
+        integer :: ios ! I/O error status
+        integer :: iP ! array pointer
+        integer :: nSpec, ai ! counter
+        integer :: nn, iskip ! counter
+        integer :: Nwav, NwavOld ! # of wavelength points used
+        integer :: nRadii ! # of radii in Qfile
+
+        character(len = 15) :: textString, dustFileType
+        character(len=40)   :: readChar, extFile ! character string readers
+        character(len=50)   :: extinctionFile
+
         print*, 'in makeDustXSec'
 
-        open (unit=10, file=dustFile(1), iostat = ios, status = &
-             &'old', position = 'rewind', action="read")
-        if(ios/=0) then
-           print*, '! makeDustXSec: cannot open file for reading ', dustFile(1)
-           stop
-        end if
+        allocate(gSca(nbins))
 
-        ! check how many species are used
-        read (10, *) nSpecies        
 
-        ! allocate abundances array for dust
-        allocate (absOpacSpecies(1:nSpecies, 1:nbins), stat=err)
-        if (err/=0) then
-           print*, "! makeDustXsec: error allocation memory for absOpacSpecies array"
-           stop
-        end if
-        absOpacSpecies=0.
+        allocate(dustComPoint(nDustComponents))
+        dustComPoint = 0
+        dustComPoint(1) = 1
 
-        ! allocate abundances array for dust
-        allocate (grainAbun(1:nSpecies), stat=err)
-        if (err/=0) then
-           print*, "! makeDustXsec: error allocation memory for grainAbun array"
-           stop
-        end if
-        grainAbun=0.
+
+        nSpecies = 0
+        nSpeciesMax = 0
+
+       do icomp = 1, nDustComponents
+
+          close(13)
+          open(file =   dustSpeciesFile(icomp), action="read",unit=13, &
+               &position="rewind",status="old", iostat = ios)
+          if (ios /= 0 ) then
+             print*, "! makeDustXsec: can't open file ", dustSpeciesFile(icomp)
+             stop
+          end if
+          read(13, *) nSpeciesPart(icomp)
+
+          close(13)
+          nSpecies = nSpecies+nSpeciesPart(icomp)
+
+          if (nSpeciesMax < nSpeciesPart(icomp)) nSpeciesMax = nSpeciesPart(icomp)
+
+        end do
 
         allocate(rho(1:nSpecies), stat = err)
         if (err /= 0) then
@@ -883,6 +886,53 @@ module xSec_mod
            stop
         end if
         MsurfAtom=0
+              
+        do icomp = 1, nDustComponents
+           if (icomp > 1) dustComPoint(icomp) = dustComPoint(icomp-1)+nSpeciesPart(icomp-1)
+
+           close(13)
+           open(file =   dustSpeciesFile(icomp), action="read",unit=13, &
+                & position="rewind",status="old", iostat = ios)
+           if (ios /= 0 ) then
+              print*, "! makeDustXsec: can't open file ", dustSpeciesFile(icomp)
+              stop
+           end if
+           read(13, *) nSpeciesPart(icomp)              
+           
+           do i = 1, nSpeciesPart(icomp)
+              read(13,*) extFile
+              close(14)
+              open(file=extFile,unit=14,  action="read", position="rewind",status="old", iostat = ios)
+              if (ios /= 0 ) then
+                 print*, "! makeDustXsec: can't open file ", extFile
+                 stop
+              end if
+              read(14,*) readChar
+
+              read(14,*) readChar, readReal, rho(dustComPoint(icomp)+i-1), grainVn(dustComPoint(icomp)+i-1), &
+                   &MsurfAtom(dustComPoint(icomp)+i-1)
+              close(14)
+           end do
+           close(13)
+        end do
+
+
+        ! allocate abundances array for dust
+        allocate (absOpacSpecies(1:nSpecies, 1:nbins), stat=err)
+        if (err/=0) then
+           print*, "! makeDustXsec: error allocation memory for absOpacSpecies array"
+           stop
+        end if
+        absOpacSpecies=0.
+        
+        ! allocate abundances array for dust
+        allocate (grainAbun(1:nDustComponents, 1:nSpeciesMax), stat=err)
+        if (err/=0) then
+           print*, "! makeDustXsec: error allocation memory for grainAbun array"
+           stop
+        end if
+        grainAbun=0.
+        
 
         allocate (grainLabel(1:nSpecies), stat=err)
         if (err/=0) then
@@ -897,12 +947,14 @@ module xSec_mod
         end if
         TdustSublime=0.        
 
+        close(11)
         open (unit=11, file=dustFile(2), iostat = ios, status = 'old', &
              &position = 'rewind', action="read")
         if(ios/=0) then
            print*, '! makeDustXSec: cannot open file for reading ', dustFile(2)
            stop
         end if
+        
         ! chekc how many sizes are used
         read (11, *) nSizes
         allocate (grainRadius(1:nSizes), stat=err)
@@ -917,7 +969,7 @@ module xSec_mod
            stop
         end if
         da=0.
-
+        
         allocate (grainWeight(1:nSizes), stat=err)
         if (err/=0) then
            print*, "! makeDustXsec: error allocation memory for grainWeight array"
@@ -925,23 +977,13 @@ module xSec_mod
         end if
         grainWeight=0.
         normWeight =0.
-
-        allocate (dustScaXSecP(0:nSpecies,1:nSizes), stat=err)
-        if (err/=0) then
-           print*, "! makeDustXsec: error allocation memory for dustScaXSecP array"
-           stop
-        end if
-        dustScaXSecP = -1
-        allocate (dustAbsXSecP(0:nSpecies,1:nSizes), stat=err)
-        if (err/=0) then
-           print*, "! makeDustXsec: error allocation memory for dustAbsXSecP array"
-           stop
-        end if
-        dustAbsXSecP = -1
-
+        
+           
         do ai = 1, nSizes
            read(11,*) iskip, grainRadius(ai), grainWeight(ai)       
         end do
+        
+        close(11)
 
         if (nSizes>1) then
            da(1) = grainRadius(2)-grainRadius(1)                    
@@ -976,477 +1018,532 @@ module xSec_mod
               print*, ai, grainRadius(ai), da(ai), grainWeight(ai)
            end do
         end if
+                
+        allocate (dustScaXSecP(0:nSpecies,1:nSizes), stat=err)
+        if (err/=0) then
+           print*, "! makeDustXsec: error allocation memory for dustScaXSecP array"
+           stop
+        end if
+        dustScaXSecP = -1
+        allocate (dustAbsXSecP(0:nSpecies,1:nSizes), stat=err)
+        if (err/=0) then
+           print*, "! makeDustXsec: error allocation memory for dustAbsXSecP array"
+           stop
+        end if
+        dustAbsXSecP = -1
 
-        do nSpec = 1, nSpecies
+
+        do icomp = 1, nDustComponents
            
-           read(10, *) extinctionFile, grainAbun(nSpec)
-           
-           open (unit=20, file=extinctionFile, iostat = ios, &
-                &status = 'old', position = 'rewind', action="read")
+           open (unit=10, file=dustSpeciesFile(icomp), iostat = ios, status = &
+                &'old', position = 'rewind', action="read")
            if(ios/=0) then
-              print*, '! makeDustXSec: cannot open file for&
-                   & reading ', extinctionFile
+              print*, '! makeDustXSec: cannot open file for reading ', dustSpeciesFile(icomp)
               stop
            end if
 
-           read (20, *) dustFileType
-
-           select case (dustFileType)
-           case ('nk')
-
-              read (unit=20, fmt=*, iostat=ios) textString
-
-              ! count number of frequency points
-              Nwav = 0
-              do
-                 read (unit=20, fmt=*, iostat=ios) value
-                 if (ios /= 0 ) exit
-                 Nwav = Nwav+1
-              end do
-              rewind 20
-              
-              if (nSpec>1 .and. nWav/=nWavOld) then
-                 print*, '! makeDustXSec: [warning] extinction files &
-                      & do not have the same number of frequency points'
-              end if
-
-              allocate (wav(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation &
-                      &memory for wav array"
-                 stop
-              end if
-              allocate (tmp1(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for &
-                      &tmp1 array"
-                 stop
-              end if
-              allocate (tmp2(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for &
-                      &tmp2 array"
-                 stop
-              end if
-              allocate (tmp3(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for &
-                      &tmp3 array"
-                 stop
-              end if
+           ! check how many species are used
+           read (10, *) nSpeciesPart(icomp) 
+                      
+           do nSpec = 1, nSpeciesPart(icomp)
            
-              ! initialise arrays
-              tmp1 = 0.
-              tmp2 = 0.
-              tmp3 = 0.
-              wav = 0.
+              read(10, *) extinctionFile, grainAbun(icomp, nSpec)
               
-              if (nSpec == 1) then
-                 ! allocate the pointers' memory
-                 allocate (Csca(1:nSpecies,0:nSizes,1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for Csca array"
-                    stop
-                 end if
-                 allocate (Cabs(1:nSpecies,0:nSizes,1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for Cabs array"
-                    stop
-                 end if
-                 allocate (CTsca(1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for CTsca array"
-                    stop
-                 end if
-                 allocate (CTabs(1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for CTabs array"
-                    stop
-                 end if
-                 Cabs = 0.
-                 Csca = 0.
-                 CTabs = 0.
-                 CTsca = 0.
+              open (unit=20, file=extinctionFile, iostat = ios, &
+                   &status = 'old', position = 'rewind', action="read")
+              if(ios/=0) then
+                 print*, '! makeDustXSec: cannot open file for&
+                      & reading ', extinctionFile
+                 stop
               end if
+              
+              read (20, *) dustFileType
 
-              allocate (Ere(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for Ere array"
-                 stop
-              end if
-              allocate (Eim(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for Eim array"
-                 stop
-              end if
-              Ere = 0.
-              Eim = 0.
-              
-              
-              read(20, *) dustFileType
-              read(20, *) grainLabel(nSpec), TdustSublime(nSpec),&
-                & rho(nSpec), grainVn(nSpec), MsurfAtom(nSpec)
-           
-              do i = 1, Nwav
-                 read (20,*) wav(i), Ere(i), Eim(i) 
-              end do
-              
-              close(20)
-           
-              nWavOld = nWav
-              
-              ! reverse order of wav, Ere and Eim and map onto mocassin's grid
-              do i = nWav, 1, -1
-                 ! convert wav into energy [Ryd]
-                 wav(i) = c/(wav(i)*fr1Ryd*1.e-4)
-                 tmp1(nWav-i+1) = Ere(i)
-                 tmp2(nWav-i+1) = Eim(i)
-                 tmp3(nWav-i+1) = wav(i)
-              end do
-              wav=tmp3
-                            
-              if (associated(Ere)) deallocate(Ere)
-              if (associated(Eim)) deallocate(Eim)
-              
-              allocate (Ere(1:nbins), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for Ere array - 2"
-                 stop
-              end if
-              allocate (Eim(1:nbins), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for Eim array - 2"
-                 stop
-              end if
-              Ere = 0.
-              Eim = 0.
-              
-              ! map onto mocassin grid
-              call linearMap(tmp1, wav, nwav, Ere, nuArray, nbins)
-              call linearMap(tmp2, wav, nwav, Eim, nuArray, nbins)
-
-              ! calculate efficiencies
-              call getQs(Ere,Eim,Cabs(nSpec,1:nSizes,1:nbins),Csca(nSpec,1:nSizes,1:nbins))
-              
-              if (associated(wav)) deallocate(wav)
-              if (associated(Ere)) deallocate(Ere)
-              if (associated(Eim)) deallocate(Eim)
-              if (associated(tmp1)) deallocate(tmp1)
-              if (associated(tmp2)) deallocate(tmp2)
-              if (associated(tmp3)) deallocate(tmp3)
-
-              
-           case ('Q')
-
-              ! read (unit=20, fmt=*, iostat=ios) textString
-
-              rewind(20)
-              read(20, *) dustFileType
-              read(20, *) grainLabel(nSpec), TdustSublime(nSpec), &
-                   &rho(nSpec), grainVn(nSpec), MsurfAtom(nSpec)
-              
-              do i = 1, 2 
-                 read(20,*) textString
-              end do
-              read(20,*) nRadii
-              read(20,*) nwav
-              read(20,*) textString
-              
-              allocate (wav(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for wav array"
-                 stop
-              end if
-              allocate (agrain(1:nRadii), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for agrain array"
-                 stop
-              end if
-              allocate (QaTemp(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for QaTemp array"
-                 stop
-              end if
-              allocate (QsTemp(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for QaTemp array"
-                 stop
-              end if
-              allocate (gTemp(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for QaTemp array"
-                 stop
-              end if
-              allocate (temp1nbins(1:nRadii,1:nbins), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for temp1nbins array"
-                 stop
-              end if
-              allocate (temp2nbins(1:nRadii,1:nbins), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for temp1nbins array"
-                 stop
-              end if
-              allocate (temp3nbins(1:nRadii,1:nbins), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for temp1nbins array"
-                 stop
-              end if
-              allocate (tmp11(1:nRadii,1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp11 array"
-                 stop
-              end if
-              allocate (tmp22(1:nRadii,1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp22 array"
-                 stop
-              end if
-              allocate (tmp33(1:nRadii,1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp33 array"
-                 stop
-              end if
-              allocate (tmpWav(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmpWav array"
-                 stop
-              end if
-                            
-              ! initialise arrays
-              QaTemp = 0.
-              QsTemp = 0.
-              gTemp = 0.
-              temp1nbins = 0.
-              temp2nbins = 0.
-              temp3nbins = 0.
-              tmp11 = 0.
-              tmp22 = 0.
-              tmp33 = 0.
-              tmpWav = 0.
-              wav = 0.
-              agrain = 0.
-              
-              if (nSpec == 1) then
-                 ! allocate the pointers' memory
-                 allocate (gCos(1:nSpecies,0:nSizes,1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for Cabs array"
-                    stop
-                 end if
-                 allocate (Csca(1:nSpecies,0:nSizes,1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for Csca array"
-                    stop
-                 end if
-                 allocate (Cabs(1:nSpecies,0:nSizes,1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for Cabs array"
-                    stop
-                 end if
-                 allocate (CTsca(1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for CTsca array"
-                    stop
-                 end if
-                 allocate (CTabs(1:nbins), stat=err)
-                 if (err/=0) then
-                    print*, "! makeDustXsec: error allocation memory for CTabs array"
-                    stop
-                 end if
-                 gCos = 0.
-                 Cabs = 0.
-                 Csca = 0.
-                 CTabs = 0.
-                 CTsca = 0.
-              end if
-           
-              do i = 1, nRadii
-                 do j = 1, nWav
-                    read(20,*) agrain(i), wav(j), tmp11(i,j), tmp22(i,j), tmp33(i,j)
+              select case (dustFileType)
+              case ('nk')
+                 
+                 read (unit=20, fmt=*, iostat=ios) textString
+                 
+                 ! count number of frequency points
+                 Nwav = 0
+                 do
+                    read (unit=20, fmt=*, iostat=ios) value
+                    if (ios /= 0 ) exit
+                    Nwav = Nwav+1
                  end do
+                 rewind 20
+                 
+                 if (nSpec>1 .and. nWav/=nWavOld) then
+                    print*, '! makeDustXSec: [warning] extinction files &
+                         & do not have the same number of frequency points'
+                 end if
+                 
+                 allocate (wav(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation &
+                         &memory for wav array"
+                    stop
+                 end if
+                 allocate (tmp1(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for &
+                         &tmp1 array"
+                    stop
+                 end if
+                 allocate (tmp2(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for &
+                         &tmp2 array"
+                    stop
+                 end if
+                 allocate (tmp3(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for &
+                         &tmp3 array"
+                    stop
+                 end if
+                 
+                 ! initialise arrays
+                 tmp1 = 0.
+                 tmp2 = 0.
+                 tmp3 = 0.
+                 wav = 0.
+                 
+                 if (nSpec == 1) then
 
-                 ! reverse order of wav, tmp11, tmp22 and tmp33 and map onto mocassin's grid
-                 do iwav = nWav, 1, -1
+                    ! allocate the pointers' memory
+
+                    allocate (Gcos(1:nSpecies,0:nSizes,1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for Csca array"
+                       stop
+                    end if
+                    allocate (Csca(1:nSpecies,0:nSizes,1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for Csca array"
+                       stop
+                    end if
+                    allocate (Cabs(1:nSpecies,0:nSizes,1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for Cabs array"
+                       stop
+                    end if
+                    allocate (CTsca(1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for CTsca array"
+                       stop
+                    end if
+                    allocate (CTabs(1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for CTabs array"
+                       stop
+                    end if
+                    Gcos = 0.
+                    Cabs = 0.
+                    Csca = 0.
+                    CTabs = 0.
+                    CTsca = 0.
+                 end if
+
+                 allocate (Ere(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for Ere array"
+                    stop
+                 end if
+                 allocate (Eim(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for Eim array"
+                    stop
+                 end if
+                 Ere = 0.
+                 Eim = 0.
+              
+              
+                 read(20, *) dustFileType
+
+                 read(20, *) grainLabel(dustComPoint(icomp)-1+nSpec), &
+                      & TdustSublime(dustComPoint(icomp)-1+nSpec),&
+                      & rho(dustComPoint(icomp)-1+nSpec), &
+                      & grainVn(dustComPoint(icomp)-1+nSpec), &
+                      & MsurfAtom(dustComPoint(icomp)-1+nSpec)
+                 
+                 do i = 1, Nwav
+                    read (20,*) wav(i), Ere(i), Eim(i) 
+                 end do
+                 
+                 close(20)
+                 
+                 nWavOld = nWav
+              
+                 ! reverse order of wav, Ere and Eim and map onto mocassin's grid
+                 do i = nWav, 1, -1
                     ! convert wav into energy [Ryd]
-                    tmpWav(iwav) = c/(wav(iwav)*fr1Ryd*1.e-4)
-                    QaTemp(iwav) = tmp11(i,iwav)
-                    QsTemp(iwav) = tmp22(i,iwav)
-                    gTemp(iwav) = tmp33(i,iwav)
+                    wav(i) = c/(wav(i)*fr1Ryd*1.e-4)
+                    tmp1(nWav-i+1) = Ere(i)
+                    tmp2(nWav-i+1) = Eim(i)
+                    tmp3(nWav-i+1) = wav(i)
                  end do
-                 wav=tmpWav
-
-                 ! map  data onto mocassin's nu grid 
-
-                 call linearMap(QaTemp, wav, nwav, temp1nbins(i,:), nuArray, nbins)
-                 call linearMap(QsTemp, wav, nwav, temp2nbins(i,:), nuArray, nbins)
-                 call linearMap(gTemp, wav, nwav, temp3nbins(i,:), nuArray, nbins) 
-
-              end do
-
-              close(20)
-
-              if (associated(QaTemp)) deallocate(QaTemp) 
-              if (associated(QsTemp)) deallocate(QsTemp) 
-              if (associated(gTemp)) deallocate(gTemp) 
-              if (associated(tmp11)) deallocate(tmp11)
-              if (associated(tmp22)) deallocate(tmp22)
-              if (associated(tmp33)) deallocate(tmp33)           
-              if (associated(wav)) deallocate(wav)
-              if (associated(tmpWav)) deallocate(tmpWav)           
-
-              ! interpolate over the grain size distribution
-              do i = 1, nSizes
-
-                 call locate(agrain, grainRadius(i), iSize)
-
-                 if (grainRadius(i)<agrain(1)) then
-                    print*, '! makeDustXsec: [warning] Size distribution &
-                         & extends to radii smaller than & 
-                         & the smallest radius listed in the external Qfile provided'
-                    print*, 'Value of the smallest radius was assigned'
-                    Cabs(nSpec,i,:) =  temp1nbins(1,:)
-                    Csca(nSpec,i,:) =  temp2nbins(1,:)
-                    gCos(nSpec,i,:) =  temp3nbins(1,:)                 
-                 else if (grainRadius(i)>agrain(nRadii)) then
-                    print*, '! makeDustXsec: [warning] Size distribution & 
-                         & extends to radii larger than & 
-                         & the largest radius listed in the external Qfile provided'
-                    print*, 'Value of the largest radius was assigned'
-
-                    Cabs(nSpec,i,:) =  temp1nbins(nRadii,:)
-                    Csca(nSpec,i,:) =  temp2nbins(nRadii,:)
-                    gCos(nSpec,i,:) =  temp3nbins(nRadii,:)
-
-                 else
-                    do j =1, nbins
-
-                       Cabs(nSpec,i,j) = temp1nbins(iSize,j)+&
-                            & (grainRadius(i)-agrain(iSize))*&
-                            & (temp1nbins(iSize+1,j)-temp1nbins(iSize,j))/&
-                            & (agrain(iSize+1)-agrain(iSize))
-                       
-                       Csca(nSpec,i,j) = temp2nbins(iSize,j)+&
-                            & (grainRadius(i)-agrain(iSize))*&
-                            & (temp2nbins(iSize+1,j)-temp2nbins(iSize,j))/&
-                            & (agrain(iSize+1)-agrain(iSize))
-                       
-                       gCos(nSpec,i,j) = temp3nbins(iSize,j)+&
-                            & (grainRadius(i)-agrain(iSize))*&
-                            & (temp3nbins(iSize+1,j)-temp3nbins(iSize,j))/&
-                            & (agrain(iSize+1)-agrain(iSize))
-                    end do
+                 wav=tmp3
+                 
+                 if (associated(Ere)) deallocate(Ere)
+                 if (associated(Eim)) deallocate(Eim)
+                 
+                 allocate (Ere(1:nbins), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for Ere array - 2"
+                    stop
                  end if
+                 allocate (Eim(1:nbins), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for Eim array - 2"
+                    stop
+                 end if
+                 Ere = 0.
+                 Eim = 0.
+                 
+                 ! map onto mocassin grid
+                 call linearMap(tmp1, wav, nwav, Ere, nuArray, nbins)
+                 call linearMap(tmp2, wav, nwav, Eim, nuArray, nbins)
+                 
+                 ! calculate efficiencies
+                 call getQs(Ere,Eim,Cabs(nSpec,1:nSizes,1:nbins),&
+                      & Csca(nSpec,1:nSizes,1:nbins), Gcos(nSpec,1:nSizes,1:nbins))
+!                 call getQs(Ere,Eim,Cabs(nSpec,1:nSizes,1:nbins),Csca(nSpec,1:nSizes,1:nbins))
 
-              end do              
+                 
+                 if (associated(wav)) deallocate(wav)
+                 if (associated(Ere)) deallocate(Ere)
+                 if (associated(Eim)) deallocate(Eim)
+                 if (associated(tmp1)) deallocate(tmp1)
+                 if (associated(tmp2)) deallocate(tmp2)
+                 if (associated(tmp3)) deallocate(tmp3)
+                 
+                 
+              case ('Q')
+                 
+                 ! read (unit=20, fmt=*, iostat=ios) textString
+                 
+                 rewind(20)
+                 read(20, *) dustFileType
 
-              if (associated(agrain)) deallocate(agrain)
-              if (associated(temp1nbins)) deallocate(temp1nbins)
-              if (associated(temp2nbins)) deallocate(temp2nbins)
-              if (associated(temp3nbins)) deallocate(temp3nbins)           
+                 read(20, *) grainLabel(dustComPoint(icomp)-1+nSpec), &
+                      & TdustSublime(nSpec+dustComPoint(icomp)-1), &
+                      &rho(dustComPoint(icomp)-1+nSpec), &
+                      & grainVn(nSpec+dustComPoint(icomp)-1), &
+                      & MsurfAtom(dustComPoint(icomp)-1+nSpec)
+              
+                 do i = 1, 2 
+                    read(20,*) textString
+                 end do
+                 read(20,*) nRadii
+                 read(20,*) nwav
+                 read(20,*) textString
+                 
+                 allocate (wav(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for wav array"
+                    stop
+                 end if
+                 allocate (agrain(1:nRadii), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for agrain array"
+                    stop
+                 end if
+                 allocate (QaTemp(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for QaTemp array"
+                    stop
+                 end if
+                 allocate (QsTemp(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for QaTemp array"
+                    stop
+                 end if
+                 allocate (gTemp(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for QaTemp array"
+                    stop
+                 end if
+                 allocate (temp1nbins(1:nRadii,1:nbins), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for temp1nbins array"
+                    stop
+                 end if
+                 allocate (temp2nbins(1:nRadii,1:nbins), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for temp1nbins array"
+                    stop
+                 end if
+                 allocate (temp3nbins(1:nRadii,1:nbins), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for temp1nbins array"
+                    stop
+                 end if
+                 allocate (tmp11(1:nRadii,1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for tmp11 array"
+                    stop
+                 end if
+                 allocate (tmp22(1:nRadii,1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for tmp22 array"
+                    stop
+                 end if
+                 allocate (tmp33(1:nRadii,1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for tmp33 array"
+                    stop
+                 end if
+                 allocate (tmpWav(1:nWav), stat=err)
+                 if (err/=0) then
+                    print*, "! makeDustXsec: error allocation memory for tmpWav array"
+                    stop
+                 end if
+                            
+                 ! initialise arrays
+                 QaTemp = 0.
+                 QsTemp = 0.
+                 gTemp = 0.
+                 temp1nbins = 0.
+                 temp2nbins = 0.
+                 temp3nbins = 0.
+                 tmp11 = 0.
+                 tmp22 = 0.
+                 tmp33 = 0.
+                 tmpWav = 0.
+                 wav = 0.
+                 agrain = 0.
+                 
+                 if (nSpec == 1) then
+                    ! allocate the pointers' memory
+                    allocate (gCos(1:nSpecies,0:nSizes,1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for Cabs array"
+                       stop
+                    end if
+                    allocate (Csca(1:nSpecies,0:nSizes,1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for Csca array"
+                       stop
+                    end if
+                    allocate (Cabs(1:nSpecies,0:nSizes,1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for Cabs array"
+                       stop
+                    end if
+                    allocate (CTsca(1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for CTsca array"
+                       stop
+                    end if
+                    allocate (CTabs(1:nbins), stat=err)
+                    if (err/=0) then
+                       print*, "! makeDustXsec: error allocation memory for CTabs array"
+                       stop
+                    end if
+                    gCos = 0.
+                    Cabs = 0.
+                    Csca = 0.
+                    CTabs = 0.
+                    CTsca = 0.
+                 end if
+                 
+                 do i = 1, nRadii
+                    do j = 1, nWav
+                       read(20,*) agrain(i), wav(j), tmp11(i,j), tmp22(i,j), tmp33(i,j)
+                    end do
+                    
+                    ! reverse order of wav, tmp11, tmp22 and tmp33 and map onto mocassin's grid
+                    do iwav = nWav, 1, -1
+                       ! convert wav into energy [Ryd]
+                       tmpWav(iwav) = c/(wav(iwav)*fr1Ryd*1.e-4)
+                       QaTemp(iwav) = tmp11(i,iwav)
+                       QsTemp(iwav) = tmp22(i,iwav)
+                       gTemp(iwav) = tmp33(i,iwav)
+                    end do
+                    wav=tmpWav
+                    
+                    ! map  data onto mocassin's nu grid 
+                    
+                    call linearMap(QaTemp, wav, nwav, temp1nbins(i,:), nuArray, nbins)
+                    call linearMap(QsTemp, wav, nwav, temp2nbins(i,:), nuArray, nbins)
+                    call linearMap(gTemp, wav, nwav, temp3nbins(i,:), nuArray, nbins) 
+                    
+                 end do
+                 
+                 close(20)
+                 
+                 if (associated(QaTemp)) deallocate(QaTemp) 
+                 if (associated(QsTemp)) deallocate(QsTemp) 
+                 if (associated(gTemp)) deallocate(gTemp) 
+                 if (associated(tmp11)) deallocate(tmp11)
+                 if (associated(tmp22)) deallocate(tmp22)
+                 if (associated(tmp33)) deallocate(tmp33)           
+                 if (associated(wav)) deallocate(wav)
+                 if (associated(tmpWav)) deallocate(tmpWav)           
+
+                 ! interpolate over the grain size distribution
+                 do i = 1, nSizes
+                    
+                    call locate(agrain, grainRadius(i), iSize)
+                    
+                    if (grainRadius(i)<agrain(1)) then
+                       print*, '! makeDustXsec: [warning] Size distribution &
+                            & extends to radii smaller than & 
+                            & the smallest radius listed in the external Qfile provided'
+                       print*, 'Value of the smallest radius was assigned'
+                       Cabs(nSpec,i,:) =  temp1nbins(1,:)
+                       Csca(nSpec,i,:) =  temp2nbins(1,:)
+                       gCos(nSpec,i,:) =  temp3nbins(1,:)                 
+                    else if (grainRadius(i)>agrain(nRadii)) then
+                       print*, '! makeDustXsec: [warning] Size distribution & 
+                            & extends to radii larger than & 
+                            & the largest radius listed in the external Qfile provided'
+                       print*, 'Value of the largest radius was assigned'
+                       
+                       Cabs(nSpec,i,:) =  temp1nbins(nRadii,:)
+                       Csca(nSpec,i,:) =  temp2nbins(nRadii,:)
+                       gCos(nSpec,i,:) =  temp3nbins(nRadii,:)
+                       
+                    else
+                       do j =1, nbins
+                          
+                          Cabs(nSpec,i,j) = temp1nbins(iSize,j)+&
+                               & (grainRadius(i)-agrain(iSize))*&
+                               & (temp1nbins(iSize+1,j)-temp1nbins(iSize,j))/&
+                               & (agrain(iSize+1)-agrain(iSize))
+                          
+                          Csca(nSpec,i,j) = temp2nbins(iSize,j)+&
+                               & (grainRadius(i)-agrain(iSize))*&
+                               & (temp2nbins(iSize+1,j)-temp2nbins(iSize,j))/&
+                               & (agrain(iSize+1)-agrain(iSize))
+                          
+                          gCos(nSpec,i,j) = temp3nbins(iSize,j)+&
+                               & (grainRadius(i)-agrain(iSize))*&
+                               & (temp3nbins(iSize+1,j)-temp3nbins(iSize,j))/&
+                               & (agrain(iSize+1)-agrain(iSize))
+                       end do
+                    end if
+                    
+                 end do
+                 
+                 if (associated(agrain)) deallocate(agrain)
+                 if (associated(temp1nbins)) deallocate(temp1nbins)
+                 if (associated(temp2nbins)) deallocate(temp2nbins)
+                 if (associated(temp3nbins)) deallocate(temp3nbins)           
 
 
-           case default
-              print*, "! makeDustXsec: invalid dustFileType", dustFileType,extinctionFile
-              stop
-           end select
+              case default
+                 print*, "! makeDustXsec: invalid dustFileType", dustFileType,extinctionFile
+                 stop
+              end select
 
-        end do
-
-        close(10)                
-
-        print*, "! makeDustXsec: Grain Abundances: " 
-        print*, "(index, label, abundance, sublimation T)"        
-        do nSpec = 1, nSpecies
-           print*, nSpec, grainLabel(nSpec),grainAbun(nSpec),TdustSublime(nSpec)
-        end do
-        print*, ""
+           end do
         
-        ! calculate cross sections [um^2]        
-        ! combine individual species/sizes cross-sections into total cross-section for
-        ! the grain mixture
-        do i = 1, nbins
-           do nSpec = 1, nSpecies
-              do ai = 1, nSizes
-
-                 Csca(nSpec,ai,i) = Csca(nSpec,ai,i)*Pi*grainRadius(ai)*grainRadius(ai)*1.e-8
-                 Cabs(nSpec,ai,i) = Cabs(nSpec,ai,i)*Pi*grainRadius(ai)*grainRadius(ai)*1.e-8
-
-                 CTsca(i) = CTsca(i) + grainAbun(nSpec)*Csca(nSpec,ai,i)*grainWeight(ai)
-                 CTabs(i) = CTabs(i) + grainAbun(nSpec)*Cabs(nSpec,ai,i)*grainWeight(ai)
-
-              end do
+           close(10)                
+           
+           print*, "! makeDustXsec: Grain Abundances: " 
+           print*, "(icomp, index, label, abundance, sublimation T)"        
+           do nSpec = 1, nSpeciesPart(icomp)
+              print*, icomp, nSpec, grainLabel(dustComPoint(icomp)-1+nSpec),&
+                   & grainAbun(icomp,nSpec),&
+                   & TdustSublime(dustComPoint(icomp)-1+nSpec)
            end do
-        end do
-
-
-        do i = 1, nbins
-           xSecArrayTemp(xSecTop+i) = CTsca(i)
-           xSecArrayTemp(xSecTop+i+nbins) = CTabs(i)
-
-           nn=2
-           do nSpec = 1, nSpecies
-              do ai = 1, nSizes
-
-                 xSecArrayTemp(xSecTop+i+nn*nbins) = Csca(nSpec, ai, i)
-                 nn=nn+1
-
-                 xSecArrayTemp(xSecTop+i+nn*nbins) = Cabs(nSpec, ai, i)
-                 nn=nn+1
-
-              end do
-           end do
-
-        end do
-
-        ! set up dust cross-section pointers
-        ! individual species
-        dustScaXsecP(0,:) = xSecTop+1
-        dustAbsXsecP(0,:) = xSecTop+1+nbins
-
-        nn = 2
-        do n = 1, nSpecies
-           do ai = 1, nSizes
-              dustScaXsecP(n,ai) = xSecTop+1+nn*nbins
-
-              nn = nn+1
-              dustAbsXsecP(n,ai) = xSecTop+1+nn*nbins
-
-              nn=nn+1
-           end do
-        end do
-        ! update value of xSecTop
-        xSecTop = xSecTop + 2*nbins*(nSpecies+1)*nSizes
-
-        if (associated(Csca)) deallocate(Csca)
-        if (associated(Cabs)) deallocate(Cabs)
-        if (associated(CTsca)) deallocate(CTsca)
-        if (associated(CTabs)) deallocate(CTabs)
-        if (associated(gCos)) deallocate(gCos)
-
-        do n = 1, nSpecies
+           print*, ""
+        
+           ! calculate cross sections [um^2]        
+           ! combine individual species/sizes cross-sections into total cross-section for
+           ! the grain mixture
            do i = 1, nbins
-              do ai = 1, nSizes
-                 absOpacSpecies(n, i) = absOpacSpecies(n, i) &
-                      & + xSecArrayTemp(dustAbsXsecP(n,ai)+i-1)*&
-                      & grainWeight(ai)
-
-
+              do nSpec = 1, nSpeciesPart(icomp)
+                 do ai = 1, nSizes
+                    
+                    Csca(nSpec,ai,i) = Csca(nSpec,ai,i)*Pi*grainRadius(ai)*grainRadius(ai)*1.e-8
+                    Cabs(nSpec,ai,i) = Cabs(nSpec,ai,i)*Pi*grainRadius(ai)*grainRadius(ai)*1.e-8
+                    
+                    CTsca(i) = CTsca(i) + grainAbun(icomp, nSpec)*Csca(nSpec,ai,i)*grainWeight(ai)
+                    CTabs(i) = CTabs(i) + grainAbun(icomp, nSpec)*Cabs(nSpec,ai,i)*grainWeight(ai)
+                    
+                 end do
               end do
            end do
+           
+           
+           do i = 1, nbins
+              xSecArrayTemp(xSecTop+i) = CTsca(i)
+              xSecArrayTemp(xSecTop+i+nbins) = CTabs(i)
+
+              nn=2
+              do nSpec = 1, nSpeciesPart(icomp)
+                 do ai = 1, nSizes
+                    
+                    xSecArrayTemp(xSecTop+i+nn*nbins) = Csca(nSpec, ai, i)
+                    nn=nn+1
+                    
+                    xSecArrayTemp(xSecTop+i+nn*nbins) = Cabs(nSpec, ai, i)
+                    nn=nn+1
+                    
+                 end do
+              end do
+              
+           end do
+           
+           ! set up dust cross-section pointers
+           ! individual species
+           dustScaXsecP(0,:) = xSecTop+1
+           dustAbsXsecP(0,:) = xSecTop+1+nbins
+           
+           nn = 2
+           do n = 1, nSpeciesPart(icomp)
+              do ai = 1, nSizes
+                 dustScaXsecP(dustComPoint(icomp)+n-1,ai) = xSecTop+1+nn*nbins
+                 
+                 nn = nn+1
+                 dustAbsXsecP(dustComPoint(icomp)+n-1,ai) = xSecTop+1+nn*nbins
+                 
+                 nn=nn+1
+              end do
+           end do
+           ! update value of xSecTop
+           xSecTop = xSecTop + 2*nbins*(nSpeciesPart(icomp)+1)*nSizes
+           
+           if (associated(Csca)) deallocate(Csca)
+           if (associated(Cabs)) deallocate(Cabs)
+           if (associated(CTsca)) deallocate(CTsca)
+           if (associated(CTabs)) deallocate(CTabs)
+
+           gSca = 0.
+           do n = 1, nSpeciesPart(icomp)
+              do i = 1, nbins
+                 do ai = 1, nSizes
+                    absOpacSpecies(dustComPoint(icomp)-1+n, i) = &
+                         & absOpacSpecies(dustComPoint(icomp)-1+n, i) &
+                         & + xSecArrayTemp(dustAbsXsecP(dustComPoint(icomp)-1+n,ai)+i-1)*&
+                         & grainWeight(ai) 
+                    gSca(i) = gSca(i)+gCos(n,ai,i)*grainWeight(ai)*&
+                         &grainAbun(icomp, n)                 
+                   
+                 end do
+              end do
+           end do
+
         end do
 
+        if (associated(gCos)) deallocate(gCos)
 
       end subroutine makeDustXsec
 
-      subroutine getQs(Ere_in,Eim_in,Qabs,Qsca)
+
+
+      subroutine getQs(Ere_in,Eim_in,Qabs,Qsca,ggCos)
         implicit none
 
         real, intent(in) :: Ere_in(*), Eim_in(*)
-        real, intent(out) :: Qabs(nsizes,nbins), Qsca(nSizes, nbins)      
+        real, intent(out) :: Qabs(nsizes,nbins), Qsca(nSizes, nbins),&
+             &ggCos(nSizes,nbins)       
       
         complex :: refIndex
-        real    :: sizeParam, Qback(nSizes, nbins)
+        real    :: sizeParam
         
         integer :: i, ai 
         
@@ -1465,7 +1562,9 @@ module xSec_mod
               if (sizeParam > 100.) sizeParam=100.
 
               ! now calculate the efficiencies
-              call BHmie(sizeParam,refIndex,Qabs(ai,i),Qsca(ai,i),Qback(ai,i))
+              call BHmie(sizeParam,refIndex,Qabs(ai,i),Qsca(ai,i),&
+                   & ggCos(ai,i))
+
               Qabs(ai,i) = Qabs(ai,i) - Qsca(ai,i)
             
               if (.not.lgDustScattering) Qsca(ai,i)=0.
@@ -1477,10 +1576,9 @@ module xSec_mod
       end subroutine getQs
 
       ! ***********************************************************************
-      ! This subroutine was originally obtained from prof. P. Menguc, Dept. of
-      ! Mechanical
-      ! Eng., University of Kentucky, by Z.Ivezic., Aug. 1996
-      ! Ported to F90 and integrated into MOCASSIN by B. Ercolano, Sep 2004
+      ! This subroutine is a modified version of the BH Mie scattering routine
+      ! Added the <gsca> from B. Draine implementation. 
+      ! Ported to F90 and integrated into MOCASSIN by B. Ercolano, Sep 2008
       ! -----------------------------------------------------------------------
       !     __________________________________________________________________
       !
@@ -1489,21 +1587,32 @@ module xSec_mod
       !     FOR A GIrVEN SIZE PARAMETER AND RELATIVE REFRACTIVE INDEX
       !     __________________________________________________________________
       
-      subroutine BHmie (x,refrel,qext,qsca,qback)
+      subroutine BHmie (x,refrel,qext,qsca,ggsca)
         implicit none
         
         complex, intent(in) :: refrel
         real, intent(in)    :: x
         
-        real, intent(out)   :: qext, qsca, qback
+        real, intent(out)   :: qext, qsca, ggsca
         
-        real, dimension(100) ::  amu, theta,pii,tau,pi0,pi1
+        real(kind = 8), dimension(100) ::  amu, theta,pii,tau,pi0,pi1
         
-        complex              :: d(3000),y,xi,xi0,xi1,an,bn,s1(200),s2(200)
-        real                 ::  psi0,psi1,psi,dn,dx,xstop,ymod,dang,chi0,&
+        double complex              :: d(3000),y,xi,xi0,xi1,an,bn,s1(200),s2(200),&
+             &an1,bn1
+        real(kind = 8)                 ::  psi0,psi1,psi,dn,dx,xstop,ymod,dang,chi0,&
              &chi1,apsi0,apsi1,apsi,fn,chi,p,t
+
+        double complex :: dpcx
+
+        real(kind = 8) ::  realpart
+        real(kind = 8) :: imagpart
         
         integer              :: nang,j,nstop,nmx,i,n,nn,rn,jj
+
+
+        realpart(dpcx)=real(dpcx)
+        imagpart(dpcx)=imag(dpcx)
+
 
         nang = 2
         dx=x
@@ -1513,7 +1622,7 @@ module xSec_mod
         ! ___________________________________________________________________
         xstop=x+4.*x**.3333 +2.0
         nstop=int(xstop)
-        ymod=cabs(y)
+        ymod=abs(y)
         nmx=int(amax1(xstop,ymod)) + 15
         dang=1.570796327/float(nang-1)
         do j = 1,nang
@@ -1557,7 +1666,9 @@ module xSec_mod
       apsi1=psi1
       xi0=cmplx(apsi0,-chi0)
       xi1=cmplx(apsi1,-chi1)
+
       qsca=0.0
+      ggsca = 0.0
       n=1
       do 
          dn=n
@@ -1565,10 +1676,15 @@ module xSec_mod
 
          fn=(2.*rn+1.)/(rn*(rn+1.))
          psi=(2.*dn-1.)*psi1/dx-psi0
+
          apsi=psi
          chi=(2.*rn-1.)*chi1/x -  chi0
          xi = cmplx(apsi,-chi)
 
+         if (n>1) then
+            an1 = an
+            bn1 = bn
+         end if
 
          an=(d(n)/refrel+rn/x)*apsi - apsi1
 
@@ -1578,7 +1694,16 @@ module xSec_mod
 
          bn=bn/((refrel*d(n)+rn/x)*xi - xi1)
 
-         qsca=qsca+(2.*rn+1.)*(cabs(an)*cabs(an)+cabs(bn)*cabs(bn))
+         qsca=qsca+(2.*rn+1.)*(abs(an)*abs(an)+abs(bn)*abs(bn))
+         
+         ggsca=ggsca+real(((2.*rn+1.)/(rn*(rn+1.)))*&
+              &(realpart(an)*realpart(bn)+imagpart(an)*imagpart(bn)))
+
+         if(n>1)then
+            ggsca=ggsca+real(((rn-1.)*(rn+1.)/rn)*&
+                 &(realpart(an1)*realpart(an)+imagpart(an1)*imagpart(an)+&
+                 &realpart(bn1)*realpart(bn)+imagpart(bn1)*imagpart(bn)))
+         endif
 
          do j=1,nang
 
@@ -1614,11 +1739,13 @@ module xSec_mod
          if (n-1-nstop>=0) exit
       end do
 
-      qsca=(2./(x*x))*qsca
-      qext=(4./(x*x))*real(s1(1))
-      qback=(4./(x*x))*cabs(s1(2*nang -1))*cabs(s1(2*nang -1))
+      ggsca=(2.*ggsca/qsca)
+      qsca=(2./(x*x))*qsca      
+      qext=(4./(x*x))*realpart(s1(1))
+
 
     end subroutine BHmie
+
 
     ! sets up Compton X-Sections and PDFs using the Klein Nishina formula
     subroutine setCompton()

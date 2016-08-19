@@ -1,4 +1,4 @@
- 46
+ 45
 ** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Fuhr, J.R. et al., "NIST Atomic Spectra Database" Ver. 2.0, March 1999, 
     NIST Physical Reference Data
@@ -23,7 +23,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  P.R. Young -  Jan. 2003
-
 %filename: s_4.upsdat
 %oscillator strengths: Tayal S.S., 1999, J.Phys.B, 32, 5311
 %effective collision strengths: Tayal S.S., 2000, ApJ, 530, 1091

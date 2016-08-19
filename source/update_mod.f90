@@ -17,40 +17,6 @@ module update_mod
 
         type(grid_type), intent(inout) :: grid         ! the grid
         
-        integer, intent(in)            :: xP, yP, zP   ! cell indexes on the Cartesian axes
-
-        ! local variables
-        logical                        :: lgHit        ! has this cell been hit by a photon?
-
-        integer ,pointer               :: grainPotP(:,:) 
-        integer                        :: cellP        ! points to this cell
-        integer                        :: HIPnuP       ! pointer to H IP in NuArray
-        integer                        :: HeIPnuP      ! pointer to HeI IP in NuArray
-        integer                        :: HeIIPnuP     ! pointer to HeII IP in NuArray
-        integer                        :: highNuP      ! pointer to highest energy of shell
-        integer                        :: IPnuP        ! pointer to this ion's IP in NuArray
-        integer                        :: xSecP        ! pointer to an ion's xSec in xSecArray
-        integer                        :: elem         ! element counter
-        integer                        :: err          ! allocation error status
-        integer                        :: g0, g1       ! stat weights
-        integer                        :: ion          ! ionization stage counter
-        integer                        :: ios          ! I/O error status
-        integer                        :: i,j          ! counter
-        integer                        :: ncutoff= 0   ! see clrate
-        integer                        :: nElec        ! # of electrons in ion
-        integer                        :: nIterateGC   ! # of GC iterations
-        integer                        :: nIterateT    ! # of T iterations
-        integer                        :: nIterateX    ! # of X iterations
-        integer                        :: outShell     ! outer shell number (1 for k shell)
- 
-        integer, parameter             ::  nTbins=300  ! number of enthalpy bins for T spike
-        integer, parameter             :: maxIterateGC&! limit to number of grain charge it
-             & = 100 
-        integer, parameter             :: maxIterateX& ! limit to number of X-iterat ions
-             & = 25 
-        integer, parameter             :: maxIterateT& ! limit to number of T-iterations
-             & = 25 
-
         real, parameter :: Y0 = 0.5, Y1 = 0.2          ! see Baldwin et al. 1991
 
         real                           :: aFit, bFit   ! general fit terms
@@ -87,8 +53,6 @@ module update_mod
         real, parameter                :: hcRyd = &    ! constant: h*c*Ryd (Ryd at inf used) [erg]
              & 2.1799153e-11
         real, parameter                :: thLimit = 0.01! convergence limit T-iteration
-
-
         
         real, dimension(nElements, nstages) &
              & :: alphaTot     ! total recombination coeffs
@@ -98,11 +62,53 @@ module update_mod
              & nPhotoDif    ! # of diffuse photoionizations
 
 
+
+        integer, intent(in)            :: xP, yP, zP   ! cell indexes on the Cartesian axes
+
+        ! local variables
+        logical                        :: lgHit        ! has this cell been hit by a photon?
+
+        integer ,pointer               :: grainPotP(:,:) 
+        integer                        :: cellP        ! points to this cell
+        integer                        :: HIPnuP       ! pointer to H IP in NuArray
+        integer                        :: HeIPnuP      ! pointer to HeI IP in NuArray
+        integer                        :: HeIIPnuP     ! pointer to HeII IP in NuArray
+        integer                        :: highNuP      ! pointer to highest energy of shell
+        integer                        :: IPnuP        ! pointer to this ion's IP in NuArray
+        integer                        :: xSecP        ! pointer to an ion's xSec in xSecArray
+        integer                        :: elem         ! element counter
+        integer                        :: err          ! allocation error status
+        integer                        :: g0, g1       ! stat weights
+        integer                        :: ion          ! ionization stage counter
+        integer                        :: ios          ! I/O error status
+        integer                        :: i,j          ! counter
+        integer                        :: ncutoff= 0   ! see clrate
+        integer                        :: nElec        ! # of electrons in ion
+        integer                        :: nIterateGC   ! # of GC iterations
+        integer                        :: nIterateT    ! # of T iterations
+        integer                        :: nIterateX    ! # of X iterations
+        integer                        :: outShell     ! outer shell number (1 for k shell)
+        integer                        :: nspU
+        integer, parameter             ::  nTbins=300  ! number of enthalpy bins for T spike
+        integer, parameter             :: maxIterateGC&! limit to number of grain charge it
+             & = 100 
+        integer, parameter             :: maxIterateX& ! limit to number of X-iterat ions
+             & = 25 
+        integer, parameter             :: maxIterateT& ! limit to number of T-iterations
+             & = 25 
+
+
         ! check whether this cell is outside the nebula
         if (grid%active(xP, yP, zP)<=0) return
 
         cellP = grid%active(xP, yP, zP)
-        
+
+        if (lgMultiDustChemistry) then
+           nspU = grid%dustAbunIndex(cellP)
+        else
+           nspU = 1
+        end if
+
         ! initialise lgBlack
         grid%lgBlack(cellP) = 0
 
@@ -338,6 +344,7 @@ module update_mod
             integer                       :: isp, ai         ! counters
             integer                       :: ios             ! I/O error status
             integer                       :: n               ! stopper
+            integer                       :: ispbig          ! counter
 
             logical                       :: lgGCBConv       ! grain charge converged?
             logical                       :: lgIBConv        ! converged?
@@ -366,13 +373,14 @@ module update_mod
 
             ! calculate dust-gas interaction heating/cooling terms
             if (lgDust .and. lgGas .and. lgPhotoelectric) then
-               do isp = 1, nSpecies
+               do isp = 1, nSpeciesPart(nspU)
                   do ai = 1, nsizes
                      nIterateGC     = 0
                      grainEmi       = 0.
                      grainRec       = 0.        
 
-                     call setGrainPotential(isp,ai,lgGCBConv)
+                     ispbig = isp+dustComPoint(nspU)-1
+                     call setGrainPotential(ispbig,ai,lgGCBConv)
 
                      call locate(nuArray, grainPot(isp,ai), grainPotP(isp,ai))                     
                      if (grainPotP(isp,ai) == 0) grainPotP = 1
@@ -585,8 +593,9 @@ module update_mod
                 call setGrainPotential(isp,ai,lgGCBConv)
                 return
              else
-                print*, '! setGrainPotential: no convergence', &
-                     & cellP,grainPot(isp,ai),grainEmi,grainRec
+
+!                print*, '! setGrainPotential: no convergence', &
+!                     & cellP,grainPot(isp,ai),grainEmi,grainRec
                 lgGCBConv=.false.                 
                 return
              end if
@@ -747,8 +756,9 @@ module update_mod
 
           photoelHeat_d=0.
           photoelHeat_g=0.          
-          do ns = 1, nSpecies
+          do ns = 1, nSpeciesPart(nspU)
              do na = 1, nSizes
+
 
                 if (grainPotP(ns,na) <= 0) then
                    print*, "! setPhotoelHeatCool irregular grain potential index", & 
@@ -765,6 +775,7 @@ module update_mod
 !                do ifreq = grainPotP(ns,na), nbins
 
                    Yn = min(Y0*(1.-grainVn(ns)/nuArray(ifreq)), Y1) 
+
 
                    Yhat = Yn*min(1., max(0.,1.-grainPot(ns,na)/(nuArray(ifreq)-grainVn(ns))))
 
@@ -792,7 +803,7 @@ module update_mod
                    photoelHeat_d(ns,na) = photoelHeat_d(ns,na)+Qa*photFlux*EY*hcRyd/Pi
 
                    photoelHeat_g = photoelHeat_g+Qa*photFlux*(EY-Yhat*grainPot(ns,na))*& 
-                        & grainAbun(ns)*grainWeight(na)
+                        & grainAbun(nspU,ns)*grainWeight(na)
 
                 end do
              end do
@@ -850,13 +861,14 @@ module update_mod
                          end if
                       end if
 
-                      do ns = 1, nSpecies
+                      do ns = 1, nSpeciesPart(nspU)
                          if (istage == 1) then
                             S = 2*mcp*MsurfAtom(ns)/(mcp+MsurfAtom(ns))**2.
                          else
                             S = 1.
                          end if
                          do na = 1, nSizes
+
                             psi = Z*grainPot(ns,na)/kT
                             if (psi <= 0. ) then
                                eta = 1.-psi
@@ -877,7 +889,7 @@ module update_mod
 
                             gasDustColl_g = gasDustColl_g + & 
                                  & ionDenUsed(elementXref(elem),istage)*& 
-                                 & grainWeight(na)*grainAbun(ns)*grid%Ndust(cellP)*&
+                                 & grainWeight(na)*grainAbun(nspU,ns)*grid%Ndust(cellP)*&
                                  & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
                                  & Pi*grainRadius(na)*grainRadius(na)*1.e-8*&
                                  & S*vmean*(2.*kT*Ryd2erg*xi-eta*2.*kBoltzmann*& 
@@ -890,10 +902,11 @@ module update_mod
                    
              ! add contribution of e- collisions
              vmean = sqrt(eightkT_pi/me)
-             do ns = 1, nSpecies
+             do ns = 1, nSpeciesPart(nspU)
                 S = 1.
                 Z=-1.
                 do na = 1, nSizes
+
 
                    psi = Z*grainPot(ns,na)/kT
                    if (psi <= 0. ) then
@@ -912,7 +925,7 @@ module update_mod
                    
                    gasDustColl_g = gasDustColl_g + & 
                         & NeUsed* &
-                        & grainWeight(na)*grainAbun(ns)*grid%Ndust(cellP)*&
+                        & grainWeight(na)*grainAbun(nspU, ns)*grid%Ndust(cellP)*&
                         & Pi*grainRadius(na)*grainRadius(na)*1.e-8*&
                         & S*vmean*(2.*kT*Ryd2erg*xi)/&
                         & grid%Hden(cellP)
@@ -1897,7 +1910,7 @@ module update_mod
 
             
             ! calculate absorption integrals for each species
-            do nS = 1, nSpecies
+            do nS = 1, nSpeciesPart(nspU)
 
                do ai = 1, nSizes
 
@@ -1914,10 +1927,10 @@ module update_mod
                   if (lgGas .and. convPercent>=resLinesTransfer .and. (.not.lgResLinesFirst) .and. &
                        & (.not.nIterateMC==1) ) then
                      dustHeatingBudget(grid%abFileIndex(xp,yp,zp),0) = dustHeatingBudget(grid%abFileIndex(xp,yp,zp),0)+&  
-                          & dustAbsIntegral*grainWeight(ai)*grainAbun(nS)*grid%Ndust(cellP)
+                          & dustAbsIntegral*grainWeight(ai)*grainAbun(nspU,nS)*grid%Ndust(cellP)
                      dustHeatingBudget(0,0) = dustHeatingBudget(0,0)+&                                                    
-                          & dustAbsIntegral*grainWeight(ai)*grainAbun(nS)*grid%Ndust(cellP)
-                     resLineHeat = resLineHeating(ai,ns)
+                          & dustAbsIntegral*grainWeight(ai)*grainAbun(nspU,nS)*grid%Ndust(cellP)
+                     resLineHeat = resLineHeating(ai,ns,nspU)
                      dustAbsIntegral = dustAbsIntegral+resLineHeat
                   end if
 
@@ -1931,6 +1944,7 @@ module update_mod
                      write(57,*) 'Abs of cont rad field  ', dabs
                      write(57,*) 'Res Lines Heating: ', reslineheat
                      if (lgGas .and. lgPhotoelectric) then
+
                         write(57,*) 'Grain potential ', grainPot(ns,ai)
                         write(57,*) 'Gas-dust collision heat', gasDustColl_d(nS,ai)
                         write(57,*) 'Photoelctric cooling: ', photoelHeat_d(nS,ai)
@@ -1974,14 +1988,14 @@ module update_mod
                end do
                
                grid%Tdust(0,0,cellP) = grid%Tdust(0,0,cellP)+&
-                    & grid%Tdust(nS,0,cellP)*grainAbun(nS)
+                    & grid%Tdust(nS,0,cellP)*grainAbun(nspU,nS)
 
             end do
             
 
           end subroutine getDustT
 
-          function resLineHeating(sizeP,speciesP)
+          function resLineHeating(sizeP,speciesP, icompP)
             implicit none
 
             real                :: resLineHeating ! dust heating due to res lines
@@ -1991,6 +2005,7 @@ module update_mod
             
             integer, intent(in) :: sizeP   ! size pointer
             integer, intent(in) :: speciesP! species pointer
+            integer, intent(in) :: icompP! dust componenent pointer
 
             integer             :: iL      ! line counter
             integer             :: imul    ! multiplet counter 
@@ -2050,9 +2065,9 @@ module update_mod
 
                dustHeatingBudget(grid%abFileIndex(xP,yP,zP),iL) = &
                     & dustHeatingBudget(grid%abFileIndex(xP,yP,zP),iL) + &
-                    & heat*grainWeight(sizeP)*grainAbun(speciesP)*grid%Ndust(cellP)
+                    & heat*grainWeight(sizeP)*grainAbun(icompP,speciesP)*grid%Ndust(cellP)
                dustHeatingBudget(0,iL) = dustHeatingBudget(0,iL) + &
-                    & heat*grainWeight(sizeP)*grainAbun(speciesP)*grid%Ndust(cellP)
+                    & heat*grainWeight(sizeP)*grainAbun(icompP,speciesP)*grid%Ndust(cellP)
 
 
             end do
