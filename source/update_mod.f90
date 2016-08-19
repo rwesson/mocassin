@@ -563,10 +563,8 @@ module update_mod
 
             ! cooling of gas due to recombination of He+
             ! fits to Hummer and Storey, MNRAS 297(1998) 1073, Table 6. least square fitting to m=4
-            betaRec =    9.4255985E-11 -4.04794384E-12*log10Te &
-                 & -1.0055237E-11*log10Te*log10Te  &
-                 & +1.99266862E-12*log10Te*log10Te*log10Te &
-                 & -1.06681387E-13*log10Te*log10Te*log10Te*log10Te 
+            betaFF =  1.070073e-11    -2.5730207e-13*log10Te + &
+                 & 2.109134e-13*log10Te*log10Te 
 
             coolRec = coolRec + Np*NeUsed*betaRec*kBoltzmann*TeUsed/sqrt(TeUsed)
 
