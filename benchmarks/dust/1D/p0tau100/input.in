@@ -1,0 +1,19 @@
+autoPackets 0.20 2. 10000000
+output
+symmetricXYZ
+contShape  blackbody
+nebComposition noGas
+maxIterateMC  30 95.
+nPhotons 100000
+nx 21
+ny 21
+nz 21
+LStar 38.26
+Rin 0.
+Rout 2.3500001e17
+TStellar 2500.
+Ndust file 'input/p0tau100.ndust'
+dustFile 'input/p0tau100_grainspecies.dat' 'input/p0tau100_grainsizes.dat'
+writeGrid 50. 
+convLimit 0.03
+
