@@ -1050,7 +1050,8 @@ module iteration_mod
               
            end do
            
-           if (lgDust .and. convPercent>=resLinesTransfer .and. lgGas) dustHeatingBudget = 0.
+           if (lgDust .and. convPercent>=resLinesTransfer .and. lgGas .and. &
+                & (.not. nIterateMC==1) .and. (.not.lgResLinesFirst)) dustHeatingBudget = 0.
 
            totCells = 0
            do iG =1,nGrids

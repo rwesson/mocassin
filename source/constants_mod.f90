@@ -42,7 +42,7 @@ module constants_mod
     real, parameter :: radToDeg = 180./pi
 
     ! hard limits
-    integer, parameter :: maxGrids = 2000           ! limit to the number of grids to be used 
+    integer, parameter :: maxGrids = 668            ! limit to the number of grids to be used 
     integer, parameter :: maxTau = 10000000         ! limit to the optical depth arrays
     integer, parameter :: nElements = 30            ! number of elements
     integer, parameter :: nForLevels = 15           ! number of levels
@@ -53,6 +53,7 @@ module constants_mod
     integer, parameter :: NnuMax = 3000             ! limit to the possible number of energy bins (nbins) 
     integer, parameter :: xSecMax = 1000000         ! max limit to xSecArray 
     integer, parameter :: nTemps=3000
+    integer, parameter :: recursionLimit=5000
 
     real, parameter :: xMax = 0.99999               ! max limit for a relative ionic abundance
 

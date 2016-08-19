@@ -50,7 +50,8 @@ program MoCaSSiN
     real, dimension(2) :: tarray,timing        ! cputimer 
     integer         :: nhours, nminutes, nseconds
 
-    timing(1)=etime(tarray)/60.0
+!    timing(1)=etime(tarray)/60.0
+    call cpu_time(timing(1))
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
@@ -133,7 +134,10 @@ program MoCaSSiN
     end do
 
     call mpi_finalize(ierr)
-    timing(2) = etime(tarray)/60.0
+!    timing(2) = etime(tarray)/60.0
+    call cpu_time(timing(2))
+    timing(1)=timing(1)/60.
+    timing(2)=timing(2)/60.  
     nhours = int((timing(2)-timing(1))/60.)
     nminutes = int(mod(timing(2)-timing(1),60.))
     nseconds = nint(60.*((timing(2)-timing(1))-real(nhours*60)-real(nminutes)))
@@ -145,3 +149,4 @@ program MoCaSSiN
 end program MoCaSSiN
    
     
+
