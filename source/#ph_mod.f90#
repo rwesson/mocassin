@@ -145,7 +145,7 @@ module xSec_mod
       logGammaHeI = log10(logGammaHeI)
       do i = 1, nlimGammaHeII
          read(23,*) nuGammaHeII(i), (logGammaHeII(itk,i), itk=1, nTkGamma)         
-         call locate(nuArray, nuGammaHeII(i), HeIINuEdgeP(i))
+         call locate(nuArray, nuGammaHI(i), HeIINuEdgeP(i))
          if (nuGammaHeII(i) > (nuArray(HeIINuEdgeP(i))+nuArray(HeIINuEdgeP(i)+1))/2.) &
               & HeIINuEdgeP(i) = HeIINuEdgeP(i)+1
       end do

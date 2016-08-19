@@ -389,21 +389,26 @@ module emission_mod
             logGammaHeIIloc = logGammaHeII(ntkGamma,:)
          else
             call locate (tkGamma, TeUsed, nTemp)
+
             factor = log10(TeUsed/tkGamma(nTemp))
             do i = 1, nlimGammaHI
                aFit = (logGammaHI(nTemp+1,i)-logGammaHI(nTemp,i))/ &
                     & log10(tkGamma(ntemp+1)/tkGamma(ntemp))
                logGammaHIloc(i) = logGammaHI(nTemp,i) + aFit * factor
             end do
+
             do i = 1, nlimGammaHeI
                aFit = (logGammaHeI(nTemp+1,i)-logGammaHeI(nTemp,i))/ &
                     & log10(tkGamma(ntemp+1)/tkGamma(ntemp))
                logGammaHeIloc(i) = logGammaHeI(nTemp,i) + aFit * factor
+
             end do
+
             do i = 1, nlimGammaHeII
                aFit = (logGammaHeII(nTemp+1,i)-logGammaHeII(nTemp,i))/ &
                     & log10(tkGamma(ntemp+1)/tkGamma(ntemp))
                logGammaHeIIloc(i) = logGammaHeII(nTemp,i) + aFit * factor
+
             end do
         end if
 
@@ -416,6 +421,7 @@ module emission_mod
         do i = 1, nlimGammaHI/2
             iup  = HINuEdgeP(2*i)
             ilow = HINuEdgeP(2*i - 1)
+
             if (iup == ilow) then
                 print*, "! fb_ff: frequency grid too course - divide&
                      & by zero                          [nu]",&
@@ -434,9 +440,11 @@ module emission_mod
 
         ! calculate gammaHeI (nu<0.799Ryd)
         ! note that we are not going all the way up to 1.8ryd.. can be changed 
+
         do i = 1, nlimGammaHeI/2
             iup  = HeINuEdgeP(2*i)
             ilow = HeINuEdgeP(2*i - 1)
+
             if (iup == ilow) then       
                 print*, "! fb_ff: frequency grid too course - divide&
                      & by zero                          [nu]",&
@@ -450,13 +458,19 @@ module emission_mod
                 gammaHeI(j) = logGammaHeIloc(2*i)+aFit* (nuArray(j)&
                      &-nuArray(iup))
                 gammaHeI(j) = 10.**gammaHeI(j)  
+
+
             end do
         end do 
 
+
         ! calculate gammaHeII (nu<4.0Ryd)
+
         do i = 1, nlimGammaHeII/2
             iup  = HeIINuEdgeP(2*i)   
             ilow = HeIINuEdgeP(2*i - 1)
+
+
             if (iup == ilow) then
                 print*, "! fb_ff: frequency grid too course - divide&
                      & by zero                          [nu]",&
@@ -472,6 +486,8 @@ module emission_mod
                 gammaHeII(j) = logGammaHeIIloc(2*i)+aFit* (nuArray(j)&
                      &-nuArray(iup))
                 gammaHeII(j) = 10.**gammaHeII(j)
+
+
             end do
         end do
         
