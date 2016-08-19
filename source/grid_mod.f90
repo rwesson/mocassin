@@ -431,12 +431,12 @@ module grid_mod
 
          allocate(viewPointPTheta(0:totAngleBinsTheta), stat = err)
          if (err /= 0) then
-            print*, "Can't allocate grid memory, viewAngleP "
+            print*, "! initCartesianGrid: Can't allocate grid memory, viewAnglePTheta "
             stop
          end if
          allocate(viewPointPPhi(0:totAngleBinsPhi), stat = err)
          if (err /= 0) then
-            print*, "Can't allocate grid memory, viewAngleP "
+            print*, "! initCartesianGrid: Can't allocate grid memory, viewAnglePPhi "
             stop
          end if
          
@@ -450,12 +450,18 @@ module grid_mod
 !         end do
 
          do i = 1, nAngleBins
-            viewPointPtheta(int(viewPointTheta(i)/dTheta)+1) = i
+            if (viewPointTheta(i) > Pi/2. .and. lgSymmetricXYZ) then
+               print*, '! initCartesianGrid: the inclination theta required is not available for symmetricXYZ models (theta > Pi/2)'
+               stop
+            end if
+            viewPointPtheta(int(viewPointTheta(i)/dTheta)+1) = i            
             viewPointPphi(int(viewPointPhi(i)/dPhi)+1) = i
          end do
          
+!         print*, 'viewpointptheta'
 !         print*, viewpointptheta
 !         print*, ' '
+!         print*, 'viewpointpphi'
 !         print*, viewpointpphi
 
          print*, 'dTheta : ', dTheta
@@ -585,14 +591,15 @@ module grid_mod
                  grid(1)%zAxis(i) = 2.*real(i-1)/real(grid(1)%nz-1) - 1.
                 grid(1)%zAxis(i) = grid(1)%zAxis(i) * Rnz
               end do
+
            end if
 
-        end if            
+        end if
 
         if (lg1D) lgSymmetricXYZ = .true.
+        
 
-
-
+        
         if (lgNeutral) then
            
            ! set up density distribution and initial grid properties
@@ -2839,8 +2846,6 @@ print*, nsp, 'here!'
 
       real                 :: nuStepSizeLoc
 
-      p=0.
-
       print*, 'resetGrid in'
       
 
@@ -2917,6 +2922,7 @@ print*, nsp, 'here!'
       read(77, *) dxSlit, dySlit
       read(77, *) lgDust, lgDustConstant
       read(77, *) lgMultiDustChemistry, nDustComponents
+      allocate(dustSpeciesFile(1:nDustComponents))
       do i = 1, nDustComponents
          read(77, *) dustSpeciesFile(i)
       end do
@@ -2924,21 +2930,24 @@ print*, nsp, 'here!'
       read(77, *) lgGas
       read(77, *) lgRecombination
       read(77, *) nSpeciesMax,nSpecies, nSizes
+      allocate(nSpeciesPart(1:nDustComponents))
       read(77, *) (nSpeciesPart(i), i = 1, nDustComponents)
       read(77, *) resLinesTransfer
       read(77, *) lgDustScattering
       read(77, *) nAngleBins
       if (nanglebins>0) then
-         allocate(viewPointTheta(1:nAngleBins), stat=err)
+         allocate(viewPointTheta(0:nAngleBins), stat=err)
          if (err /= 0) then
             print*, '! readInput: allocation error for viewPoint pointer'
             stop
          end if
-         allocate(viewPointPhi(1:nAngleBins), stat=err)
+         viewPointTheta = 0.
+         allocate(viewPointPhi(0:nAngleBins), stat=err)
          if (err /= 0) then
             print*, '! readInput: allocation error for viewPoint pointer'
             stop
          end if
+         viewPointPhi = 0.
          read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
          read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
       end if
@@ -3007,6 +3016,7 @@ print*, nsp, 'here!'
       end if
       close(77)
 
+
       allocate(p(nstages))
       p=0.
       allocate(lgDataAvailable(3:nElements, nstages))
@@ -3058,7 +3068,7 @@ print*, nsp, 'here!'
          read(89, *) nGrids
          read(89, *) nxIn(iG), nyIn(iG), nzIn(iG), grid(iG)%nCells, grid(iG)%motherP, R_out
 
-!         print*, nxIn(iG), nyIn(iG), nzIn(iG), grid(iG)%nCells, grid(iG)%motherP, R_out
+         print*, nxIn(iG), nyIn(iG), nzIn(iG), grid(iG)%nCells, grid(iG)%motherP, R_out
 
          ! initialize cartesian grid
          call initCartesianGrid(grid(iG),nxIn(iG), nyIn(iG), nzIn(iG)) 
@@ -3137,8 +3147,9 @@ print*, nsp, 'here!'
                print*, "! resetGrid: can't allocate grid memory : LdiffuseLoc "
                stop
             end if
+            grid(iG)%LdiffuseLoc=0.
          end if
-         grid(iG)%LdiffuseLoc=0.
+
          totCells = totCells + grid(iG)%nCells
          if (emittingGrid>0 .and. iG<=emittingGrid) then
             totCellsLoc = totCellsLoc + grid(iG)%nCells
@@ -3240,6 +3251,8 @@ print*, nsp, 'here!'
          grid(iG)%lgConverged = 0
          grid(iG)%lgBlack = 0
 
+
+
          ! axis points
          do i = 1, grid(iG)%nx
             read(89, *) grid(iG)%xAxis(i)
@@ -3251,14 +3264,20 @@ print*, nsp, 'here!'
             read(89, *) grid(iG)%zAxis(i)
          end do
 
+         if (lg2D) then
+            yTop = 1
+         else
+            yTop = grid(iG)%ny
+         end if
+
          ! read the rest of the files into grid 
          do i = 1, grid(iG)%nx
             do j = 1, yTOp
                do k = 1, grid(iG)%nz
                   
-                  read(89, *) grid(iG)%active(i,j,k), p0,p00
-
-                  cellP = grid(iG)%active(i,j,k)
+                  read(89, *) cellP, p0,p00
+!print*, cellP
+                  grid(iG)%active(i,j,k) = cellP
                   if (cellP<0) cellP = 0
 
                   grid(iG)%lgConverged(cellP)=p0

@@ -1,37 +1,39 @@
- 38
-** Atomic data from version 5.2 of the CHIANTI database **
+ 40
+** Atomic data from version 6 of the CHIANTI database **
 %observed energies (n=2,3,4): Del Zanna, Chidichimo, Mason, 2005, A&A, 432, 1137
 %observed energy levels (n=5): Shirai,T., et al, 2000, J.Phys.Chem.Ref.Data, Monograph 8
-%observed energy levels (97,100): Landi & Phillips 2005, ApJ, in press
+%observed energy levels (97,100): Landi & Phillips 2005, ApJS, 160, 286
 %observed energy levels (above ionization): Palmeri P., Mendoza C., Kallman T.R., Bautista M.A., 2003, A&A, 403, 1175
 %theoretical energies (levels 1-98, second column): Del Zanna, Mason, 2005, A&A, 430, 331 (scattering calculation)
 %theoretical energies (levels 1-98, third column): Del Zanna, Mason, 2005, A&A, 430, 331 (SUPERSTRUCTURE calculation 
     with term energy corrections)
-%Theoretical energy levels (99-166): Landi & Gu, 2005, ApJ, in press
+%Theoretical energy levels (99-166): Landi & Gu, 2006, ApJ, 640, 1171
 %theoretical energy levels (above ionization): Bautista, M.A., Mendoza, C., Kallman, T.R., Palmeri, P., 2004, A&A, 418, 1171
 %Comment: the theoretical energies from Palmeri et al. have been used as experimental ones when the latter were unavailable
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %   G. Del Zanna and E. Landi - June 23 2005
+%filename: fe_23.wgfa
 %observed energies (n=2,3,4): Del Zanna, Chidichimo, Mason, 2005, A&A, 432, 1137
 %observed energy levels (n=5): Shirai,T., et al, 2000, J.Phys.Chem.Ref.Data, Monograph 8
-%observed energy levels (97,100): Landi & Phillips 2005, ApJ, in press
+%observed energy levels (97,100): Landi & Phillips 2005, ApJS, 160, 286
 %observed energy levels (above ionization): Palmeri P., Mendoza C., Kallman T.R., Bautista M.A., 2003, A&A, 403, 1175
 %theoretical energies levels (1-98): Del Zanna, Mason, 2005, A&A, 430, 331 (SUPERSTRUCTURE calculation with term energy corrections)
-%Theoretical energy levels (99-166): Landi & Gu, 2005, ApJ, in press
+%Theoretical energy levels (99-166): Landi & Gu, 2006, ApJ, 640, 1171
 %A and gf values (1-98): Del Zanna, Chidichimo, Mason, 2005, A&A, 432, 1137
-%A and gf values (99-166): Landi & Gu, 2005, ApJ, in press
+%A and gf values (99-166): Landi & Gu, 2006, ApJ, 640, 1171
 %Radiative data (above ionization): Palmeri P., Mendoza C., Kallman T.R., Bautista M.A., 2003, A&A, 403, 1175
 %Autoionization rates: Palmeri P., Mendoza C., Kallman T.R., Bautista M.A., 2003, A&A, 403, 1175
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  G. Del Zanna and E. Landi - June 23 2005
+
 %filename: fe_23.splups
 %oscillator strengths (levels 1-98): Del Zanna, Mason, 2005, A&A, 430, 331 (scattering calculation)
-%oscillator strengths (levels 99-166): Landi & Gu, 2005, ApJ, in press
+%oscillator strengths (levels 99-166): Landi & Gu, 2006, ApJ, 640, 1171
 %oscillator strengths (above ionization): Bautista, M.A., Mendoza, C., Kallman, T.R., Palmeri, P., 2004, A&A, 418, 1171
 %effective Collision strengths (levels 1-98): Chidichimo, Del Zanna, Mason, 2005, A&A, 430, 331
-%collision strengths (levels 99-166): Landi & Gu, 2005, ApJ, in press
+%collision strengths (levels 99-166): Landi & Gu, 2006, ApJ, 640, 1171
 %collisional data (above ionization): Bautista, M.A., Mendoza, C., Kallman, T.R., Palmeri, P., 2004, A&A, 418, 1171
 %comment: Effective collision strengths from Chidichimo et al 2005 were calculated in the range 2x10^6 < T < 1.3x10^8 K
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration

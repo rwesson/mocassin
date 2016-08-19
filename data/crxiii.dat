@@ -1,11 +1,12 @@
- 21
-** Atomic data from version 5.2 of the CHIANTI database **
+ 23
+** Atomic data from version 6 of the CHIANTI database **
 %Experimental energy levels: Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 1995,
      NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 %theoretical energy levels: Christensen etal, Ph.Rev.A, 34, 4704, 1986
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi 2000
+%filename: cr_13.wgfa
 %experimental energy levels: Martin,W.C., Sugar,J., Musgrove,A., Dalton,G.R., 1995,
      NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
 %A values: Christensen et al, Ph.Rev.A, 4704, 34, 1986
@@ -14,6 +15,7 @@ by Christensen, Norcross, Pradhan, Ph.Rev.A, 34, 4704, 1986
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi 2000
+
 %filename: cr_13.splups
 %oscillator strengths: Christensen etal, 1986, Ph.Rev.A, 4704, 34
 %collision strengths: Christensen etal, 1986, Ph.Rev.A, 4704, 34

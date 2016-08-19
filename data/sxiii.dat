@@ -1,41 +1,58 @@
- 37
-** Atomic data from version 5.2 of the CHIANTI database **
-%energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 
-         1995, NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
-%energy levels (12,16): Khardi et al, 1994, Physica Scripta, 49, 571
-%energy levels: Martin, W.C., Zalubas, R., Musgrove, A., 1990, J.Phys.Chem.Ref.Data, 19, 821
-%Theoretical energy levels (n=2): Zhang, Sampson, ADNDT, 1992, 52, 143
-%theoretical energy levels (n=3): Sampson, D.H., Goett, S.J., Clark, R.E.H., 1984, ADNDT, 30, 125
-%comment:  level 18 has been relabeled 2p3p 1P1,  j=1
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+ 54
+** Atomic data from version 6 of the CHIANTI database **
+%observed energy levels (1-5,9,10): Edlen, B., 1983, Phys. Scr., 28, 51
+%observed energy levels (6-8): Edlen, B., 1985, Phys. Scr., 32, 86
+%observed energy levels (15,16,31,37,44,47,53-55,76,77,81): Fawcett & Hayes 1987, Phys. Scr., 36, 80
+%observed energy levels (38-42,45): Goldsmith, S., Oren, L., Cohen, L., 1974, ApJ, 188, 197
+%observed energy levels (52,88): Lepson, J.K., Beiersdorfer, P., Behar, E., & Kahn, S.M., 2005, ApJ, 625, 1045
+%observed energy levels (25): Ralchenko, Yu., Jou, F.-C., Kelleher, D.E., Kramida, A.E., Musgrove, A.,
+     Reader, J., Wiese, W.L., & Olsen, K. 2005, NIST Atomic Spectra Database (version 3.0.2), National Institute
+     of Standards and Technology, Gaithersburg, MD
+%observed energy levels (91): average from Fawcett, B.C., Hardcastle, R.A., & Tondello, G. 1970, J. Phys. B., 3, 564
+       and Fawcett & Hayes 1987
+%observed energy levels (11,13,17,18,20,27-29,32,46): Average from Fawcett & Hayes 1987 and Goldsmith et al 1974
+%observed energy levels (19): Average from Fawcett & Hayes 1987, Goldsmith et al 1974 and Lepson et al. 2005
+%observed energy levels (84): Average from Fawcett & Hayes 1987 and Lepson et al. 2005
+%observed energy levels (48): Average from Goldsmith et al 1974, Lepson et al. 2005 and 
+       Kardi, S., et al., 1994, Phys. Scr., 49, 571
+%observed energy levels (56): Average from Fawcett & Hayes 1987, Goldsmith et al 1974, Khardi et al 1994 and
+       Lepson et al. 2005
+%Theoretical energy levels: 27-conf model from Landi & Bhatia 2008, ADNDT, 94, 1
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% E. Landi 1997
-%observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
-    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
-%observed energy levels (12,16): Khardi et al, 1994, Physica Scripta, 49, 571
-%theoretical energy levels (n=3): Sampson, D.H., Goett, S.J., Clark, R.E.H., 1984, ADNDT, 30, 125
-%Allowed transitions oscillator strengths (n=2): Zhang, Sampson, 1992, ADNDT, 52, 143
-%oscillator strengths: forbidden transitions (n=2): Muhlethaler, Nussbaumer, 1976, A&A, 48, 109
-%Allowed transitions oscillator strengths (n=3): Sampson, D.H., Goett, S.J., Clark, R.E.H., 1984, ADNDT, 30, 125
-%comment: level 18 has been relabeled 2p3p 1P1,  j=1
-%comment: gf values for transitions 19-26 and 23-26 were simply taken to be
-   equal to the O V gf values reported by Hibbert, 1980, J. Phys. B, 13, 1721.
-   The A values were obtained from the gf values by using the wavelengths listed.
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%  E. Landi - Sep 2006
+%filename: s_13.wgfa
+%observed energy levels (1-5,9,10): Edlen, B., 1983, Phys. Scr., 28, 51
+%observed energy levels (6-8): Edlen, B., 1985, Phys. Scr., 32, 86
+%observed energy levels (15,16,31,37,44,47,53,54,55,76,77,81): Fawcett & Hayes 1987, Phys. Scr., 36, 80
+%observed energy levels (38-42,45): Goldsmith, S., Oren, L., Cohen, L., 1974, ApJ, 188, 197
+%observed energy levels (52,88): Lepson, J.K., Beiersdorfer, P., Behar, E., & Kahn, S.M., 2005, ApJ, 625, 1045
+%observed energy levels (25): Ralchenko, Yu., Jou, F.-C., Kelleher, D.E., Kramida, A.E., Musgrove, A.,
+     Reader, J., Wiese, W.L., & Olsen, K. 2005, NIST Atomic Spectra Database (version 3.0.2), National Institute
+     of Standards and Technology, Gaithersburg, MD
+%observed energy levels (91): average from Fawcett, B.C., Hardcastle, R.A., & Tondello, G. 1970, J. Phys. B., 3, 564
+       and Fawcett & Hayes 1987
+%observed energy levels (11,13,17,18,20,27-29,32,46): Average from Fawcett & Hayes 1987 and Goldsmith et al 1974
+%observed energy levels (19): Average from Fawcett & Hayes 1987, Goldsmith et al 1974 and Lepson et al. 2005
+%observed energy levels (84): Average from Fawcett & Hayes 1987 and Lepson et al. 2005
+%observed energy levels (48): Average from Goldsmith et al 1974, Lepson et al. 2005 and
+       Kardi, S., et al., 1994, Phys. Scr., 49, 571
+%observed energy levels (56): Average from Fawcett & Hayes 1987, Goldsmith et al 1974, Khardi et al 1994 and
+       Lepson et al. 2005
+%Theoretical energy levels: 27-conf model from Landi & Bhatia 2008, ADNDT, 94, 1
+%A values and oscillator strengths: 27-conf model from Landi & Bhatia 2008, ADNDT, 94, 1
+%% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-%  E.Landi (n=2) and K.P.Dere (n=3) - 1997
+%  E. Landi - Sep 2006
+
 %filename: s_13.splups
-%oscillator strengths (n=2): Zhang, Sampson, 1992, ADNDT, 52, 143
-%oscillator strengths (n=3): Sampson, D.H., Goett, S.J., Clark, R.E.H., 1984, ADNDT, 30, 125
-%effective collision strengths (1 - 10): Keenan, F.P., 1988, Phys.Scripta, 37, 57
-%collision strengths (n=3): Sampson, D.H., Goett, S.J., Clark, R.E.H., 1984, ADNDT, 30, 125
-%produced as part of the Arcetri/Cambridge/NRL atomic data base collaboration CHIANTI
-%comment: Have derived the upsilon data from Table III of Keenan 1988.
-   The Delta-E's have been taken from the observed values in the .elvlc
-   file. The gf values are from the .wgfa file.
-%comment: the effective collision strengths have been calculated in the temperature range 5.6 < Log T < 7.2
-% 
-% Enrico Landi March 2001 (n=2); n=3 levels added by K. Dere 6/97
+%Oscillator strengths: 27-conf model from Landi & Bhatia 2008, ADNDT, 94, 1
+%Effective collision strengths (levels 1-10): Keenan, 1988, Physica Scripta, 37, 57
+%Collision strengths (levels 11-92): 27-conf model from Landi & Bhatia 2008, ADNDT, 94, 1
+%Comment: effective collision strengths were provided in the 5.6 < Log T < 7.2 temperature range
+% produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% E. Landi - Aug 2006
 10 23
   1  2s2 1S0
   2  2s.2p 3P0
@@ -393,29 +410,29 @@
   0  0   4.23e-01
   0  0   4.47e-01
   0  0   4.76e-01
-  2  8   8.80e-03
-  0  0   8.80e-03
-  0  0   8.80e-03
-  0  0   8.80e-03
-  0  0   8.80e-03
-  0  0   8.80e-03
-  0  0   8.80e-03
-  0  0   8.80e-03
-  0  0   8.79e-03
-  0  0   8.79e-03
-  0  0   8.78e-03
-  0  0   8.77e-03
-  0  0   8.76e-03
-  0  0   8.73e-03
-  0  0   8.69e-03
-  0  0   8.63e-03
-  0  0   8.54e-03
-  0  0   8.41e-03
-  0  0   8.21e-03
-  0  0   7.96e-03
-  0  0   7.64e-03
-  0  0   7.31e-03
-  0  0   6.96e-03
+  2  8   3.40e-03
+  0  0   3.40e-03
+  0  0   3.40e-03
+  0  0   3.40e-03
+  0  0   3.40e-03
+  0  0   3.40e-03
+  0  0   3.40e-03
+  0  0   3.40e-03
+  0  0   3.39e-03
+  0  0   3.39e-03
+  0  0   3.39e-03
+  0  0   3.39e-03
+  0  0   3.39e-03
+  0  0   3.38e-03
+  0  0   3.38e-03
+  0  0   3.37e-03
+  0  0   3.35e-03
+  0  0   3.32e-03
+  0  0   3.28e-03
+  0  0   3.22e-03
+  0  0   3.12e-03
+  0  0   2.98e-03
+  0  0   2.77e-03
   2  9   7.04e-03
   0  0   7.04e-03
   0  0   7.04e-03
@@ -646,29 +663,29 @@
   0  0   6.85e-02
   0  0   5.75e-02
   0  0   4.80e-02
-  4  6   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.90e-02
-  0  0   1.91e-02
-  0  0   1.91e-02
-  0  0   1.91e-02
-  0  0   1.92e-02
-  0  0   1.93e-02
-  0  0   1.95e-02
-  0  0   1.98e-02
-  0  0   2.01e-02
-  0  0   2.07e-02
-  0  0   2.14e-02
-  0  0   2.22e-02
-  0  0   2.31e-02
-  0  0   2.39e-02
+  4  6   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.25e-03
+  0  0   2.24e-03
+  0  0   2.24e-03
+  0  0   2.23e-03
+  0  0   2.22e-03
+  0  0   2.20e-03
+  0  0   2.18e-03
+  0  0   2.13e-03
+  0  0   2.07e-03
+  0  0   1.98e-03
+  0  0   1.84e-03
   4  7   4.37e-01
   0  0   4.37e-01
   0  0   4.37e-01
@@ -1108,50 +1125,50 @@
   0  0   6.13e-02
  0 0 0
   1  2   0.000e+00
-  1  3   1.006e+06
-  1  4   4.550e-01
-  1  5   8.031e+09
+  1  3   1.116e+06
+  1  4   4.505e-01
+  1  5   8.227e+09
   1  6   0.000e+00
-  1  7   0.000e+00
-  1  8   0.000e+00
-  1  9   0.000e+00
+  1  7   1.015e+02
+  1  8   6.187e+01
+  1  9   5.744e+03
   1 10   0.000e+00
-  2  3   0.000e+00
-  2  4   0.000e+00
-  2  5   0.000e+00
+  2  3   1.621e+00
+  2  4   1.513e-04
+  2  5   1.842e+02
   2  6   0.000e+00
-  2  7   2.255e+09
+  2  7   2.244e+09
   2  8   0.000e+00
   2  9   0.000e+00
   2 10   0.000e+00
-  3  4   1.200e+01
-  3  5   0.000e+00
-  3  6   6.158e+09
-  3  7   1.621e+09
-  3  8   1.758e+09
-  3  9   5.228e+06
-  3 10   6.790e+06
-  4  5   0.000e+00
+  3  4   1.411e+01
+  3  5   1.295e+02
+  3  6   6.121e+09
+  3  7   1.612e+09
+  3  8   1.747e+09
+  3  9   7.383e+06
+  3 10   7.487e+06
+  4  5   1.830e+02
   4  6   0.000e+00
-  4  7   2.458e+09
-  4  8   4.729e+09
-  4  9   1.067e+08
+  4  7   2.442e+09
+  4  8   4.691e+09
+  4  9   1.196e+08
   4 10   0.000e+00
-  5  6   1.477e+06
-  5  7   1.365e+05
-  5  8   5.260e+06
-  5  9   1.459e+09
-  5 10   1.309e+10
-  6  7   0.000e+00
-  6  8   0.000e+00
-  6  9   0.000e+00
+  5  6   1.401e+06
+  5  7   1.434e+05
+  5  8   5.797e+06
+  5  9   1.420e+09
+  5 10   1.288e+10
+  6  7   3.466e+00
+  6  8   1.261e-04
+  6  9   5.991e-06
   6 10   0.000e+00
-  7  8   0.000e+00
-  7  9   0.000e+00
-  7 10   0.000e+00
-  8  9   0.000e+00
-  8 10   0.000e+00
-  9 10   0.000e+00
+  7  8   7.938e+00
+  7  9   5.832e+01
+  7 10   1.899e+03
+  8  9   1.141e+02
+  8 10   8.968e+00
+  9 10   1.976e+02
   1  1        0.0
   2  1   199181.0
   3  3   203474.0

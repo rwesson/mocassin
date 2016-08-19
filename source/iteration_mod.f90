@@ -151,8 +151,7 @@ module iteration_mod
                  call mpi_allreduce(grid(iG)%opacity, opacityTemp, size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
                  
-
-                 call mpi_barrier(mpi_comm_world, ierr)
+                 
                  do i = 1, grid(iG)%nx
                     do j = 1, yTop
                        do k = 1, grid(iG)%nz
@@ -645,7 +644,6 @@ module iteration_mod
                  end do
               end do
                  
-              call mpi_barrier(mpi_comm_world, ierr)
 
               if ( associated(escapedPacketsTemp) ) deallocate(escapedPacketsTemp)
               
@@ -852,7 +850,6 @@ module iteration_mod
               end if
 
 
-              call mpi_barrier(mpi_comm_world, ierr)
               
               size = 1
 
@@ -913,7 +910,6 @@ module iteration_mod
 
                     dustHeatingBudget = budgetTemp
 
-                    call mpi_barrier(mpi_comm_world, ierr)
 
                     deallocate(budgetTemp)
                     
@@ -952,12 +948,6 @@ module iteration_mod
            
 !******************************************************************************
 
-           if (nGrids>1) then
-!              print*, " ! iterateMC: integratePathTau stuff still not implemented for multiple grids.... skipping"
-           else
-              call writeTau(grid)
-           end if
-
            ! decide over final convergence of the model
            
            ! reinitialize convPercent and totCells           
@@ -990,6 +980,7 @@ module iteration_mod
               noHitPercent              = 100.*noHitPercent(iG) / totCells
               grid(iG)%noIonBal         = 100.*noIonBalPercent(iG) / totCells
               grid(iG)%noTeBal          = 100.*noTeBalPercent(iG) / totCells 
+              totPercent = totPercent + convPercent*grid(iG)%nCells/100.
 
               if (taskid == 0) then
                  if (nIterateMC == 1) then
@@ -1040,9 +1031,6 @@ module iteration_mod
                        end do
                     end do
                  end if
-
-                 totPercent = totPercent + convPercent*grid(iG)%nCells/100.
-
               end if
               
            end do
@@ -1078,8 +1066,6 @@ module iteration_mod
            
            end if
         
-           call mpi_barrier(mpi_comm_world, ierr)
-
            nPhotonsTot = nPhotons(1)
            do iStar=1, nStars              
               nPhotonsTot = nPhotonsTot+nPhotons(iStar)

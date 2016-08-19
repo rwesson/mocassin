@@ -33,7 +33,7 @@ module common_mod
     logical         :: lgWritePss=.false.       ! write Pss for qHeat file?
     logical         :: lgTraceHeating = .false. ! trace thermal balance?
     logical         :: lgGrainSpiking = .true.  ! temperature spiking for small grains
-
+    logical         :: lgEcho = .false.         ! light time travel included?
 
     real, pointer :: gSca(:)                 ! gSca(freq)
 
@@ -57,7 +57,7 @@ module common_mod
     real            :: endtime        ! end time [sec]    
     real            :: absInt         ! total number of absorption events
     real            :: scaInt         ! total number of scattering events
-
+    real            :: echot1, echot2   ! light time travel parameters
     real            :: dTheta                  ! 
     real            :: dPhi                    ! 
     real            :: nu0                     ! 
@@ -382,8 +382,8 @@ module common_mod
     integer,pointer    :: viewPointPtheta(:), viewPointPphi(:)       ! viewing angles
 
     integer            :: nAngleBins=0     ! number of viewing angles for SED
-    integer            :: TotAngleBinsTheta=180 ! total # of theta angle bins for SED
-    integer            :: TotAngleBinsPhi=360 ! total # of phi angle bins for SED
+    integer            :: TotAngleBinsTheta=10 ! total # of theta angle bins for SED
+    integer            :: TotAngleBinsPhi=20 ! total # of phi angle bins for SED
     integer            :: nGrids           ! total number of grids to be used in the simulation
     integer            :: maxIterateMC     ! limit on number of MC iterations
     integer            :: maxPhotons       ! limit to packets to be use

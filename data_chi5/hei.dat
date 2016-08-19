@@ -1,0 +1,51 @@
+ 24
+** Atomic data from version 5.2 of the CHIANTI database **
+%energy levels: Fuhr et al., 1999, NIST Atomic Spectra Database Version 2.0
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  Ken Dere - Feb  2 2001
+%observed energy levels: Fuhr et al., 1999, NIST Atomic Spectra Database Version 2.0 
+%A values: Fuhr et al., 1999, NIST Atomic Spectra Database Version 2.0
+%A values (1-2,4,5; 2-4,5,6): Lin, C.D., Johnson, W.R., Dalgarno, A., Phys Rev A, 1977, 15, 154
+%A values (1-3 2-phot): Drake, G.W.F., Phys Rev A, 1986, 34, 2871
+%oscillator strengths (from 5g 3G and 1G decays): Wiese,W.L., Smith,M.W., Glennon,B.M., 1966, 
+     Atomic Transition Probabilities, NSRDS-NBS-4.
+%comment: Wiese's f values are hydrogenic
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  K.P.Dere and E.Landi - Oct 2004
+
+%filename: he_1.splups
+%oscillator strengths: Fuhr et al., 1999, NIST Atomic Spectra Database Version 2.0
+%effective collision strengths: Sawey, P.M.J., Berrington, K.A., 1993, ADNDT, 55, 81
+%effective collision strengths: Bray, I., Burgess, A., Fursa, D.V., Tully, J.A., 2000, A&AS, 146, 481
+%comment: effective collision strengths were used in the temperature range 3.0 < Log T < 5.75
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  Ken Dere - Jun 19 2001
+ 0 23
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+ 0 0 0

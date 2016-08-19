@@ -362,7 +362,12 @@ module photon_mod
             if (.not.lgDust .and. enPacket%nu < ionEdge(1) .and. .not.enPacket%lgLine) then
 
                ! the packet escapes without further interaction
-               idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               if (lgSymmetricXYZ) then
+                  idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+               else
+                  idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               end if
+
                if (idirT>totangleBinsTheta) then
                   idirT=totangleBinsTheta
                end if
@@ -373,12 +378,17 @@ module photon_mod
                end if
               
 
-               if (enPacket%direction%x<1.e-35) then
+               if (abs(enPacket%direction%x)<1.e-35) then
                   idirP = 0
                else
-                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                  if (lgSymmetricXYZ) then
+                     idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                  else
+                     idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                  end if
                end if
                if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                idirP=idirP+1
 
                if (idirP>totangleBinsPhi) then
@@ -388,15 +398,26 @@ module photon_mod
                end if
              
                if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                  print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                  print*, '! energyPacketRun: error in phi direction cosine assignment -1',&
                        &  idirP, enPacket, dPhi, totAngleBinsPhi
                   stop
                end if
 
                if (nAngleBins>0) then
-                  if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                  if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          & enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) +  deltaE(iStar)
+
+                  elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                        & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
                        & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+
                      grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
                           &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)
@@ -404,13 +425,16 @@ module photon_mod
                           & enPacket%nuP,0) = &
                           & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,0) +  deltaE(iStar)
+
                   else
+
                      grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                           & enPacket%nuP,0) = &
                           & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,0) +  deltaE(iStar)
+
                   end if
-                              
+
                else
 
                   if (enPacket%origin(1) == 0) then 
@@ -682,7 +706,7 @@ module photon_mod
             call random_number(random)
             
             do i = 1, 10000
-               if (random==0 .or. random==1.) then
+               if (random==0 .or. random==1. .or. random == 0.9999999) then
                   call random_number(random)
                else
                   exit
@@ -703,7 +727,7 @@ module photon_mod
                end if
             end do            
 
-            if (nuP<nbins) then
+            if (nuP<nbins-1) then
                nuP=nuP+1
             end if
 
@@ -1280,7 +1304,8 @@ module photon_mod
                       end if
                    end if
                 else if (vHat%x==0.) then
-                   dSx = grid(gP)%xAxis(grid(gP)%nx)
+!                   dSx = grid(gP)%xAxis(grid(gP)%nx)
+                   dSx =1.e35
                 end if
                 
                 if (.not.lg1D) then 
@@ -1312,7 +1337,8 @@ module photon_mod
                          end if
                       end if
                    else if (vHat%y==0.) then
-                      dSy = grid(gP)%yAxis(grid(gP)%ny)
+!                      dSy = grid(gP)%yAxis(grid(gP)%ny)
+                      dSy = 1.e35
                    end if
 
                    if (vHat%z>0.) then
@@ -1343,7 +1369,8 @@ module photon_mod
                          end if
                       end if
                    else if (vHat%z==0.) then
-                      dSz = grid(gP)%zAxis(grid(gP)%nz)
+!                      dSz = grid(gP)%zAxis(grid(gP)%nz)
+                      dSz = 1.e35
                    end if
                    
                    if (xP > grid(gP)%nx .or. xP < 1 .or. &
@@ -1525,9 +1552,14 @@ module photon_mod
                 if ( sqrt( (rvec%x/1.e10)**2. + (rvec%y/1.e10)**2. + (rvec%z/1.e10)**2.)*1.e10 >= R_out &
                      & .and. R_out > 0.) then
                    
-                   ! the packet escapes without further interaction
                    
-                   idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                   ! the packet escapes without further interaction
+                   if (lgSymmetricXYZ) then
+                      idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+                   else
+                      idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                   end if
+
                    if (idirT>totangleBinsTheta) then
                       idirT=totangleBinsTheta
                    end if
@@ -1537,25 +1569,53 @@ module photon_mod
                       stop
                    end if
 
-                   if (enPacket%direction%x<1.e-35) then
+!                   if (enPacket%direction%x<1.e-35) then
+!                      idirP = 0
+!                   else
+!                      idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+!                   end if
+!                   if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+                   
+                   if (abs(enPacket%direction%x)<1.e-35) then
                       idirP = 0
                    else
-                      idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                      if (lgSymmetricXYZ) then
+                         idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                      else
+                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                      end if
                    end if
                    if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                    idirP=idirP+1
+
                    if (idirP>totangleBinsPhi) then
                       idirP=totangleBinsPhi
                    end if
                    
                    if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                      print*, '! energyPacketRun: error in Phi direction cosine assignment',&
+                      print*, '! energyPacketRun: error in Phi direction cosine assignment -2',&
                            &  idirP, enPacket, dPhi, totAngleBinsPhi
                       stop
                    end if
-               
+
+!print*, 'a', nanglebins
+!print*, enPacket%lgStellar, enPacket%direction
+!print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+!print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+
                    if (nAngleBins>0) then
-                      if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                      if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+                         grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                              &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                              & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                         grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                              & enPacket%nuP,0) = &
+                              & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                              & enPacket%nuP,0) +  deltaE(iStar)
+
+                      elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                            & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
                            & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
                          grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
@@ -1989,8 +2049,14 @@ module photon_mod
                    if (lgReturn) then
                       
                       ! the packet escapes without further interaction
-                      
-                      idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                      ! the packet escapes without further interaction
+                      if (lgSymmetricXYZ) then
+                         idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+                      else
+                         idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                      end if
+
+!                      idirT = int(acos(enPacket%direction%z)/dTheta)+1
                       if (idirT>totangleBinsTheta) then
                          idirT=totangleBinsTheta
                       end if
@@ -2001,26 +2067,53 @@ module photon_mod
                       end if
                       
                       
-                      if (enPacket%direction%x<1.e-35) then
+!                      if (enPacket%direction%x<1.e-35) then
+!                         idirP = 0
+!                      else
+!                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+!                      end if
+!                      if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+                      if (abs(enPacket%direction%x)<1.e-35) then
                          idirP = 0
                       else
-                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                         if (lgSymmetricXYZ) then
+                            idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                         else
+                            idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                         end if
                       end if
                       if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                       idirP=idirP+1
                       
                       if (idirP>totangleBinsPhi) then
                          idirP=totangleBinsPhi
                       end if
                       if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                         print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                         print*, '! energyPacketRun: error in phi direction cosine assignment -3',&
                               &  idirP, enPacket, dPhi, totAngleBinsPhi
                          stop
                       end if
                       
                       
+!print*, 'b''c', nanglebins
+!print*, enPacket%lgStellar, enPacket%direction
+!print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+!print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+
                       if (nAngleBins>0) then
-                         if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                         if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                                 &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                 & enPacket%nuP,0) = &
+                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,0) +  deltaE(iStar)
+                            
+                         elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                               & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. &
                               & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
                             grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
@@ -2175,8 +2268,14 @@ module photon_mod
                    if (lgReturn) then            
 
                       ! the packet escapes without further interaction
+                      ! the packet escapes without further interaction
+                      if (lgSymmetricXYZ) then
+                         idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+                      else
+                         idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                      end if
                       
-                      idirT = int(acos(enPacket%direction%z)/dTheta)+1
+!                      idirT = int(acos(enPacket%direction%z)/dTheta)+1
                       if (idirT>totangleBinsTheta) then
                          idirT=totangleBinsTheta
                       end if
@@ -2187,26 +2286,54 @@ module photon_mod
                       end if
                       
                       
-                      if (enPacket%direction%x<1.e-35) then
+
+                      if (abs(enPacket%direction%x)<1.e-35) then
                          idirP = 0
                       else
-                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                         if (lgSymmetricXYZ) then
+                            idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                         else
+                            idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                         end if
                       end if
                       if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+!                      if (enPacket%direction%x<1.e-35) then
+!                         idirP = 0
+!                      else
+!                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+!                      end if
+!                      if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                       idirP=idirP+1
                   
                       if (idirP>totangleBinsPhi) then
                          idirP=totangleBinsPhi
                       end if
                       if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                         print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                         print*, '! energyPacketRun: error in phi direction cosine assignment -4',&
                               &  idirP, enPacket, dPhi, totAngleBinsPhi
                          stop
                       end if
 
 
+!print*, 'c', nanglebins
+!print*, enPacket%lgStellar, enPacket%direction
+!print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+!print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+
                       if (nAngleBins>0) then
-                         if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                         if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                                 &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                 & enPacket%nuP,0) = &
+                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,0) +  deltaE(iStar)
+
+                         elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                               & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
                               & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
                             grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
@@ -2267,8 +2394,14 @@ module photon_mod
                      ! the energy packet escapes
                         
                      ! the packet escapes without further interaction
+                     ! the packet escapes without further interaction
+                     if (lgSymmetricXYZ) then
+                        idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+                     else
+                        idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                     end if
                      
-                     idirT = int(acos(enPacket%direction%z)/dTheta)+1
+!                     idirT = int(acos(enPacket%direction%z)/dTheta)+1
                      if (idirT>totangleBinsTheta) then
                         idirT=totangleBinsTheta
                      end if
@@ -2278,12 +2411,25 @@ module photon_mod
                         stop
                      end if
                          
-                     if (enPacket%direction%x<1.e-35) then
+!                     if (enPacket%direction%x<1.e-35) then
+!                        idirP = 0
+!                     else
+!                        idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+!                     end if
+!                     if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+
+                     if (abs(enPacket%direction%x)<1.e-35) then
                         idirP = 0
                      else
-                        idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                        if (lgSymmetricXYZ) then
+                           idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                        else
+                           idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                        end if
                      end if
                      if (idirP<0) idirP=totAngleBinsPhi+idirP
+
                      idirP=idirP+1
                      
                      if (idirP>totangleBinsPhi) then
@@ -2291,31 +2437,51 @@ module photon_mod
                      end if
                      
                      if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                        print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                        print*, '! energyPacketRun: error in phi direction cosine assignment -5',&
                              &  idirP, enPacket, dPhi, totAngleBinsPhi
                         stop
                      end if
                      
+!print*, 'd', nanglebins
+!print*, enPacket%lgStellar, enPacket%direction
+!print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+!print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+
+
                      if (nAngleBins>0) then
-                        if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                        if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+                           
+                           grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                                &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                           grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                & enPacket%nuP,0) = &
+                                & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                & enPacket%nuP,0) +  deltaE(iStar)
+!print*, 'd1', enPacket%origin(1), enPacket%origin(2)
+
+                        elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                              & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
                              & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
                                 & viewPointPtheta(idirT)) = &
                                 &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                                 & enPacket%nuP,viewPointPtheta(idirT)) +  deltaE(iStar)
+!print*, 'd2'
                            if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                                 enPacket%nuP,0) = &
                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                                 & enPacket%nuP,0) +  deltaE(iStar)
                         else
+
+!print*, 'd3'
                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                                 enPacket%nuP,0) = &
                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                                 & enPacket%nuP,0) +  deltaE(iStar)
                         end if
                      else
-                        
+!print*, 'd4'                        
                         grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
                              enPacket%nuP,0) = &
                              & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
@@ -2360,8 +2526,14 @@ module photon_mod
                         ! the energy packet escapes
                         
                         ! the packet escapes without further interaction
+                        ! the packet escapes without further interaction
+                        if (lgSymmetricXYZ) then
+                           idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+                        else
+                           idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                        end if
                         
-                        idirT = int(acos(enPacket%direction%z)/dTheta)+1
+!                        idirT = int(acos(enPacket%direction%z)/dTheta)+1
                         if (idirT>totangleBinsTheta) then
                            idirT=totangleBinsTheta
                         end if
@@ -2371,12 +2543,26 @@ module photon_mod
                            stop
                         end if
                         
-                        if (enPacket%direction%x<1.e-35) then
+!                        if (enPacket%direction%x<1.e-35) then
+!                           idirP = 0
+!                        else
+!                           idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+!                        end if
+!                        if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+                        
+                        if (abs(enPacket%direction%x)<1.e-35) then
                            idirP = 0
                         else
-                           idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+                           if (lgSymmetricXYZ) then
+                              idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+                           else
+                              idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                           end if
                         end if
                         if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+
                         idirP=idirP+1
       
                         if (idirP>totangleBinsPhi) then
@@ -2384,13 +2570,28 @@ module photon_mod
                         end if
                      
                         if (idirP<1 .or. idirP>totAngleBinsPhi) then
-                           print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                           print*, '! energyPacketRun: error in phi direction cosine assignment -6',&
                                 &  idirP, enPacket, dPhi, totAngleBinsPhi
                            stop
                         end if
                      
+print*, 'e', nanglebins
+print*, enPacket%lgStellar, enPacket%direction
+print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+
                         if (nAngleBins>0) then
-                           if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                           if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                              grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                                   &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                   & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                              grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                   & enPacket%nuP,0) = &
+                                   & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                   & enPacket%nuP,0) +  deltaE(iStar)
+                              
+                           elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                                 &(viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))).or. & 
                                 & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
                               grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
@@ -2494,7 +2695,14 @@ module photon_mod
          
             ! the packet escapes without further interaction
             
-            idirT = int(acos(enPacket%direction%z)/dTheta)+1
+            ! the packet escapes without further interaction
+            if (lgSymmetricXYZ) then
+               idirT = int(acos(abs(enPacket%direction%z))/dTheta)+1
+            else
+               idirT = int(acos(enPacket%direction%z)/dTheta)+1
+            end if
+            
+!            idirT = int(acos(enPacket%direction%z)/dTheta)+1
             if (idirT>totangleBinsTheta) then
                idirT=totangleBinsTheta
             end if
@@ -2504,12 +2712,24 @@ module photon_mod
                stop
             end if
             
-            if (enPacket%direction%x<1.e-35) then
+!            if (enPacket%direction%x<1.e-35) then
+!               idirP = 0
+!            else
+!               idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+!            end if
+!            if (idirP<0) idirP=totAngleBinsPhi+idirP
+
+            if (abs(enPacket%direction%x)<1.e-35) then
                idirP = 0
             else
-               idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+               if (lgSymmetricXYZ) then
+                  idirP = int(atan(abs(enPacket%direction%y)/abs(enPacket%direction%x))/dPhi)
+               else
+                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+               end if
             end if
             if (idirP<0) idirP=totAngleBinsPhi+idirP
+
             idirP=idirP+1
             
             if (idirP>totangleBinsPhi) then
@@ -2517,13 +2737,29 @@ module photon_mod
             end if
             
             if (idirP<1 .or. idirP>totAngleBinsPhi) then
-               print*, '! energyPacketRun: error in phi direction cosine assignment',&
+               print*, '! energyPacketRun: error in phi direction cosine assignment -7',&
                     &  idirP, enPacket, dPhi, totAngleBinsPhi
                stop
             end if
             
+
+print*, 'f', nanglebins
+print*, enPacket%lgStellar, enPacket%direction
+print*, idirT, viewPointPTheta(idirT), viewPointTheta(viewPointPTheta(idirT))
+print*, idirP, viewPointPPhi(idirP), viewPointPhi(viewPointPPhi(idirP)), viewPointPhi(viewPointPtheta(idirT))
+
             if (nAngleBins>0) then
-               if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+               if (viewPointPtheta(idirT) > 0 .and. viewPointPhi(viewPointPtheta(idirT)) < 0) then
+
+                  grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                       &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,viewPointPtheta(idirT)) + deltaE(iStar)                     
+                  grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                       & enPacket%nuP,0) = &
+                       & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,0) +  deltaE(iStar)
+                  
+               elseif (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
                     & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
                     & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
                   grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 

@@ -1,29 +1,33 @@
- 29
-** Atomic data from version 5.2 of the CHIANTI database **
+ 33
+** Atomic data from version 6 of the CHIANTI database **
 %Experimental energy levels (1 to 45): Shirai,T., Sugar,J., Musgrove,A., Wiese,W.L.,2000, J.Phys.Chem.Ref.Data, Monograph 8
 %Experimental energy levels (31,32): Eissner, W., Galavis, M.E., Mendoza, C., Zeippen, C.J., 1999, A&AS, 137, 165
 %Experimental energy levels (50,51,52): Reader, J., Sugar, J., 1975, J.Phys.Chem.Ref.Data, 4, 424
 %Experimental energy levels (76-117): Ralchenko Y., Jou, F.C., Kelleher, D.E., Kramida, A.E.,
    Musgrove, A., Reader, J., Wiese, W.L., Olsen, K., 2005, NIST Atomic Spectra Database, Version 3.0
-%Theoretical energy levels: Landi & Gu 2005, ApJ, in press
+%Theoretical energy levels: Landi & Gu 2005, unpublished calculations
 %comment: NIST energy for level 3p.4f 1F3 (80) has been assigned to level 3p.4f 3F3 (77)
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % Enrico Landi - Aug 2005
+%filename: fe_15.wgfa
 %Experimental energy levels (1 to 45): Shirai, T., Sugar, J., Musgrove, A., Wiese, W.L.,2000, J.Phys.Chem.Ref.Data, Monograph 8
 %Experimental energy levels (31,32): Eissner, W., Galavis, M.E., Mendoza, C., Zeippen, C.J., 1999, A&AS, 137, 165
 %Experimental energy levels (50,51,52): Reader, J., Sugar, J., 1975, J.Phys.Chem.Ref.Data, 4, 424
 %Experimental energy levels (76-117): Ralchenko Y., Jou, F.C., Kelleher, D.E., Kramida, A.E.,
    Musgrove, A., Reader, J., Wiese, W.L., Olsen, K., 2005, NIST Atomic Spectra Database, Version 3.0
-%Theoretical energy levels: Landi & Gu 2005, ApJ, in press
-%A values and oscillator strengths: Landi & Gu 2005, ApJ, in press
+%Theoretical energy levels: Landi & Gu 2005, unpublished calculations
+%A values and oscillator strengths: Landi & Gu 2005, unpublished calculations
+%A-value (1-3): Traebert, E., Heckmann, P.H., Hutton , R., & Martinson, I. 1988, J. Opt. Soc. Am. B, 5, 2173
+%comment: added transition experimental A-value 1-3 from Traebert et al 1988 (E. Landi, Sept. 20, 2006).
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% Enrico Landi - Aug 2005
+% Enrico Landi - Sep 2006
+
 %filename: fe_15.splups
-%gf values: Landi & Gu, 2005, ApJ, in press
+%gf values: Landi & Gu, 2005, unpublished calculations
 %Effective collision strengths (levels 1-45): Berrington, K.A., Ballance, C.P., Griffin, D.C., & Badnell, N.R. 2005, J.Ph.B, 38, 1667
-%Collision strengths (levels 46-283): Landi & Gu, 2005, ApJ, in press
+%Collision strengths (levels 46-283): Landi & Gu, 2005, unpublished calculations
 %comment: Effective collision strengths for the lowest 45 levels are provided in the 5.0 < log T < 7.0 range
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
@@ -290,7 +294,7 @@
   0  0   1.59e-01
  0 0 0
   1  2   0.000e+00
-  1  3   3.945e+07
+  1  3   3.846e+07
   1  4   3.296e+00
   1  5   2.289e+10
   2  3   0.000e+00

@@ -1356,10 +1356,13 @@ module emission_mod
 
         end if
 
-        grid%recPDF(cellPUsed, :) = grid%recPDF(cellPUsed, :)/grid%recPDF(cellPUsed, nbins)
+        grid%recPDF(cellPUsed, :) = grid%recPDF(cellPUsed, :)/grid%recPDF(cellPUsed, nbins)       
 
         grid%recPDF(cellPUsed, nbins) = 1.
 
+        do i = 1, nbins
+           if (grid%recPDF(cellPUsed, i) > 0.999998) grid%recPDF(cellPUsed, i) = 1.
+        enddo                   
 
         ! calculate the PDF for recombination and forbidden lines
         if (lgDebug) then 
@@ -2111,11 +2114,11 @@ module emission_mod
          & Ne, &       ! electron density [cm^-3]
          & ionDenUp    ! ion density of the upper ion stage 
 
-    
+    real  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats    
     integer  :: gx               ! stat weight reader  
     integer  :: i, j, k, l, iT   ! counters/indeces
     integer  :: i1, j1, k1,i2, j2, k2,i3, j3, k3  ! counters/indeces
-    integer  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
+
     integer  :: ios              ! I/O error status
     integer  :: nLev             ! number of levels in atomic data file
     integer  :: numLines         ! number of lines for atomic data refernce
@@ -2146,6 +2149,7 @@ module emission_mod
     close(11)
     open(unit=11,  action="read", file = file_name, status="old", position="rewind", &
          & iostat = ios)
+
     if (ios /= 0) then
        print*, "! equilibrium: can't open file: ", file_name
        stop
