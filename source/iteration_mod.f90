@@ -512,7 +512,9 @@ module iteration_mod
               
               if ( associated(escapedPacketsTemp) ) deallocate(escapedPacketsTemp)
               
-              if (taskid==0) call writeSED(grid(1))
+              if (taskid==0) call writeSED(grid)
+              if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) &
+                   & call writeContCube(grid, contCube(1),contCube(2))
 
               size =  (grid(iG)%nCells+1)*nbins
 

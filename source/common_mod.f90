@@ -30,6 +30,7 @@ module common_mod
 
 
     real            :: dTheta                  ! 
+    real            :: dPhi                    ! 
     real            :: totalDustMass 
     real            :: convPercent=0.          ! total convergence percentage
     real            :: totPercent=0.           ! 
@@ -158,6 +159,7 @@ module common_mod
         integer, pointer :: abFileIndex(:,:,:)      ! abundance file index axxay
         integer, pointer :: lgConverged(:)          ! has the model converged at this grid cell?
         integer, pointer :: lgBlack(:)              ! is this to remain a black cell?
+        
 
         real    :: geoCorrX,geoCorrY,geoCorrZ       ! geometric correction
         real    :: noHit                            ! cells not sampled by rad field
@@ -179,7 +181,7 @@ module common_mod
         real, pointer :: ionDen(:,:,:)              ! fractional ion density (x,y,z,elem,stage)
         real, pointer :: Jste(:,:)                  ! MC estimator of stellar J (cell,nu) 
         real, pointer :: Jdif(:,:)                  ! MC estimator of diffuse J (cell,nu)
-        real, pointer :: escapedPackets(:,:,:)        ! escaped packets (cell,nu, angle)
+        real, pointer :: escapedPackets(:,:,:)    ! escaped packets (cell,nu, angle)
         real, pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
         real, pointer :: Ndust(:)                   ! number density for dust
 
@@ -206,6 +208,7 @@ module common_mod
         integer       :: nuP       ! pointer
         integer, dimension(maxGrids) & 
              & :: xP,yP,zP         ! grids position indeces
+        integer, dimension(2) :: origin ! 1=ig, 2=icell
         integer       :: iG        ! grid index 
 
         real          :: nu
@@ -221,8 +224,10 @@ module common_mod
     ! plot type
     type plot_type
        real, pointer         :: intensity(:,:,:)
+       real, pointer         :: xAxis(:), yAxis(:)
 
        logical               :: lgFilter
+       logical               :: lgMap
        logical, pointer      :: lgLine(:)
 
        integer, pointer      :: lineNumber(:)
@@ -279,9 +284,10 @@ module common_mod
     character(len=50)  :: NdustFile         ! name of Ndust file    
     character(len=30),pointer       :: grainLabel(:)    ! name of this species
 
-    integer,pointer    :: viewPointP(:)       ! viewing angles
+    integer,pointer    :: viewPointPtheta(:), viewPointPphi(:)       ! viewing angles
     integer            :: nAngleBins=0     ! number of viewing angles for SED
-    integer            :: TotAngleBins=180 ! total # of angle bins for SED
+    integer            :: TotAngleBinsTheta=180 ! total # of theta angle bins for SED
+    integer            :: TotAngleBinsPhi=360 ! total # of phi angle bins for SED
     integer            :: nGrids           ! total number of grids to be used in the simulation
     integer            :: maxIterateMC     ! limit on number of MC iterations
     integer            :: maxPhotons       ! limit to packets to be used
@@ -294,6 +300,7 @@ module common_mod
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
 
     real               :: fillingFactor    ! filling factor epsilon
+    real               :: contCube(2)      ! continuum cube
     real               :: convIncPercent   ! percentage by  which conv must increase
     real               :: convWriteGrid    ! min conv level before starting to write the grid
     real               :: nPhotIncrease    ! nPhoton increase factor
@@ -301,7 +308,7 @@ module common_mod
     real,pointer       :: grainAbun(:)     ! abundance of this species
     real,pointer       :: grainRadius(:)   ! grain radius [um]
     real,pointer       :: grainWeight(:)   ! grain weight normalised to 1
-    real,pointer       :: viewPoint(:)     ! viewing angles
+    real,pointer       :: viewPointTheta(:),viewPointPhi(:)     ! viewing angles
     real               :: Hdensity         ! constant H density values (cm-^3)
     real               :: H0Start          ! initial guess at X(H0) for regions I and II
     real               :: Lphot            ! L of ionizing source [e36 phot/sec]
@@ -319,9 +326,11 @@ module common_mod
     real               :: Rnx,Rny,Rnz      ! edges [cm]
     real               :: R_in             ! inner radius [cm]
     real               :: R_out            ! outer radius [cm]
+    real               :: SEDfreq(2)       ! 
     real               :: TeStart          ! initial guess at Te for regions I and II
     real               :: Tstellar         ! T of ionizing source [K]
     real               :: XHILimit         ! convergence limit on X(HI)
+    
 
     ! dust parameters
     integer            :: nSizes           ! number of grain sizes

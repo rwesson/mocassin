@@ -83,9 +83,13 @@ module interpolation_mod
 
       ii = 1
       do i = 1, nx_new
-         do 
+         do
             if (x_new(i)>x(ii+1)) then
                ii=ii+1
+               if (ii>=nx-1) then
+                  ii = nx-1 
+                  exit
+               end if
             else
                exit
             end if

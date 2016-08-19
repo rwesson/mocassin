@@ -3,10 +3,10 @@ program makeHomCube
   integer :: i,j,k,nx,ny,nz
   real::R
 
-  nx=10
-  ny=10
-  nz=10
-  R=2.e19
+  nx=50
+  ny=50
+  nz=50
+  R=1.e17
   
 
   open(unit=10, file='cube.dat', status='unknown')
@@ -15,7 +15,7 @@ program makeHomCube
      do j = 1, nx
         do k = 1, nx
            
-           write(10,*) real(i-1)*R/(nx-1),' ',real(j-1)*R/(ny-1), ' ', real(k-1)*R/(nz-1), 100.
+           write(10,*) real(i-1)*R/(nx-1),' ',real(j-1)*R/(ny-1), ' ', real(k-1)*R/(nz-1), 1.e-7
 
         end do
      end do

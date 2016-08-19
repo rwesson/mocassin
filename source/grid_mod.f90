@@ -441,22 +441,58 @@ module grid_mod
         grid%yAxis = 0.
         grid%zAxis = 0.
 
-         dTheta = Pi/totAngleBins
+        !new
+         dTheta = Pi/totAngleBinsTheta
+!         dTheta = Pi/totAngleBins
  
-         allocate(viewPointP(0:totAngleBins), stat = err)
+         do i = 1, nAngleBins 
+            if (viewPointPhi(i)<0.) then 
+               totAngleBinsPhi=1
+               print*, '! initCartesianGrid : [warning] phi-dependance in viewing angle turned off'
+               viewPointPhi=-1.
+               exit
+            end if
+         end do
+
+         ! new
+         dPhi = twoPi/totAngleBinsPhi
+
+!         allocate(viewPointP(0:totAngleBins), stat = err)
+!         if (err /= 0) then
+!            print*, "Can't allocate grid memory, viewAngleP "
+!            stop
+!         end if        
+
+         allocate(viewPointPTheta(0:totAngleBinsTheta), stat = err)
+         if (err /= 0) then
+            print*, "Can't allocate grid memory, viewAngleP "
+            stop
+         end if        
+         allocate(viewPointPPhi(0:totAngleBinsPhi), stat = err)
          if (err /= 0) then
             print*, "Can't allocate grid memory, viewAngleP "
             stop
          end if        
  
-         viewPointP = 0
-         ii = 1
-         do i = 1, nAngleBins           
-            viewPointP(int(viewPoint(i)/dTheta)+1) = ii
-            ii = ii+1
+         viewPointPtheta = 0
+         viewPointPphi = 0
+!         ii = 1
+!         do i = 1, nAngleBins         
+!            viewPointP(int(viewPoint(i)/dTheta)+1) = ii
+!            ii = ii+1
+!         end do
+
+         do i = 1, nAngleBins
+            viewPointPtheta(int(viewPointTheta(i)/dTheta)+1) = i
+            viewPointPphi(int(viewPointPhi(i)/dPhi)+1) = i
          end do
- 
-         print*, 'dTheta :', dTheta
+         
+         print*, viewpointptheta
+         print*, ' '
+         print*, viewpointpphi
+
+         print*, 'dTheta : ', dTheta
+         print*, 'dPhi : ', dPhi
 
          print*, "out initCartesianGrid"
 
@@ -2148,7 +2184,9 @@ module grid_mod
         write(40, *) resLinesTransfer, 'resLinesTransfer'
         write(40, *) lgDustScattering, 'lgDustScattering'
         write(40, *) nAngleBins, ' nAngleBins'
-        write(40, *) viewPoint, ' inclination'
+        write(40, *) viewPointTheta, ' inclination theta'
+        write(40, *) viewPointPhi, ' inclination theta'
+        write(40, *) contCube(1),contCube(2), ' continuumCube'
 
         ! close file
         close(40)
@@ -2331,13 +2369,20 @@ module grid_mod
       read(77, *) resLinesTransfer
       read(77, *) lgDustScattering
       read(77, *) nAngleBins
-      allocate(viewPoint(1:nAngleBins), stat=err)
+      allocate(viewPointTheta(1:nAngleBins), stat=err)
       if (err /= 0) then
          print*, '! readInput: allocation error for viewPoint pointer'
          stop
       end if
-      read(77, *) (viewPoint(i), i = 1, nAngleBins)
-
+      allocate(viewPointPhi(1:nAngleBins), stat=err)
+      if (err /= 0) then
+         print*, '! readInput: allocation error for viewPoint pointer'
+         stop
+      end if
+      read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
+      read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
+      read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
+      read(77, *) contCube(1),contCube(2)
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -2373,6 +2418,7 @@ module grid_mod
          print*,  resLinesTransfer
          print*,  lgDustScattering
          print*,  nAngleBins
+         print*,  contCube(1),contCube(2), 'continuumCube'
       end if
       close(77)
          

@@ -44,10 +44,10 @@ module photon_mod
         integer                        :: iPhot       ! counter
         integer                        :: plotNum     ! counter
         integer                        :: seedSize    ! pseudo random number generator seed 
-        integer                        :: totalEscaped  
         integer, dimension(nGrids)     :: inX,inY,inZ ! initial position indeces
         integer, pointer               :: seed(:)     ! seed array
 
+        integer                        :: totalEscaped  
         real                           :: gasInt      ! total number of gas interactions
         real                           :: dustAInt    ! total number of dust absorptions
         real                           :: dustSInt    ! total number of dust scatterings
@@ -179,21 +179,22 @@ module photon_mod
               grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9 * Lstar / (float(nPhotons))           
 
               if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:) * 1.e-9 * Lstar / (float(nPhotons))
+              do ifreq = 1, nbins
+                 totalEscaped = totalEscaped+&
+                      & grid(iG)%escapedPackets(i,ifreq, 0)
+                 do ian = 0, nAngleBins
+                    grid(iG)%escapedPackets(i,ifreq,ian) = grid(iG)%escapedPackets(i,ifreq,ian)  &
+                        & * Lstar / (float(nPhotons))
+                 end do
+              end do
+
               if (lgSymmetricXYZ) then
                  grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:)/8.
                  grid(iG)%escapedPackets(i,:,:) = grid(iG)%escapedPackets(i,:,:)/8.
                  if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:)/8.
               end if
-              do ifreq = 1, nbins
-                 do ian = 0, nAngleBins
-                    grid(iG)%escapedPackets(i,ifreq,ian) = grid(iG)%escapedPackets(i,ifreq,ian)  &
-                         * Lstar / (float(nPhotons))
-                 end do
-                 totalEscaped = totalEscaped+&
-                      & grid(iG)%escapedPackets(i,ifreq, 0)
-              end do
-           end do
 
+           end do
         end do
 
         if (lgDust) then
@@ -225,7 +226,7 @@ module photon_mod
 
             integer                          :: err              ! allocation error status
             integer                          :: i, j             ! counters  
-            integer                          :: idir             ! direction cosine
+            integer                          :: idirP, idirT     ! direction cosines
 
             real :: number 
             real, save :: ionPhot = 0.       
@@ -303,43 +304,50 @@ module photon_mod
 
                ! the packet escapes without further interaction
                   
-               idir = int(acos(enPacket%direction%z)/dTheta)+1
-               if (idir>totangleBins) then
-                  idir=totangleBins
+               idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               if (idirT>totangleBinsTheta) then
+                  idirT=totangleBinsTheta
 !                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
 !                       & idir, totanglebins, enPacket%direction, dtheta
                end if
-               if (idir<1 .or. idir>totAngleBins) then
-                  print*, '! energyPacketRun: error in direction cosine assignment',&
-                       &  idir, enPacket, dTheta, totAngleBins
+               if (idirT<1 .or. idirT>totAngleBinsTheta) then
+                  print*, '! energyPacketRun: error in theta direction cosine assignment',&
+                       &  idirT, enPacket, dTheta, totAngleBinsTheta
+                  stop
+               end if
+              
+               idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+               if (idirP<0) idirP=totAngleBinsPhi+idirP
+               idirP=idirP+1
+
+               if (idirP>totangleBinsPhi) then
+                  idirP=totangleBinsPhi
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+               end if
+             
+               if (idirP<1 .or. idirP>totAngleBinsPhi) then
+                  print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                       &  idirP, enPacket, dPhi, totAngleBinsPhi
                   stop
                end if
 
-               if (present(gP)) then
- 
-                  grid(gP)%escapedPackets(grid(gP)%active(enPacket%xP(gP), &
-                       & enPacket%yP(gP), enPacket%zP(gP)), enPacket%nuP,viewPointP(idir)) = &
-                       & grid(gP)%escapedPackets(grid(gP)%active(enPacket%xP(gP), &
-                       & enPacket%yP(gP), enPacket%zP(gP)), enPacket%nuP,& 
-                       & viewPointP(idir)) + 1.
-                  if (viewPointP(idir)/=0) grid(gP)%escapedPackets(grid(gP)%active(enPacket%xP(gP), &
-                       & enPacket%yP(gP), enPacket%zP(gP)), & 
-                       & enPacket%nuP, 0) = &
-                       & grid(gP)%escapedPackets(grid(gP)%active(enPacket%xP(gP), &
-                       & enPacket%yP(gP), enPacket%zP(gP)), enPacket%nuP,0) + 1.
+               if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                    & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                    & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                       &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,viewPointPtheta(idirT)) + 1.
+                  if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                       & enPacket%nuP,0) = &
+                       & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,0) + 1.
                else
-                  grid(1)%escapedPackets(grid(1)%active(enPacket%xP(1), &
-                       & enPacket%yP(1), enPacket%zP(1)), enPacket%nuP,viewPointP(idir)) = &
-                       & grid(1)%escapedPackets(grid(1)%active(enPacket%xP(1), &
-                       & enPacket%yP(1), enPacket%zP(1)), enPacket%nuP,& 
-                       & viewPointP(idir)) + 1.
-                  if (viewPointP(idir)/=0) grid(1)%escapedPackets(grid(1)%active(enPacket%xP(1), &
-                       & enPacket%yP(1), enPacket%zP(1)), & 
-                       & enPacket%nuP, 0) = &
-                       & grid(1)%escapedPackets(grid(1)%active(enPacket%xP(1), &
-                       & enPacket%yP(1), enPacket%zP(1)), enPacket%nuP,0) + 1.
+                  grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                       & enPacket%nuP,0) = &
+                       & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,0) + 1.
                end if
-
                return
             end if
 
@@ -501,6 +509,18 @@ module photon_mod
                 if (initPhotonPacket%direction%z<0.) &
                      & initPhotonPacket%direction%z = -initPhotonPacket%direction%z
             end if
+
+            if (.not.(initPhotonPacket%lgStellar .and. gP==1 .and. & 
+                 & initPhotonPacket%xP(gP)==iorigin .and. initPhotonPacket%yP(gP)==jorigin .and.& 
+                 &  initPhotonPacket%zP(gP)==korigin) .and.  grid(gP)%active(initPhotonPacket%xP(gP),&
+                 & initPhotonPacket%yP(gP), initPhotonPacket%zP(gP))==0) then
+               print*, '! initPhotonPacket: photons cannot be emitted/scattered in & 
+                    & inactive cells'
+               stop
+            end if
+            initPhotonPacket%origin(1) = gP
+            initPhotonPacket%origin(2) = grid(gP)%active(initPhotonPacket%xP(gP),&
+                 & initPhotonPacket%yP(gP), initPhotonPacket%zP(gP))
 
         end function initPhotonPacket
 
@@ -769,14 +789,14 @@ module photon_mod
           real                            :: dSx, dSy, dSz 
                                                       ! distances from x,y and z wall
           real                            :: dS       ! distance from nearest wall 
-          real                            :: dV       ! volume of this cell
+          real                            :: dV       ! lume of this cell
           real                            :: passProb ! prob of passing the next segment
           real                            :: probDust ! prob that the packet interacts with a grain
           real                            :: radius   ! radius
           real                            :: random   ! random number
           real                            :: tauCell  ! local tau
 
-          integer                         :: idir     ! direction cosine counter
+          integer                         :: idirT,idirP ! direction cosine counters
           integer                         :: i, nS    ! counter
           integer                         :: xP,yP,zP ! cartesian axes indeces
           integer                         :: gP       ! grid index
@@ -1069,389 +1089,461 @@ module photon_mod
                 if ( sqrt( (rvec%x/1.e10)**2. + (rvec%y/1.e10)**2. + (rvec%z/1.e10)**2.)*1.e10 >= R_out &
                      & .and. R_out > 0.) then
 
-                   ! packet actually escapes
-                   idir = int(acos(vHat%z)/dTheta)+1
-                   if (idir<1 .or. idir>totAngleBins) then
-                      print*, '! pathSegment: error in direction cosine assignment',&
-                           &  idir, vHat, dTheta, totAngleBins
-                      stop
-                   end if
 
-                   grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), enPacket%nuP,viewPointP(idir)) = &
-                        & grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), enPacket%nuP,& 
-                        & viewPointP(idir)) + 1.
-                   if (viewPointP(idir)/=0) grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), & 
-                        & enPacket%nuP, 0) = &
-                        & grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), enPacket%nuP,0) + 1.
+                   ! the packet escapes without further interaction
+                   
+               idirT = int(acos(enPacket%direction%z)/dTheta)+1
+               if (idirT>totangleBinsTheta) then
+                  idirT=totangleBinsTheta
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+               end if
+               if (idirT<1 .or. idirT>totAngleBinsTheta) then
+                  print*, '! energyPacketRun: error in theta direction cosine assignment',&
+                       &  idirT, enPacket, dTheta, totAngleBinsTheta
+                  stop
+               end if
 
-                   return
-                end if
+               idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)             
+               if (idirP<0) idirP=totAngleBinsPhi+idirP
+               idirP=idirP+1
+               if (idirP>totangleBinsPhi) then
+                  idirP=totangleBinsPhi
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+               end if
+
+               if (idirP<1 .or. idirP>totAngleBinsPhi) then
+                  print*, '! energyPacketRun: error in Phi direction cosine assignment',&
+                       &  idirP, enPacket, dPhi, totAngleBinsPhi
+                  stop
+               end if
+
+
+               !b
+
+               if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                    & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                    & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                  grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                       &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,viewPointPtheta(idirT)) + 1.
+                  if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                       & enPacket%nuP,0) = &
+                       & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,0) + 1.
+               else
+                  grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                       & enPacket%nuP,0) = &
+                       & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                       & enPacket%nuP,0) + 1.
+               end if
+
+               return
+            end if
 
  
-                ! check if the packet interacts with gas or dust
-                if (lgDust) then
-
-                   lgDustInteraction = .true.
-                   
-                   if (lgGas) then
-                      probDust = grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP) + &
-                           & grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/Pi
-                      probDust = probDust /&
-                           & (grid(gP)%opacity(grid(gP)%active(xP,yP,zP),enPacket%nuP))
-
-                      call random_number(random)
-                      
-                      random = 1.-random
-                      if (random > probDust) lgDustInteraction = .false.         
-
-                   end if
-                   
-                   if (lgDustInteraction) then
-
-                      do nS = 1, nSpecies
-                         if (grainabun(nS)>0. .and. grid(gP)%Tdust(nS, 0, & 
-                              & grid(gP)%active(xP,yP,zP))<TdustSublime(nS)) exit
-                      end do
-                      if (nS>7) then
-                         print*, "! pathSegment: packet interacts with dust at position where all &
-                              &grains have sublimed."
-                         print*, xP,yP,zP, grid(gP)%active(xP,yP,zP), tauCell, absTau, passProb
-                         stop
-                      end if
-
-                      ! packet interacts with dust
-                      
-                      call random_number(random)
-                      
-                      random = 1.-random
-                      
-                      ! check if the packet is absorbed or scattered by the dust
-                      probDust = grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/&
-                           & ( grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP) + &
-                           & grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/Pi)
-
-                      ! absorbed by dust
-                      if (random <= probDust) then
-
-                         dustAInt = dustAInt + 1.
-                         
-                         ! packet is absobed by the grain
-                         packetType = "dustEmi"
-                         
-                         exit
-                         
-                         ! scattered
-                      else
-                         
-                         dustSInt = dustSInt + 1.
-                         
-                         ! packet is scattered by the grain
-
-                         ! calculate new direction
-                         ! for now assume scattering is isotropic, when phase
-                         ! function is introduced the following must be changed                         
-                         
-                         enPacket%xP(gP) = xP
-                         enPacket%yP(gP) = yP
-                         enPacket%zP(gP) = zP            
-
-                         enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., enPacket%xP(1:nGrids), &
-                              & enPacket%yP(1:nGrids), enPacket%zP(1:nGrids), gP)
-
-                         vHat%x = enPacket%direction%x
-                         vHat%y = enPacket%direction%y
-                         vHat%z = enPacket%direction%z
-
-                      end if
-                      
-                   else 
-
-                      if (.not.lgGas) then
-                         print*, "! pathSegment: Insanity occured - no gas present when no dust interaction"
-                         stop
-                      end if
-                      
-                      gasInt = gasInt + 1.
-                      
-                      ! packet interacts with gas
-                      packetType = "diffuse"
-                      exit
-                      
-                   end if
-                      
-                else
-                      
-                   if (.not.lgGas) then
-                      print*, "! pathSegment: Insanity occured - no gas or dust present - & 
-                           & the grid is empty", gP, nGrids
-                      stop
-                   end if
-
-                   ! packet interacts with gas
-                   packetType = "diffuse"
-                   exit
-                      
-                end if
+            ! check if the packet interacts with gas or dust
+            if (lgDust) then
+               
+               lgDustInteraction = .true.
+               
+               if (lgGas) then
+                  probDust = grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP) + &
+                       & grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/Pi
+                  probDust = probDust /&
+                       & (grid(gP)%opacity(grid(gP)%active(xP,yP,zP),enPacket%nuP))
                   
-             else
-                ! the packet is not absorbed within this cell
-                ! add contribution of the packet to the radiation field
-
-                if (enPacket%lgStellar) then
-                   grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) = &
-                        grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) + dS / dV
-                else ! if the energy packet is diffuse
-                   if (lgDebug) then
-                      grid(gP)%Jdif(grid(gP)%active(xP,yP,zP),enPacket%nuP) = &
-                           & grid(gP)%Jdif(grid(gP)%active(xP,yP,zP),enPacket%nuP) + dS / dV
-                   else
-                      grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) = &
-                           & grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) + dS / dV
-                   end if
-                end if
-
-                ! update absTau
-                absTau = absTau+tauCell
-
-                ! update packet's position
-                rVec = rVec+dS*vHat
-
-                ! keep track of where you are on mother grid
-                if (gP>1) then
-                   if (vHat%x>0.) then
-                      if ( enPacket%xP(grid(gP)%motherP) < grid(grid(gP)%motherP)%nx ) then
-                         if ( rVec%x > (grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP))+& 
-                              & grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP)+1))/2. ) then
-                            enPacket%xP(grid(gP)%motherP) = enPacket%xP(grid(gP)%motherP)+1
-                         end if
-                      else
-                         if ( rVec%x > grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP))) then
-                            print*, '! pathSegment: insanity occured at mother grid transfer (x axis +)', & 
-                                 & rVec%x, gP, grid(gP)%motherP
-                            stop
-                         end if
-                      end if
-                   else
-                      if ( enPacket%xP(grid(gP)%motherP) > 1 ) then
-                         if ( rVec%x <= (grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP)-1)+& 
-                              & grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP)))/2. ) then
-                            enPacket%xP(grid(gP)%motherP) = enPacket%xP(grid(gP)%motherP)-1
-                         end if
-                      else
-                         if (rVec%x < grid(grid(gP)%motherP)%xAxis(1)) then
-                            print*, '! pathSegment: insanity occured at mother grid transfer (x axis-)',&  
-                                 & rVec%x, gP, grid(gP)%motherP
-                            stop
-                         end if
-                      end if
-                   end if
-                   if (vHat%y>0.) then
-                      if (  enPacket%yP(grid(gP)%motherP) < grid(grid(gP)%motherP)%ny ) then
-                         if ( rVec%y > (grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP))+& 
-                              & grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP)+1))/2. ) then
-                             enPacket%yP(grid(gP)%motherP) =  enPacket%yP(grid(gP)%motherP)+1
-                         end if
-                      else
-                         if ( rVec%y > grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP))) then
-                            print*, '! pathSegment: insanity occured at mother grid transfer (y axis +)',&
-                                 & rVec%y, gP, grid(gP)%motherP
-                            stop
-                         end if
-                      end if
-                   else
-                      if (  enPacket%yP(grid(gP)%motherP) > 1 ) then
-                         if ( rVec%y <= (grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP)-1)+& 
-                              & grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP)))/2. ) then
-                             enPacket%yP(grid(gP)%motherP) =  enPacket%yP(grid(gP)%motherP)-1
-                         end if
-                      else
-                         if (rVec%y < grid(grid(gP)%motherP)%yAxis(1)) then
-                            print*, '! pathSegment: insanity occured at mother grid transfer (y axis -)', & 
-                                 & rVec%y, gP, grid(gP)%motherP
-                            stop
-                         end if
-                      end if
-                   end if
-                   if (vHat%z>0.) then
-                      if (  enPacket%zP(grid(gP)%motherP) < grid(grid(gP)%motherP)%nz ) then
-                         if ( rVec%z > (grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP))+&
-                              & grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP)+1))/2. ) then
-                             enPacket%zP(grid(gP)%motherP) =  enPacket%zP(grid(gP)%motherP)+1
-                         end if
-                      else
-                         if ( rVec%z > grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP))) then
-                            print*, '! pathSegment: insanity occured at mother grid transfer (z axis +)', &
-                                 & rVec%z, gP, grid(gP)%motherP
-                            stop
-                         end if
-                      end if
-                   else
-                      if (  enPacket%zP(grid(gP)%motherP) > 1 ) then
-                         if ( rVec%z <= (grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP)-1)+&
-                              & grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP)))/2. ) then
-                             enPacket%zP(grid(gP)%motherP) =  enPacket%zP(grid(gP)%motherP)-1
-                         end if
-                      else
-                         if (rVec%z < grid(grid(gP)%motherP)%zAxis(1)) then
-                            print*, '! pathSegment: insanity occured at mother grid transfer (z axis -)', &
-                                 & rVec%z, gP, grid(gP)%motherP
-                            stop
-                         end if
-                      end if
-                   end if
-                end if
-
-                if (.not.lg1D) then
-                   if ( (dS == dSx) .and. (vHat%x > 0.)  ) then
-                      xP = xP+1
-                   else if ( (dS == dSx) .and. (vHat%x < 0.) ) then
-                      xP = xP-1
-                   else if ( (dS == dSy) .and. (vHat%y > 0.) ) then
-                      yP = yP+1
-                   else if ( (dS == dSy) .and. (vHat%y < 0.) ) then 
-                      yP = yP-1
-                   else if ( (dS == dSz) .and. (vHat%z > 0.) ) then
-                      zP = zP+1
-                   else if ( (dS == dSz) .and. (vHat%z < 0.) ) then
-                      zP = zP-1
-                   else
-                      print*, '! pathSegment: insanity occured in dS assignement', dS,dSx,dSy,dSz
-                   end if
-                else
-                   radius = 1.e10*sqrt((rVec%x/1.e10)*(rVec%x/1.e10) + &
-                        & (rVec%y/1.e10)*(rVec%y/1.e10) + &
-                        & (rVec%z/1.e10)*(rVec%z/1.e10))
-                   call locate(grid(gP)%xAxis, radius , xP)
-                end if                            
-
-                if(lgPlaneIonization) then
-                   lgReturn=.false.
-
-                   if ( rVec%y <= grid(gP)%yAxis(1)-grid(gP)%geoCorrY .or. yP<1) then
-
-                      ! the energy packet escapes this grid
-                      if (gP==1) then	
-                         yP=1
-                         lgReturn=.true.
-                      else if (gP>1) then
-                         xP = enPacket%xP(grid(gP)%motherP)
-                         yP = enPacket%yP(grid(gP)%motherP)
-                         zP = enPacket%zP(grid(gP)%motherP)
-                         gP = grid(gP)%motherP
-                      else
-                         print*, '! pathSegment: insanity occured - invalid gP', gP
-                         stop
-                      end if
-
-                   end if
-
-                   if (rVec%y > grid(gP)%yAxis(grid(gP)%ny)+grid(gP)%geoCorrY .or. yP>grid(gP)%ny) then
-
-                      if (gP==1) then	
-                         ! the energy packet escapes
-                         yP = grid(gP)%ny
-                         lgReturn=.true.
-                      else if (gP>1) then
-                         xP = enPacket%xP(grid(gP)%motherP)
-                         yP =  enPacket%yP(grid(gP)%motherP)
-                         zP =  enPacket%zP(grid(gP)%motherP)
-                         gP = grid(gP)%motherP                      
-                      else
-                         print*, '! pathSegment: insanity occured - invalid gP', gP
-                         stop
-                      end if
-
-                   end if
-
-                   if ( (rVec%x <= grid(gP)%xAxis(1) .or. xP<1) .and. gP==1) then
-                      xP=1
-                      rVec%x = grid(gP)%xAxis(1)
-                      vHat%x = -vHat%x
-
-                   end if
+                  call random_number(random)
+                  
+                  random = 1.-random
+                  if (random > probDust) lgDustInteraction = .false.         
+                  
+               end if
                    
-                   if ( (rVec%x <= grid(gP)%xAxis(1)-grid(gP)%geoCorrX .or. xP<1) &
-                        & .and. gP>1) then
+               if (lgDustInteraction) then
+                  
+                  do nS = 1, nSpecies
+                     if (grainabun(nS)>0. .and. grid(gP)%Tdust(nS, 0, & 
+                          & grid(gP)%active(xP,yP,zP))<TdustSublime(nS)) exit
+                  end do
+                  if (nS>7) then
+                     print*, "! pathSegment: packet interacts with dust at position where all &
+                          &grains have sublimed."
+                     print*, xP,yP,zP, grid(gP)%active(xP,yP,zP), tauCell, absTau, passProb
+                     stop
+                  end if
 
-                      xP = enPacket%xP(grid(gP)%motherP)
-                      yP =  enPacket%yP(grid(gP)%motherP)
-                      zP =  enPacket%zP(grid(gP)%motherP)
-                      gP = grid(gP)%motherP
+                  ! packet interacts with dust
+                      
+                  call random_number(random)
+                      
+                  random = 1.-random
+                      
+                  ! check if the packet is absorbed or scattered by the dust
+                  probDust = grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/&
+                       & ( grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP) + &
+                       & grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/Pi)
+                  
+                  ! absorbed by dust
+                  if (random <= probDust) then
+                     
+                     dustAInt = dustAInt + 1.
+                     
+                     ! packet is absobed by the grain
+                     packetType = "dustEmi"
+                         
+                     exit
+                     
+                     ! scattered
+                  else
+                         
+                     dustSInt = dustSInt + 1.
+                     
+                     ! packet is scattered by the grain
+                     
+                     ! calculate new direction
+                     ! for now assume scattering is isotropic, when phase
+                     ! function is introduced the following must be changed                         
+                     
+                     enPacket%xP(gP) = xP
+                     enPacket%yP(gP) = yP
+                     enPacket%zP(gP) = zP            
+                     
+                     enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., enPacket%xP(1:nGrids), &
+                              & enPacket%yP(1:nGrids), enPacket%zP(1:nGrids), gP)
+                     
+                     vHat%x = enPacket%direction%x
+                     vHat%y = enPacket%direction%y
+                     vHat%z = enPacket%direction%z
+                     
+                  end if
+                  
+               else 
+
+                  if (.not.lgGas) then
+                     print*, "! pathSegment: Insanity occured - no gas present when no dust interaction"
+                     stop
+                  end if
+                  
+                  gasInt = gasInt + 1.
+                  
+                  ! packet interacts with gas
+                  packetType = "diffuse"
+                  exit
+                  
+               end if
+               
+            else
+                      
+               if (.not.lgGas) then
+                  print*, "! pathSegment: Insanity occured - no gas or dust present - & 
+                       & the grid is empty", gP, nGrids
+                  stop
+               end if
+               
+                   ! packet interacts with gas
+               packetType = "diffuse"
+               exit
+               
+            end if
+                  
+         else
+            ! the packet is not absorbed within this cell
+            ! add contribution of the packet to the radiation field
+
+            if (enPacket%lgStellar) then
+               grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) = &
+                    grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) + dS / dV
+            else ! if the energy packet is diffuse
+               if (lgDebug) then
+                  grid(gP)%Jdif(grid(gP)%active(xP,yP,zP),enPacket%nuP) = &
+                       & grid(gP)%Jdif(grid(gP)%active(xP,yP,zP),enPacket%nuP) + dS / dV
+               else
+                  grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) = &
+                       & grid(gP)%Jste(grid(gP)%active(xP,yP,zP),enPacket%nuP) + dS / dV
+               end if
+            end if
+
+            ! update absTau
+            absTau = absTau+tauCell
+            
+            ! update packet's position
+            rVec = rVec+dS*vHat
+            
+            ! keep track of where you are on mother grid
+            if (gP>1) then
+               if (vHat%x>0.) then
+                  if ( enPacket%xP(grid(gP)%motherP) < grid(grid(gP)%motherP)%nx ) then
+                     if ( rVec%x > (grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP))+& 
+                          & grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP)+1))/2. ) then
+                        enPacket%xP(grid(gP)%motherP) = enPacket%xP(grid(gP)%motherP)+1
+                     end if
+                  else
+                     if ( rVec%x > grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP))) then
+                        print*, '! pathSegment: insanity occured at mother grid transfer (x axis +)', & 
+                             & rVec%x, gP, grid(gP)%motherP
+                        stop
+                     end if
+                  end if
+               else
+                  if ( enPacket%xP(grid(gP)%motherP) > 1 ) then
+                     if ( rVec%x <= (grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP)-1)+& 
+                          & grid(grid(gP)%motherP)%xAxis(enPacket%xP(grid(gP)%motherP)))/2. ) then
+                        enPacket%xP(grid(gP)%motherP) = enPacket%xP(grid(gP)%motherP)-1
+                     end if
+                  else
+                     if (rVec%x < grid(grid(gP)%motherP)%xAxis(1)) then
+                        print*, '! pathSegment: insanity occured at mother grid transfer (x axis-)',&  
+                             & rVec%x, gP, grid(gP)%motherP
+                        stop
+                     end if
+                  end if
+               end if
+               if (vHat%y>0.) then
+                  if (  enPacket%yP(grid(gP)%motherP) < grid(grid(gP)%motherP)%ny ) then
+                     if ( rVec%y > (grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP))+& 
+                          & grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP)+1))/2. ) then
+                        enPacket%yP(grid(gP)%motherP) =  enPacket%yP(grid(gP)%motherP)+1
+                     end if
+                  else
+                     if ( rVec%y > grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP))) then
+                        print*, '! pathSegment: insanity occured at mother grid transfer (y axis +)',&
+                             & rVec%y, gP, grid(gP)%motherP
+                        stop
+                     end if
+                  end if
+               else
+                  if (  enPacket%yP(grid(gP)%motherP) > 1 ) then
+                     if ( rVec%y <= (grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP)-1)+& 
+                          & grid(grid(gP)%motherP)%yAxis( enPacket%yP(grid(gP)%motherP)))/2. ) then
+                        enPacket%yP(grid(gP)%motherP) =  enPacket%yP(grid(gP)%motherP)-1
+                     end if
+                  else
+                     if (rVec%y < grid(grid(gP)%motherP)%yAxis(1)) then
+                        print*, '! pathSegment: insanity occured at mother grid transfer (y axis -)', & 
+                             & rVec%y, gP, grid(gP)%motherP
+                        stop
+                     end if
+                  end if
+               end if
+               if (vHat%z>0.) then
+                  if (  enPacket%zP(grid(gP)%motherP) < grid(grid(gP)%motherP)%nz ) then
+                     if ( rVec%z > (grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP))+&
+                          & grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP)+1))/2. ) then
+                        enPacket%zP(grid(gP)%motherP) =  enPacket%zP(grid(gP)%motherP)+1
+                     end if
+                  else
+                     if ( rVec%z > grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP))) then
+                        print*, '! pathSegment: insanity occured at mother grid transfer (z axis +)', &
+                             & rVec%z, gP, grid(gP)%motherP
+                        stop
+                     end if
+                  end if
+               else
+                  if (  enPacket%zP(grid(gP)%motherP) > 1 ) then
+                     if ( rVec%z <= (grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP)-1)+&
+                          & grid(grid(gP)%motherP)%zAxis( enPacket%zP(grid(gP)%motherP)))/2. ) then
+                        enPacket%zP(grid(gP)%motherP) =  enPacket%zP(grid(gP)%motherP)-1
+                     end if
+                  else
+                     if (rVec%z < grid(grid(gP)%motherP)%zAxis(1)) then
+                        print*, '! pathSegment: insanity occured at mother grid transfer (z axis -)', &
+                             & rVec%z, gP, grid(gP)%motherP
+                        stop
+                     end if
+                  end if
+               end if
+            end if
+
+            if (.not.lg1D) then
+               if ( (dS == dSx) .and. (vHat%x > 0.)  ) then
+                  xP = xP+1
+               else if ( (dS == dSx) .and. (vHat%x < 0.) ) then
+                  xP = xP-1
+               else if ( (dS == dSy) .and. (vHat%y > 0.) ) then
+                  yP = yP+1
+               else if ( (dS == dSy) .and. (vHat%y < 0.) ) then 
+                  yP = yP-1
+               else if ( (dS == dSz) .and. (vHat%z > 0.) ) then
+                  zP = zP+1
+               else if ( (dS == dSz) .and. (vHat%z < 0.) ) then
+                  zP = zP-1
+               else
+                  print*, '! pathSegment: insanity occured in dS assignement', dS,dSx,dSy,dSz
+               end if
+            else
+               radius = 1.e10*sqrt((rVec%x/1.e10)*(rVec%x/1.e10) + &
+                    & (rVec%y/1.e10)*(rVec%y/1.e10) + &
+                    & (rVec%z/1.e10)*(rVec%z/1.e10))
+               call locate(grid(gP)%xAxis, radius , xP)
+            end if
+
+            if(lgPlaneIonization) then
+               lgReturn=.false.
+               
+               if ( rVec%y <= grid(gP)%yAxis(1)-grid(gP)%geoCorrY .or. yP<1) then
+                  
+                  ! the energy packet escapes this grid
+                  if (gP==1) then	
+                     yP=1
+                     lgReturn=.true.
+                  else if (gP>1) then
+                     xP = enPacket%xP(grid(gP)%motherP)
+                     yP = enPacket%yP(grid(gP)%motherP)
+                     zP = enPacket%zP(grid(gP)%motherP)
+                     gP = grid(gP)%motherP
+                  else
+                     print*, '! pathSegment: insanity occured - invalid gP', gP
+                     stop
+                  end if
+                  
+               end if
+               
+               if (rVec%y > grid(gP)%yAxis(grid(gP)%ny)+grid(gP)%geoCorrY .or. yP>grid(gP)%ny) then
+
+                  if (gP==1) then	
+                     ! the energy packet escapes
+                     yP = grid(gP)%ny
+                     lgReturn=.true.
+                  else if (gP>1) then
+                     xP = enPacket%xP(grid(gP)%motherP)
+                     yP =  enPacket%yP(grid(gP)%motherP)
+                     zP =  enPacket%zP(grid(gP)%motherP)
+                     gP = grid(gP)%motherP                      
+                  else
+                     print*, '! pathSegment: insanity occured - invalid gP', gP
+                     stop
+                  end if
+                  
+               end if
+               
+               if ( (rVec%x <= grid(gP)%xAxis(1) .or. xP<1) .and. gP==1) then
+                  xP=1
+                  rVec%x = grid(gP)%xAxis(1)
+                  vHat%x = -vHat%x
+                  
+               end if
                    
-                   end if
-   
-                   if ( (rVec%x >=  grid(gP)%xAxis(grid(gP)%nx) &
-                        & .or. xP>grid(gP)%nx) .and. gP==1 )then
-                      xP = grid(gP)%nx
-                      rVec%x = grid(gP)%xAxis(grid(gP)%nx)
-                      vHat%x = -vHat%x
+               if ( (rVec%x <= grid(gP)%xAxis(1)-grid(gP)%geoCorrX .or. xP<1) &
+                    & .and. gP>1) then
+                  
+                  xP = enPacket%xP(grid(gP)%motherP)
+                  yP =  enPacket%yP(grid(gP)%motherP)
+                  zP =  enPacket%zP(grid(gP)%motherP)
+                  gP = grid(gP)%motherP
+                   
+               end if
+               
+               if ( (rVec%x >=  grid(gP)%xAxis(grid(gP)%nx) &
+                    & .or. xP>grid(gP)%nx) .and. gP==1 )then
+                  xP = grid(gP)%nx
+                  rVec%x = grid(gP)%xAxis(grid(gP)%nx)
+                  vHat%x = -vHat%x
+                  
+               end if
+               
+               if ( (rVec%x >=  grid(gP)%xAxis(grid(gP)%nx)+grid(gP)%geoCorrX&
+                    & .or. xP>grid(gP)%nx) .and.  gP>1) then
+                  
+                  xP = enPacket%xP(grid(gP)%motherP)
+                  yP =  enPacket%yP(grid(gP)%motherP)
+                  zP =  enPacket%zP(grid(gP)%motherP)
+                  gP = grid(gP)%motherP
+                      
+               end if
+               
+               if ( (rVec%z <= grid(gP)%zAxis(1) .or.zP<1) .and. gP==1) then
+                  zP=1
+                  rVec%z = grid(gP)%yAxis(1)
+                  vHat%z = -vHat%z
+                  
+               end if
+               
+               if ( (rVec%z <= grid(gP)%zAxis(1)-grid(gP)%geoCorrZ &
+                    & .or.zP<1) .and. gP>1) then
+                  
+                  xP = enPacket%xP(grid(gP)%motherP)
+                  yP =  enPacket%yP(grid(gP)%motherP)
+                  zP =  enPacket%zP(grid(gP)%motherP)
+                  gP = grid(gP)%motherP
+                  
+               end if
+               
+               if ( (rVec%z >=  grid(gP)%zAxis(grid(gP)%nz) .or. zP>grid(gP)%nz) &
+                    & .and. gP==1) then
+                  
+                  zP = grid(gP)%nz
+                  rVec%z = grid(gP)%zAxis(grid(gP)%nz)
+                  vHat%z = -vHat%z
+                  
+               end if
 
-                   end if
+               if ((rVec%z >=  grid(gP)%zAxis(grid(gP)%nz)+grid(gP)%geoCorrZ &
+                    & .or. zP>grid(gP)%nz) .and. gP>1) then
+                  
+                  xP = enPacket%xP(grid(gP)%motherP)
+                  yP =  enPacket%yP(grid(gP)%motherP)
+                  zP =  enPacket%zP(grid(gP)%motherP)
+                  gP = grid(gP)%motherP                      
+                  
+               end if
+               
+               if (lgReturn) then            
 
-                   if ( (rVec%x >=  grid(gP)%xAxis(grid(gP)%nx)+grid(gP)%geoCorrX&
-                        & .or. xP>grid(gP)%nx) .and.  gP>1) then
+                  ! the packet escapes without further interaction
+                  
+                  idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                  if (idirT>totangleBinsTheta) then
+                     idirT=totangleBinsTheta
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+                  end if
+                  if (idirT<1 .or. idirT>totAngleBinsTheta) then
+                     print*, '! energyPacketRun: error in theta direction cosine assignment',&
+                          &  idirT, enPacket, dTheta, totAngleBinsTheta
+                     stop
+                  end if
+               
+                  idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                  if (idirP<0) idirP=totAngleBinsPhi+idirP
+                  idirP=idirP+1
+                  
+                  if (idirP>totangleBinsPhi) then
+                     idirP=totangleBinsPhi
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+                  end if
+                  if (idirP<1 .or. idirP>totAngleBinsPhi) then
+                     print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                          &  idirP, enPacket, dPhi, totAngleBinsPhi
+                     stop
+                  end if
 
-                      xP = enPacket%xP(grid(gP)%motherP)
-                      yP =  enPacket%yP(grid(gP)%motherP)
-                      zP =  enPacket%zP(grid(gP)%motherP)
-                      gP = grid(gP)%motherP
 
-                   end if
+                  !b
+                  if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                       & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                       & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,viewPointPtheta(idirT)) = &
+                          &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,viewPointPtheta(idirT)) + 1.
+                     if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) + 1.
 
-                   if ( (rVec%z <= grid(gP)%zAxis(1) .or.zP<1) .and. gP==1) then
-                      zP=1
-                      rVec%z = grid(gP)%yAxis(1)
-                      vHat%z = -vHat%z
+                  else
+                     grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                          enPacket%nuP,0) = &
+                          & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                          & enPacket%nuP,0) + 1.
 
-                   end if
-
-                   if ( (rVec%z <= grid(gP)%zAxis(1)-grid(gP)%geoCorrZ &
-                        & .or.zP<1) .and. gP>1) then
-
-                      xP = enPacket%xP(grid(gP)%motherP)
-                      yP =  enPacket%yP(grid(gP)%motherP)
-                      zP =  enPacket%zP(grid(gP)%motherP)
-                      gP = grid(gP)%motherP
-
-                   end if
-
-                   if ( (rVec%z >=  grid(gP)%zAxis(grid(gP)%nz) .or. zP>grid(gP)%nz) &
-                        & .and. gP==1) then
-
-                      zP = grid(gP)%nz
-                      rVec%z = grid(gP)%zAxis(grid(gP)%nz)
-                      vHat%z = -vHat%z
-
-                   end if
-
-                   if ((rVec%z >=  grid(gP)%zAxis(grid(gP)%nz)+grid(gP)%geoCorrZ &
-                        & .or. zP>grid(gP)%nz) .and. gP>1) then
-
-                      xP = enPacket%xP(grid(gP)%motherP)
-                      yP =  enPacket%yP(grid(gP)%motherP)
-                      zP =  enPacket%zP(grid(gP)%motherP)
-                      gP = grid(gP)%motherP                      
-
-                   end if
-
-                   if (lgReturn) then                      
-                      idir = int(acos(vHat%z)/dTheta)+1
-                      if (idir<1 .or. idir>totAngleBins) then
-                         print*, '! pathSegment: error in direction cosine assignment', idir, vHat, &
-                              & dTheta, totAngleBins
-                         stop
-                      end if
-                      grid(gP)%escapedPackets(grid(gP)%active(xP, yP, zP), & 
-                           & enPacket%nuP,viewPointP(idir)) = &
-                           & grid(gP)%escapedPackets(grid(gP)%active(xP, yP, zP), & 
-                           & enPacket%nuP,viewPointP(idir)) + 1.
-                      if (viewPointP(idir)/=0) grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), & 
-                           & enPacket%nuP, 0) = &
-                           & grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), enPacket%nuP,0) + 1.
-                      return
-                   end if
-
-                end if
+                  end if
+                  return
+               end if
+               
+            end if
 
                 ! check if the path is still within the ionized region 
                 radius = 1.e10*sqrt((rVec%x/1.e10)*(rVec%x/1.e10) + &
@@ -1472,21 +1564,58 @@ module photon_mod
                          if (zP > grid(gP)%nz) zP = grid(gP)%nz
 
                          ! the energy packet escapes
-                         idir = int(acos(vHat%z)/dTheta)+1
-                         if (idir<1 .or. idir>totAngleBins) then
-                            print*, '! pathSegment: error in direction cosine assignment', & 
-                                 & idir, vHat, dTheta, totAngleBins
+
+
+
+                         ! the packet escapes without further interaction
+                  
+                         idirT = int(acos(enPacket%direction%z)/dTheta)+1
+                         if (idirT>totangleBinsTheta) then
+                            idirT=totangleBinsTheta
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+                         end if
+                         if (idirT<1 .or. idirT>totAngleBinsTheta) then
+                            print*, '! energyPacketRun: error in theta direction cosine assignment',&
+                                 &  idirT, enPacket, dTheta, totAngleBinsTheta
+                            stop
+                         end if
+                         
+                         idirP = int(atan(enPacket%direction%y/enPacket%direction%x)/dPhi)
+                         if (idirP<0) idirP=totAngleBinsPhi+idirP
+                         idirP=idirP+1
+      
+                         if (idirP>totangleBinsPhi) then
+                            idirP=totangleBinsPhi
+!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
+!                       & idir, totanglebins, enPacket%direction, dtheta
+                         end if
+      
+                         if (idirP<1 .or. idirP>totAngleBinsPhi) then
+                            print*, '! energyPacketRun: error in phi direction cosine assignment',&
+                                 &  idirP, enPacket, dPhi, totAngleBinsPhi
                             stop
                          end if
 
-                         grid(gP)%escapedPackets(grid(gP)%active(xP, yP, zP), & 
-                              & enPacket%nuP,viewPointP(idir)) = &
-                              & grid(gP)%escapedPackets(grid(gP)%active(xP, yP, zP),&
-                              &  enPacket%nuP,viewPointP(idir)) + 1.
-                         if (viewPointP(idir)/=0) grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), & 
-                              & enPacket%nuP, 0) = &
-                              & grid(gP)%escapedPackets(grid(gP)%active(xP,yP,zP), enPacket%nuP,0) + 1.
-                         return
+                         !b
+                         if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
+                              & (viewPointTheta(viewPointPphi(idirP))==viewPointTheta(viewPointPtheta(idirT))) .or. & 
+                              & (viewPointPhi(viewPointPtheta(idirT))==viewPointPhi(viewPointPphi(idirP))) ) then
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), enPacket%nuP,& 
+                                 & viewPointPtheta(idirT)) = &
+                                 &grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,viewPointPtheta(idirT)) + 1.
+                            if (viewPointPtheta(idirT)/=0) grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                 enPacket%nuP,0) = &
+                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,0) + 1.
+                         else
+                            grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), & 
+                                 enPacket%nuP,0) = &
+                                 & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
+                                 & enPacket%nuP,0) + 1.
+                         end if
+
 
                       else if (gP>1) then
 

@@ -753,23 +753,22 @@ module xSec_mod
 
 !              read (20, *) wav(i), Csca(nSpec, 0, i), Cabs(nSpec, 0, i)
               read (20,*) wav(i), Ere(i), Eim(i) 
-
            end do
            
            close(20)
 
            nWavOld = nWav
 
-           ! convert wav into energy [Ryd]
-           wav = c/(wav*fr1Ryd*1.e-4)
-
            ! reverse order of wav, Ere and Eim and map onto mocassin's grid
            do i = nWav, 1, -1
+              ! convert wav into energy [Ryd]
+              wav(i) = c/(wav(i)*fr1Ryd*1.e-4)
               tmp1(nWav-i+1) = Ere(i)
               tmp2(nWav-i+1) = Eim(i)
               tmp3(nWav-i+1) = wav(i)
            end do
            wav=tmp3
+
 
            if (associated(Ere)) deallocate(Ere)
            if (associated(Eim)) deallocate(Eim)

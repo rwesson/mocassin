@@ -363,6 +363,14 @@
 		     defined by integer3 (1e8 in this example) has not been reached.\\
 		     $[$.false.$]$
 
+\paragraph {continuumCube} real1 real2 : This keyword creates a 3D cube of the escaped continuum radiation
+                     in direction given by the inclination keyword and over all directions. 
+		     If no inclination is specified in the input the continuum cube 
+		     will include packets escaping in all directions. The continuum band wavelength limits are 		     
+                     defined by real1 and real2 (give in $\mu$m). A negative value or the omission of 
+		     this keyword will result in no continuum cube being written out. \\
+		     $[$-1.$]$		     
+
 \paragraph   {contShape} 'string': The shape of the ionising continuum. The default value is 
 		     'blackbody', in which case the ionising stellar continuum is 
 		     approximated by the Planck function for the stellar 
@@ -450,11 +458,13 @@
 		     hydrogen density, by number, to the constant value of 300 $cm^{-3}$.\\
 		     $[$0.$]$\\
 
-\paragraph    {inclination integer real\_1, real\_2 ..... real\_integer} : This keyword controls the
+\paragraph    {inclination integer real\_1, real\_2 ..... real\_{n1}, real\_{n2}} : This keyword controls the
                      viewing angles at which the SED will be calculated as it will appear 
 		     in the SED.out file (see Section 4.2). The number of viewing 
-		     angles is given first (integer) and then the inclination in radians 
-		     (inclination =0. when the line of sight coincides with the z-axis)\\
+		     angles is given first (integer; in this version integer <= 2) and then the $\theta$
+                     and $\phi$ inclination in radians. To turn off the $\phi$ dependence, real\_2 must be set to 
+		     to -1. . 
+		     ($\theta$ =0. when the line of sight coincides with the z-axis)\\
 		     $[$0$]$\\
 
 \paragraph    {inputNe  }        : This indicates that the density distribution of the grid is in 

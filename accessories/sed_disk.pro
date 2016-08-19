@@ -31,9 +31,9 @@ tvlct,[  0,255, 255,  0,  0,255,255,  0,255,125,125,  0,  0,255],$ ;red
 rstar=6.9599e10
 rout=3.27e17
 t0001='SED000.1.out'
-t0010='SED001.0.out'
-t0100='SED010.0.out'
-t1000='SED100.0.out'
+t0010='SED000.1.out'
+t0100='SED000.1.out'
+t1000='SED000.1.out'
 
 r_r1=1000.
 vp=2
@@ -46,9 +46,10 @@ vp=2
 ;close,lun
 ;free_lun,lun
 
-data0001=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},102)
+data0001=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},101)
 openr,lun,t0001,/get_lun
 nothing=' '
+readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
@@ -57,9 +58,10 @@ readf,lun,data0001
 close,lun 
 free_lun,lun
 
-data0010=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},102)
+data0010=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},101)
 openr,lun,t0010,/get_lun
 nothing=' '
+readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
@@ -68,9 +70,10 @@ readf,lun,data0010
 close,lun 
 free_lun,lun
 
-data0100=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},102)
+data0100=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},101)
 openr,lun,t0100,/get_lun
 nothing=' '
+readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
@@ -79,9 +82,10 @@ readf,lun,data0100
 close,lun 
 free_lun,lun
 
-data1000=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},102)
+data1000=replicate({ryd:fltarr(1),ang:fltarr(1),flux:fltarr(vp+1)},101)
 openr,lun,t1000,/get_lun
 nothing=' '
+readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing
 readf, lun, nothing

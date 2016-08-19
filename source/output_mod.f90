@@ -2355,10 +2355,10 @@ module output_mod
     subroutine writeSED(grid)
       implicit none
 
-      type(grid_type), intent(in) :: grid                !
+      type(grid_type), intent(in) :: grid(*)     !
 
       integer :: ios, err                        ! I/O error status
-      integer :: i, freq, imu                    ! counters
+      integer :: i, freq, imu, iG                 ! counters
       
       real, pointer :: SED(:,:)                  ! SED array
 
@@ -2385,34 +2385,43 @@ module output_mod
       SED=0.
 
       write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
-      write(16,*) '  viewPoint = ', viewPoint
+      write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
       write(16,*) '   nu [Ryd]        lambda [um]        nu*F(nu)          '
       write(16,*) '                                  [erg/sec/cm^2/str]    '
 
       totalE=0.
-      do freq=1,nbins
 
-         do i = 0, grid%nCells
-            do imu = 0, nAngleBins
-               SED(freq,imu)=SED(freq,imu)+grid%escapedPackets(i,freq,imu)
+      do iG = 1, nGrids
+         do freq=1,nbins
+
+            do i = 0, grid(iG)%nCells
+               do imu = 0, nAngleBins
+                  SED(freq,imu)=SED(freq,imu)+grid(iG)%escapedPackets(i,freq,imu)
+               end do
             end do
+            
+            do imu = 1, nAngleBins
+               if (imu>0) then               
+                  if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
+                  if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
+               else
+                  if (lgSymmetricXYZ) SED(freq,imu) = SED(freq,imu)*8.
+                  SED(freq,imu) = SED(freq,imu)*8./(4.*Pi)
+               end if
+            end do
+
+            lambda = c/(nuArray(freq)*fr1Ryd)
+            
+            totalE = totalE +  SED(freq,0)
+            
+            SED(freq,0) = SED(freq,0)/(Pi)
+            
+
+            write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu)*&
+                 & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
+
+
          end do
-         
-         do imu = 1, nAngleBins
-            SED(freq,imu) = SED(freq,imu)/dTheta
-         end do
-
-         lambda = c/(nuArray(freq)*fr1Ryd)
-
-         totalE = totalE +  SED(freq,0)
-
-         SED(freq,0) = SED(freq,0)/(Pi)
-
-
-         write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu)*&
-              & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
-
-
       end do
 
       write(16,*) ' '
@@ -2423,9 +2432,9 @@ module output_mod
          write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE
          print*, 'Total energy radiated out of the nebula [e36 erg/s]:', totalE, Lstar, nphotons
       end if
-      write(16,*) 'All SEDs given per unit direction - must multiply column 3&
-           & by Pi to obtain total emission &
-           &over all directions.'
+      write(16,*) 'All SEDs given per unit direction'
+      write(16,*) 'To obtain total emission over all directions'
+      write(16,*) 'must multiply by 4.Pi'
 
 
       close(16)
@@ -2435,5 +2444,90 @@ module output_mod
       print*, 'out writeSED'
 
     end subroutine writeSED
+
+
+    subroutine writeContCube(grid, freq1,freq2)
+      implicit none
+
+      type(grid_type), intent(in) :: grid(*)     
+
+      integer :: ios, err, i,ix,iy,iz, iG        ! I/O error status, counters
+      integer ::  freq, imu, ifreq1, ifreq2      ! counters
+      
+      real, intent(inout)         :: freq1,freq2 ! wavelengths in um
+      real                        :: contI(0:nanglebins) ! continuum int in band
+
+      print*, 'in writeContCube'      
+
+
+      close(19)
+
+      open(unit=19,file='output/contCube.out',status='unknown', position='rewind',iostat=ios)              
+      if (ios /= 0) then
+         print*, "! writeContCube: Cannot open file for writing"
+         stop
+      end if
+
+      freq1 = c/(freq1*1.e-4*fr1Ryd)
+      freq2 = c/(freq2*1.e-4*fr1Ryd)
+
+      call locate(nuArray(1:nbins), freq1, ifreq2)
+      if (ifreq2 <= 0) ifreq2=1
+
+      call locate(nuArray(1:nbins), freq2, ifreq1)
+      if (ifreq1 <= 0) ifreq1=1
+
+
+      do iG = 1, nGrids
+         
+         do ix = 1, grid(iG)%nx
+            do iy = 1, grid(iG)%ny
+               do iz = 1, grid(iG)%nz
+
+                  if ( grid(iG)%active(ix,iy,iz)>0 .or. (ig==1 .and. &
+                       & ix==iorigin .and. iy==jorigin .and.iz==korigin) ) then
+
+                     do imu=0,nanglebins
+                        contI(imu)=0.
+!                        do freq = ifreq1, ifreq2
+                        do freq = 1, nbins
+                           contI(imu) = contI(imu)+&
+                                & grid(iG)%escapedPackets(grid(iG)%active(ix,iy,iz),freq,imu)
+                        end do
+                     
+                        if (imu>0) then
+                           if (viewPointTheta(imu)>0.) contI(imu) = contI(imu) / dTheta
+                           if (viewPointPhi(imu)>0.) contI(imu) = contI(imu) / dPhi
+                        else
+                           contI(imu) = contI(imu) / (4.*Pi)
+                        end if
+
+                     end do
+                  
+                     write(19,*) iG, ix,iy,iz, (contI(imu), imu=0,nanglebins)
+
+                  else
+
+                     write(19,*) iG, ix,iy,iz, (0., imu=0,nanglebins)
+
+                  end if
+
+               end do
+            end do
+         end do
+
+      end do      
+
+
+      write(19,*) ' '
+      write(19,*) 'All continuum intensities given per unit direction - must multiply column 3&
+           & by 4. Pi to obtain total emission over all directions.'
+
+
+      close(19)
+            
+      print*, 'writeContCube'
+
+    end subroutine writeContCube
 
 end module output_mod

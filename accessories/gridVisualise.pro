@@ -6,10 +6,10 @@
 ;
 ; Barbara Ercolano 2004
 ;
-nx=59
+nx=16
 ny=nx
 nz=nx
-densityfile='diskDensity1.000.dat'
+densityfile='p0tau1.ndust'
 
 set_plot,'ps'
 device,/color

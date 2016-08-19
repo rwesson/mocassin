@@ -25,6 +25,7 @@ module set_input_mod
         character(len=50)   :: keyword          ! input parameter keyword
  
         ! set default values and set non oprional values to 0 or 0. or "zero"
+        
         lgRecombination = .false.
         lgAutoPackets = .false.
         lgMultiChemistry = .false.
@@ -66,6 +67,7 @@ module set_input_mod
         nPhotons      = 100000
 
         fillingFactor = 1.
+        contCube      = -1.
         convIncPercent= 0.
         convWriteGrid = 0.
         nPhotIncrease = 0.
@@ -123,6 +125,10 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case("continuumCube")
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, contCube(1), contCube(2)
+               print*, keyword, contCube
             case("noScattering")
                print*, keyword
                lgDustScattering = .false.
@@ -362,16 +368,28 @@ module set_input_mod
                 if (taskid==0) print*, keyword, convWriteGrid
             case ("inclination")
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins
-               allocate(viewPoint(1:nAngleBins), stat=err)
-               if (err /= 0) then
-                  print*, '! readInput: allocation error for viewPoint pointer'
+               read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins 
+               if (nAngleBins>2) then
+                  print*, '! readInput: only two inclination anges are allowed per simulation. &
+                       & If more inclinations are required please run mocassinWarm for the other&
+                       & viewing angles.'
                   stop
                end if
-               viewPoint=0.
+               allocate(viewPointTheta(1:nAngleBins), stat=err)
+               if (err /= 0) then
+                  print*, '! readInput: allocation error for viewPointTheta pointer'
+                  stop
+               end if
+               viewPointTheta=0.
+               allocate(viewPointPhi(1:nAngleBins), stat=err)
+               if (err /= 0) then
+                  print*, '! readInput: allocation error for viewPointPhi pointer'
+                  stop
+               end if
+               viewPointPhi=0.
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins, (viewPoint(j), j=1,nAngleBins)
-               if (taskid==0) print*, keyword, nAngleBins, viewPoint 
+               read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins, (viewPointTheta(j), viewPointPhi(j), j=1,nAngleBins)
+               if (taskid==0) print*, keyword, nAngleBins, (viewPointTheta(j), viewPointPhi(j), j = 1, nAngleBins)
             case default
                 print*, "! readInput: invalid keyword in model parameter input file", &
 &                        in_file, keyword
