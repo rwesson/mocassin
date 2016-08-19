@@ -1,12 +1,11 @@
- 29
-** Atomic data from version 6 of the CHIANTI database **
+ 24
+** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 %theoretical energy levels: Pradhan, 1986, Ph.Rev.A, 34, 4704
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi 1995
-%filename: ni_17.wgfa
 %observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 %theoretical energy levels: Pradhan, 1986, Ph.Rev.A, 34, 4704
@@ -15,13 +14,9 @@
    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
 %A values (1:4): Calculated using SUPERSTRUCTURE and the same atomic model adopted
    by Christensen, Norcross, Pradhan, Ph.Rev.A, 34, 4704, 1986
-%A-value (1-3): Traebert, E., Heckmann, P.H., Hutton , R., & Martinson, I. 1988, J. Opt. Soc. Am. B, 5, 2173
-%comment: added transition experimental A-value 1-3 from Traebert et al 1988 (E. Landi, Sept. 20, 2006).
-%comment: corrected a typo on the A value of transition 1-5 (E. Landi, Jul 1, 2009).
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% E. Landi - Sep 2006
-
+% E. Landi 2000
 %filename: ni_17.splups
 %oscillator strengths: Christensen, Norcross, Pradhan, 1986, Ph.Rev.A, 34, 4704
 %collision strengths: Christensen, Norcross, Pradhan, 1986, Ph.Rev.A, 34, 4704
@@ -290,9 +285,9 @@
   0  0   2.51e-02
  0 0 0
   1  2   0.000e+00
-  1  3   8.333e+07
+  1  3   2.170e+07
   1  4   5.649e+00
-  1  5   2.750e+10
+  1  5   1.380e+10
   2  3   0.000e+00
   2  4   0.000e+00
   2  5   0.000e+00

@@ -1,12 +1,11 @@
- 32
-** Atomic data from version 6 of the CHIANTI database **
+30
+** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: NIST database (http://physics.nist.gov/cgi-bin/AtData/main_asd)
 %theoretical energy levels: Aggarwal, K.M., & Keenan, F.P., 1998, J.Phys.B, 31, 4545
 %comment: Aggarwal & Keenan give only LS state energies
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % P.R. Young - 27-May-03
-%filename: al_2.wgfa
 %observed energy levels: NIST database (http://physics.nist.gov/cgi-bin/AtData/main_asd)
 %A-values (1-5, 3-4, 1-4): Zou, Y., Froese Fischer, C. 2001, J.Phys.B 34, 915
 %A-values (1-3): Trabert, E., Wolf, A., Linkemann, J., Tordoir, X., 1999, J.Phys.B, 32, 537
@@ -19,14 +18,13 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % P.R. Young - 23-May-03
-
 %filename: al_2.splups
-%theoretical energies: Aggarwal, K.M., & Keenan, F.P., 1998, J.Phys.B, 31, 4545
-%theoretical energies: Aggarwal, K.M., & Keenan, F.P., 1994, J.Phys.B, 27, 5321 (except for transitions within multiplets where observed level splitting was used)
-%gf-values (transitions 1-5, 1-18, 2-7, 3-7, 4-7, 5-6, 6-18): Aggarwal, K.M., & Keenan, F.P., 1994, J.Phys.B, 27, 2343
-%gf-values (remaining transitions): P.R.Young, 2003, SSTRUCT calculation (see .wgfa file)
 %effective collision strengths: Aggarwal, K.M., & Keenan, F.P., 1994, J.Phys.B, 27, 5321
 %effective collision strengths between triplet states: Aggarwal, K.M., & Keenan, F.P., 1998, J.Phys.B, 31, 4545
+%gf-values (transitions 1-5, 1-18, 2-7, 3-7, 4-7, 5-6, 6-18): Aggarwal, K.M., & Keenan, F.P., 1994, J.Phys.B, 27, 2343
+%gf-values (remaining transitions): P.R.Young, 2003, SSTRUCT calculation (see .wgfa file)
+%theoretical energies: Aggarwal, K.M., & Keenan, F.P., 1998, J.Phys.B, 31, 4545
+%theoretical energies: Aggarwal, K.M., & Keenan, F.P., 1994, J.Phys.B, 27, 5321 (except for transitions within multiplets where observed level splitting was used)
 %comment: Only transitions involving levels 1-4 and 6 were fitted, as these are the only levels with significant population at astrophysical densities.
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %

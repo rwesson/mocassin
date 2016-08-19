@@ -1,5 +1,5 @@
- 99
-** Atomic data from version 6 of the CHIANTI database **
+ 81
+** Atomic data from version 5.2 of the CHIANTI database **
 %observed energy levels: NIST Database for Atomic Spectroscopy, Version 1.0, 
   NIST Standard Reference Database 61, 1995.
 %observed energy levels (12,13,41): Jupen et al., MNRAS, 264, 627, 1993
@@ -8,20 +8,15 @@
 %comment: The third column of energies contains scaled superstructure values.
 %comment: Have had problems with the identification of some of the Fe XI
    lines. The following are proposed.
-
    Level 37 has been proposed as giving the 188.30 line (Jupen et
    al.). Don't think this is right, as the 3P2 - 3S1 transition is
    quite weak. Can not find any lines which correspond to the 3S1
    transitions, so have put the scaled superstructure value in.
-
    Level 38 (3P2) is identified from the strong line at 188.23.
-
    Level 39 (1P1) is identified as the strong line at 188.30.
-
    There's only one line from level 40 (3P0), whose identification
    I'm uncertain about (near 189.10 AA?). Have used the scaled 
    superstructure energy relative to the 3P1 level.
-
    Level 41 (3P1) has been identified from the 184.704 line seen by
    Jupen et al., two other transitions from this level match up
    nicely with the 189.123 and 189.733 lines seen by Behring et
@@ -29,7 +24,6 @@
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 %  P.R. Young  Feb. 1996 & Enrico Landi Apr. 1999
-%filename: fe_11.wgfa
 %observed energy levels: NIST Database for Atomic Spectroscopy, Version 1.0,
   NIST Standard Reference Database 61, 1995.
 %observed energy levels (12,13,41): Jupen et al., MNRAS, 264, 627, 1993
@@ -37,39 +31,30 @@
 %theoretical energy levels: Bhatia & Doschek 1996, ADNDT, 64, 183
 %A values: obtained from a 13 configuration model of Fe XI used in "superstructure", 
 %comment: the configurations used were:
-
 	3s2 3p4, 3s 3p5, 3s2 3p3 3d, 3p6
 	3s2 3p3 {4s, 4p, 4d, 4f}
 	3s 3p4 3d, 3s2 3p2 3d2
 	3p5 3d, 3s 3p3 3d2, 3s2 3p 3d3
-
    The most striking difference between this model and the 4 conf
    model occurs for the (2D*) 3P1, 3S1 and 1P1 levels. Essentially,
    the 3S1 level is pushed closer to the other two levels,
    increasing the amount of interaction between them. The data
    below, from "superstructure" shows this.
-
    The first column gives the levels; the second and third the
    theoretical energies for the 4 conf model and the 13 conf model;
    the next three columns give the percentage contributions of the
    three levels to each other: "a/b" means a is percentage for 4
    conf model, while b is percentage for 13 conf model.
-
 				3S1	3P1	1P1
 	3S1	532878	547264	97/71	-/-	-/10
 	3P1	555764	553263	1/14	50/42	11/7
 	1P1	564755	542936 	-/12	21/16	17/16
-
    Clearly the change of energies gives rise to different
    interactions. Most notably, 1P1 starts mixing with 3S1, whereas
    it did not before
-%comment: The wavelengths for the transitions from level 37 have been changed to be 
-          consistent with the energy of level 37 in the third column of the .elvlc 
-          file (PRY 13-Nov-2008)
 %produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
-% Peter Young - Nov 2008  
-
+% Peter Young    Jul 2000.
 %filename: fe_11.splups
 %oscillator strengths: obtained from a SUPERSTRUCTURE calculation (see fe_11.wgfa for details)
 %effective collision strengths levels 1-9: Gupta & Tayal, 1999, ApJ, 510, 1081
@@ -80,18 +65,15 @@
    level balance of the complete collisional data. Essentially all 
    significant collision strengths involving the levels 1-5 and 
    14,20,23,24,25,30.
-
    This file contains fits to the SCALED Bhatia omega data. It was
    found that the 4 configuration collisional model does not
    accurately predict some important collision strengths, so it was
    decided to scale all the 3s2 3p2 - 3s2 3p 3d collision strengths
    (for which there was a corresponding oscillator strength) by the
    factor:
-
 	(accurate "superstructure" oscillator strength)
 	-----------------------------------------------
 	     (original Bhatia oscillator strength)
-
    In particular, this improves the agreement of the 188.22, 188.30 lines
    with theory.
 %
