@@ -56,14 +56,8 @@ program MoCaSSiNoutput
     call makeElements()
     
     if (taskid ==  0) then
-       ! determine final statistics
-       if (lgGas) then
-          if (lg3DextinctionMap) then
-             call outputGas(grid3D(1:nGrids), extMapFile) 
-          else
-             call outputGas(grid3D(1:nGrids)) 
-          end if
-       end if
+        ! determine final statistics
+        if (lgGas) call outputGas(grid3D)
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)

@@ -37,19 +37,19 @@ module xSec_mod
       print*, 'in initGammaCont'
 
       close(21)
-      open(file='data/gammaHI.dat', unit=21, status='old', iostat = err)
+      open(file='data/gammaHI.dat', unit=21, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHI"
          stop
       end if
       close(22)
-      open(file='data/gammaHeI.dat', unit=22, status='old', iostat = err)
+      open(file='data/gammaHeI.dat', unit=22, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeI"
          stop
       end if
       close(23)
-      open(file='data/gammaHeII.dat', unit=23, status='old', iostat = err)
+      open(file='data/gammaHeII.dat', unit=23, status='old', iostat = err, action="read")
       if (err /= 0) then
          print*, "! initGammaCont: can't open file: data/gammaHeII"
          stop
@@ -364,7 +364,7 @@ module xSec_mod
 
          ! open data/ph1.dat file and check for errors in opening 
          close(10)
-         open(unit = 10, file = "data/ph1.dat", status = "old", position = "rewind", iostat = ios)
+         open(unit = 10, file = "data/ph1.dat", status = "old", position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph1.dat"
             stop
@@ -372,7 +372,7 @@ module xSec_mod
 
          ! open data/ph2.dat file and check for errors in opening  
          close(20)
-         open(unit = 20, file = "data/ph2.dat", status = "old", position = "rewind", iostat = ios)
+         open(unit = 20, file = "data/ph2.dat", status = "old", position = "rewind", iostat = ios, action="read")
          if (ios /= 0) then
             print*, "! phInit: can't open file: data/ph2.dat"
             stop
@@ -761,7 +761,7 @@ module xSec_mod
 
         print*, 'in makeDustXSec'
 
-        open (unit=10, file=dustFile(1), iostat = ios, status = 'old', position = 'rewind')
+        open (unit=10, file=dustFile(1), iostat = ios, status = 'old', position = 'rewind', action="read")
         if(ios/=0) then
            print*, '! makeDustXSec: cannot open file for reading ', dustFile(1)
            stop
@@ -818,7 +818,7 @@ module xSec_mod
         end if
         TdustSublime=0.        
 
-        open (unit=11, file=dustFile(2), iostat = ios, status = 'old', position = 'rewind')
+        open (unit=11, file=dustFile(2), iostat = ios, status = 'old', position = 'rewind', action="read")
         if(ios/=0) then
            print*, '! makeDustXSec: cannot open file for reading ', dustFile(2)
            stop
@@ -901,7 +901,7 @@ module xSec_mod
            
            read(10, *) extinctionFile, grainAbun(nSpec)
            
-           open (unit=20, file=extinctionFile, iostat = ios, status = 'old', position = 'rewind')
+           open (unit=20, file=extinctionFile, iostat = ios, status = 'old', position = 'rewind', action="read")
            if(ios/=0) then
               print*, '! makeDustXSec: cannot open file for reading ', extinctionFile
               stop

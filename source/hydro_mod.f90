@@ -1,4 +1,5 @@
 ! Copyright (C) 2005 Barbara Ercolano 
+! Line 421: Ionisation stages number changed from 7 to 10 to read in 10 stages from ion list file (nw2006)
 !
 ! Version 2.02
 module elements_mod
@@ -403,7 +404,7 @@ module elements_mod
        integer           :: ios        ! I/O error status
        
        close(17)
-       open(file='data/fileNames.dat', unit=17, status='old', &
+       open(file='data/fileNames.dat', action="read", unit=17, status='old', &
             & position='rewind', iostat=ios)
        
        if (ios/=0) then
@@ -417,7 +418,7 @@ module elements_mod
        ! read in the file names for the atomica data
        ! (even the non existing ones.. never know might add them later)
        do elem = 3, nElements
-          do ion = 1, min(elem+1, 7)
+          do ion = 1, min(elem+1, 10)
 
              read(17, '(A20)') dataFile(elem, ion)
 
@@ -464,7 +465,7 @@ module elements_mod
              if(.not.lgElementOn(elem)) exit
 
              close(18)
-             open(file=dataFile(elem,ion), unit=18, status='old', &
+             open(file=dataFile(elem,ion), unit=18, action="read", status='old', &
                   & position='rewind', iostat=ios)
 
              if (ios == 0) then

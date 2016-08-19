@@ -1,0 +1,45 @@
+6
+ Cl V  fine structure transition of the groud term
+ Upsilons from Saraph & Storey 1996 (Iron Project paper XVII in prep.) A&A
+  Supl.Ser.
+ Aij from Storey (unpubl)
+ E lev. from NIST database R.L.Kelly unpubl.                      CJP 1-5-96
+
+ 2 15 0
+ 2P(1/2)
+ 2P(3/2)
+ 2000
+ 4000
+ 6000
+ 8000
+ 10000
+ 12000
+ 14000
+ 16000
+ 18000
+ 20000
+ 30000
+ 40000
+ 50000
+ 100000
+ 200000
+0
+ 1 2 2.718
+ 0 0 3.15 
+ 0 0 3.487
+ 0 0 3.727
+ 0 0 3.90 
+ 0 0 4.04 
+ 0 0 4.157
+ 0 0 4.257
+ 0 0 4.347
+ 0 0 4.427
+ 0 0 4.73 
+ 0 0 4.915
+ 0 0 5.018
+ 0 0 5.079
+ 0 0 4.87 
+0 0 0
+ 1 2 2.98E-2
+ 1 2 0.
+ 2 4 1490.8

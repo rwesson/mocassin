@@ -66,15 +66,19 @@ module iteration_mod
            integer, pointer       :: planeIonDistributionTemp(:,:) 
            integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets
            integer                :: err             ! allocation error status
-           integer                :: elem,freq,ion,nS ! counters
-           integer                :: ios,iG          ! I/O error status
+           integer                :: elem,freq,ion,nS! counters
+           integer                :: ifreq, ian      ! counters
+           integer                :: ios,iG          ! I/O error status           
            integer                :: load,rest       ! 
            integer                :: size            ! size for mpi
            integer                :: iCell           ! cell index including non-active
            integer                :: iStar           ! star index
            integer                :: ai              ! grain size counter
            integer                :: icontrib,icomp ! counters
-           integer                :: imu             ! direction cosine counter
+           integer                :: imu             ! direction cosine            
+           integer                :: cellLoc(3)      ! local cell counters
+           integer                :: gpLoc           ! local grid counter
+           integer                :: ii,jj,kk        ! counters
 
            allocate(noHitPercent(nGrids))
            allocate(noIonBalPercent(nGrids))
@@ -100,7 +104,7 @@ module iteration_mod
                  grid(iG)%dustPDF     = 0.
               end if
            end do
-              
+
 !*****************************************************************************
 
            iCell = 0
@@ -108,7 +112,7 @@ module iteration_mod
               grid(iG)%opacity = 0.
 
               if (lgGas) then
-                 print*, 'ionizationDriver in'
+                 if (taskid==0) print*, '! iterateMC: ionizationDriver in', iG
                  ! calculate the opacities at every grid cell
                  do i = 1, grid(iG)%nx
                     do j = 1, grid(iG)%ny
@@ -119,8 +123,7 @@ module iteration_mod
                        end do
                     end do
                  end do
-                 print*, 'ionizationDriver out'
- 
+                 if (taskid==0) print*, '! iterateMC: ionizationDriver out', iG
 
                  allocate(opacityTemp(0:grid(iG)%nCells, nbins), stat = err)
                  if (err /= 0) then
@@ -155,6 +158,7 @@ module iteration_mod
               end if
            
               ! add dust contribution to total opacity
+              if (taskid==0) print*, '! iterateMC: adding dust contribution to total opacity ',iG           
               if (lgDust) then
                  grid(iG)%scaOpac = 0.
                  grid(iG)%absOpac = 0.
@@ -162,38 +166,38 @@ module iteration_mod
                     do j = 1, grid(iG)%ny
                        do k = 1, grid(iG)%nz
                           
-                          do nS = 1, nSpecies
-                             do ai = 1, nSizes
-
-                                if (grid(iG)%Tdust(nS,ai,grid(iG)%active(i,j,k))<TdustSublime(nS)) then
-                                   do freq = 1, nbins 
-                                      grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) = &
-                                           & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
-                                           & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
-                                           & xSecArray(dustScaXsecP(nS,ai)+freq-1)
-                                      grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
-                                           & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
-                                           & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
-                                           & xSecArray(dustAbsXsecP(nS,ai)+freq-1)
-                                   end do
-                                end if
+                          if (grid(iG)%active(i,j,k)>0) then
+                             do nS = 1, nSpecies
+                                do ai = 1, nSizes                                
+                                   if (grid(iG)%Tdust(nS,ai,grid(iG)%active(i,j,k))<TdustSublime(nS)) then
+                                      do freq = 1, nbins 
+                                         grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) = &
+                                              & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
+                                              & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
+                                              & xSecArray(dustScaXsecP(nS,ai)+freq-1)
+                                         grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
+                                              & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
+                                              & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
+                                              & xSecArray(dustAbsXsecP(nS,ai)+freq-1)
+                                      end do
+                                   end if
+                                end do
                              end do
-                          end do
-
-                          do freq = 1, nbins
-                             grid(iG)%opacity(grid(iG)%active(i,j,k),freq) = &
-                                  &grid(iG)%opacity(grid(iG)%active(i,j,k),freq) + &
-                                  & (grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + &
-                                  &grid(iG)%absOpac(grid(iG)%active(i,j,k),freq))
- 
-                         end do
+                             
+                             do freq = 1, nbins
+                                grid(iG)%opacity(grid(iG)%active(i,j,k),freq) = &
+                                     &grid(iG)%opacity(grid(iG)%active(i,j,k),freq) + &
+                                     & (grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + &
+                                     &grid(iG)%absOpac(grid(iG)%active(i,j,k),freq))
+                             end do
+                          end if
 
                        end do
                     end do
                  end do
-
               end if
-                 
+              if (taskid==0) print*, '! iterateMC: dust contribution to total opacity added ',iG                            
+
            end do ! ngrids
 
            call mpi_barrier(mpi_comm_world, ierr)
@@ -202,10 +206,10 @@ module iteration_mod
 !*****************************************************************************
 
            
-           print*, 'emissionDriver in'
+
            
            if (taskid==0 .and. lgWritePss) then
-              open(unit=89, file='output/qHeatPss.out', status='unknown', position='rewind', iostat=ios)
+              open(unit=89, file='output/qHeatPss.out',  action="write",status='unknown', position='rewind', iostat=ios)
               if (ios /= 0) then
                  print*, "! iterationMC: can't open file for writing, output/qHeatPss.out"
                  stop
@@ -243,6 +247,7 @@ module iteration_mod
            ! set the diffuse PDFs at every grid cell
            do iG = 1, nGrids
 
+              if (taskid==0) print*, '! iterateMC: emissionDriver in',iG           
               iCell = 0
               do i = 1, grid(iG)%nx
                  do j = 1, grid(iG)%ny
@@ -256,8 +261,7 @@ module iteration_mod
                  end do
               end do
 
-              print*, 'emissionDriver out'
-
+              if (taskid==0) print*, '! iterateMC: emissionDriver out', iG           
               if (taskid==0 .and. lgWritePss) close(89)
 
               if (lgDust .and. .not.lgGas) then 
@@ -414,6 +418,7 @@ module iteration_mod
 !**********************************************************************************************
 
            do iG = 1, nGrids
+
               grid(iG)%Jste           = 0.
               if (lgDebug) then
                  grid(iG)%Jdif = 0.
@@ -422,8 +427,10 @@ module iteration_mod
            end do
           
 
+           totalEscaped = 0.
+
            do iStar = 1, nStars
-              print*, 'Starting transfer for ionising source ', iStar
+              if(taskid==0) print*, 'iterateMC: Starting transfer for ionising source ', iStar
               
               load = int(nPhotons(iStar)/numtasks)
               rest = mod(nPhotons(iStar), numtasks)           
@@ -449,6 +456,47 @@ module iteration_mod
               call mpi_barrier(mpi_comm_world, ierr)
            end do
 
+           if (Ldiffuse>0.) then
+              
+!              do gpLoc = 1, nGrids
+              do gpLoc = 1, 1
+                 if(taskid==0) print*, 'iterateMC: Starting transfer for diffuse source ', gpLoc
+                 do ii = 1,grid(gpLoc)%nx
+                    do jj = 1,grid(gpLoc)%ny
+                       do kk = 1,grid(gpLoc)%nz
+                 
+                          if (grid(gpLoc)%active(ii,jj,kk)>0) then
+                          
+                             cellLoc(1)  = ii
+                             cellLoc(2)  = jj
+                             cellLoc(3)  = kk
+
+                             load = int(nPhotonsDiffuseLoc/numtasks)
+                             rest = mod(nPhotonsDiffuseLoc, numtasks)           
+                               
+              
+                             ! send the photons through and evaluate the MC 
+                             ! estimators of Jste and Jdif at every grid cell
+                             if (taskid < rest) then
+                                load = load+1
+                                call energyPacketDriver(iStar=0,n=load, grid=grid(1:nGrids), &
+                                     & gpLoc=gpLoc, cellLoc=cellLoc)
+                             else
+                                call energyPacketDriver(iStar=0,n=load, grid=grid(1:nGrids), &
+                                     & gpLoc=gpLoc, cellLoc=cellLoc)
+                             end if
+           
+                             call mpi_barrier(mpi_comm_world, ierr)
+
+                          end if
+
+                       end do
+                    end do
+                 end do
+              end do
+
+           end if
+
 
            if (lgPlaneIonization) then
 
@@ -467,7 +515,7 @@ module iteration_mod
               planeIonDistribution = planeIonDistributionTemp
 
               if (taskid ==0) then
-                 open(file="output/planeIonDistribution.out", unit=18, status="unknown")
+                 open(file="output/planeIonDistribution.out",  action="write",unit=18, status="unknown")
                  do i = 1, grid(1)%nx
                     do k = 1, grid(1)%nz
                        write(18,*) i,k,planeIonDistribution(i,k)
@@ -520,19 +568,20 @@ module iteration_mod
 
               do i = 0, grid(iG)%nCells
                  do freq = 0, nbins                       
-                    do imu = 0, nAngleBins
+                    do imu = 0, nAngleBins                       
                        grid(iG)%escapedPackets(i, freq,imu) = escapedPacketsTemp(i, freq, imu)
+
                     end do
                  end do
               end do
                  
               call mpi_barrier(mpi_comm_world, ierr)
-              
+
               if ( associated(escapedPacketsTemp) ) deallocate(escapedPacketsTemp)
               
-              if (taskid==0) call writeSED(grid)
-              if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) &
-                   & call writeContCube(grid, contCube(1),contCube(2))
+!              if (taskid==0) call writeSED(grid)
+!              if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) &
+!                   & call writeContCube(grid, contCube(1),contCube(2))    
 
               size =  (grid(iG)%nCells+1)*nbins
 
@@ -578,13 +627,50 @@ module iteration_mod
 
               call mpi_barrier(mpi_comm_world, ierr)
 
+
               if (lgDebug) then
                  if ( associated(linePacketsTemp) )    deallocate(linePacketsTemp)
                  if ( associated(JDifTemp) )           deallocate(JDifTemp)
               end if
               if ( associated(JSteTemp) )           deallocate(JSteTemp)           
 
+
+              do i = 0, grid(iG)%nCells
+                 grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9
+                 
+                 if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:) * 1.e-9
+                 do ifreq = 1, nbins
+                    totalEscaped = totalEscaped+&
+                         & grid(iG)%escapedPackets(i,ifreq, 0)
+                    do ian = 0, nAngleBins
+                       grid(iG)%escapedPackets(i,ifreq,ian) = grid(iG)%escapedPackets(i,ifreq,ian)                           
+                    end do
+                 end do
+                 
+                 if (lgSymmetricXYZ) then
+                    grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:)/8.
+                    grid(iG)%escapedPackets(i,:,:) = grid(iG)%escapedPackets(i,:,:)/8.
+                    totalEscaped = totalEscaped/8.
+                    if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:)/8.
+                 end if
+                 
+              end do
+
            end do
+
+
+           if (lgDust) then
+              print*, "! iterateMC: [Interactions] : total -- abs -- sca: "
+              print*, "! iterateMC: [Interactions] ", absInt+scaInt, " -- ", &
+                   &  absInt*100./(absInt+scaInt),"% -- ", &
+                   &  scaInt*100./(scaInt+absInt),"%"
+           end if
+           
+           print*, " total Escaped Packets :",  totalEscaped              
+
+           if (taskid==0) call writeSED(grid)                          
+           if (taskid==0 .and. contCube(1)>0. .and. contCube(2)>0. ) & 
+                & call writeContCube(grid, contCube(1),contCube(2))    
 
 !*******************************************************************
 
@@ -656,15 +742,14 @@ module iteration_mod
               lgBlackTemp          = 0 
 
                if (lgTraceHeating.and.taskid==0) then
-                 open(file="output/thermalBalance.out", unit=57, status="unknown", iostat=ios)
+                 open(file="output/thermalBalance.out",  action="write",unit=57, status="unknown", iostat=ios)
                  if (ios /= 0) then
                     print*, "! iterationMC: can't open file for writing, output/thermalBalance.out"
                     stop
                  end if
               end if
 
-
-              print*, 'updateCell in', iG
+              if(taskid==0) print*, 'iterateMC: updateCell in', iG
               iCell = 0
               do i = 1, grid(iG)%nx
                  do j = 1, grid(iG)%ny
@@ -676,7 +761,7 @@ module iteration_mod
                     end do
                  end do
               end do
-
+              if(taskid==0) print*, 'iterateMC: updateCell out', iG
 
               if (lgTraceHeating.and.taskid==0) then
                  close (57)
@@ -818,13 +903,13 @@ module iteration_mod
 
               if (taskid == 0) then
                  if (nIterateMC == 1) then
-                    open(unit=21, status='unknown', position='rewind', file='output/summary.out', iostat=ios)
+                    open(unit=21, status='unknown',  action="write",position='rewind', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
                        print*, "! iterationMC: can't open file for writing, summary.out"
                        stop
                     end if
                  else
-                    open(unit=21, status='unknown', position='append', file='output/summary.out', iostat=ios)
+                    open(unit=21, status='unknown',  action="write",position='append', file='output/summary.out', iostat=ios)
                     if (ios /= 0) then
                        print*, "! iterationMC: can't open file for writing, summary.out"
                        stop
@@ -922,6 +1007,21 @@ module iteration_mod
               
            end if
 
+
+           if (Ldiffuse>0. .and. nIterateMC > 1 .and. totPercent < 95. .and. lgAutoPackets & 
+                &  .and. totPercentOld > 0.) then
+
+              if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
+                 nPhotonsDiffuseLoc = nPhotonsDiffuseLoc*nPhotIncrease
+
+                 if (taskid==0) &
+                      & print*, "! iterateMC: [talk] number of diffuse energy packets &
+                      &per cell increased to ", nPhotonsDiffuseLoc
+              end if
+              
+           end if
+
+
            totPercentOld = totPercent
 
            if ( totPercent >= minConvergence ) then
@@ -933,13 +1033,7 @@ module iteration_mod
                  ! output results at this itearation stage (every 3 iterations)
 
                  call writeGrid(grid(1:nGrids))
-                 if (lgGas) then
-                    if (lg3DextinctionMap) then
-                       call outputGas(grid(1:nGrids), extMapFile) 
-                    else
-                       call outputGas(grid(1:nGrids)) 
-                    end if
-                 end if
+                 if (lgGas) call outputGas(grid(1:nGrids)) 
               end if
               
               call mpi_barrier(mpi_comm_world, ierr)
@@ -952,14 +1046,7 @@ module iteration_mod
                       & maxIterateMC
 
                  call writeGrid(grid(1:nGrids))
-                 if (lgGas) then
-                    if (lg3DextinctionMap) then
-                       call outputGas(grid(1:nGrids), extMapFile) 
-                    else
-                       call outputGas(grid(1:nGrids)) 
-                    end if
-                 end if
-
+                 if (lgGas) call outputGas(grid(1:nGrids))
               end if
 
               call mpi_barrier(mpi_comm_world, ierr)
@@ -969,16 +1056,10 @@ module iteration_mod
               if (lgOutput .and. taskid == 0 ) then
                  ! output results at this itearation stage (every ? iterations)
                  if ( mod(nIterateMC, 1) == 0 ) then
-                    if (lgGas) then
-                       if (lg3DextinctionMap) then
-                          call outputGas(grid(1:nGrids), extMapFile) 
-                       else
-                          call outputGas(grid(1:nGrids)) 
-                       end if
-                    end if
+                    if (lgGas) call outputGas(grid(1:nGrids)) 
                  end if
               end if
-
+              
               call mpi_barrier(mpi_comm_world, ierr)
                  
               ! step up MC iterations counter

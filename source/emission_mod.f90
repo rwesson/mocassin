@@ -18,7 +18,7 @@ module emission_mod
     ! units are [e-25erg/s/N_gas]
     double precision, dimension(nElements,nstages, nForLevels,nForLevels)::&
          & forbiddenLines                                          ! emissivity from heavies  rec lines
-    double precision, dimension(3:15, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
+    double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
     double precision, dimension(9)         :: HeIRecLinesS         ! emissivity from HeI sing rec lines
     double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
@@ -772,7 +772,7 @@ module emission_mod
         
         ! read in rates from data/HeI2phot.dat
         close(93)
-        open(unit = 93, file = "data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 93,  action="read", file = "data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! HeI2phot: can't open file: data/HeI2phot.dat"
             stop
@@ -867,7 +867,7 @@ module emission_mod
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(94)
-        open(unit = 94, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
             stop
@@ -902,7 +902,7 @@ module emission_mod
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95, file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -929,7 +929,7 @@ module emission_mod
         ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
         ! Benjamin, Skillman and Smits ApJ514(1999)307
         close(96)
-        open(unit = 96, file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 96,  action="read", file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
             stop
@@ -958,7 +958,7 @@ module emission_mod
         ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
         ! Benjamin, Skillman and Smits ApJ514(1999)307
         close(97)
-        open(unit = 97, file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 97,  action="read", file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
             stop
@@ -1161,7 +1161,7 @@ module emission_mod
         ! read in HeII Lyman line ratios up to level n=5 [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(98)
-        open(unit = 98, file = "data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 98,  action="read", file = "data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! setDiffusePDF: can't open file: data/r2a0100.dat"
             stop
@@ -1463,65 +1463,72 @@ module emission_mod
 
             if (grid%Tdust(n,ai,cellPUsed) >0. .and. & 
                  & grid%Tdust(n,ai,cellPused)<TdustSublime(n)) then
-               
-               if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
-                    & convPercent>minConvQheat.and. nIterateMC>1) then
+            
+               do i = 1, nbins
+   
+                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
+                       & convPercent>minConvQheat.and. nIterateMC>1) then
                   
-                  tg =  grid%Tdust(n,ai,cellPused)
-                  call qHeat(n, ai,tg,Tspike,Pspike)                                    
+                     tg =  grid%Tdust(n,ai,cellPused)
+                     call qHeat(n, ai,tg,Tspike,Pspike)                                    
                   
-                  do iT = 1, nTbins
-                     treal = Tspike(iT)
-                     bb = getFlux(nuArray(1), treal, cShapeLoc)
-                     grid%dustPDF(cellPUsed, 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
-                          & grainWeight(ai)*grainAbun(n)*Pspike(iT)                     
-                  end do
-                  
-               else
-                  
-                  treal = grid%Tdust(n,ai,cellPused)
-                  bb = getFlux(nuArray(1), treal, cShapeLoc)
-                  grid%dustPDF(cellPused, 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
-                       & grainWeight(ai)*grainAbun(n)
-               end if
-
-
-               do i = 2,nbins
-                  
-                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and.& 
-                    & convPercent>minConvQheat .and. nIterateMC>1) then
-                     
-                     do iT=1,nTbins
+                     do iT = 1, nTbins
                         treal = Tspike(iT)
-                        bb = getFlux(nuArray(i), treal, cShapeLoc)                     
-                        grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
-                             &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*& 
-                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)
+                        bb = getFlux(nuArray(i), treal, cShapeLoc)
+                        grid%dustPDF(cellPUsed, i) = grid%dustPDF(cellPUsed, i)+ & 
+                             & xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(i)*&
+                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)                     
                      end do
-                  
-                  else
                      
+                  else
+                  
                      treal = grid%Tdust(n,ai,cellPused)
                      bb = getFlux(nuArray(i), treal, cShapeLoc)
-                     grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
-                          &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*& 
+                     grid%dustPDF(cellPused, i) = grid%dustPDF(cellPused, i)+&
+                          & xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(i)*&
                           & grainWeight(ai)*grainAbun(n)
-                     
                   end if
-
                end do
+
+!               do i = 2,nbins
+!                  
+!                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and.& 
+!                    & convPercent>minConvQheat .and. nIterateMC>1) then
+!                     
+!                     do iT=1,nTbins
+!                        treal = Tspike(iT)
+!                        bb = getFlux(nuArray(i), treal, cShapeLoc)                     
+!                        grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
+!                             &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i-1)*& 
+!                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)
+!                     end do
+!                  
+!                  else
+!                     
+!                     treal = grid%Tdust(n,ai,cellPused)
+!                     bb = getFlux(nuArray(i), treal, cShapeLoc)
+!                     grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
+!                          &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i-1)*& 
+!                          & grainWeight(ai)*grainAbun(n)
+!                     
+!                  end if
+!
+!               end do
+
                
             end if
          end do
       end do
 
       ! normalise
-      do i = 1, nbins
+      do i = 2, nbins
          
-         if (grid%dustPDF(cellPused,nbins)>0.) grid%dustPDF(cellPused,i) = &
-              & grid%dustPDF(cellPUsed,i)/grid%dustPDF(cellPUsed,nbins)
+         grid%dustPDF(cellPused,i) = &
+              & grid%dustPDF(cellPUsed,i-1)+grid%dustPDF(cellPUsed,i)
          
       end do
+      grid%dustPDF(cellPused,:) = &    
+           grid%dustPDF(cellPused,:)/grid%dustPDF(cellPused,nbins)
 
       grid%dustPDF(cellPused,nbins) = 1.
 
@@ -2081,7 +2088,7 @@ module emission_mod
          & pointer :: n(:), n2(:) ! level population arrays
 
     
-    real                 :: alphaTotal(100)           ! maximum 100-level ion
+    real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
     real                 :: a_fit, b_fit              !         
     real                 :: qomInt                    ! interpolated value of qom
     real,    pointer     :: logTemp(:)                ! log10 temperature points array
@@ -2125,7 +2132,7 @@ module emission_mod
     
     ! open file containing atomic data
     close(11)
-    open(unit=11, file = file_name, status="old", position="rewind", &
+    open(unit=11,  action="read", file = file_name, status="old", position="rewind", &
          & iostat = ios)
     if (ios /= 0) then
        print*, "! equilibrium: can't open file: ", file_name
@@ -2157,6 +2164,13 @@ module emission_mod
     
     ! allocate space for transition probability  array
     allocate(a(nLev, nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate a array memory"
+       stop
+    end if
+
+    ! allocate space for transition probability  array
+    allocate(alphaTotal(nLev), stat = err)
     if (err /= 0) then 
        print*, "! equilibrium: can't allocate a array memory"
        stop
@@ -2337,13 +2351,7 @@ module emission_mod
        else
           alphaTotal(1) = 1.
        end if
-           
-       if (nLev>100) then
-          print*, '! equilibrium: alphaTotal set to a &
-               &max 100 level atom, please expand'
-          stop
-       end if
-       
+                  
        alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
        
     end do
@@ -2441,6 +2449,7 @@ module emission_mod
     end do
     
     ! deallocate arrays
+    if( associated(alphaTotal) ) deallocate(alphaTotal)
     if( associated(label) ) deallocate(label)
     if( associated(logTemp) ) deallocate(logTemp)
     if( associated(a) ) deallocate(a)
@@ -2552,7 +2561,7 @@ module emission_mod
       integer :: nResLinesFile
       integer :: safeLimit = 1e6 !
 
-      open(unit=19,file="data/resLines.dat", status="old", position="rewind", iostat=ios)
+      open(unit=19, action="read", file="data/resLines.dat", status="old", position="rewind", iostat=ios)
       if (ios /= 0) then
          print*, "! initResLines: can't open file: data/resLines"
          stop

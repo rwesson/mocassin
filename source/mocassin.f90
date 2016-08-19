@@ -90,25 +90,36 @@ program MoCaSSiN
 
     ! if grains are included, calculate the dust opacity     
     if (lgDust) then
+       if (taskid==0) print*, '! mocassin: calling dustDriver'
        do iGrid = 1, nGrids
           call dustDriver(grid3D(iGrid))
        end do
+       if (taskid==0) print*, '! mocassin: dustDriver done'
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)
 
+    ! set local diffuse ionisation field
+    if (Ldiffuse>0.) then
+       if (taskid==0) print*, '! mocassin: calling setLdiffuse'
+       do iGrid = 1, nGrids
+          call setLdiffuse(grid3D(iGrid))
+       end do
+       if (taskid==0) then
+          print*, '! mocassin: setLdiffuse done'
+       end if
+    end if
+
+
+
+    if (taskid==0) print*, '! mocassin: calling MCIterationDriver'    
     ! start the Monte Carlo simulation
     call MCIterationDriver(grid3D(1:nGrids))
+    if (taskid==0) print*, '! mocassin: MCIterationDriver done'    
 
     if (taskid ==  0) then
-       ! determine final statistics
-       if (lgGas) then
-          if (lg3DextinctionMap) then
-             call outputGas(grid3D(1:nGrids), extMapFile) 
-          else
-             call outputGas(grid3D(1:nGrids)) 
-          end if
-       end if
+        ! determine final statistics
+        if (lgGas) call outputGas(grid3D(1:nGrids))
     end if
 
     call mpi_barrier(mpi_comm_world, ierr)

@@ -35,6 +35,8 @@ module common_mod
     real            :: starttime      ! start time [sec]
 
     real            :: endtime        ! end time [sec]    
+    real            :: absInt         ! total number of absorption events
+    real            :: scaInt         ! total number of scattering events
 
     real            :: dTheta                  ! 
     real            :: dPhi                    ! 
@@ -210,6 +212,7 @@ module common_mod
         real, pointer :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
         real, pointer :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
         real, pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
+        real, pointer :: LdiffuseLoc(:)             ! loc luminosity of diffuse source [e36 erg/sec]
         real, pointer :: Ndust(:)                   ! number density for dust
 
         real, pointer :: xAxis(:)                   ! x-axis
@@ -285,7 +288,6 @@ module common_mod
 
     type(vector), pointer :: starPosition(:) ! ionising source(s) position
 
-    logical            :: lg3DextinctionMap! is 3D extinction to be accounted for?
     logical            :: lgAutoPackets    ! automatic increase of packets on the fly? 
     logical            :: lgTalk           ! talk on?
     logical            :: lgDfile          ! use an external density file?
@@ -307,12 +309,12 @@ module common_mod
 
     character(len=50)  :: gridList ! grid list file name
     character(len=50), pointer  :: abundanceFIle(:) ! abundance file names
+    character(len=50)           :: contDiffuse      ! shape of the diffuse ionising spectrum
     character(len=50), pointer  :: contShape(:)     ! continuumShape
     character(len=50), pointer  :: contShapeIn(:)   ! continuumShape
     character(len=50), pointer  :: spID(:)          ! input spectrum generator ID
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
-    character(len=50)  :: extMapFile       ! name of 3D extinction map file
     character(len=50)  :: MdMgFile         ! name of MdMg file
     character(len=50)  :: NdustFile        ! name of Ndust file    
     character(len=50)  :: Qfile            ! name of Qfile 
@@ -330,6 +332,8 @@ module common_mod
     integer            :: nElementsUsed    ! actual number of elements used
     integer, pointer   :: nPhotons(:)      ! # of packets to be used in the sim
     integer            :: nPhotonsTot      ! # of packets to be used in the sim
+    integer            :: nPhotonsDiffuse  ! # of packets to be used by the diffuse ionisation source
+    integer            :: nPhotonsDiffuseLoc! # of packets to be used by the diffuse ionisation source
     integer, dimension(maxGrids) &
                       &:: nxIn,nyIn, nzIn  ! x, y and z dimensions of the grids
     integer            :: nStars           ! number of ionising sources
@@ -349,6 +353,7 @@ module common_mod
     real               :: Hdensity         ! constant H density values (cm-^3)
     real               :: H0Start          ! initial guess at X(H0) for regions I and II
     real               :: Lphot            ! L of ionizing source [e36 phot/sec]
+    real               :: Ldiffuse         ! total luminosity of diffuse source [e36 erg/sec]
     real,pointer       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
     real               :: meanField        ! mean ionizing field to be used with plane parallel 
                                            ! geometry [erg/sec/cm^2]
@@ -367,7 +372,8 @@ module common_mod
     real               :: SEDfreq(2)       ! 
     real               :: TeStart          ! initial guess at Te for regions I and II
     real, pointer      :: deltaE(:)        ! energy carried by a single photon
-    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]
+    real               :: Tdiffuse         ! energy of diffuse ionising source [K]
+    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]    
     real, pointer      :: tStep(:)         ! time step for sb99 inputs [yrs]
     real               :: XHILimit         ! convergence limit on X(HI)
     

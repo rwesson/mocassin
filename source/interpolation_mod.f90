@@ -69,39 +69,6 @@ module interpolation_mod
         
     end subroutine locate
 
-    subroutine powerIntegral(y,x,nx,x1,x2,intout)
-      implicit none
-
-      real, intent(in)  :: y(*)
-      real, intent(in)  :: x(*)      
-      real, intent(out) :: intout      
-      real (kind=16)     :: delta,pow,cvar
-
-      integer, intent(in) :: nx, x1,x2      
-      integer :: ix
-
-      intout = 0.
-
-      do ix = x1, x2-1
-         if (y(ix)>0. .and. y(ix+1)>0.) then
-            pow = log(y(ix+1)/y(ix)) / log(x(ix+1)/x(ix))
-            if (log(x(ix+1)/x(ix)) == 0.) then
-               print*, '! powerIntegral:, insanity in x-array)'
-               stop
-            end if
-            if (x(ix) == 0.) then
-               print*, '! powerIntegral:, x-array members cannot have value 0.'
-               stop
-            end if
-         end if
-
-         cvar = y(ix) / x(ix)**pow  
-         delta = (x(ix+1)**(pow+1.)-x(ix)**(pow+1.))*cvar/(pow+1.)                  
-         intout = intout + delta
-
-      end do
-
-    end subroutine powerIntegral            
 
     ! this routine will map y(x) onto x_new and return y_new(x_new)
     ! mapping is carried out by means of linear interpolation

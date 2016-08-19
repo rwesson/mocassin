@@ -28,6 +28,8 @@ module dust_mod
       integer :: size ! size of MPI reducing string
       integer :: ios ! I/O error status
 
+      logical,save :: lgFirstDustEm=.true.
+
       ! allocate dust opacity arrays
 
       allocate(absOpacTmp(0:grid%nCells, 1:nbins), stat = err)
@@ -93,7 +95,10 @@ module dust_mod
       grid%scaOpac = scaOpacTmp
 
       ! calculate the dust emission integrals
-      call dustEmissionInt()
+      if (lgFirstDustEm) then
+         call dustEmissionInt()
+         lgFirstDustEm=.false.
+      end if
 
       lgDust = .true.
 

@@ -26,13 +26,13 @@ source4  = source/constants_mod.f90 source/vector_mod.f90 source/common_mod.f90 
 	source/update_mod.f90 \
 	source/output_mod.f90 source/iteration_mod.f90 source/mocassinPlot.f90 
  
-F90  = /moz/mpi/mpich-1.2.5.2/bin/mpif90
+F90  = mpif90
 LIBS =	-lm
-OPT1 = -O3
+OPT1 = -O3 
 OPT2 = -CB -g 
 
 mocassin:
-	$(F90) $(OPT1) -o mocassin $(source1) $(LIBS)
+	$(F90) $(OPT2) -o mocassin $(source1) $(LIBS)
 
 mocassinWarm:
 	$(F90) $(OPT1) -o mocassinWarm $(source2) $(LIBS) 

@@ -19,7 +19,7 @@ module continuum_mod
     real, save          :: normConstantErg = 0.    ! normalization constant (area beyond input spectrum)
     real, save          :: normConstantPhot= 0.    ! normalization constant (area beyond input spectrum)    
     real                :: correctionPhot
-    real,save :: RStar
+    real,save           :: RStar
                
     integer, parameter  :: maxLim = 1000000        ! max number of rows in the input spectrum file
     integer             :: nuP                     ! frequency pointer
@@ -40,6 +40,7 @@ module continuum_mod
         integer :: i, j, k, iStar, iloop     ! counters
         integer :: ios                       ! I/O error status
         integer :: numLam
+        integer :: star1
         integer, parameter :: sb99nuLim=1221
 
         integer,dimension(nbins) :: lamCount
@@ -55,7 +56,7 @@ module continuum_mod
         ios = 0
 
         lamCount=0
-
+        
         ! initialize arrays 
         allocate(inSpectrumErg(nbins), stat = err)
         if (err /= 0) then
@@ -67,16 +68,24 @@ module continuum_mod
             print*, "setContinuum: can't allocate grid memory"    
             stop    
         end if      
-        allocate(inSpectrumProbDen(nStars,nbins), stat = err)
+        allocate(inSpectrumProbDen(0:nStars,nbins), stat = err)
         if (err /= 0) then
             print*, "setContinuum: can't allocate grid memory"
             stop
         end if
 
+        inSpectrumProbDen = 0.
+
         ! find the Lyman limit
         call locate(nuArray, 1., lymanP)
 
-        do iStar=1, nStars
+        if (Ldiffuse >0.) then
+           star1 = 0
+        else
+           star1 = 1
+        end if
+
+        do iStar=star1, nStars
 
            ! initialise arrays
            enArray           = 0.
@@ -89,7 +98,7 @@ module continuum_mod
                  
            ! open file for reading
            close(12)
-           open(unit = 12, file=filein, status = 'old', position = 'rewind', iostat=err)
+           open(unit = 12, file=filein,  action="read", status = 'old', position = 'rewind', iostat=err)
 
            if (err /= 0) then     
 
@@ -314,6 +323,10 @@ module continuum_mod
            
         end if
 
+        if (Ldiffuse>0. .and. nPhotonsDiffuse>0 ) then
+           deltaE(0) = Ldiffuse/nPhotonsDiffuse
+        end if
+
         if (associated(inSpectrumErg)) deallocate(inSpectrumErg)
         if (associated(inSpectrumPhot)) deallocate(inSpectrumPhot)
 
@@ -449,6 +462,40 @@ module continuum_mod
         if (associated(inSpSumPhot)) deallocate(inSpSumPhot)
 
       end subroutine setProbDen
+
+      subroutine setLdiffuse(grid)
+        implicit none
+        
+        type(grid_type), intent(inout) :: grid
+
+        real    :: norm
+
+        integer :: iloc
+        
+        if (lgGas) then
+           norm = 0.
+           do iloc = 1, grid%nCells
+              norm = norm+grid%Hden(iloc)
+           end do
+           norm = Ldiffuse/norm
+           do iloc = 1, grid%nCells
+              grid%LdiffuseLoc(iloc) = norm*grid%Hden(iloc)
+           end do
+        else if (lgDust) then
+           norm = 0.
+           do iloc = 1, grid%nCells
+              norm = norm+grid%nDust(iloc)
+           end do
+           norm = Ldiffuse/norm
+           do iloc = 1, grid%nCells
+              grid%LdiffuseLoc(iloc) = norm*grid%nDust(iloc)
+           end do
+        else
+           print*, 'setLdiffuse: insanity - no dust or gas!'
+           stop
+        end if
+
+      end subroutine setLdiffuse
 
 end module continuum_mod
 

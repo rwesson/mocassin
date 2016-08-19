@@ -58,6 +58,7 @@ program MoCaSSiNplot
 
     logical         :: lgContinuum    ! 
 
+
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
@@ -95,7 +96,7 @@ program MoCaSSiNplot
     end do
 
     if (plot%lgFilter) then
-       open(unit=72, file=bandFile, status='old', position='rewind',iostat=ios)
+       open(unit=72, file=bandFile,  action="read",status='old', position='rewind',iostat=ios)
        if (ios /= 0) then
           print*, "! readPlot: can't open band file for reading: ", bandFile
           stop
@@ -129,7 +130,7 @@ program MoCaSSiNplot
     end if
     
     if (taskid == 0) then
-       open(unit=29, file='output/grid4.out', status='unknown', position='rewind',iostat=ios)
+       open(unit=29, file='output/grid4.out', status='unknown',  action="write",position='rewind',iostat=ios)
        if (ios /= 0) then
           print*, "! readPlot: can't open file for writing: output/grid4.out"
           stop
@@ -177,14 +178,15 @@ program MoCaSSiNplot
 
 
                          ! HI rec lines
-                         do iup = 3, 15
-                            do ilow = 2, min0(8,iup-1)
-                               
-                               iLine = iLine+1
+
+                         iLine = 0
+                         do ilow = 2, 8
+                            do iup = ilow+1, 30
                                
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & HIRecLines(iup,ilow)*HdenUsed*dV
+                               iLine = iLine+1
                                
                             end do
                          end do
@@ -340,7 +342,7 @@ program MoCaSSiNplot
        
     end if
        
-    open(unit=28, file='output/plot.out', status='unknown', position='rewind',iostat=ios)
+    open(unit=28, file='output/plot.out', status='unknown',  action="write",position='rewind',iostat=ios)
     if (ios /= 0) then
        print*, "! readPlot: can't open file for writing: output/plot.out"
        stop
@@ -438,7 +440,7 @@ program MoCaSSiNplot
         
 
         close(77)
-        open(unit=77, file=filename, status='old', position='rewind',iostat=ios)
+        open(unit=77, file=filename, status='old', position='rewind', action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! readPlot: can't open file for reading", filename
            stop
@@ -514,7 +516,7 @@ program MoCaSSiNplot
         freq                  = 0.
         code                  = 0
 
-        open(unit=77, file=filename, status='old', position='rewind',iostat=ios)
+        open(unit=77, file=filename, status='old', position='rewind', action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! readPlot: can't open file for reading", filename
            stop
@@ -631,7 +633,7 @@ program MoCaSSiNplot
 
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
-        open(unit = 120, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 120, file = "data/r1b0100.dat", status = "old", position = "rewind",  action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
            stop
@@ -652,7 +654,7 @@ program MoCaSSiNplot
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
-        open(unit = 130, file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 130, file = "data/r2b0100.dat", status = "old", position = "rewind", action="read", iostat=ios)
         if (ios /= 0) then
            print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
            stop
@@ -673,7 +675,7 @@ program MoCaSSiNplot
           
         ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
         ! Benjamin, Skillman and Smits ApJ514(1999)307
-        open(unit = 140, file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 140, file = "data/heIrecS.dat", status = "old", position = "rewind",  action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
            stop
@@ -699,7 +701,7 @@ program MoCaSSiNplot
         
         ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
         ! Benjamin, Skillman and Smits ApJ514(1999)307
-        open(unit = 150, file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
+        open(unit = 150, file = "data/heIrecT.dat", status = "old", position = "rewind",  action="read",iostat=ios)
         if (ios /= 0) then
            print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
            stop

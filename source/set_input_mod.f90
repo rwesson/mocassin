@@ -1,9 +1,12 @@
 ! Copyright (C) 2005 Barbara Ercolano 
-!
+! Changed: nuStepSize increased from 0.05 to 0.075 for high-energy-mocassin (nw2006)
+! 
 ! Version 2.02
 module set_input_mod
     use common_mod
     implicit none
+
+    character(len=50)   :: shapeDiffuse     ! diffuse spectrum shape
 
     contains
 
@@ -28,8 +31,7 @@ module set_input_mod
         logical             :: lgMultiStars=.false.
         
         ! set default values and set non oprional values to 0 or 0. or "zero"
-
-        lg3DextinctionMap = .false.       
+       
         lgRecombination = .false.
         lgAutoPackets = .false.
         lgMultiChemistry = .false.
@@ -50,7 +52,8 @@ module set_input_mod
         lg1D          = .false.
         lgDustScattering = .true.
         lgSymmetricXYZ= .false.
-        
+
+        nPhotonsDiffuse = 0        
         nStars        = 0
         nxIn(:)       = 0
         nyIn(:)       = 0
@@ -60,8 +63,6 @@ module set_input_mod
         nzIn(1)       = 30        
         maxIterateMC  = 30
         maxPhotons    = 0
-        minaQHeat     = 1.e-3
-        minConvQHeat  = 99.
         nbins         = 600        
         MdMgValue     = 0.
         MdMgFile      = "none"               
@@ -74,6 +75,8 @@ module set_input_mod
         Tmax           =700.
         nTbins         =300.
         lgWritePss     =.false.
+        minaQHeat     = 1.e-3
+        minConvQHeat  = 99.
 
         fillingFactor = 1.
         contCube      = -1.
@@ -86,9 +89,11 @@ module set_input_mod
         multiPhotoSources = "none"
         densityFile   = "none"
         dustFile      = "none"
-        extMapFile    = "none"
         gridList      = "none"
 
+        Ldiffuse      = 0. 
+        Tdiffuse      = 0.
+        shapeDiffuse  = "none"
         Hdensity      = 0.
         H0Start       = 3.e-5
         LPhot         = 0.
@@ -96,7 +101,7 @@ module set_input_mod
         NeStart       = 0.
         nuMax         = 15.
         nuMin         = 1.001e-5
-        nuStepSize    = 0.05
+        nuStepSize    = 0.075
         resLinesTransfer = 101.
         Rnx           = -1.
         Rny           = -1.
@@ -112,7 +117,7 @@ module set_input_mod
 
              close(10)
              open (unit = 10, file = in_file, status = "old", &
-                  &position="rewind",  iostat = ios)
+                  &position="rewind",  iostat = ios, action="read")
 
              if (ios==0) exit
  
@@ -134,11 +139,10 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
-            case ("3DextinctionMap") 
-               lg3DextinctionMap= .true.
+            case ("diffuseSource") 
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, extMapFile 
-               print*, keyword, extMapFile 
+               read(unit=10, fmt=*, iostat=ios) keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse
+               print*, keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse
             case ("traceHeating")
                lgTraceHeating = .true.
                print*, keyword, lgTraceHeating
@@ -263,10 +267,11 @@ module set_input_mod
             case ("contShape")
                 backspace 10
                 nstars=1
-                allocate(contShape(1))
-                allocate(contShapeIn(1))
-                allocate(spID(1))
-                allocate(tstep(1))
+                allocate(contShape(0:1))
+                allocate(contShapeIn(0:1))
+                allocate(spID(0:1))
+                allocate(tstep(0:1))
+                contShape = 'none'
                 read(unit=10, fmt=*, iostat=ios) keyword, contShape(1)
                 print*, keyword, contShape(1)
                 if (contShape(1) == 'blackbody') then
@@ -324,7 +329,7 @@ module set_input_mod
                 print*, keyword, NeStart
             case ("TStellar")
                 backspace 10
-                allocate(TStellar(1))
+                allocate(TStellar(0:1))
                 read(unit=10, fmt=*, iostat=ios) keyword, TStellar(1)
                 print*, keyword, TStellar(1)
             case ("convLimit")
@@ -451,7 +456,7 @@ module set_input_mod
                 stop
             end select
 
-        end do
+         end do
 
         close(10)
 
@@ -462,8 +467,19 @@ module set_input_mod
            stop
         else
            allocate(nPhotons(1))
-           allocate(deltaE(1))
+           allocate(deltaE(0:1))
            nPhotons(1)=nPhotonsTot
+
+           if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
+              deltaE(0) = Ldiffuse/nPhotonsDiffuse
+              contShape(0) = shapeDiffuse
+              if (contShape(0) == 'blackbody') then
+                 spID(0) = contShape(0)
+              else
+                 spID(0) = 'rauch'
+              end if
+           end if
+
            if (.not.associated(starPosition)) then
               allocate (starPosition(1))
               starPosition(1)%x=0.
@@ -544,13 +560,14 @@ module set_input_mod
            print*, "! readInput [warning]: plane ionizing field specified - cannot use&
                 & symmetricXYZ - removed."
            lgSymmetricXYZ = .false.
-        else if (TStellar(1) == 0.) then
+        else if (TStellar(1) == 0. .and. Tdiffuse==0.) then
             print*, "! readInput: TStellar missing from model parameter input file" 
             stop
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
             stop
-       else if (LPhot == 0. .and. LStar(1) == 0. .and. .not.lgPlaneIonization) then
+       else if (LPhot == 0. .and. LStar(1) == 0. .and. .not.lgPlaneIonization & 
+            & .and. Ldiffuse<=0.) then
             print*, "! readInput: LPhot and LStar missing from model parameter input file"
             stop
         else if (LPhot /= 0. .and. LStar(1) /= 0.) then 
@@ -563,7 +580,7 @@ module set_input_mod
             print*, "! readInput: invalid minConvergence input (must be between 0. and 100.) ", & 
                  &  in_file, minConvergence
             stop
-        else if (nPhotons(1) < 1) then
+        else if (nPhotons(1) < 0) then
             print*, "! readInput: invalid nPhotons in model parameter input &
                  & file", in_file, nPhotons
             stop
@@ -622,6 +639,8 @@ module set_input_mod
                 &be specified."
            stop
         end if
+
+        TStellar(0) = Tdiffuse
         
         contains
 
@@ -637,7 +656,7 @@ module set_input_mod
             
             close(17)
             open (unit = 17, file = filename, status = "old", &
-                 &position="rewind",  iostat = ios)
+                 &position="rewind",  iostat = ios, action="read")
             if (ios/=0) then
                print*, "! readGridList: can't open file for reading ", filename
                stop
@@ -665,7 +684,7 @@ module set_input_mod
 
 
         close(13)
-        open(file=infile, unit=13, iostat=ios)
+        open(file=infile, unit=13, iostat=ios, action="read")
         if (ios /= 0) then
            print*, "! setMultiPhotoSources: can't open ionising sources file", infile
            stop
@@ -675,14 +694,13 @@ module set_input_mod
         print*, "Multiple Ionising sources", nStars
         print*, "(i, Tstellar, Lstar, ContShape, Nphotons, position)"
 
-
-        allocate(deltaE(nStars))
-        allocate(spID(nStars))        
+        allocate(deltaE(0:nStars))
+        allocate(spID(0:nStars))        
         allocate(tStep(nStars))        
-        allocate(TStellar(nStars))        
+        allocate(TStellar(0:nStars))        
         allocate(Lstar(nStars))
-        allocate(ContShape(nStars))        
-        allocate(ContShapeIn(nStars))        
+        allocate(ContShape(0:nStars))        
+        allocate(ContShapeIn(0:nStars))        
         allocate(nPhotons(nStars))        
         allocate(starPosition(nStars))       
 
@@ -707,6 +725,16 @@ module set_input_mod
            deltaE(i) = Lstar(i)/nPhotons(i)
            print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i), deltaE(i)
         end do                
+
+        if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
+           deltaE(0) = Ldiffuse/nPhotonsDiffuse
+           contShape(0) = shapeDiffuse
+           if (contShape(0) == 'blackbody') then
+              spID(0) = contShape(0)
+           else
+              spID(0) = 'rauch'
+           end if
+        end if
 
       end subroutine setMultiPhotoSources
         
