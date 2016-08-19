@@ -545,7 +545,7 @@ module output_mod
                              recFlux = 0.
                              recLinesLambda = 0.
                              ! rec lines for OII
-                             call roii(recLinesLambda, recFlux,TeUsed, denIon)
+                             call roii(recLinesLambda, recFlux,TeUsed, NeUsed)
                              
                              do nrec = 1, 500 
                                 recLinesFlux(abFileUsed,1,nrec) = recLinesFlux(abFileUsed,1,nrec) + &
@@ -626,7 +626,7 @@ module output_mod
                                   & grid(iG)%elemAbun(abFileUsed,7)*HdenUsed
 
                              ! rec lines for NII 3-3
-                             call rnii(recLinesLambda, recFlux, TeUsed, denIon)
+                             call rnii(recLinesLambda, recFlux, TeUsed, NeUsed)
 
                              do nrec = 1, 500
                                 recLinesFlux(abFileUsed,5,nrec) = recLinesFlux(abFileUsed,5,nrec) + recFlux(nrec)*&
