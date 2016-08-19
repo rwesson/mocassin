@@ -17,8 +17,7 @@ module emission_mod
 
     ! units are [e-25erg/s/N_gas]
     double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines 
-    double precision, dimension(9)         :: HeIRecLinesS         ! emissivity from HeI sing rec lines
-    double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
+    double precision, dimension(34)        :: HeIRecLines          ! emissivity from HeI rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
 
     real                                :: BjumpTemp   ! 
@@ -849,7 +848,7 @@ module emission_mod
 
         ! local variables
         integer                    :: ios         ! I/O error status
-        integer                    :: i           ! counters
+        integer                    :: i, denint   ! counters
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
 
@@ -860,12 +859,14 @@ module emission_mod
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
         real                       :: T4          ! TeUsed/10000.
+        real                       :: x1, x2
 
-        real, dimension(9,3)       :: HeISingRead ! array reader for HeI sing rec lines
-        real, dimension(11,3)       :: HeITripRead ! array reader for HeI trip  rec lines  
+
+        T4 = TeUsed / 10000.
 
         ! do hydrogenic ions first
 
+         
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(94)
@@ -928,68 +929,31 @@ module emission_mod
 
         ! now do HeI
         
-        ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(96)
-        open(unit = 96,  action="read", file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
-            stop
+        if (grid%Hden(grid%active(ix,iy,iz)) <= 100.) then
+           denint=0
+        elseif (grid%Hden(grid%active(ix,iy,iz)) > 100. .and. grid%Hden(grid%active(ix,iy,iz)) <= 1.e4) then
+           denint=1
+        elseif (grid%Hden(grid%active(ix,iy,iz)) > 1.e4 .and. grid%Hden(grid%active(ix,iy,iz)) <= 1.e6) then
+            denint=2
+        elseif (grid%Hden(grid%active(ix,iy,iz)) > 1.e6) then
+           denint=3
         end if
-        do i = 1, 9
-            read(96, fmt=*) HeISingRead(i, :)
 
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 1)
-            else if (TeUsed >= 20000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) ) 
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
-
-        close(96)
-        
-        ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(97)
-        open(unit = 97,  action="read", file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
-            stop
+        ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        if (denint>0.and.denint<3) then
+           x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+           x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
+           HeIRecLines(i) = 10.**(log10(x1)+(log10(x2/x1))*log10(HdenUsed/(100.**denint))/2.)
+       elseif(denint==0) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
+        elseif(denint==3) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
         end if
-        do i = 1, 11
-            read(97, fmt=*) HeITripRead(i, :)
-
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesT(i) = HeITripRead(i, 1)
-            else if (TeUsed >= 20000) then
-                HeIRecLinesT(i) = HeITripRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) )
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
-
-        close(97)
-
-        HeIRecLinesS = HeIRecLinesS*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
-        HeIRecLinesT = HeIRecLinesT*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
-
-                                                   
+                              
     end subroutine RecLinesEmission
 
 
@@ -1011,7 +975,7 @@ module emission_mod
 
                  if (ion<nstages) then
                     call equilibrium(file_name=dataFile(elem, ion), &
-                         &ionDenUp=ionDenUsed(elementXref(elem),ion+1), Te=TeUsed,&
+                         &ionDenUp=ionDenUsed(elementXref(elem),ion+1)/ionDenUsed(elementXref(elem),ion), Te=TeUsed,&
                          &Ne=NeUsed, FlineEm=forbiddenLines(elem, ion,1:nForLevels, 1:nForLevels))
                  else
                     call equilibrium(file_name=dataFile(elem, ion), &
@@ -1286,12 +1250,8 @@ module emission_mod
             end do
         end do
         ! HeI singlets
-        do i = 1, 9
-            normRec = normRec+HeIRecLinesS(i)
-        end do
-        ! HeI triplets
-        do i = 1, 11
-            normRec = normRec+HeIRecLinesT(i)
+        do i = 1, 34
+            normRec = normRec+HeIRecLines(i)
         end do
 
         ! Sum  up energy in forbidden lines
@@ -1375,17 +1335,10 @@ module emission_mod
            end do
 
            ! HeI singlet recombination lines
-           do j = 1, 9
+           do j = 1, 34
               grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
-&                           HeIRecLinesS(j) / grid%totalLines(cellPUsed)
+&                           HeIRecLines(j) / grid%totalLines(cellPUsed)
               i = i+1 
-           end do
-
-           ! HeI triplet recombination lines
-           do j = 1, 11
-              grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
-&                           HeIRecLinesT(j) / grid%totalLines(cellPUsed)
-              i = i+1
            end do
 
            ! HeII recombination lines
@@ -2089,7 +2042,7 @@ module emission_mod
     double precision, &
          & pointer :: n(:), n2(:) ! level population arrays
 
-    
+    real                 :: a_r(4),a_d(5),z,br       !
     real,    pointer     :: alphaTotal(:)             ! maximum 100-level ion
     real                 :: a_fit, b_fit              !         
     real                 :: qomInt                    ! interpolated value of qom
@@ -2338,22 +2291,27 @@ module emission_mod
        g(i) = gx
        e(i) = ex
     end do
+
     ! read power law fit coefficients [e-13 cm^3/s]
     ! and calculate total recombination coefficient
     ! (direct + cascades)
     alphaTotal = 0.
     
     do j = 2, nLev
-       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
-       
+!       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
+       read(unit=11,fmt=*,iostat=ios) br,z,a_r(:),a_d(:) !a_fit, b_fit
        if (ios<0) then
           exit
        else
           alphaTotal(1) = 1.
        end if
                   
-       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
-       
+!       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
+       alphaTotal(j)=1.e-13*br*z*a_r(1)*(Te*1.e-4/z**2)**a_r(2)/(1.+a_r(3)*&
+            & (Te*1.e-4/Z**2)**a_r(4))+1.0e-12*br*(a_d(1)& 
+            & /(Te*1.e-4)+a_d(2)+a_d(3)*Te*1.e-4+a_d(4)*(Te*1.e-4)**2)*&
+            & (Te*1.e-4)**(-1.5)*exp(-a_d(5)*1.e4/Te)              
+
     end do
 
     ! close atomic data file 
@@ -2402,7 +2360,7 @@ module emission_mod
        do j = 1, nLev
           
           x(1,:) = 1.
-          y = 0.
+!          y = 0.
           y(1)   = 1.
           
           if (j /= i) then

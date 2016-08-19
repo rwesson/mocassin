@@ -137,7 +137,30 @@ module elements_mod
 
      end subroutine getOuterShell
  
-     
+     subroutine readHeIRecLines()
+       implicit none
+       
+       ! iden = 1 is 100cm^-2
+       ! iden = 2 is 10000cm^-2
+       ! iden = 3 is 1000000cm^-2
+       integer :: iline, iden, j
+
+       close(13)
+       open(file='data/HeIrecLines.dat', unit = 13, status='old')
+       
+       do iden = 1, 3
+          do iline = 1, 34
+             read(13,*) (HeIrecLineCoeff(iline,iden,j), j = 1, 4)
+!             HeIrecLineCoeff(iline,iden,1) = HeIrecLineCoeff(iline,iden,1)*4.*Pi*1.e25
+             HeIrecLineCoeff(iline,iden,1) = 8.*HeIrecLineCoeff(iline,iden,1)*1.e25 
+          end do
+       end do
+
+
+       close(13)
+     end subroutine readHeIRecLines
+
+
      ! this subroutine assignes continuum energy pointers 
      ! to shells for all atoms     
      subroutine setShells(nElem)
@@ -281,6 +304,8 @@ module elements_mod
          ! set data for hydrogen and helium atoms
          call makeHydro()  
          
+         call readHeIRecLines()
+
          ! set HlevNuP (pointer to the nth H level in nuArray)           
          do i = 1, nHlevel
             call locate(nuArray, HlevEn(i), HlevNuP(i))     

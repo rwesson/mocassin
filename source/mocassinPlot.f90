@@ -200,29 +200,14 @@ program MoCaSSiNplot
                             end do
                          end do
                       
-                         ! HeI singlets
-                         do l = 1, 9
-                            
-
-
+                         do l = 1, 34 
                             if (plot%lineNumber(plotNum) == iLine) &
                                  & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
-                                 & HeIRecLinesS(l)*HdenUsed*dV
+                                 & HeIRecLines(l)*HdenUsed*dV
                             iLine = iLine+1
 
                          end do
                          
-                         ! HeI triplets
-                         do l = 1, 11
-                            
-
-                            
-                            if (plot%lineNumber(plotNum) == iLine) &
-                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
-                                 & HeIRecLinesT(l)*HdenUsed*dV
-                            iLine = iLine+1
-
-                         end do
                          
                          ! HeII rec lines
                          do iup = 3, 30
@@ -608,7 +593,7 @@ print*, lineORcont, code, freq1, freq2
               if (lgDataAvailable(elem, ion)) then
 
                  if (ion<min(elem+1,nstages)) then
-                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1), &
+                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1)/ionDenUsed(elementXref(elem),ion), &
                          & TeUsed, NeUsed, flinePlot(elem,ion,:,:))
                  else
                     call equilibrium(dataFile(elem, ion), 0., &
@@ -633,126 +618,118 @@ print*, lineORcont, code, freq1, freq2
       end subroutine forLines
     
 
-      subroutine RecLinesEmission()
+    subroutine RecLinesEmission()
         implicit none
-          
+
         ! local variables
         integer                    :: ios         ! I/O error status
         integer                    :: i           ! counters
         integer                    :: ilow,&      ! pointer to lower level
-&                                      iup         ! pointer to upper level
-     
-        real                       :: aFit        ! general interpolation coeff
+&                                      iup        ! pointer to upper level
+        integer                    :: denint
 
-        real, dimension(9,3)       :: HeISingRead ! array reader for HeI sing rec lines
-        real, dimension(11,3)      :: HeITripRead ! array reader for HeI trip  rec lines  
-        
+        real                       :: A4471, A4922! HeI reference lines 
+        real                       :: aFit        ! general interpolation coeff
+        real                       :: C5876, C6678! collition exc. corrections
+        real                       :: Hbeta       ! Hbeta emission
+        real                       :: HeII4686    ! HeII 4686 emission
+        real                       :: Lalpha      ! Lalpha emission
+        real                       :: T4          ! TeUsed/10000.
+        real                       :: x1,x2
+
+        T4 = TeUsed / 10000.
+
         ! do hydrogenic ions first
 
+         
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
-        open(unit = 120, file = "data/r1b0100.dat", status = "old", position = "rewind",  action="read",iostat=ios)
+        close(94)
+        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
-           stop
+            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
+            stop
         end if
         do iup = 15, 3, -1
-           read(120, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
+            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
         end do
+
+        close(94)
+
+        ! calculate Hbeta 
+        ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        ! fits to Storey and Hummer MNRAS 272(1995)41
+        Hbeta = 10**(-0.870*log10Te + 3.57)
+        Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*grid%elemAbun(grid%abFileIndex(ix,iy,iz),1)
 
         ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
         do iup = 15, 3, -1
-           do ilow = 2, min0(8, iup-1)
+            do ilow = 2, min0(8, iup-1)
+                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
+            end do
+        end do    
 
-              HIRecLines(iup, ilow) = HIRecLines(iup, ilow)* &
-                   & NeUsed*ionDenUsed(elementXref(1),2)*grid3D(iG)%elemAbun(abFileIndexUsed,1)
-
-           end do
-        end do
+        ! add contribution of Lyman alpha 
+        ! fits to Storey and Hummer MNRAS 272(1995)41
+        Lalpha = 10**(-0.897*log10Te + 5.05) 
+        HIRecLines(15, 8) =HIRecLines(15, 8) + grid%elemAbun(grid%abFileIndex(ix,iy,iz),1)*&
+             & ionDenUsed(elementXref(1),2)*&
+             & NeUsed*Lalpha 
+        
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
-        open(unit = 130, file = "data/r2b0100.dat", status = "old", position = "rewind", action="read", iostat=ios)
+        close(95)
+        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
-           stop
+            print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
+            stop
         end if
         do iup = 30, 3, -1
-           read(130, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min0(16, iup-1))
+            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min0(16, iup-1))
         end do
 
-        ! calculate emission due to HeII recombination lines [e-25 ergs/s/cm^3]
+        close(95)
+
+        ! calculate HeII 4686 [E-25 ergs*cm^3/s]
+        HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)
+        HeII4686 = HeII4686*NeUsed*grid%elemAbun(grid%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),3)
+
+        ! calculate emission due to HeI recombination lines [e-25 ergs/s/cm^3]
         do iup = 30, 3, -1
-           do ilow = 2, min0(16, iup-1)
-              HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*&
-                   & NeUsed*ionDenUsed(elementXref(2),3)*grid3D(iG)%elemAbun(abFileIndexUsed,2)
-           end do
-        end do
+            do ilow = 2, min0(16, iup-1)
+                HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
+            end do
+        end do    
 
         ! now do HeI
-          
-        ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        open(unit = 140, file = "data/heIrecS.dat", status = "old", position = "rewind",  action="read",iostat=ios)
-        if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
-           stop
-        end if
-        do i = 1, 9
-           read(140, fmt=*) HeISingRead(i, :)
-           
-           ! interpolate over temperature (log10-log10 space)
-           if (TeUsed <= 5000.) then
-              HeIRecLinesS(i) = HeISingRead(i, 1)
-           else if (TeUsed >= 20000.) then
-              HeIRecLinesS(i) = HeISingRead(i, 3)
-           else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-              aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
-              HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-                   & aFit*log10(TeUsed/5000.) ) 
-           else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-              aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
-              HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-                   & aFit*log10(TeUsed/10000.) )
-           end if
-        end do
         
-        ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        open(unit = 150, file = "data/heIrecT.dat", status = "old", position = "rewind",  action="read",iostat=ios)
-        if (ios /= 0) then
-           print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
-           stop
+        if (grid%Hden(grid%active(ix,iy,iz)) <= 100.) then
+           denint=0
+        elseif (grid%Hden(grid%active(ix,iy,iz)) > 100. .and. grid%Hden(grid%active(ix,iy,iz)) <= 1.e4) then
+           denint=1
+        elseif (grid%Hden(grid%active(ix,iy,iz)) > 1.e4 .and. grid%Hden(grid%active(ix,iy,iz)) <= 1.e6) then
+            denint=2
+        elseif (grid%Hden(grid%active(ix,iy,iz)) > 1.e6) then
+           denint=3
         end if
-        do i = 1, 11
-           read(150, fmt=*) HeITripRead(i, :)
-             
-           ! interpolate over temperature (log10-log10 space)
-           if (TeUsed <= 5000.) then
-              HeIRecLinesT(i) = HeITripRead(i, 1)
-           else if (TeUsed >= 20000) then
-              HeIRecLinesT(i) = HeITripRead(i, 3)
-           else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-              aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
-              HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-                   & aFit*log10(TeUsed/5000.) )
-           else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-              aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
-              HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-                   & aFit*log10(TeUsed/10000.) )
-           end if
-        end do
 
-        ! close files
-        close(120)
-        close(130)
-        close(140)
-        close(150)
-
-        HeIRecLinesS = HeIRecLinesS*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),2)
-        HeIRecLinesT = HeIRecLinesT*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),2)
-
-      end subroutine RecLinesEmission
+        ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        if (denint>0.and.denint<3) then
+           x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+           x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
+           HeIRecLines(i) = 10.**(log10(x1)+(log10(x2/x1))*log10(HdenUsed/(100.**denint))/2.)
+        elseif(denint==0) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
+        elseif(denint==3) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
+        end if
+                                                   
+    end subroutine RecLinesEmission
 
 end program MoCaSSiNplot
    

@@ -1286,7 +1286,7 @@ module update_mod
                 if (lgDataAvailable(elem, ion)) then
                   
                    if (ion<nstages) then
-                      call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1), &
+                      call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1)/ionDenUsed(elementXref(elem),ion), &
                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
                    else
                       call equilibrium(dataFile(elem, ion), 0., &

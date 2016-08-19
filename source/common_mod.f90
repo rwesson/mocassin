@@ -5,7 +5,7 @@ module common_mod
     use constants_mod
     use vector_mod
     implicit none
-    save
+
 
     ! MPI variables
     integer, pointer :: lgConvergedTemp(:)  ! temporary converged? flag
@@ -27,6 +27,7 @@ module common_mod
     real, pointer   :: NeTemp(:)            ! temporary electron density array
     real, pointer   :: TeTemp(:)            ! temporary electron Temperature array    
    
+    real            :: HeIrecLineCoeff(34,3,4)
 
     integer         :: radio4p9GHzP   ! 
       

@@ -50,10 +50,10 @@ module output_mod
         real                        :: sumMC    ! sum of the relative MC intensities
         real                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
         real, parameter             :: hcryd = 2.1799153e-11!
-        real                        :: lamS(9)     ! wav in A of singlets
-        real                        :: lamT(11)    ! wav in A of triplets
 
         real, pointer               :: absTau(:), lambda(:)
+
+
 
 
 
@@ -71,8 +71,7 @@ module output_mod
         real, pointer         :: resLinesVol(:,:)    ! resonance lines volume emission
         real, pointer         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
         real, pointer         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
-        real, pointer         :: HeISVol(:,:)        ! analytical HeI singlets volume emissivity
-        real, pointer         :: HeITVol(:,:)        ! analytical HeI triplets volume emissivity
+        real, pointer         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
         real, pointer         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
         real, pointer         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
         real, pointer         :: lineLuminosity(:,:) ! MC luminosity in a given line
@@ -126,14 +125,9 @@ module output_mod
            print*, "! output mod: can't allocate array HIVol memory"
            stop
         end if
-        allocate(HeISVol(0:nAbComponents, 1:9), stat=err)
+        allocate(HeIVol(0:nAbComponents, 1:34), stat=err)
         if (err /= 0) then
-           print*, "! output mod: can't allocate array HeISVol memory"
-           stop
-        end if
-        allocate(HeITVol(0:nAbComponents, 1:11), stat=err)
-        if (err /= 0) then
-           print*, "! output mod: can't allocate array HeITVol memory"
+           print*, "! output mod: can't allocate array HeIVol memory"
            stop
         end if
         allocate(HeIIVol(0:nAbComponents, 3:30, 2:16), stat=err)
@@ -205,8 +199,7 @@ module output_mod
         g               = 0.
         HbetaVol        = 0.
         HIVol           = 0.
-        HeISVol         = 0.
-        HeITVol         = 0.
+        HeIVol         = 0.
         HeIIVol         = 0.
         elemAbundanceUsed = 0.
         ionDenUsed      = 0.
@@ -372,16 +365,8 @@ module output_mod
                           end do
 
                           ! He I recombination lines
-                          ! HeI singlets
-                          do l = 1, 9
-                             HeIRecLinesS(l) = HeIRecLinesS(l)*10.**& 
-                                  & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
-                             iCount = iCount + 1
-                          end do
-
-                          ! HeI triplets
-                          do l = 1, 11
-                             HeIRecLinesT(l) = HeIRecLinesT(l)*10.**&
+                          do l = 1, 34
+                             HeIRecLines(l) = HeIRecLines(l)*10.**& 
                                   & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
                              iCount = iCount + 1
                           end do
@@ -435,14 +420,9 @@ module output_mod
                           end do
                        end do
 
-                       ! HeI singlets
-                       HeISVol(abFileUsed,:) = HeISVol(abFileUsed,:) + HeIRecLinesS(:)*HdenUsed*dV
-                       HeISVol(0,:) = HeISVol(0,:) + HeIRecLinesS(:)*HdenUsed*dV
-
-
-                       ! HeI triplets
-                       HeITVol(abFileUsed,:) = HeITVol(abFileUsed,:) + HeIRecLinesT(:)*HdenUsed*dV
-                       HeITVol(0,:) = HeITVol(0,:) + HeIRecLinesT(:)*HdenUsed*dV
+                       ! HeI recombination lines
+                       HeIVol(abFileUsed,:) = HeIVol(abFileUsed,:) + HeIRecLines(:)*HdenUsed*dV
+                       HeIVol(0,:) = HeIVol(0,:) + HeIRecLines(:)*HdenUsed*dV
 
 
                        ! HeII rec lines
@@ -794,11 +774,9 @@ module output_mod
                  end do
               end do
 
-              ! HeI singlets
-              HeISVol(iAb,:) = HeISVol(iAb,:) / HbetaVol(iAb)
+              ! HeI 
+              HeIVol(iAb,:) = HeIVol(iAb,:) / HbetaVol(iAb)
 
-              ! HeI triplets
-              HeITVol(iAb,:) = HeITVol(iAb,:) / HbetaVol(iAb)
 
               ! HeII rec lines
               do iup = 3, 30
@@ -887,12 +865,10 @@ module output_mod
            write(10, *) "Line Ratios (Hbeta=1.) :               Analytical"
            write(10, *) "Hbeta [E36 erg/s]:     ",  HbetaVol(iAb)
            write(10, *)
-           write(10, *) "HeI 4471", HeITVol(iAb,6)
-           write(10, *) "HeI 4922", HeISVol(iAb,5)
-           write(10, *) "HeI 5876", HeITVol(iAb,8)
-           write(10, *) "HeI 6678", HeISVol(iAb,8)
-           write(10, *) "HeI 7065", HeITVol(iAb,9)
-           write(10, *)
+           write(10, *) "HeI"
+           do i = 1, 34
+              write(10, *) HeIrecLineCoeff(i,1,4), HeIVol(iAb,i)
+           end do
            write(10, *) "HeII 4686", HeIIVol(iAb,4,3)
            if (lgElementOn(7) .and. lgDataAvailable(7,2)) then
               write(10, *) 
@@ -972,9 +948,6 @@ module output_mod
            if (lgElementOn(8) .and. lgDataAvailable(8,3)) &
                 & write(10, *) "[OIII] (4959+5007)/4363 ", (forbVol(iAb,8,3,2,4)+forbVol(iAb,8,3,3,4))/&
                 &forbVol(iAb,8,3,4,5)
-           write(10, *) "HeI 5876/4471 ", HeITVol(iAb,8)/HeITVol(iAb,6)
-           write(10, *) "HeI 6678/4471 ", HeISVol(iAb,8)/HeITVol(iAb,6)
-           write(10, *)
 
            write(10, *)
            write(10, *)
@@ -1031,43 +1004,25 @@ module output_mod
            end do
 
            write(10, *)
-           write(10, *) "HeI singlets"
+           write(10, *) "HeI "
            write(10, *)
-           do l = 1, 9
+           do l = 1, 34
 
               if (lgDebug) then
                  if (lineLuminosity(iAb,iLine) > 0. ) then
-                    write(10, *) l,"            ", lamS(l), HeISVol(iAb,l), lineLuminosity(iAb,iLine), &
-                         & HeISVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
-                    sumAn = sumAn + HeISVol(iAb,l)
+                    write(10, *) l,"            ",  HeIVol(iAb,l),  lineLuminosity(iAb,iLine), &
+                         & HeIVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
+                    sumAn = sumAn + HeIVol(iAb,l)
                     sumMC = sumMC + lineLuminosity(iAb,iLine) 
                  else
-                    write(10, *) l,"            ", lamS(l), HeISVol(iAb,l), iLine
+                    write(10, *) l,"            ", HeIVol(iAb,l), iLine
                  end if
               else
-                 write(10, *) l,"            ", lamS(l), HeISVol(iAb,l), iLine
+                 write(10, *) l,"            ",  HeIVol(iAb,l), iLine
               end if
               iLine = iLine + 1
            end do
 
-           write(10, *)
-           write(10, *) "HeI triplets:"
-           do l = 1, 11
-
-              if (lgDebug) then
-                 if ( lineLuminosity(iAb,iLine) > 0. ) then
-                    write(10, *) l,"            ", lamT(l), HeITVol(iAb,l), lineLuminosity(iAb,iLine),&
-                         & HeITVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
-                    sumAn = sumAn + HeITVol(iAb,l)
-                    sumMC = sumMC + lineLuminosity(iAb,iLine)
-                 else
-                    write(10, *) l,"            ", lamT(l), HeITVol(iAb,l), iLine
-                 end if
-              else
-                 write(10, *) l,"            ", lamT(l), HeITVol(iAb,l), iLine
-              end if
-              iLine = iLine + 1
-           end do
               
            write(10, *)
            write(10, *) "HeII recombination lines:"
@@ -1473,8 +1428,7 @@ module output_mod
         if (associated(absTau)) deallocate(absTau)
         if (associated(lambda)) deallocate(lambda)
         if (associated(HIVol)) deallocate(HIVol)
-        if (associated(HeISVol)) deallocate(HeISVol)
-        if (associated(HeITVol)) deallocate(HeITVol)
+        if (associated(HeIVol)) deallocate(HeIVol)
         if (associated(HeIIVol)) deallocate(HeIIVol)
         if (associated(ionDenVol)) deallocate(ionDenVol)
         if (lgDebug) then
@@ -2050,7 +2004,7 @@ module output_mod
               if (lgDataAvailable(elem, ion)) then
 
                  if (ion<nstages) then
-                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem),ion+1), &
+                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem),ion+1)/ionDenUsed(elementXref(elem),ion), &
                          & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), wav(elem,ion,:,:))
                  else
                     call equilibrium(dataFile(elem, ion), 0., &
@@ -2084,26 +2038,29 @@ module output_mod
         integer                    :: i           ! counters
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
+        integer                    :: denint
 
         real                       :: A4471, A4922! HeI reference lines 
         real                       :: aFit        ! general interpolation coeff
         real                       :: C5876, C6678! collition exc. corrections
         real                       :: Hbeta       ! Hbeta emission
-        real                       :: hb          ! emissivity of H 4->2
-        real                       :: fh          ! emissivity of H
         real                       :: HeII4686    ! HeII 4686 emission
         real                       :: Lalpha      ! Lalpha emission
         real                       :: T4          ! TeUsed/10000.
+        real                       :: x1,x2
+        real                       :: hb          ! emissivity of H 4->2
+        real                       :: fh          ! emissivity of H
 
-        real, dimension(9,3)       :: HeISingRead ! array reader for HeI sing rec lines
-        real, dimension(11,3)       :: HeITripRead ! array reader for HeI trip  rec lines  
+
+        T4 = TeUsed / 10000.
 
         ! do hydrogenic ions first
 
+         
         ! read in HI recombination lines [e-25 ergs*cm^3/s] 
         ! (Storey and Hummer MNRAS 272(1995)41)
 !        close(94)
-!        open(unit = 94, file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
+!        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
 !        if (ios /= 0) then
 !            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
 !            stop
@@ -2113,6 +2070,19 @@ module output_mod
 !        end do
 
 !        close(94)
+
+        ! calculate Hbeta 
+        ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        ! fits to Storey and Hummer MNRAS 272(1995)41
+!        Hbeta = 10**(-0.870*log10Te + 3.57)
+!        Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
+
+        ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
+!        do iup = 15, 3, -1
+!            do ilow = 2, min0(8, iup-1)
+!                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
+!            end do
+!        end do    
 
         ! calculate Hbeta
         if (TeUsed > 26000.) then
@@ -2131,28 +2101,22 @@ module output_mod
            do iup = 30, ilow+1, -1
               call hlinex(iup,ilow,TeUsed,NeUsed,fh,2)              
               HIRecLines(iup, ilow) = (fh/hb)*Hbeta
-print*, iup,ilow,TeUsed,  HIRecLines(iup, ilow), fh,hb,hbeta
            enddo
         enddo
 
-        ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
-!        do iup = 15, 3, -1
-!            do ilow = 2, min0(8, iup-1)
-!                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
-!            end do
-!        end do    
 
         ! add contribution of Lyman alpha 
         ! fits to Storey and Hummer MNRAS 272(1995)41
         Lalpha = 10**(-0.897*log10Te + 5.05) 
-        HIRecLines(30, 8) =HIRecLines(30, 8) + elemAbundanceUsed(1)*ionDenUsed(elementXref(1),2)*&
+        HIRecLines(30, 8) =HIRecLines(30, 8) + elemAbundanceUsed(1)*&
+             & ionDenUsed(elementXref(1),2)*&
              & NeUsed*Lalpha 
         
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
         close(95)
-        open(unit = 95, file = "data/r2b0100.dat", status = "old", position = "rewind", action="read",iostat=ios)
+        open(unit = 95,  action="read", file = "data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
             print*, "! RecLinesEmission: can't open file: data/r2b0100.dat"
             stop
@@ -2162,7 +2126,6 @@ print*, iup,ilow,TeUsed,  HIRecLines(iup, ilow), fh,hb,hbeta
         end do
 
         close(95)
-
 
         ! calculate HeII 4686 [E-25 ergs*cm^3/s]
         HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)
@@ -2175,70 +2138,32 @@ print*, iup,ilow,TeUsed,  HIRecLines(iup, ilow), fh,hb,hbeta
             end do
         end do    
 
-
         ! now do HeI
         
-        ! read in HeI singlet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(96)
-        open(unit = 96, file = "data/heIrecS.dat", status = "old", position = "rewind", iostat=ios, action="read")
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecS.dat"
-            stop
+        if (HdenUsed <= 100.) then
+           denint=0
+        elseif (HdenUsed > 100. .and. HdenUsed <= 1.e4) then
+           denint=1
+        elseif (HdenUsed > 1.e4 .and. HdenUsed < 1.e6) then
+            denint=2
+        elseif (HdenUsed >= 1.e6) then
+           denint=3
         end if
-        do i = 1, 9
-            read(96, fmt=*) HeISingRead(i, :), lamS(i)
 
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 1)
-            else if (TeUsed >= 20000.) then
-                HeIRecLinesS(i) = HeISingRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) ) 
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
-                HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
-
-        close(96)
-        
-        ! read in HeI triplet recombination lines [e-25 ergs*cm^3/s]
-        ! Benjamin, Skillman and Smits ApJ514(1999)307
-        close(97)
-        open(unit = 97, file = "data/heIrecT.dat", status = "old", position = "rewind", iostat=ios, action="read")
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: data/heIrecT.dat"
-            stop
+        ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        if (denint>0.and.denint<3) then
+           x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
+           x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
+           HeIRecLines(i) = 10.**(log10(x1)+(log10(x2/x1))*log10(HdenUsed/(100.**denint))/2.)
+        elseif(denint==0) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
+        elseif(denint==3) then
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
         end if
-        do i = 1, 11
-            read(97, fmt=*) HeITripRead(i, :), lamT(i)
-
-            ! interpolate over temperature (log10-log10 space)
-            if (TeUsed <= 5000.) then
-                HeIRecLinesT(i) = HeITripRead(i, 1)
-            else if (TeUsed >= 20000) then
-                HeIRecLinesT(i) = HeITripRead(i, 3)
-            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
-                aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) )
-            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
-                aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
-                HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
-            end if
-        end do
-
-        close(97)
-
-        HeIRecLinesS = HeIRecLinesS*NeUsed*elemAbundanceUsed(2)*ionDenUsed(elementXref(2),2)
-        HeIRecLinesT = HeIRecLinesT*NeUsed*elemAbundanceUsed(2)*ionDenUsed(elementXref(2),2)
-
                                                    
     end subroutine RecLinesEmission
 
