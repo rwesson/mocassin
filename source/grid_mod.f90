@@ -47,7 +47,7 @@ module grid_mod
 
         print*, "in initCartesianGrid"
         
-        elemLabel = (/'H','He','Li','Be',' B',' C',' N',' O',' F','Ne','Na','Mg',&
+        elemLabel = (/' H','He','Li','Be',' B',' C',' N',' O',' F','Ne','Na','Mg',&
              &'Al','Si',' P',' S','Cl','Ar',' K','Ca','Sc','Ti',' V','Cr','Mn','Fe',&
              &'Co','Ni','Cu','Zn'/)
 
@@ -2171,8 +2171,10 @@ module grid_mod
         write(40, *) LStar, ' LStar'
         write(40, *) lgDebug, ' lgDebug'
         write(40, *) lgPlaneIonization, ' lgPlaneIonization'
-        write(40, *) nAbComponents, &
-             & (' "',trim(abundanceFile(i)),'" ', i=1,nAbComponents), ' nAbComponents'
+        write(40, *) nAbComponents, ' nAbComponents'
+        do i=1,nAbComponents
+           write(40,*) '"',abundanceFile(i),'"'
+        end do
         write(40, *) lgOutput, ' lgOutput'
         write(40, *) dxSlit,dySlit,' dxSlit,dySlit'
         write(40, *) lgDust, lgDustConstant, ' lgDust, lgDustConstant'
@@ -2184,8 +2186,10 @@ module grid_mod
         write(40, *) resLinesTransfer, 'resLinesTransfer'
         write(40, *) lgDustScattering, 'lgDustScattering'
         write(40, *) nAngleBins, ' nAngleBins'
-        write(40, *) viewPointTheta, ' inclination theta'
-        write(40, *) viewPointPhi, ' inclination theta'
+        if (nanglebins>0) then
+           write(40, *) viewPointTheta, ' inclination theta'
+           write(40, *) viewPointPhi, ' inclination theta'
+        end if
         write(40, *) contCube(1),contCube(2), ' continuumCube'
 
         ! close file
@@ -2349,15 +2353,15 @@ module grid_mod
       read(77, *) lgDebug
       read(77, *) lgPlaneIonization
       read(77, *) nAbComponents
-      backspace(77)
       allocate(abundanceFile(nAbComponents))
       if (nAbComponents>1) then
          lgMultiChemistry = .true.
-         read(unit=77, fmt=*) nAbComponents, (abundanceFile(j), j=1,nAbComponents)
       else
          lgMultiChemistry = .false.
-         read(unit=77, fmt=*) nAbComponents, abundanceFile(1)
       end if
+      do i = 1, nAbComponents
+         read(77, *) abundanceFile(i)
+      end do                  
       read(77, *) lgOutput
       read(77, *) dxSlit, dySlit
       read(77, *) lgDust, lgDustConstant
@@ -2369,19 +2373,21 @@ module grid_mod
       read(77, *) resLinesTransfer
       read(77, *) lgDustScattering
       read(77, *) nAngleBins
-      allocate(viewPointTheta(1:nAngleBins), stat=err)
-      if (err /= 0) then
-         print*, '! readInput: allocation error for viewPoint pointer'
-         stop
+      if (nanglebins>0) then
+         allocate(viewPointTheta(1:nAngleBins), stat=err)
+         if (err /= 0) then
+            print*, '! readInput: allocation error for viewPoint pointer'
+            stop
+         end if
+         allocate(viewPointPhi(1:nAngleBins), stat=err)
+         if (err /= 0) then
+            print*, '! readInput: allocation error for viewPoint pointer'
+            stop
+         end if
+         read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
+         read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
+         read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
       end if
-      allocate(viewPointPhi(1:nAngleBins), stat=err)
-      if (err /= 0) then
-         print*, '! readInput: allocation error for viewPoint pointer'
-         stop
-      end if
-      read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
-      read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
-      read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
       read(77, *) contCube(1),contCube(2)
 
       if (taskid == 0) then

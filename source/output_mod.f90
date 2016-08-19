@@ -786,20 +786,20 @@ module output_mod
               ! HI rec lines
               do iup = 3, 15
                  do ilow = 2, min0(8,iup-1)
-                    HIVol(iAb,iup,ilow) = HIVol(iAb,iup,ilow) /HbetaVol(0)
+                    HIVol(iAb,iup,ilow) = HIVol(iAb,iup,ilow) /HbetaVol(iAb)
                  end do
               end do
 
               ! HeI singlets
-              HeISVol(iAb,:) = HeISVol(iAb,:) / HbetaVol(0)
+              HeISVol(iAb,:) = HeISVol(iAb,:) / HbetaVol(iAb)
 
               ! HeI triplets
-              HeITVol(iAb,:) = HeITVol(iAb,:) / HbetaVol(0)
+              HeITVol(iAb,:) = HeITVol(iAb,:) / HbetaVol(iAb)
 
               ! HeII rec lines
               do iup = 3, 30
                  do ilow = 2, min0(16, iup-1)
-                    HeIIVol(iAb,iup,ilow) = HeIIVol(iAb,iup,ilow) / HbetaVol(0)
+                    HeIIVol(iAb,iup,ilow) = HeIIVol(iAb,iup,ilow) / HbetaVol(iAb)
                  end do
               end do
 
@@ -808,7 +808,7 @@ module output_mod
                  do ion = 1, min(elem+1, nstages)
                     do iup = 1, nForLevels
                        do ilow = 1, nForLevels
-                          forbVol(iAb,elem, ion, iup, ilow) = forbVol(iAb,elem, ion,iup,ilow) / HbetaVol(0)
+                          forbVol(iAb,elem, ion, iup, ilow) = forbVol(iAb,elem, ion,iup,ilow) / HbetaVol(iAb)
                        end do
                     end do
                  end do
@@ -816,11 +816,11 @@ module output_mod
 
               if (lgDust .and. convPercent>resLinesTransfer) then
                  do iRes = 1, nResLines
-                    resLinesVol(iAb, iRes) = resLinesVol(iAb, iRes)/HbetaVol(0)
-                    resLinesVolCorr(iAb, iRes) = resLinesVolCorr(iAb, iRes)/HbetaVol(0)
+                    resLinesVol(iAb, iRes) = resLinesVol(iAb, iRes)/HbetaVol(iAb)
+                    resLinesVolCorr(iAb, iRes) = resLinesVolCorr(iAb, iRes)/HbetaVol(iAb)
                  end do
 
-                 if (lgRecombination) recLinesFlux(iAb,:,:) = recLinesFlux(iAb,:,:)/HbetaVol(0)
+                 if (lgRecombination) recLinesFlux(iAb,:,:) = recLinesFlux(iAb,:,:)/HbetaVol(iAb)
               end if
 
            end if
@@ -833,7 +833,7 @@ module output_mod
                       & lineLuminosity(iAb,2)
               else
                  do l = 1, nLines
-                    lineLuminosity(iAb,l) = lineLuminosity(iAb,l)/HbetaLuminosity(0)
+                    lineLuminosity(iAb,l) = lineLuminosity(iAb,l)/HbetaLuminosity(iAb)
                  end do
               end if
            end if
