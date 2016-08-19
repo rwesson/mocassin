@@ -620,7 +620,7 @@ module set_input_mod
 
         integer                       :: ios, i, iloop,nSafeLimit=10000
 
-        real                          :: E0, nphotonsold
+        real                          :: E0, nphotonsold,Ltot
 
         close(13)
         open(file=infile, unit=13, iostat=ios)
@@ -651,31 +651,18 @@ module set_input_mod
            contShapeIn(i) = contShape(i)
         end do
 
-        ! find the number of packets to be emitted by each source 
-        ! (keep E0 constant throughout the sim)
-
-        ! initial guess at Nphotons(1) -> E0
-        Nphotons(1) = NphotonsTot/nStars
-        E0 = Lstar(1)/real(Nphotons(1))
-
-        do iloop = 1, nSafelimit
-
-           nphotonsold=Nphotons(1)
-           ! find Nphotons(i)
-           do i = 2, nStars
-              Nphotons(i) = int(Lstar(i)/E0)
-           end do
-        
-           ! impose the condition that NphotonsTot = Sum{Nphotons(i)} -> derive new Nphotons(1)        
-           Nphotons(1)=NphotonsTot
-           do i = 2, nStars
-              Nphotons(1) = Nphotons(1)-Nphotons(i)
-           end do
-        
-           if (abs(nPhotons(1)-nphotonsold)<1) exit
-
+        Ltot = 0.
+        do i = 1, nstars
+           Ltot = Ltot+ Lstar(i)
         end do
+        Ltot = Ltot
 
+        E0 = Ltot/NphotonsTot
+
+        do i = 1, nStars
+           Nphotons(i) = int(Lstar(i)/E0)
+        end do
+        
         do i = 1, nStars
            print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i)
         end do                
