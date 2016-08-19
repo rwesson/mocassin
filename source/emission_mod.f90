@@ -3146,7 +3146,7 @@ module emission_mod
          end do
 
          if (resLine(nL)%elem==0) then
-            print*, "! initResLines: illegal label -2 -"
+            print*, "! initResLines: illegal label -2 -", resLine(nl)%elem, nL
             stop
          end if
 

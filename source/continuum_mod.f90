@@ -470,7 +470,6 @@ module continuum_mod
            inSpectrumProbDen(iS,i) = inSpectrumProbDen(iS,i-1) + &
                 & inSpSumErg(i)*widFlx(i)/normConstantErg 
         end do
-
         maxp = 0.
         do i = 1, nbins
            if (inSpectrumProbDen(iS,i)>maxp) maxp = inSpectrumProbDen(iS,i)
@@ -478,6 +477,7 @@ module continuum_mod
 
         do i = 1, nbins
            if (inSpectrumProbDen(iS,i)>=maxp) inSpectrumProbDen(iS,i)=1.
+
         end do
 
         if (contShape(iS)=='blackbody') then

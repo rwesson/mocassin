@@ -262,7 +262,7 @@ program MoCaSSiNplot
                                                                                    
                                            if (plot%lineNumber(plotNum) == iLine) then 
                                               
-                                              print*, flinePlotLarge(iup,ilow), elem,ion,iup,ilow
+!                                              print*, flinePlotLarge(iup,ilow), elem,ion,iup,ilow
                                               plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                                    & flinePlotLarge(iup,ilow)*HdenUsed*dV
                                               
@@ -281,7 +281,7 @@ program MoCaSSiNplot
                                            
                                            if (plot%lineNumber(plotNum) == iLine) then 
                                               
-                                              print*, flinePlot(elem,ion,iup,ilow), elem,ion,iup,ilow
+!                                              print*, flinePlot(elem,ion,iup,ilow), elem,ion,iup,ilow
                                               plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                                    & flinePlot(elem,ion,iup,ilow)*HdenUsed*dV
                                               

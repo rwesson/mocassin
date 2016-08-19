@@ -1624,12 +1624,25 @@ print*, nsp, 'here!'
 
                              end do
                           end do
+
                        end if
 
                     end if
                  end do
               end do
            end do
+
+           if (lgDust .and. lginputDustMass) then
+           do i = 1, grid%nx
+              do j = 1, yTop
+                 do k = 1, grid%nz
+             grid%Ndust(grid%active(i,j,k)) = grid%Ndust(grid%active(i,j,k)) * inputDustMass / totalDustMass
+                 end do
+              end do
+           end do
+           totalDustMass = inputDustMass
+           end if
+
 
            if(associated(MdMg)) deallocate(MdMg)
 
@@ -2480,12 +2493,24 @@ print*, nsp, 'here!'
                                         & *grid(iG)%Ndust(grid(iG)%active(ix,iy,iz))*dV)
                                 end do
                              end do
+
                           end if
 
                        end if
                     end do
                  end do
               end do
+
+           if (lgDust .and. lginputDustMass) then
+           do ix = 1, grid(iG)%nx
+              do iy = 1, grid(iG)%ny
+                 do iz = 1, grid(iG)%nz
+        grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) = grid(iG)%Ndust(grid(iG)%active(ix,iy,iz)) * inputDustMass / totalDustMass
+                 end do
+              end do
+           end do
+           totalDustMass = inputDustMass
+           end if
 
               if (taskid == 0) then
               
@@ -2677,6 +2702,7 @@ print*, nsp, 'here!'
         if (lgDust) then
            write(50,*) ' '
            write(50,*) 'Total dust mass [1.e45 g]: ', totalDustMass
+           write(50,*) 'Total dust mass [Msol]: ', totalDustMass*5.028e11
            close(50)
         end if
 

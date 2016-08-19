@@ -547,6 +547,14 @@ module set_input_mod
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins, (viewPointTheta(j), viewPointPhi(j), j=1,nAngleBins)
                if (taskid==0) print*, keyword, nAngleBins, (viewPointTheta(j), viewPointPhi(j), j = 1, nAngleBins)
+            case ("dustMass")
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword, inputDustMass
+               lginputDustMass = .true.  
+               if (lgSymmetricXYZ) then
+                 inputDustMass = inputDustMass / 8
+               end if
+               inputDustMass = inputDustMass / 5.028e11
             case default
                 print*, "! readInput: invalid keyword in model parameter input file", &
 &                        in_file, keyword

@@ -814,7 +814,7 @@ module xSec_mod
         real, pointer :: da(:)
         real, pointer :: tmp1(:), tmp2(:), tmp3(:), agrain(:), tmp11(:,:), tmp22(:,:),&
              & tmp33(:,:), tmpWav(:), QaTemp(:), QsTemp(:), gTemp(:), temp1nbins(:,:), &
-             & temp2nbins(:,:), temp3nbins(:,:)
+             & temp2nbins(:,:), temp3nbins(:,:), norm(:)
         real, pointer :: wav(:) ! wavelength in [um]
         real, pointer :: gCos(:,:,:) ! phase function parameter
         real, pointer :: Cabs(:,:,:) ! abs cross-section [um^2] for each grain species and size
@@ -840,6 +840,7 @@ module xSec_mod
         print*, 'in makeDustXSec'
 
         allocate(gSca(nbins))
+        allocate(norm(nbins))
 
 
         allocate(dustComPoint(nDustComponents))
@@ -995,10 +996,12 @@ module xSec_mod
         normWeight=  0.
         do ai = 1, nSizes
            normWeight = normWeight+grainWeight(ai)*da(ai) 
+!!!           normWeight = normWeight+grainWeight(ai) 
         end do
         if (nSizes>1) then
            do ai = 1, nSizes
               grainWeight(ai) = (grainWeight(ai)*da(ai))/normWeight
+!!!              grainWeight(ai) = (grainWeight(ai))/normWeight
               if (.not.grainWeight(ai)>=0.) then
                  print*, '! makeDustXSec : Invalid grain weight ', grainWeight(ai), ai
                  stop
@@ -1115,7 +1118,7 @@ module xSec_mod
 
                     allocate (Gcos(1:nSpecies,0:nSizes,1:nbins), stat=err)
                     if (err/=0) then
-                       print*, "! makeDustXsec: error allocation memory for Csca array"
+                       print*, "! makeDustXsec: error allocation memory for Gcos array"
                        stop
                     end if
                     allocate (Csca(1:nSpecies,0:nSizes,1:nbins), stat=err)
@@ -1452,8 +1455,8 @@ module xSec_mod
            print*, ""
         
            ! calculate cross sections [um^2]        
-           ! combine individual species/sizes cross-sections into total cross-section for
-           ! the grain mixture
+           ! combine individual species/sizes cross-sections into total 
+           ! cross-section for the grain mixture
            do i = 1, nbins
               do nSpec = 1, nSpeciesPart(icomp)
                  do ai = 1, nSizes
@@ -1513,6 +1516,7 @@ module xSec_mod
            if (associated(CTabs)) deallocate(CTabs)
 
            gSca = 0.
+           norm = 0.
            do n = 1, nSpeciesPart(icomp)
               do i = 1, nbins
                  do ai = 1, nSizes
@@ -1520,12 +1524,22 @@ module xSec_mod
                          & absOpacSpecies(dustComPoint(icomp)-1+n, i) &
                          & + xSecArrayTemp(dustAbsXsecP(dustComPoint(icomp)-1+n,ai)+i-1)*&
                          & grainWeight(ai) 
-                    gSca(i) = gSca(i)+gCos(n,ai,i)*grainWeight(ai)*&
-                         &grainAbun(icomp, n)                 
+!                    gSca(i) = gSca(i)+gCos(n,ai,i)*grainWeight(ai)*&
+!                         &grainAbun(icomp, n)                 
+                    gSca(i) = gSca(i)+gCos(n,ai,i)*Pi*grainRadius(ai)**2*&
+                         & grainWeight(ai)*grainAbun(icomp, n)
+                    norm(i) = norm(i) + Pi*grainRadius(ai)**2*&
+                         & grainWeight(ai)*grainAbun(icomp, n)
                    
                  end do
               end do
            end do
+!           print*,' '
+!           print*,'Dust-grain anisotropy parameter g'
+           do i = 1, nbins
+              gSca(i)=gSca(i)/norm(i)
+!              write(6,'(i5,2es12.4)')i,c/(nuArray(i)*fr1Ryd)*1.e4,gSca(i)
+           enddo
 
         end do
 
