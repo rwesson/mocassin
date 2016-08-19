@@ -73,7 +73,7 @@ module set_input_mod
 
         ! qheat
         Tmax           =700.
-        nTbins         =300.
+        nTbins         =300
         lgWritePss     =.false.
         minaQHeat     = 1.e-3
         minConvQHeat  = 99.

@@ -151,8 +151,7 @@ module elements_mod
        do iden = 1, 3
           do iline = 1, 34
              read(13,*) (HeIrecLineCoeff(iline,iden,j), j = 1, 4)
-!             HeIrecLineCoeff(iline,iden,1) = HeIrecLineCoeff(iline,iden,1)*4.*Pi*1.e25
-             HeIrecLineCoeff(iline,iden,1) = 8.*HeIrecLineCoeff(iline,iden,1)*1.e25 
+             HeIrecLineCoeff(iline,iden,1) = HeIrecLineCoeff(iline,iden,1)*1.e25
           end do
        end do
 
