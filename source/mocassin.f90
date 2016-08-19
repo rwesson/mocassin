@@ -25,7 +25,7 @@
 
 !  
 ! MoCaSSiN = MOnte CArlo SImulationS of Nebulae 
-! Version 2.0
+! Version 2.02
 ! this is the main driver of the simulation
 !  
 program MoCaSSiN

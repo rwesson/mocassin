@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.0
+! Version 2.02
 module interpolation_mod
     contains
  

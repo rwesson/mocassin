@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module grid_mod
 
     use common_mod             ! common variables
@@ -914,6 +914,18 @@ module grid_mod
                  stop
               end if
               rho=0.
+              allocate(grainVn(1:nSpecies), stat = err)
+              if (err /= 0) then
+                 print*, "! setMotherGrid: can't allocate grainVn memory"
+                 stop
+              end if
+              grainVn=0.
+              allocate(MsurfAtom(1:nSpecies), stat = err)
+              if (err /= 0) then
+                 print*, "! setMotherGrid: can't allocate surfAtom memory"
+                 stop
+              end if
+              MsurfAtom=0
 
               do i = 1, nSpecies
                  read(13,*) extFile
@@ -922,7 +934,7 @@ module grid_mod
                     print*, "! setMotherGrid: can't open file ", extFile
                     stop
                  end if
-                 read(14,*) readChar, readReal, rho(i)
+                 read(14,*) readChar, readReal, rho(i), grainVn(i), MsurfAtom(i)
                  close(14)
               end do
               close(13)
@@ -1054,6 +1066,14 @@ module grid_mod
           end do
 
           ! allocate grid arrays
+          if (lgGas .and. lgDust .and. lgPhotoelectric) then
+             allocate(grid%JPEots(1:grid%nCells, 1:nbins), stat = err)
+             if (err /= 0) then
+                print*, "! setMotherGrid: can't allocate JPEots memory"
+                stop
+             end if
+             grid%JPEots=0
+          end if
 
           if (lgGas) then
 
@@ -2222,6 +2242,8 @@ module grid_mod
            write(40, *) viewPointPhi, ' inclination theta'
         end if
         write(40, *) contCube(1),contCube(2), ' continuumCube'
+        write(40, *) lgPhotoelectric, ' lgPhotoelectric'
+        write(40, *) lgTraceHeating, ' lgTraceHeating'
 
         ! close file
         close(40)
@@ -2443,6 +2465,8 @@ module grid_mod
          read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
       end if
       read(77, *) contCube(1),contCube(2)
+      read(77, *) lgPhotoelectric
+      read(77, *) lgTraceHeating
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -2475,6 +2499,9 @@ module grid_mod
          print*,  lgDustScattering
          print*,  nAngleBins
          print*,  contCube(1),contCube(2), 'continuumCube'
+         print*,  lgPhotoelectric, ' lgPhotoelectric'
+         print*,  lgTraceHeating, ' lgTraceHeating'
+
       end if
       close(77)
          

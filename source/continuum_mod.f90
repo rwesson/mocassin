@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module continuum_mod
     use constants_mod
     use common_mod

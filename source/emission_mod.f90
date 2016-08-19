@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module emission_mod
     use constants_mod
     use common_mod
@@ -9,13 +9,6 @@ module emission_mod
     use xSec_mod
 
     type(resLine_type), pointer         :: resLine(:)  ! resonant lines
-
-    real                                :: abFileUsed  ! abundance file index used
-    real                                :: BjumpTemp   ! 
-    real                                :: HbetaProb   ! probability of Hbeta
-    real                                :: log10Ne     ! log10(Ne) at this cell
-    real                                :: log10Te     ! log10(Te) at this cell
-    real                                :: sqrTeUsed   ! sqr(Te) at this cell
 
     ! units are [e-40erg/cm^3/s/Hz]
     double precision, pointer :: emissionHI(:)                     ! HI continuum emission coefficient 
@@ -30,8 +23,14 @@ module emission_mod
     double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
 
-    integer                                :: cellPUsed   !  cell index
+    real                                :: BjumpTemp   ! 
+    real                                :: HbetaProb   ! probability of Hbeta
+    real                                :: log10Ne     ! log10(Ne) at this cell
+    real                                :: log10Te     ! log10(Te) at this cell
+    real                                :: sqrTeUsed   ! sqr(Te) at this cell
 
+    integer                             :: abFileUsed  ! abundance file index used
+    integer                             :: cellPUsed   !  cell index
 
     contains
 
@@ -47,7 +46,7 @@ module emission_mod
         type(grid_type)                :: grid
 
         ! local variables
-
+        integer :: ncutoff= 0                ! see clrate
         integer :: err                       ! allocation error status
         integer :: i, n                      ! counters
 
@@ -172,6 +171,7 @@ module emission_mod
         twoPhotHeII    = 0.
         ffCoeff1       = 0.
         ffCoeff2       = 0.
+
 
         ! calculates the H, He and heavy ions f-b and f-f emission
         ! coefficients
@@ -1040,6 +1040,10 @@ module emission_mod
         implicit none
 
         ! local variables
+
+        real (kind=8)     :: tg
+        real(kind=8),dimension(nTbins) :: Tspike,Pspike
+
         real              :: A4922             ! reference line intensity for HeI Lyman series
         real              :: aFit              ! general calculations component
         real              :: alpha2tS          ! effective rec coeff to the 2s trip HeI
@@ -1055,6 +1059,7 @@ module emission_mod
         real              :: normHeI           !                            HeI
         real              :: normHeII          !                            HeII
         real              :: normRec           !                            rec. lines
+        real              :: treal
         real              :: T4                ! TeUsed/10000.
 
         integer, parameter:: NHeIILyman = 4     ! Number of HeII Lym lines included 
@@ -1074,7 +1079,7 @@ module emission_mod
         integer           :: i,iup,ilow,j       ! counters       
         integer           :: ios                ! I/O error status
         integer           :: nuP                ! frequency pointer in nuArray
-        integer           :: nS, ai, freq       ! dust counters
+        integer           :: nS, ai, freq, iT   ! dust counters
 
         character(len=50) :: cShapeLoc
         
@@ -1098,7 +1103,6 @@ module emission_mod
             print*, "! setDiffusePDF: can't allocate recPDF array memory"
             stop  
         end if
-
 
 
         ! assign pointers for the He line photons
@@ -1197,22 +1201,55 @@ module emission_mod
            end if
 
            sumDiffuseDust = 0.
-           normDust       = 0.
+           normDust       = 0.           
            do ai = 1, nSizes                 
               do nS = 1, nSpecies
 
                  if (grid%Tdust(nS,ai,cellPUsed)<TdustSublime(nS)) then
 
-                    do freq = 1, nbins 
+                    if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
+                         & convPercent>minConvQheat .and. nIterateMC>1) then
 
-                       bb = getFlux(nuArray(freq), grid%Tdust(nS,ai,cellPUsed), cShapeLoc)                  
-                       sumDiffuseDust(freq) = sumDiffuseDust(freq) + &
-                            &  xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
-                            & grainWeight(ai)*grainAbun(nS)
-                       normDust = normDust+xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
-                            & grainWeight(ai)*grainAbun(nS)
-                    end do
+                       tg =  grid%Tdust(nS,ai,cellPused)
+                       Tspike=0.
+                       Pspike=0.
 
+                       call qHeat(nS, ai,tg,Tspike,Pspike)                                                          
+
+                       if (lgWritePss .and. taskid==0) then
+                          write(89, *) '              ix iy iz cellp nSpecies aRadius Teq'
+                          write(89, *)  ix, iy, iz, cellpUsed, ns, grainRadius(ai), tg
+                          write(89, *) '              i Tspike(i) Pspike(i)'
+                          do iT = 1, nTbins
+                             write(89, *) it, Tspike(it), Pspike(it) 
+                          end do
+                          write(89, *) 'Tmean: ', tg
+                          write(89, *) ' '
+                       end if
+
+                       do freq = 1, nbins 
+                          do iT=1,nTbins
+                             treal = Tspike(iT)
+                             bb = getFlux(nuArray(freq), treal, cShapeLoc)                     
+                             sumDiffuseDust(freq) = sumDiffuseDust(freq) + &
+                                  &  xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
+                                  & grainWeight(ai)*grainAbun(nS)*Pspike(iT)
+                             normDust = normDust+xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
+                                  & grainWeight(ai)*grainAbun(nS)*Pspike(iT)
+                          end do
+                       end do
+
+                    else
+
+                       do freq = 1, nbins 
+                          bb = getFlux(nuArray(freq), grid%Tdust(nS,ai,cellPUsed), cShapeLoc)                  
+                          sumDiffuseDust(freq) = sumDiffuseDust(freq) + &
+                               &  xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
+                               & grainWeight(ai)*grainAbun(nS)
+                          normDust = normDust+xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
+                               & grainWeight(ai)*grainAbun(nS)
+                       end do
+                    end if
                  end if
 
               end do
@@ -1403,586 +1440,1108 @@ module emission_mod
 
     end subroutine setDiffusePDF  
 
-
     subroutine setDustPDF()
       implicit none
 
-      real :: bb
+      real :: bb,treal
+      real (kind=8) :: tg
+      real(kind=8),dimension(nTbins) :: Tspike,Pspike
 
-      integer :: i, n, ai ! counters
+      integer :: i, n, ai, iT ! counters
 
       character(len=50) :: cShapeLoc
+
+      Tspike=0.
+      Pspike=0.
 
       cShapeLoc = 'blackbody'
 
       grid%dustPDF(grid%active(ix,iy,iz),:)=0.
-
       do n = 1, nSpecies
          do ai = 1, nSizes
 
-            if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. &
-                 & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
+            if (grid%Tdust(n,ai,cellPUsed) >0. .and. & 
+                 & grid%Tdust(n,ai,cellPused)<TdustSublime(n)) then
+               
+               if (lgQHeat .and. grainRadius(ai)<minaQHeat .and. & 
+                    & convPercent>minConvQheat.and. nIterateMC>1) then
+                  
+                  tg =  grid%Tdust(n,ai,cellPused)
+                  call qHeat(n, ai,tg,Tspike,Pspike)                                    
+                  
+                  do iT = 1, nTbins
+                     treal = Tspike(iT)
+                     bb = getFlux(nuArray(1), treal, cShapeLoc)
+                     grid%dustPDF(cellPUsed, 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
+                          & grainWeight(ai)*grainAbun(n)*Pspike(iT)                     
+                  end do
+                  
+               else
+                  
+                  treal = grid%Tdust(n,ai,cellPused)
+                  bb = getFlux(nuArray(1), treal, cShapeLoc)
+                  grid%dustPDF(cellPused, 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
+                       & grainWeight(ai)*grainAbun(n)
+               end if
 
-               bb = getFlux(nuArray(1), grid%Tdust(n,ai,grid%active(ix,iy,iz)), cShapeLoc)
-               grid%dustPDF(grid%active(ix,iy,iz), 1) = grid%dustPDF(grid%active(ix,iy,iz), 1)+&
-                    & xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
-                    & grainWeight(ai)*grainAbun(n)
 
+               do i = 2,nbins
+                  
+                  if (lgQHeat .and. grainRadius(ai)<minaQHeat .and.& 
+                    & convPercent>minConvQheat .and. nIterateMC>1) then
+                     
+                     do iT=1,nTbins
+                        treal = Tspike(iT)
+                        bb = getFlux(nuArray(i), treal, cShapeLoc)                     
+                        grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
+                             &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*& 
+                             & grainWeight(ai)*grainAbun(n)*Pspike(iT)
+                     end do
+                  
+                  else
+                     
+                     treal = grid%Tdust(n,ai,cellPused)
+                     bb = getFlux(nuArray(i), treal, cShapeLoc)
+                     grid%dustPDF(cellPused,i) = grid%dustPDF(cellPused,i-1) + &
+                          &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*& 
+                          & grainWeight(ai)*grainAbun(n)
+                     
+                  end if
+                  
+               end do
+               
             end if
          end do
-      end do
-
-
-      do i = 2, nbins
-         do n = 1, nSpecies
-            do ai = 1, nSizes
-               if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. &
-                    & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
-
-                  bb = getFlux(nuArray(i), grid%Tdust(n,ai,grid%active(ix,iy,iz)), cShapeLoc)
-                  grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i) + &
-                       &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*grainWeight(ai)*grainAbun(n)
-
-               end if
-            end do
-         end do
-      end do
-
-
-      do i=2, nbins
-         grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i-1) + &
-              grid%dustPDF(grid%active(ix,iy,iz),i)
       end do
 
       ! normalise
       do i = 1, nbins
-
-         if (grid%dustPDF(grid%active(ix,iy,iz),nbins)>0.) grid%dustPDF(grid%active(ix,iy,iz),i) = &
-              & grid%dustPDF(grid%active(ix,iy,iz),i)/grid%dustPDF(grid%active(ix,iy,iz),nbins)
-
+         
+         if (grid%dustPDF(cellPused,nbins)>0.) grid%dustPDF(cellPused,i) = &
+              & grid%dustPDF(cellPUsed,i)/grid%dustPDF(cellPUsed,nbins)
+         
       end do
 
+      grid%dustPDF(cellPused,nbins) = 1.
 
     end subroutine setDustPDF
 
 
-    end subroutine emissionDriver
+    ! calculates the quantum heating according to 
+    ! guhathakurta & draine (G&D, 1989) ApJ 345, 230
+    ! adapted from a program originally written by 
+    ! R. Sylvester
+    subroutine qHeat(ns,na,tg,temp,pss)
+      implicit none
 
-    subroutine equilibrium(file_name, ionDenUp, Te, Ne, fLineEm, wav)
-        implicit none
+      real ::  tbase
+      integer, intent(in) :: ns, na
+      integer             :: i,j,ii,if
+      integer             :: wlp,wllp,wlsp,natom
+      
+      character(len=1)    :: sorc
+      
+      real(kind=8), dimension(nTbins,nTbins) :: A, B
+      real(kind=8), intent(inout) :: tg
+      real(kind=8), intent(inout) :: temp(nTbins),pss(nTbins) 
+      real(kind=8)                :: lambda(nbins), sQabs(nbins),& 
+           & temp1(nbins),temp2(nbins)
+      real(kind=8)                :: U(nTbins),dU(nTbins)
+      real(kind=8)                :: mgrain,mdUdt,ch
+      real(kind=8)                :: nu,nuh,nul !freq [ryd]
+      real(kind=8)                :: const1, radField(nbins),hc,wlim
+      real(kind=8)                :: qHeatTemp,X(nTbins)
+      real(kind=8)                :: UiTrun,sumX, sumBx
+      real(kind=8)                :: wl,wll,wls
+      real(kind=8)                :: qint,qint1,qint2,delwav
+      
+      real                        :: realarr(nbins),realvar
+      integer :: ifreq
+      character(len=50) :: chvarloc
 
-        character(len = *), &
-&          intent(in)  :: file_name   ! ionic data file name
+     
+      ! radiation field at this location in Flambdas
+      if (lgDebug) then
+         radField = grid%Jste(cellPUsed,:) + grid%Jdif(cellPUsed,:)
+      else
+         radField = grid%Jste(cellPUsed,:)
+      end if
 
-        real, intent(in) &
-&                      :: Te, &       ! electron temperature [K]
-&                         Ne, &       ! electron density [cm^-3]
-&                         ionDenUp    ! ion density of the upper ion stage 
+      do ifreq = 1, nbins
+         radField(ifreq) = radField(ifreq)/(widflx(ifreq)*fr1ryd)
+ 
+        temp1(ifreq) = (radField(ifreq)* (nuArray(ifreq)*fr1Ryd)**2.)/(c)
+         temp2(ifreq) = xSecArray(dustAbsXSecP(ns,na)+ifreq-1)
+      end do
+      do ifreq=1, nbins
+         radField(ifreq) = temp1(nbins-ifreq+1)
+         lambda(ifreq) = c/(nuArray(nbins-ifreq+1)*fr1Ryd)
+         sQabs(ifreq) = temp2(nbins-ifreq+1)
+      end do
+      
 
-        double precision, dimension(nForLevels,nForLevels), &
-&          intent(out) :: fLineEm     ! forbidden line emissivity
+      const1 = (hPlanck*fr1Ryd)
+      hc = hPlanck*c
 
-        double precision, dimension(nForLevels,nForLevels), &
-&          intent(out), optional :: wav         ! wavelength of transition [A]
+      if (grainRadius(na) > minaQHeat) then
+         temp(1)=tg
+         pss(1) = 1.
+         do i = 2, nTbins
+            temp(i)=0.
+            pss(i) = 0.
+         end do
+         return
+      end if
 
-        ! local variables 
-
-        integer  :: gx               ! stat weight reader  
-        integer  :: i, j, k, l, iT   ! counters/indeces
-        integer  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
-        integer  :: ios              ! I/O error status
-        integer  :: nLev             ! number of levels in atomic data file
-        integer  :: numLines         ! number of lines for atomic data refernce
-
-       integer  :: nTemp            ! number of temperature points in atomic data file        
-        integer  :: err              ! allocation error status
-
-        integer, parameter :: safeLim = 10000 ! loop safety limit
-
-        integer, pointer :: g(:)              ! statistical weight array
-
-        integer, dimension(2) :: ilow, &      ! lower index
-&                                 iup          ! upper index
-
-        character(len = 20), pointer :: &
-&                                      label(:)! labels array
-        character(len = 75) :: text  ! lines of text
-
-        real                 :: alphaTotal(100)           ! maximum 100-level ion
-        real                 :: a_fit, b_fit              !         
-        double precision     :: ax, ex                    ! readers
-        double precision     :: constant                  ! calculations constant 
-        double precision     :: delTeK                    ! Boltzmann exponent
-        double precision     :: expFac                    ! calculations factor
-        double precision     :: Eji                       ! energy between levels j and i
-        real       :: qomInt                    ! interpolated value of qom
-        double precision       :: qx                        ! reader
-        double precision   :: sumN                      ! normalization factor for populations
-        double precision        :: sqrTe                     ! sqrt(Te)
-        double precision    :: value                     ! general calculations value
-
-        double precision, pointer          :: a(:,:)      ! transition rates array
-        double precision, pointer          :: cs(:,:)     ! collisional strengths array
-        double precision, pointer          :: e(:)        ! energy levels array
-        real,    pointer          :: logTemp(:)  ! log10 temperature points array
-        double precision, pointer          :: qeff(:,:)   ! q eff  array
-        double precision,    pointer          :: qom(:,:,:)  ! qom array
-        real,    pointer          :: qq(:)       ! qq array
-        real,    pointer          :: qq2(:)      ! 2nd deriv qq2 array
-        double precision, pointer          :: tnij(:,:)   ! tnij array
-        double precision, pointer          :: x(:,:)      ! matrix arrays
-        double precision, pointer          :: y(:)        ! 
-
-       
-
-        double precision, &
-&                       pointer :: n(:), n2(:) ! level population arrays
-
-        sqrTe   = sqrt(Te)
-        log10Te = log10(Te) 
-
-        ! open file containing atomic data
-        close(11)
-        open(unit=11, file = file_name, status="old", position="rewind", &
-&                                                     iostat = ios)
-        if (ios /= 0) then
-            print*, "! equilibrium: can't open file: ", file_name
-            stop
-        end if
-
-        ! read reference heading
-        read(11, *) numLines
-        do i = 1, numLines
-            read(11, '(78A1)') text
-        end do
-
-        ! read number of levels and temperature points available
-        read(11, *) nLev, nTemp
-
-        ! allocate space for labels array
-        allocate(label(nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate label array memory"
-            stop
-        end if
-
-        ! allocate space for tempertaure points array
-        allocate(logTemp(nTemp), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate logTemp array memory"
-            stop
-        end if
-
-        ! allocate space for transition probability  array
-        allocate(a(nLev, nLev), stat = err)
-        if (err /= 0) then 
-            print*, "! equilibrium: can't allocate a array memory"
-            stop
-        end if
-
-        ! allocate space for energy levels array
-        allocate(e(nLev), stat = err)
-        if (err /= 0) then 
-            print*, "! equilibrium: can't allocate e array memory"
-            stop
-        end if
-
-        ! allocate space for statistical weights array
-        allocate(g(nLev), stat = err)
-        if (err /= 0) then 
-            print*, "! equilibrium: can't allocate g array memory"
-            stop
-        end if
-
-        ! allocate space for qom array
-        allocate(qom(nTemp, nLev, nLev), stat = err)
-        if (err /= 0) then 
-            print*, "! equilibrium: can't allocate qom array memory"
-            stop
-        end if
-
-        ! allocate space for collisional strengths array
-        allocate(cs(nLev, nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate cm array memory"
-            stop
-        end if
-
-        ! allocate space for q eff array
-        allocate(qeff(nLev, nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate qeff array memory"
-            stop
-        end if
-
-        ! allocate space for tnij array
-        allocate(tnij(nLev, nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate tnij array memory"
-            stop
-        end if
-
-        ! allocate space for x array
-        allocate(x(nLev, nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate x array memory"
-            stop
-        end if
-
-        ! allocate space for y array
-        allocate(y(nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate y array memory"
-            stop
-        end if
-
-        ! allocate space for qq array
-        allocate(qq(nTemp), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate qq array memory"
-            stop
-        end if
-
-        ! allocate space for qq2 array
-        allocate(qq2(nTemp), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate qq2 array memory"
-            stop
-        end if
-
-        ! allocate space for n array
-        allocate(n(nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate n array memory"
-            stop
-        end if
-
-        ! allocate space for n2 array
-        allocate(n2(nLev), stat = err)
-        if (err /= 0) then
-            print*, "! equilibrium: can't allocate n2 array memory"
-            stop
-        end if
-
-        ! zero out arrays
-        a = 0.
-        cs = 0.
-        e = 0.
-        fLineEm = 0.
-        g = 0
-        n = 0.
-        n2 = 0.
-        qom = 0.
-        qeff = 0.
-        qq = 0.
-        qq2 = 0.
-        logTemp = 0.
-        tnij = 0.
-        x = 0.d0
-        y = 0.
-
-        ! read labels
-        do i = 1, nLev
-            read(11, '(A20)') label(i)
-
-        end do
-
-        ! read temperetaure points and get logs
-        do i = 1, nTemp
-            read(11, *) logTemp(i)
-            logTemp(i) = log10(logTemp(i))
-
-        end do
-
-        ! read iRats
-        read(11, *) iRats
-
-        do i = 1, safeLim
-            ! read in data
-            read(11, *) ilow(2), iup(2), qx
-
-            ! check if end of qx dat
-            if (qx == 0.d0) exit
+      temp = 0.
+      pss  = 0.
             
-            ! ilow(2) always starts with a non zero value
-            ! so the else condition is true at first and k initialized
-            if (ilow(2) == 0) then
-                ilow(2) = ilow(1)
-                k = k + 1
-            else 
-                ilow(1) = ilow(2)
-                k = 1
-            end if 
+      sorc = grainLabel(ns)
 
-            ! the same as above
-            if (iup(2) == 0) then
-                iup(2) = iup(1)                                                  
+      select case(sorc)
+      case ('S') ! silicates
+         ! factor of 1.e12 to change from um to A
+         natom = 0.44*1.e12*grainRadius(na)**3.
+         if (natom<=0) then
+            print*, '! qHeat: invalid value for natom', sorc, na,natom, grainRadius(na)
+         end if
+         
+         mgrain = (4.*Pi/3.0)*(grainRadius(na)**3.)*rho(ns)*1.e-12
+         
+      case ('C')  ! carbonaceous
+         natom = 0.454*3.*1.e12*grainRadius(na)**3.
+         if (natom<=0) then
+            print*, '! qHeat: invalid value for natom', sorc, na,natom, grainRadius(na)
+         end if
+         mgrain = (4.*Pi/3.0)*(grainRadius(na)**3.)*rho(ns)*1.e-12
+      case default
+         qheatTemp = tg 
+         return               
+      end select
+
+      ! find enthalpy bins
+      call getTmin(ns,na,temp(1))
+
+      tbase=tg
+      U(1) = enthalpy(temp(1),natom,na,sorc)
+
+      do i=2,10
+         temp(i)= temp(1) + real(i-1)/real(9)*(tbase-temp(1))  !big bins
+         U(i)=enthalpy(temp(i),natom,na,sorc)
+      end do
+      
+      do i = 11, nTbins
+         temp(i) = tbase + real(i-10)/real(nTbins-10)*(tmax-tbase)         
+         U(i) = enthalpy(temp(i), natom, na, sorc)
+      end do
+
+      dU(1) = 0.5*(U(2)-U(1))
+      do i = 2, nTbins-1
+         dU(i) = 0.5*(U(i+1)-U(i-1))
+      end do
+      dU(nTbins) = 0.5*(U(nTbins)-U(nTbins-1))
+
+      ! discrete heating term:
+      ! grain heated from state ii to higher state if
+      ! by a photon of wavelength hc/( U(if)-U(ii) )
+      do ii = 1, nTbins-1
+         do if = ii+1, nTbins
+
+            ! calculate wav of transition ii->if
+            wl = hc/ (U(if)-U(ii))
+            do wlp = nbins, 1, -1
+               if (lambda(wlp)<wl) exit
+            end do
+            wlp = wlp+1
+            
+            if ( (dU(if) >= (0.1* (U(if)-U(ii)))) .and. &
+                 & (if < nTbins) ) then
+               
+               wls = hc/( (U(if)+U(if+1))/2.0 - U(ii)) ! shorter wl
+               wll = hc/( (U(if)+U(if-1))/2.0 - U(ii)) ! longer wl
+               
+               if ( wl>= 0.1 .or. wl < lambda(1)) then
+                  A(if,ii) = 0.
+               else
+
+                  if (wll>0.1) wll =.1
+                  if (wls<lambda(1)) wls = lambda(1)
+
+                  do wllp = nbins, 1, -1
+                     if (lambda(wllp)<wll) exit
+                  end do
+                  wllp = wllp+1
+                  do wlsp = nbins, 1, -1
+                     if (lambda(wlsp)<wls) exit
+                  end do
+                  wlsp = wlsp+1            
+
+                  ! here R. Sylvester program interpolates
+                  ! our nu grid is finer and maybe this is 
+                  ! not necessary - test this and possibly change
+                  ! if not too expensive
+
+                  ! 1st trapezium
+                  A(if,ii) = 0.5*(sQabs(wlsP)*radField(wlsP)&
+                       &*wls**3+sQabs(wlP)*radField(wlP)&
+                       &*wl**3)*(U(if+1)-U(if))/2.
+                        
+                  ! 2nd trapezium
+                  A(if,ii) = A(if,ii)+0.5*(sQabs(wlP)*radField(wlP)&
+                       &*wl**3+sQabs(wllP)*radField(wllP)&
+                       &*wll**3)*(U(if)-U(if-1))/2.
+
+                  A(if,ii) = A(if,ii) /(hc**2.)
+
+               end if
             else
-                iup(1) = iup(2)
+               if ( (wl>=0.1) .or. (wl<lambda(1))) then
+                  A(if,ii) = 0.
+               else
+                  A(if,ii) = sQabs(wlP)*& 
+                       & radField(wlP)*dU(if)*wl**3/(hc**2.)
+               end if
+
+            end if
+         end do
+            
+         ! heating of enthalpies beyond the highest bin
+         ! G&D p232
+         UiTrun = U(nTbins)+dU(nTbins)/2.0 - U(ii)
+         wlim = hc/UiTrun
+
+         qint = 0.
+         do j = 1,nbins-1
+
+            qint1 = lambda(j)*sQabs(j)*radField(j)
+            qint2 = lambda(j+1)*sQabs(j+1)*radField(j+1)
+            delwav = lambda(j+1) - lambda(j)
+
+            if (lambda(j+1)<wlim) then
+
+               qint = qint + 0.5*(qint1+qint2)*delwav
+
+            else if (lambda(j) < wlim) then
+               qint = qint+(wlim-lambda(j))*(qint1+0.5*(wlim-lambda(j))*&
+                    & (qint2-qint1)/delwav)
             end if
 
-            qom(k, ilow(2), iup(2)) = qx 
+         end do
 
-        end do
+         qint = qint/hc
 
-        ! read in transition probabilities
-        do k = 1, nLev-1
-            do l = k+1, nLev
-                read(11, *) i, j, ax
+         A(nTbins,ii) = A(nTbins,ii)+qint
+      end do
 
-                a(j,i) = ax
+      ! Work out the cooling terms
+      do if = 1, nTbins-1 
+
+         call clrate(temp(if+1), lambda,radField,sQabs,mdUdt)
+         call cheat(if+1,nTbins,lambda,radField,sQabs,U(1:nTbins),ch)
+
+
+         A(if,if+1) = mdUdt/dU(if+1)
+
+         if (mdUdt <= ch) then
+            A(if,if+1) = A(if,if+1)*1.d-20 
+!            write(*,*), "! qHeat: Heat lost in bin ", if+1
+            A(if+2,if+1) = A(if+2,if+1) + (ch-mdUdt)/dU(if+1)
+         else
+            A(if,if+1)=A(if,if+1) - ch/dU(if+1)
+         end if
+
+      end do
+
+      if (A(2,1) == 0.) A(2,1) = 2.*A(1,2)
+
+
+      ! find the B(f,j) terms
+      B=0.
+      do ii = 1, nTbins
+         B(nTbins,ii) = A(nTbins,ii)
+         do if = nTbins-1, ii+1,-1
+            B(if,ii) = B(if+1,ii)+A(if,ii) ! G&D p233
+         end do
+      end do
+      sumX = 0.
+      x(1) = 1.d-100
+      do if = 2, nTbins
+         sumBx = 0.
+         do j = 1, if-1
+            sumBx = sumBx + B(if,j)*x(j)
+         end do
+
+         x(if) = sumBx/A(if-1,if) ! G&D eqn 2.16
+
+         if (x(if) > 1.d250) then
+            do i = 1, if
+               if (x(i)< 1.) then
+                  x(i) = 0.
+               else
+                  x(i) = x(i)*1.d-250
+               end if
             end do
-        end do
+         end if
+      end do
 
-        ! read statistical weights, energy levels [1/cm]
-        do j = 1, nLev
-            read(11, *) i, gx, ex
+      do j=1,nTbins 
+         sumx = sumx+x(j)
+      end do
 
-            g(i) = gx
-            e(i) = ex
-        end do
+      do i = 1, nTbins-1
+         if (x(i) > 0.) then
+            if (dlog10(x(i))-dlog10(sumx) <= -250.) x(i) = 0.
+         end if
+         Pss(i) = x(i)/sumx
+      end do
 
-        ! read power law fit coefficients [e-13 cm^3/s]
-        ! and calculate total recombination coefficient
-        ! (direct + cascades)
-        alphaTotal = 0.
+      qHeatTemp = 0.
+      do i = 1, nTbins
 
-        do j = 2, nLev
-           read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
+         qHeatTemp = qHeatTemp+Pss(i)*temp(i)
+      end do
 
-           if (ios<0) then
-              exit
-           else
-              alphaTotal(1) = 1.
-           end if
+      tg=qHeatTemp
 
-           if (nLev>100) then
-              print*, '! equilibrium: alphaTotal set to a &
-                   &max 100 level atom, please expand'
-              stop
-           end if
+    end  subroutine qHeat
 
-           alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
-
-        end do
-
-        ! close atomic data file 
-        close(11)
-
-        ! form matrices
-        ! set up qeff
-        do i = 2, nLev
-            do j = i, nLev
-                do iT = 1, nTemp
-                    qq(iT) = qom(iT, i-1, j)
-                end do
-
-                if (nTemp == 1) then  
-                   ! collisional strength available only for one temperature - assume constant
-                   qomInt = qq(1)
-                else if (nTemp == 2) then
-                   ! collisional strength available only for one temperature - linear interpolation
-                   qomInt = qq(1) + &
-                        (qq(2)-qq(1)) / (logTemp(2)-logTemp(1)) * (log10Te - logTemp(1))
-                else
-                   ! set up second derivatives for spline interpolation
-                   call spline(logTemp, qq, 1.e30, 1.e30, qq2)
-
-                   ! get interpolated qom for level
-                   call splint(logTemp, qq, qq2, log10Te, qomInt)
-                end if
-
-                ! set collisional strength
-                cs(i-1, j) = qomInt
-
-                ! the calculation constant here is the energy [erg] 
-                ! associated to unit wavenumber [1/cm] divided by the 
-                ! boltzmann constant k.
-                constant = 1.4388463d0
-                ! exponential factor 
-                delTeK = (e(i-1)-e(j))*constant
-                expFac = exp( delTeK/Te )
-                qeff(i-1, j) = 8.63d-6 * cs(i-1, j) * expFac /&
-&                               (g(i-1)*sqrTe)
-                qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
-            end do
-        end do
-
-        ! set up x
-        do i= 2, nLev
-            do j = 1, nLev
-
-               x(1,:) = 1.
-               y = 0.
-               y(1)   = 1.
-
-                if (j /= i) then
-                    x(i, j) = x(i, j) + Ne*qeff(j, i)
-                    x(i, i) = x(i, i) - Ne*qeff(i, j)
-                    if (j > i) then
-                        x(i, j) = x(i, j) + a(j, i)
-                    else 
-                        x(i, i) = x(i, i) - a(i, j)
-                    end if
-                end if
-            end do
-
-            ! when coefficients are available use the following:
-            y(i) = -Ne*ionDenUp*alphaTotal(i)
-        end do
-        ! 
-!        do i = 2, nLev        
-!            value = 0.d0 - x(i, 1)
-!            y(i-1) = value
-!            do j = 2, nLev
-!                value = x(i, j)
-!                x(i-1,j-1) = value
-!            end do
-!        end do
-
-        ! solve matrices for populations
-!        call luSlv(x, y, nLev-1)
-        call luSlv(x, y, nLev)
-
-        n = y
-
-!        do i = nLev, 2, -1
-!            n(i) = y(i-1)
-!        end do
-!        sumN = 1.d0
-!        do i = 2, nLev
-!            sumN = sumN + n(i)
-!        end do
-!        do i = 2, nLev
-!            n(i) = n(i) / sumN
-!        end do
-!        n(1) = 1.d0 / sumN
-
-        sumN = 0.d0
-        do i = 1, nLev
-           sumN = sumN+n(i)
-        end do
-        do i = 1, nLev           
-           n(i) = n(i)/sumN
-        end do
-
-        ! now find emissivity and wavelengths
-        do i = 1, nLev-1
-            do j = i+1, nLev
-                if (a(j,i) /= 0.d0) then
-                    Eji = (e(j)-e(i))
-                    fLineEm(i,j) = a(j,i) * Eji * n(j)
-                    if (Eji>0.) then
-                       if (present(wav)) wav(i,j) = 1.e8/Eji
-                    else
-                       if (present(wav)) wav(i,j) = 0.
-                    end if
-                end if
-             end do
-        end do   
-
-        ! deallocate arrays
-        if( associated(label) ) deallocate(label)
-        if( associated(logTemp) ) deallocate(logTemp)
-        if( associated(a) ) deallocate(a)
-        if( associated(cs) ) deallocate(cs)
-        if( associated(n) ) deallocate(n)
-        if( associated(n2) ) deallocate(n2)
-        if( associated(qeff) ) deallocate(qeff) 
-        if( associated(qq) ) deallocate(qq)
-        if( associated(qq2) ) deallocate(qq2)
-        if( associated(tnij) ) deallocate(tnij) 
-        if( associated(x) ) deallocate(x) 
-        if( associated(y) ) deallocate(y) 
-        if( associated(e) ) deallocate(e)
-        if( associated(g) ) deallocate(g)
-        if( associated(qom) ) deallocate(qom)
-
-    end subroutine equilibrium
-
-    ! this procedure performs the solution of linear equations
-    subroutine luSlv(a, b, n)
-        implicit none
-
-        integer, intent(in)                  :: n 
-
-        double precision,& 
-&               intent(inout), dimension(:,:) :: a
-        double precision,&
-&               intent(inout), dimension(:)   :: b    
-
-        call lured(a,n)
-
-        call reslv(a,b,n)
-    end subroutine luSlv
-
-    subroutine lured(a,n)
-        implicit none
-
-        integer, intent(in)                  :: n
-
-        double precision,&
-&            intent(inout), dimension(:,:)    :: a
-
-        ! local variables
-        integer          :: i, j, k                    ! counters
-
-        double precision :: factor                     ! general calculation factor
-
-        if (n == 1) return
-
-        do i = 1, n-1
-            do k = i+1, n
-                factor = a(k,i)/a(i,i)
-                do j = i+1, n
-                   a(k, j) = a(k, j) - a(i, j) * factor
-                end do
-            end do
-        end do
-    end subroutine lured
-
-    subroutine reslv(a,b,n)
-        implicit none 
-
-        integer, intent(in)              :: n
-
-        double precision,&
-&            intent(inout), dimension(:,:) :: a
-        double precision,&        
-&            intent(inout), dimension(:)   :: b
-
-        ! local variables
-        integer    :: i, j, k, l              ! counters
-
-        if (n == 1) then
-            b(n) = b(n) / a(n,n)
-            return
-        end if
-
-        do i = 1, n-1
-            do j = i+1, n
-                b(j) = b(j) - b(i)*a(j, i)/ a(i, i)
-            end do
-        end do
-        b(n) = b(n) / a(n,n)
-        do i = 1, n-1
-            k = n-i
-            l = k+1
-            do j = l, n
-                b(k) = b(k) - b(j)*a(k, j)
-            end do
-            b(k) = b(k) / a(k,k)
-        end do
-    end subroutine reslv
-
-    subroutine initResLines(grid)
+                  
+    subroutine getTmin(ns, ai, tmin)
       implicit none
-      
-      type(grid_type), intent(inout) :: grid(*)
 
+      real(kind=8), intent(out)      :: tmin  ! continuous heating/cooling equilibrium temp
+      real                   :: dustAbsIntegral   ! dust absorption integral
+      real                   :: dabs
+      real                   :: resLineHeat       ! resonance line heating
+      real                   :: cutoff            ! lambda=1000um (guhathakurta & draine 89)
+      real, dimension(nbins) :: radField          ! radiation field
+      
+      integer, intent(in) :: ns, ai ! grain species and size pointers
+      integer :: iT,ifreq ! pointer to dust temp in dust temp array
+      integer :: cutoffP ! pointer to energy cutoff in nuarray
+      
+      cutoff = 9.11e-5
+      
+      if (cutoff<nuArray(1)) then
+         print*, "! getTmin: [warning] nuMin larger than cutoff for continuous heating &
+              & in quantum heating routine"
+         cutoff = nuArray(1)
+         cutoffP = 1
+      else if (cutoff>=nuArray(nbins)) then
+         print*, "! getTmin: nuMax smaller than cutoff for continuous heating &
+              & in quantum heating routine"
+         stop
+      else
+         call locate(nuArray, cutoff, cutoffP)
+      end if
+      
+      ! radiation field at this location
+      if (lgDebug) then
+         radField = grid%Jste(cellPUsed,:) + grid%Jdif(cellPUsed,:)
+      else
+         radField = grid%Jste(cellPUsed,:)
+      end if
+      
+      do ifreq = 1, cutoffP
+         radField(ifreq)=0.
+      end do
+      
+      ! zero out dust temperature
+      tmin = 0.
+      
+      ! calculate absorption integral
+      dustAbsIntegral = 0.
+      do i = 1, cutoffP
+         dustAbsIntegral =  dustAbsIntegral + xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)/Pi
+      end do
+      
+      
+      call locate(dustEmIntegral(nS,ai,:), dustAbsIntegral, iT)
+      if (iT<=0) then
+         iT=1
+      end if
+
+      tmin = real(iT)
+      
+    end subroutine getTmin
+    
+
+          ! calculates the enthalpy for a spherical silicate
+          ! or graphite grain of radius a, temperature tg, 
+          ! containing natom atoms 
+          ! based on a program originally written by 
+          ! R. Sylvester using G&D heat capacity
+          function enthalpy(tg,natom,na,sorc)
+            implicit none
+            
+            real(kind=8) :: enthalpy
+            real(kind=8), intent(in) :: tg
+
+            real(kind=8) :: enth1,  enth2,  enth3,  enth4,& 
+                 & enth1_50,  enth2_150,  enth3_500, & 
+                 & vg
+
+            integer, intent(in) :: natom, na
+            character (len=1), intent(in) :: sorc
+
+            enth1  = (1.4e3/3.) * tg**3.
+            enth1_50 = (1.4e3/3.) * 50.**3.
+            enth2 = (2.1647e4/2.3) * (tg**2.3 - 50.**2.3)
+            enth2_150 = (2.1647e4/2.3) * (150.**2.3 - 50.**2.3)
+            enth3 = (4.8375e5/1.68) * (tg**1.68 - 150.**1.68)
+            enth3_500 = (4.8375e5/1.68) * (500.**1.68 - 150.**1.68)
+            enth4 = 3.3107e7*(tg-500.)
+
+            vg = (4.18878*1.e-12*grainRadius(na)**3.)
+            
+            select case (sorc)
+            case ('S')
+
+               if (tg<=50.) then
+                  enthalpy = enth1
+               else if (tg <= 150.) then
+                  enthalpy = enth1_50 + enth2
+               else if (tg <= 500.) then
+                  enthalpy = enth1_50 + enth2_150 + enth3
+               else
+                  enthalpy = enth1_50 + enth2_150 + enth3_500 +& 
+                       & enth4                  
+               end if
+               enthalpy = (1.-(2./real(natom))) * vg *enthalpy
+
+            case('C')
+               enthalpy = real(natom)*(4.15e-22*tg**3.3)
+               enthalpy = enthalpy/(1.+6.51e-3*tg + 1.5e-6*tg**2. + 8.3e-7*tg**2.3)
+               enthalpy = (1.-(2./real(natom))) * enthalpy
+            case default
+               print*, '! enthalpy: calculations only available for C & S &
+                    & identifiers'
+            end select
+
+          end function enthalpy
+
+ 
+          ! Calculation of the Plank black body equation
+          ! lam in cm; output in erg/cm2/s/cm
+          ! C1 = 2.Pi.h.c^2
+          ! C2 = h.c/k
+          function bbody(lam,tIn)
+
+            real(kind=8)            :: bbody
+            real(kind=8), intent(in):: lam, tIn
+            real(kind=8), parameter :: C1=3.74185e-5
+            real(kind=8), parameter :: C2=1.43883                  
+            real(kind=8)            :: exptest
+
+            exptest=C2/(lam*tIn)
+            
+            if(exptest > 400.) then
+               bbody=0.
+            else
+               bbody = C1*(1./lam**5.)/(exp(exptest)-1.)
+            end if
+          end function bbody
+
+          subroutine clrate(tem,lam,fl,sQa,mdudt)
+            implicit none
+            
+            real(kind=8), intent(out) :: mdudt
+
+            real(kind=8), intent(in) :: tem,lam(nbins),fl(nbins),sQa(nbins)
+            
+            real(kind=8) :: cutoff, eout(nbins), engin, engout,eomid, & 
+                 & delwav
+
+            integer :: k,ifreq,cutoffP
+
+            cutoff = .1 ! cm
+
+            ! calculate -dU/dt
+            engin = 0.
+            engout = 0.
+            
+            do k = 1, nbins
+               
+               eout(k) = sQa(k)*bbody(lam(k),tem)
+               if (lam(k)<cutoff) cutoffP=k
+
+               if (k>=2) then
+                  eomid=(eout(k)+eout(k-1))/2.
+                  delwav = lam(k)-lam(k-1)
+                  engout = engout+4.*eomid*delwav
+
+               end if
+            end do
+
+            engin  = 0.25*fl(cutoffP)*sQa(cutoffP)*cutoff
+            if (engin<0.) print*, "! clrate [warning]: engin < 0."            
+
+            mdUdt = engout-engin
+
+          end subroutine clrate
+            
+          ! continuous heating within a temoerature bin: photon not energetic 
+          ! enough to raise the grain to the next temp bin
+          subroutine cheat(it,nTbins,lam,fl,sQa,U,ch)
+            implicit none
+            
+            real                        :: realvar
+            real(kind=8), intent(out)   :: ch
+            real(kind=8), intent(in)    :: U(*),lam(nbins),fl(nbins),sQa(nbins)
+            real(kind=8) :: einmax,const1,shwav,cutoff, ein(nbins),engin,&
+                 & eimid,hc,delwav
+
+            integer, intent(in) :: it,nTbins
+            integer :: nshort,nlong,ifreq,k
+
+            if (it>nTbins) then
+               ch=0.
+               return
+            end if
+
+            hc = hPlanck*c
+
+            engin=0.
+            nshort=0
+            nlong=0
+
+            cutoff = .1
+
+            if (it>=nTbins) then
+               ch = 0.
+               return
+            end if
+
+            einmax = 0.5*(U(it+1)-(U(it)))
+            shwav=hc/einmax
+
+            if(shwav>=cutoff) then
+               ch=0.
+               return
+            end if
+
+            do k = 1, nbins
+               if (lam(k)<shwav) nshort = k
+               if (lam(k)<cutoff) nlong = k
+               ein(k) = sQa(k)*fl(k)
+            end do
+            nshort = nshort+1
+            if (nshort>=nlong) then
+               ch = 0.
+               return
+            end if
+
+            do k = nshort,nlong
+               if (k>=2) then
+                  eimid = (ein(k)+ein(k-1))/2.
+                  delwav = lam(k)-lam(k-1)
+                  engin=engin+eimid*delwav
+               end if
+            end do
+            
+            ch = engin
+
+          end subroutine cheat
+    
+
+  end subroutine emissionDriver
+
+
+
+  subroutine equilibrium(file_name, ionDenUp, Te, Ne, fLineEm, wav)
+    implicit none
+    
+    double precision, dimension(nForLevels,nForLevels), &
+         & intent(out) :: fLineEm     ! forbidden line emissivity
+
+    double precision, dimension(nForLevels,nForLevels), &
+         & intent(out), optional :: wav         ! wavelength of transition [A]
+    
+
+    double precision     :: ax, ex                    ! readers
+    double precision     :: constant                  ! calculations constant 
+    double precision     :: delTeK                    ! Boltzmann exponent
+    double precision     :: expFac                    ! calculations factor
+    double precision     :: Eji                       ! energy between levels j and i
+
+    double precision       :: qx                        ! reader
+    double precision   :: sumN                      ! normalization factor for populations
+    double precision        :: sqrTe                     ! sqrt(Te)
+    double precision    :: value                     ! general calculations value
+    
+    double precision, pointer          :: a(:,:)      ! transition rates array
+    double precision, pointer          :: cs(:,:)     ! collisional strengths array
+    double precision, pointer          :: e(:)        ! energy levels array
+    double precision, pointer          :: qeff(:,:)   ! q eff  array
+    double precision, pointer          :: qom(:,:,:)  ! qom array
+    double precision, pointer          :: tnij(:,:)   ! tnij array
+    double precision, pointer          :: x(:,:)      ! matrix arrays
+    double precision, pointer          :: y(:)        !       
+    double precision, &
+         & pointer :: n(:), n2(:) ! level population arrays
+
+    
+    real                 :: alphaTotal(100)           ! maximum 100-level ion
+    real                 :: a_fit, b_fit              !         
+    real                 :: qomInt                    ! interpolated value of qom
+    real,    pointer     :: logTemp(:)                ! log10 temperature points array
+    real,    pointer     :: qq(:)                     ! qq array
+    real,    pointer     :: qq2(:)                    ! 2nd deriv qq2 array
+
+    real, intent(in) &
+         & :: Te, &    ! electron temperature [K]
+         & Ne, &       ! electron density [cm^-3]
+         & ionDenUp    ! ion density of the upper ion stage 
+
+    
+    integer  :: gx               ! stat weight reader  
+    integer  :: i, j, k, l, iT   ! counters/indeces
+    integer  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
+    integer  :: ios              ! I/O error status
+    integer  :: nLev             ! number of levels in atomic data file
+    integer  :: numLines         ! number of lines for atomic data refernce
+    
+    integer  :: nTemp            ! number of temperature points in atomic data file        
+    integer  :: err              ! allocation error status
+    
+    integer, parameter :: safeLim = 10000 ! loop safety limit
+    
+    integer, pointer :: g(:)              ! statistical weight array
+    
+    integer, dimension(2) :: ilow, &      ! lower index
+         & iup          ! upper index
+
+    character(len = 20), pointer :: &
+         & label(:)! labels array
+
+    character(len = 75) :: text  ! lines of text
+
+    character(len = *), &
+         & intent(in)  :: file_name   ! ionic data file name
+
+
+    sqrTe   = sqrt(Te)
+    log10Te = log10(Te) 
+    
+    ! open file containing atomic data
+    close(11)
+    open(unit=11, file = file_name, status="old", position="rewind", &
+         & iostat = ios)
+    if (ios /= 0) then
+       print*, "! equilibrium: can't open file: ", file_name
+       stop
+    end if
+    
+    ! read reference heading
+    read(11, *) numLines
+    do i = 1, numLines
+       read(11, '(78A1)') text
+    end do
+    
+    ! read number of levels and temperature points available
+    read(11, *) nLev, nTemp
+    
+    ! allocate space for labels array
+    allocate(label(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate label array memory"
+       stop
+    end if
+    
+    ! allocate space for tempertaure points array
+    allocate(logTemp(nTemp), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate logTemp array memory"
+       stop
+    end if
+    
+    ! allocate space for transition probability  array
+    allocate(a(nLev, nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate a array memory"
+       stop
+    end if
+    
+    ! allocate space for energy levels array
+    allocate(e(nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate e array memory"
+       stop
+    end if
+    
+    ! allocate space for statistical weights array
+    allocate(g(nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate g array memory"
+       stop
+    end if
+    
+    ! allocate space for qom array
+    allocate(qom(nTemp, nLev, nLev), stat = err)
+    if (err /= 0) then 
+       print*, "! equilibrium: can't allocate qom array memory"
+       stop
+    end if
+    
+    ! allocate space for collisional strengths array
+    allocate(cs(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate cm array memory"
+       stop
+    end if
+    
+    ! allocate space for q eff array
+    allocate(qeff(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate qeff array memory"
+       stop
+    end if
+        
+    ! allocate space for tnij array
+    allocate(tnij(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate tnij array memory"
+       stop
+    end if
+
+    ! allocate space for x array
+    allocate(x(nLev, nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate x array memory"
+       stop
+    end if
+         
+    ! allocate space for y array
+    allocate(y(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate y array memory"
+       stop
+    end if
+    
+    ! allocate space for qq array
+    allocate(qq(nTemp), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate qq array memory"
+       stop
+    end if
+    
+    ! allocate space for qq2 array
+    allocate(qq2(nTemp), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate qq2 array memory"
+       stop
+    end if
+    
+    ! allocate space for n array
+    allocate(n(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate n array memory"
+       stop
+    end if
+    
+    ! allocate space for n2 array
+    allocate(n2(nLev), stat = err)
+    if (err /= 0) then
+       print*, "! equilibrium: can't allocate n2 array memory"
+       stop
+    end if
+    
+    ! zero out arrays
+    a = 0.
+    cs = 0.
+    e = 0.
+    fLineEm = 0.
+    g = 0
+    n = 0.
+    n2 = 0.
+    qom = 0.
+    qeff = 0.
+    qq = 0.
+    qq2 = 0.
+    logTemp = 0.
+    tnij = 0.
+    x = 0.d0
+    y = 0.
+        
+    ! read labels
+    do i = 1, nLev
+       read(11, '(A20)') label(i)
+       
+    end do
+
+    ! read temperetaure points and get logs
+    do i = 1, nTemp
+       read(11, *) logTemp(i)
+       logTemp(i) = log10(logTemp(i))
+
+    end do
+    
+    ! read iRats
+    read(11, *) iRats
+    
+    do i = 1, safeLim
+       ! read in data
+       read(11, *) ilow(2), iup(2), qx
+       
+       ! check if end of qx dat
+       if (qx == 0.d0) exit
+       
+       ! ilow(2) always starts with a non zero value
+       ! so the else condition is true at first and k initialized
+       if (ilow(2) == 0) then
+          ilow(2) = ilow(1)
+          k = k + 1
+       else 
+          ilow(1) = ilow(2)
+          k = 1
+       end if
+       
+       ! the same as above
+       if (iup(2) == 0) then
+          iup(2) = iup(1)                                                  
+       else
+          iup(1) = iup(2)
+       end if
+       
+       qom(k, ilow(2), iup(2)) = qx 
+       
+    end do
+
+    ! read in transition probabilities
+    do k = 1, nLev-1
+       do l = k+1, nLev
+          read(11, *) i, j, ax
+          
+          a(j,i) = ax
+       end do
+    end do
+    
+    ! read statistical weights, energy levels [1/cm]
+    do j = 1, nLev
+       read(11, *) i, gx, ex
+       
+       g(i) = gx
+       e(i) = ex
+    end do
+    
+    ! read power law fit coefficients [e-13 cm^3/s]
+    ! and calculate total recombination coefficient
+    ! (direct + cascades)
+    alphaTotal = 0.
+    
+    do j = 2, nLev
+       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
+       
+       if (ios<0) then
+          exit
+       else
+          alphaTotal(1) = 1.
+       end if
+           
+       if (nLev>100) then
+          print*, '! equilibrium: alphaTotal set to a &
+               &max 100 level atom, please expand'
+          stop
+       end if
+       
+       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
+       
+    end do
+
+    ! close atomic data file 
+    close(11)
+    
+    ! form matrices
+    ! set up qeff
+    do i = 2, nLev
+       do j = i, nLev
+          do iT = 1, nTemp
+             qq(iT) = qom(iT, i-1, j)
+          end do
+          
+          if (nTemp == 1) then  
+             ! collisional strength available only for one temperature - assume constant
+             qomInt = qq(1)
+          else if (nTemp == 2) then
+             ! collisional strength available only for one temperature - linear interpolation
+             qomInt = qq(1) + &
+                  (qq(2)-qq(1)) / (logTemp(2)-logTemp(1)) * (log10Te - logTemp(1))
+          else
+             ! set up second derivatives for spline interpolation
+             call spline(logTemp, qq, 1.e30, 1.e30, qq2)
+             
+             ! get interpolated qom for level
+             call splint(logTemp, qq, qq2, log10Te, qomInt)
+          end if
+          
+          ! set collisional strength
+          cs(i-1, j) = qomInt
+          
+          ! the calculation constant here is the energy [erg] 
+                ! associated to unit wavenumber [1/cm] divided by the 
+          ! boltzmann constant k.
+          constant = 1.4388463d0
+          ! exponential factor 
+          delTeK = (e(i-1)-e(j))*constant
+          expFac = exp( delTeK/Te )
+          qeff(i-1, j) = 8.63d-6 * cs(i-1, j) * expFac /&
+               &(g(i-1)*sqrTe)
+          qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
+       end do
+    end do
+    
+    ! set up x
+    do i= 2, nLev
+       do j = 1, nLev
+          
+          x(1,:) = 1.
+          y = 0.
+          y(1)   = 1.
+          
+          if (j /= i) then
+             x(i, j) = x(i, j) + Ne*qeff(j, i)
+             x(i, i) = x(i, i) - Ne*qeff(i, j)
+             if (j > i) then
+                x(i, j) = x(i, j) + a(j, i)
+             else 
+                x(i, i) = x(i, i) - a(i, j)
+             end if
+          end if
+       end do
+       
+       ! when coefficients are available use the following:
+       y(i) = -Ne*ionDenUp*alphaTotal(i)
+    end do
+
+    call luSlv(x, y, nLev)
+
+    n = y
+    
+    sumN = 0.d0
+    do i = 1, nLev
+       sumN = sumN+n(i)
+    end do
+    do i = 1, nLev           
+       n(i) = n(i)/sumN
+    end do
+    
+    ! now find emissivity and wavelengths
+    do i = 1, nLev-1
+       do j = i+1, nLev
+          if (a(j,i) /= 0.d0) then
+             Eji = (e(j)-e(i))
+             fLineEm(i,j) = a(j,i) * Eji * n(j)
+             if (Eji>0.) then
+                if (present(wav)) wav(i,j) = 1.e8/Eji
+             else
+                if (present(wav)) wav(i,j) = 0.
+             end if
+          end if
+       end do
+    end do
+    
+    ! deallocate arrays
+    if( associated(label) ) deallocate(label)
+    if( associated(logTemp) ) deallocate(logTemp)
+    if( associated(a) ) deallocate(a)
+    if( associated(cs) ) deallocate(cs)
+    if( associated(n) ) deallocate(n)
+    if( associated(n2) ) deallocate(n2)
+    if( associated(qeff) ) deallocate(qeff) 
+    if( associated(qq) ) deallocate(qq)
+    if( associated(qq2) ) deallocate(qq2)
+    if( associated(tnij) ) deallocate(tnij) 
+    if( associated(x) ) deallocate(x) 
+    if( associated(y) ) deallocate(y) 
+    if( associated(e) ) deallocate(e)
+    if( associated(g) ) deallocate(g)
+    if( associated(qom) ) deallocate(qom)
+        
+  end subroutine equilibrium
+
+  ! this procedure performs the solution of linear equations
+  subroutine luSlv(a, b, n)
+    implicit none
+    
+    integer, intent(in)                  :: n 
+
+    double precision,& 
+         & intent(inout), dimension(:,:) :: a
+    double precision,&
+         & intent(inout), dimension(:)   :: b    
+    
+    call lured(a,n)
+    
+    call reslv(a,b,n)
+  end subroutine luSlv
+  
+  subroutine lured(a,n)
+    implicit none
+    
+    integer, intent(in)                  :: n
+    
+    double precision,&
+         & intent(inout), dimension(:,:)    :: a
+    
+    ! local variables
+    integer          :: i, j, k                    ! counters
+    
+    double precision :: factor                     ! general calculation factor
+    
+    if (n == 1) return
+    
+    do i = 1, n-1
+       do k = i+1, n
+          factor = a(k,i)/a(i,i)
+          do j = i+1, n
+             a(k, j) = a(k, j) - a(i, j) * factor
+          end do
+       end do
+    end do
+  end subroutine lured
+  
+  subroutine reslv(a,b,n)
+    implicit none 
+    
+    integer, intent(in)              :: n
+    
+    double precision,&
+         & intent(inout), dimension(:,:) :: a
+    double precision,&        
+         & intent(inout), dimension(:)   :: b
+    
+    ! local variables
+    integer    :: i, j, k, l              ! counters
+
+    if (n == 1) then
+       b(n) = b(n) / a(n,n)
+       return
+    end if
+    
+    do i = 1, n-1
+       do j = i+1, n
+          b(j) = b(j) - b(i)*a(j, i)/ a(i, i)
+       end do
+    end do
+    b(n) = b(n) / a(n,n)
+    do i = 1, n-1
+       k = n-i
+       l = k+1
+       do j = l, n
+          b(k) = b(k) - b(j)*a(k, j)
+       end do
+       b(k) = b(k) / a(k,k)
+    end do
+  end subroutine reslv
+  
+  subroutine initResLines(grid)
+    implicit none
+    
+    type(grid_type), intent(inout) :: grid(*)
+    
       character(len=2)   :: label
       character(len=120) :: reader ! file reader
-
+      
       integer :: el  ! element number
       integer :: err ! allocation error status
       integer :: i,ii,j ! counters

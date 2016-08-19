@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !  
-! Version 2.0
+! Version 2.02
 module common_mod
     use constants_mod
     use vector_mod
@@ -14,6 +14,11 @@ module common_mod
     logical         :: lgWarm=.false.           ! warm started?
     logical         :: lgNeInput=.false.        ! Ne distribution entered
     logical         :: lgResLinesFirst = .true. ! first time the res lines transfer proc is called? 
+    logical         :: lgPhotoelectric = .true. ! photoelectric effect on
+    logical         :: lgQheat = .false.        ! temperature spiking on? 
+    logical         :: lgWritePss=.false.       ! write Pss for qHeat file?
+    logical         :: lgTraceHeating = .false. ! trace thermal balance?
+    logical         :: lgGrainSpiking = .true.  ! temperature spiking for small grains
 
 
     real, pointer   :: TdustTemp(:,:,:)     ! temporary dust temperature array (species,size,cell)
@@ -26,20 +31,24 @@ module common_mod
     integer         :: numtasks       ! total # of processes
     integer         :: taskid         ! process identification #
     real            :: starttime      ! start time [sec]
-    real            :: endtime        ! end time [sec]    
 
+    real            :: endtime        ! end time [sec]    
 
     real            :: dTheta                  ! 
     real            :: dPhi                    ! 
     real            :: totalDustMass 
     real            :: convPercent=0.          ! total convergence percentage
     real            :: totPercent=0.           ! 
+    real            :: minaQHeat = 0.          ! min radius for Q Heat in [um]
     real            :: NeUsed, TeUsed, HdenUsed ! local properties of the gas
+    real            :: Tmax                    ! max temp for qheat
 
     integer, pointer  :: HINuEdgeP(:)     ! pointers to the HI, HeI and HeII 
     integer, pointer  :: HeINuEdgeP(:)    ! series edges in nuArray
     integer, pointer  :: HeIINuEdgeP(:)   !
 
+
+    integer :: nTbins                     ! # of temp bins in qheat
     integer :: nlimGammaHI,nlimGammaHeI, nlimGammaHeII, ntkGamma
 
     integer :: nIterateMC = 1                  ! current MC interation # 
@@ -64,7 +73,6 @@ module common_mod
                                                ! 2 is highest energy for shell
                                                ! 3 is opacity offset
 
-   
 
     integer,pointer :: dustScaXsecP(:,:)       ! pointer to dust scatterring x-sec in xSecArray (species,size)
     integer,pointer :: dustAbsXsecP(:,:)       ! pointer to dust absorption x-sec in xSecArray  (species,size)
@@ -114,9 +122,12 @@ module common_mod
 
     ! dust arrays
     real, pointer :: TdustSublime(:)        ! sublimation T (nspecies)
-    real, pointer :: rho(:)                 ! intrinsic density (nspecies)
+    real, pointer :: grainVn(:)             ! potential of neutral grain
+    real, pointer :: MsurfAtom(:)           ! mass of surf atom of a grain [amu]
+    real, pointer :: rho(:)                 ! intrinsic density (nspecies)    
     real, pointer :: dustHeatingBudget(:,:) ! heating budget of grains (nAbComponents, nResLines+1)
         
+
     ! linear increments
     real, pointer :: dl(:)
 
@@ -153,6 +164,8 @@ module common_mod
     real, pointer :: widFlx(:)               ! widFlx array
 
     integer, pointer :: planeIonDistribution(:,:) ! initial distribution of ionising photons 
+
+
 
     ! derived types
 
@@ -193,7 +206,8 @@ module common_mod
         real, pointer :: ionDen(:,:,:)              ! fractional ion density (x,y,z,elem,stage)
         real, pointer :: Jste(:,:)                  ! MC estimator of stellar J (cell,nu) 
         real, pointer :: Jdif(:,:)                  ! MC estimator of diffuse J (cell,nu)
-        real, pointer :: escapedPackets(:,:,:)    ! escaped packets (cell,nu, angle)
+        real, pointer :: JPEots(:,:)                ! OTS line contribution to photoelectric emission
+        real, pointer :: escapedPackets(:,:,:)      ! escaped packets (cell,nu, angle)
         real, pointer :: linePackets(:,:)           ! line packets (x,y,z,n)
         real, pointer :: Ndust(:)                   ! number density for dust
 
@@ -249,8 +263,8 @@ module common_mod
     end type plot_type
 
     type resLine_type
-       character(len=2)      ::   species
-       character(len=30)     ::   transition, multiplet! label
+       character(len=2)      :: species
+       character(len=30)     :: transition, multiplet! label
 
        integer               :: nuP  ! pointer to freq of line in nuArray
        integer               :: elem ! elemnt
@@ -334,6 +348,7 @@ module common_mod
     real               :: meanField        ! mean ionizing field to be used with plane parallel 
                                            ! geometry [erg/sec/cm^2]
     real               :: minConvergence   ! stop when this level of convergence has been reached  
+    real               :: minConvQHeat     ! min convergence level for Qheat routines to run
     real               :: NeStart          ! initial guess at Ne
     real               :: MdMgValue        ! dust-to-gas ratio by mass
     real               :: NdustValue       ! dust number density [cm^-3]

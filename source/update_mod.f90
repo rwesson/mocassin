@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module update_mod
     use constants_mod
     use common_mod
@@ -22,6 +22,7 @@ module update_mod
         ! local variables
         logical                        :: lgHit        ! has this cell been hit by a photon?
 
+        integer ,pointer               :: grainPotP(:,:) 
         integer                        :: cellP        ! points to this cell
         integer                        :: HIPnuP       ! pointer to H IP in NuArray
         integer                        :: HeIPnuP      ! pointer to HeI IP in NuArray
@@ -35,15 +36,22 @@ module update_mod
         integer                        :: ion          ! ionization stage counter
         integer                        :: ios          ! I/O error status
         integer                        :: i,j          ! counter
+        integer                        :: ncutoff= 0   ! see clrate
         integer                        :: nElec        ! # of electrons in ion
+        integer                        :: nIterateGC   ! # of GC iterations
         integer                        :: nIterateT    ! # of T iterations
         integer                        :: nIterateX    ! # of X iterations
         integer                        :: outShell     ! outer shell number (1 for k shell)
  
+        integer, parameter             ::  nTbins=300  ! number of enthalpy bins for T spike
+        integer, parameter             :: maxIterateGC&! limit to number of grain charge it
+             & = 100 
         integer, parameter             :: maxIterateX& ! limit to number of X-iterat ions
              & = 25 
         integer, parameter             :: maxIterateT& ! limit to number of T-iterations
              & = 25 
+
+        real, parameter :: Y0 = 0.5, Y1 = 0.2          ! see Baldwin et al. 1991
 
         real                           :: aFit, bFit   ! general fit terms
         real                           :: deltaXHI        ! delta ionDen of H0                   
@@ -61,6 +69,18 @@ module update_mod
         real                           :: Thigh        ! T high limit [K]
         real                           :: Tlow         ! T low limit  [K]
         real                           :: XOldHI       ! old ionDen of H0 at this cell 
+
+        ! dust-gas interaction heating and cooling process
+        real                           :: grainEmi, grainRec ! grain emissions and recom          
+        real, pointer                  :: gasDustColl_d(:,:) ! cooling/heating of the 
+                                                             ! dust through collisions with grains        
+        real                           :: gasDustColl_g ! cooling/heating of the 
+                                                       ! gas through collisions with grains
+        real,pointer                   :: photoelHeat_d(:,:) ! cooling of dust by photoelectric
+                                                             ! emission 
+        real                           :: photoelHeat_g ! heating of gas by dust photoelctric 
+                                                       !emission 
+        real,pointer                   :: grainPot(:,:)  ! [Ryd]        
 
         real, parameter                :: hcRyd_k = &  ! constant: h*cRyd/k (Ryd at inf used) [K]
              & 157893.94   
@@ -247,6 +267,33 @@ module update_mod
          Thigh          = 0.
          Tlow           = 0.
          
+         if (lgDust .and. lgGas .and. lgPhotoelectric) then
+            allocate (grainPot(1:nSPecies, 1:nsizes))
+            if (err /= 0) then                     
+               print*, "! updateCell:cannot allocate grid memory,grainpot"                    
+               stop
+            end if
+            grainPot=0.
+            allocate (grainPotP(1:nSPecies, 1:nsizes))
+            if (err /= 0) then                     
+               print*, "! updateCell:cannot allocate grid memory,grainpotp"                    
+               stop
+            end if
+            grainPotP=0
+            allocate (photoelHeat_d(1:nSPecies, 1:nsizes))
+            if (err /= 0) then                     
+               print*, "! updateCell:cannot allocate grid memory,photoelHeat_d"                    
+               stop
+            end if
+            photoelHeat_d=0.
+            allocate ( gasDustColl_d(1:nSPecies, 1:nsizes))
+            if (err /= 0) then                     
+               print*, "! updateCell:cannot allocate grid memory"                    
+               stop
+            end if
+            gasDustColl_d=0.
+         end if
+
          ! call the recursive iteration procedure for the gas
          call iterateT()
 
@@ -301,9 +348,11 @@ module update_mod
 
             ! local variables
             integer                       :: i               ! counter
+            integer                       :: isp, ai         ! counters
             integer                       :: ios             ! I/O error status
             integer                       :: n               ! stopper
 
+            logical                       :: lgGCBConv       ! grain charge converged?
             logical                       :: lgIBConv        ! converged?
 
             real                          :: a, b, b2        ! calculation coefficients
@@ -327,6 +376,29 @@ module update_mod
 
             ! calculate the ion abundances for the remaning ions
             call ionBalance(lgIBConv)
+
+            ! calculate dust-gas interaction heating/cooling terms
+            if (lgDust .and. lgGas .and. lgPhotoelectric) then
+               do isp = 1, nSpecies
+                  do ai = 1, nsizes
+                     nIterateGC     = 0
+                     grainEmi       = 0.
+                     grainRec       = 0.        
+
+                     call setGrainPotential(isp,ai,lgGCBConv)
+
+                     call locate(nuArray, grainPot(isp,ai), grainPotP(isp,ai))                     
+                     if (grainPotP(isp,ai) == 0) grainPotP = 1
+
+                  end do
+               end do
+               call setPhotoelHeatCool()
+
+
+               call setDustGasCollHeatCool()
+
+            end if
+
 
             ! solve thermal balance
             call thermBalance(heatInt, coolInt)
@@ -423,7 +495,7 @@ module update_mod
 
                     
                     print*, "! iterateT: [warning] no convergence after ", &
-                         & nIterateT, " steps. (cell, T)", xP,yP,zP,TeUsed
+                         & nIterateT, " steps. (cell, T)", cellP,xP,yP,zP,TeUsed
 
                     grid%noTeBal = grid%noTeBal+1.
                     
@@ -465,6 +537,406 @@ module update_mod
 
         end subroutine iterateT
 
+        recursive subroutine setGrainPotential(iSp, ai, lgGCBConv)
+          implicit none 
+
+          real,save            :: delta0, delta,delta1
+          real,save            :: grainPotOld ! local copy of grai pot
+          real                 :: grainEmi, grainRec ! grain emissions and recom          
+          real,save            :: grainEmiOld, grainRecOld ! grain emissions and recom          
+          real,parameter       :: errorLim = 0.005, dm = 0.05 ! loop convergence
+          real,parameter       :: safeLim = 100 ! loop safety limit
+          real                 :: threshold,fac
+          real,save :: dlow,dhigh,grainpotlow,grainpothigh,dVg,slope
+          
+          integer, intent(in)  :: iSp, ai
+
+          logical, intent(inout) :: lgGCBConv   ! converged?
+                    
+          nIterateGC = nIterateGC+1         
+
+          if (nIterateGC==1) then 
+             dVg=0.05
+             grainPot(isp,ai) = 0.             
+             grainPotOld = grainPot(isp,ai)
+             lgGCBConv = .true.
+             grainEmiOld = getGrainEmission(grainPot(isp,ai), isp, ai)
+             grainRecOld = getGrainRecombination(grainPot(isp,ai), isp)
+             grainPot(isp,ai) = grainPotOld+0.05             
+          end if
+
+          threshold = max(grainVn(isp)+grainPot(isp,ai),grainVn(isp))
+          grainEmi = getGrainEmission(grainPot(isp,ai), isp, ai)
+          grainRec = getGrainRecombination(grainPot(isp,ai), isp)
+          delta = grainEmi-grainRec
+
+          delta1 = abs(delta/(0.5*max(1.e-35, grainEmi+grainRec)))
+
+
+          ! check for convergence
+          if (delta1<errorLim) then
+             return
+          else 
+             
+             if (grainPot(iSp,ai) /= grainPotOld) then
+                fac = (grainEmi-grainEmiOld)-(grainRec-grainRecOld)
+                if (fac/=0.) slope = fac/(grainPot(iSp,ai)-grainPotOld)
+             end if
+
+             grainPotOld=grainPot(iSp,ai)
+             grainRecOld = grainRec
+             grainEmiOld = grainEmi
+
+             delta1 = -delta/slope
+             delta = abs(delta1)
+             delta = min(delta, dm*threshold)
+             delta = sign(delta, delta1)
+
+             grainPot(iSp,ai) = grainPot(iSp,ai)+delta
+
+             if (nIterateGC< maxIterateGC) then
+                call setGrainPotential(isp,ai,lgGCBConv)
+                return
+             else
+                print*, '! setGrainPotential: no convergence', cellP,grainPot(isp,ai),grainEmi,grainRec
+                lgGCBConv=.false.                 
+                return
+             end if
+             
+          end if
+
+        end subroutine setGrainPotential
+
+        ! calculate the grain recombination 
+        ! using eqn 18 etc of Baldwin et al. (1991)
+        ! cellFactor is dependant on the physical conditions of the gas, 
+        function getGrainEmission(Vg, isp,ai)
+          implicit none
+
+
+          real :: getGrainEmission
+          real, intent(in) :: Vg ! grain potential
+          real :: Yn, Yhat
+
+          real :: Qa ! grain absorption efficiency
+          real :: thres, photFlux
+          
+          integer, intent(in) :: isp, ai
+          integer :: ifreq, ip
+
+          getGrainEmission=0.
+
+
+          ! get the threshold
+          thres = max(grainVn(isp)+Vg,grainVn(isp))
+
+          call locate( nuArray, thres, ip)           
+          ip = ip+1
+
+
+          do ifreq = ip, nbins
+
+
+             Yn = min(Y0*(1.-grainVn(isp)/nuArray(ifreq)), Y1) 
+
+             Yhat = Yn*min(1., max(0.,1.-Vg/(nuArray(ifreq)-grainVn(isp))))
+
+             if (.not. lgDebug) then
+!                photFlux = (grid%JPEots(cellP,ifreq) + grid%Jste(cellP,ifreq))/(hcRyd*nuArray(ifreq))
+                photFlux =  grid%Jste(cellP,ifreq)/(hcRyd*nuArray(ifreq))
+             else
+!                photFlux = (grid%JPEots(cellP,ifreq) + grid%Jste(cellP,ifreq)+grid%Jdif(cellP,ifreq))/& 
+!                     & (hcRyd*nuArray(ifreq))
+             end if
+
+             photFlux = photFlux*fourPi             
+
+             Qa = XSecArray(dustAbsXsecP(isp,ai)+ifreq-1)/(1.e-8*grainRadius(ai)**2.)
+
+             getGrainEmission = getGrainEmission+Yhat*photFlux*Qa
+
+          end do
+
+        end function getGrainEmission
+
+
+        ! calculate the grain recombination 
+        ! using eqn 23 etcof Baldwin et al. (1991)
+        ! cellFactor is dependant on the physical conditions of the gas, 
+        function getGrainRecombination(Vg, isp)
+          implicit none
+
+          real :: getGrainRecombination
+          real, intent(in) :: Vg ! grain potential [ryd]
+          
+          real :: eta   ! Coulomb correction
+          real :: cpDen ! colliding particle number density [cm^-3]
+          real :: eightkT_pi ! 8*k * Te/Pi [erg]
+          real :: mcp   ! mass of colliding particle in [g]
+          real :: kT    ! k*Te [ryd]
+          real :: S     ! sticking coefficient 
+          real :: vmean ! colliding particle mean velocity
+          real :: Z     ! colliding particle charge
+          
+          integer, intent(in) :: isp ! species identifier 
+          
+          integer :: istage, ielem
+          
+          getGrainRecombination = 0.
+          eta = 0.
+          kT =6.336e-6*TeUsed
+          eightkT_pi = (1.1045e-15)*TeUsed/Pi
+          
+          ! add e- collisions contributions
+          
+          vmean = sqrt(eightkT_pi/me)
+
+          S  =1. ! electron sticking probability
+
+
+          ! eq 24 of Baldwin et al 91
+          eta = -Vg/kT
+
+          if (eta <= 0.) then
+             eta = 1.-eta
+          else if (eta >0.) then
+             eta = exp(-eta)
+          else
+             print*, "! getGrainRecombination: insane eta for e-", eta
+          end if
+             
+          getGrainRecombination = getGrainRecombination + &
+               & NeUsed*vmean*S*eta
+
+          ! add contribution from all other neutral and ionic species
+          do elem = 1, nElements
+             if (lgElementOn(elem)) then                
+                do istage = 2, min(elem+1,nstages)
+                   ! get cpDen
+                   cpDen = grid%ionDen(cellP,elementXref(elem),istage)*&
+                        & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*& 
+                        & grid%Hden(cellP)
+                   mcp = (aWeight(elem)*amu)
+                   vmean = sqrt(eightkT_pi/mcp)
+
+                   S = 1.
+                   Z = real(istage-1)
+                   
+                   eta = Z*Vg/kT
+
+                   if (eta <= 0.) then
+                      eta = 1.-eta
+                   else if (eta >0.) then
+                      eta = exp(-eta)
+                   else
+                      print*, "! getGrainRecombination: insane eta", & 
+                           & eta, elem, istage
+                   end if
+                   
+                   getGrainRecombination = getGrainRecombination - &
+                        & cpDen*vmean*S*eta
+
+                end do
+             end if
+          end do          
+
+        end function getGrainRecombination
+          
+        ! see Baldwin et al 1991; but beware that we are resolving the size distribution.
+        ! so must keep size dependance, so Qa ia really Pi a^2 Qa
+        subroutine setPhotoelHeatCool()
+          implicit none
+          
+          real    :: Qa, photFlux, EY, Yhat,Yn,th
+
+          integer :: ns,na,ifreq,thP
+
+          ! calculate the cooling of dust by photoelectric emission 
+          !  and heating of gas
+          ! Baldwin et al. 1991 eqn 25-27
+
+          photoelHeat_d=0.
+          photoelHeat_g=0.          
+          do ns = 1, nSpecies
+             do na = 1, nSizes
+
+                if (grainPotP(ns,na) <= 0) then
+                   print*, "! setPhotoelHeatCool irregular grain potential index", & 
+                        grainPotP(ns,na), grainPot(ns,na)
+                   stop
+                end if
+
+                th = max(grainVn(ns)+grainPot(ns,na), grainVn(ns))
+                call locate(nuArray,th,thP)
+                if(thP<=0) thP=1
+
+                do ifreq = thP, nbins                
+
+!                do ifreq = grainPotP(ns,na), nbins
+
+                   Yn = min(Y0*(1.-grainVn(ns)/nuArray(ifreq)), Y1) 
+
+                   Yhat = Yn*min(1., max(0.,1.-grainPot(ns,na)/(nuArray(ifreq)-grainVn(ns))))
+
+                   if (.not. lgDebug) then
+!                      photFlux = (grid%JPEots(cellP,ifreq) + & 
+!                           & grid%Jste(cellP,ifreq))/(hcRyd*nuArray(ifreq))
+                      photFlux = grid%Jste(cellP,ifreq)/(hcRyd*nuArray(ifreq))
+                   else
+!                      photFlux = (grid%JPEots(cellP,ifreq) + grid%Jste(cellP,ifreq)+& 
+!                           & grid%Jdif(cellP,ifreq))/(hcRyd*nuArray(ifreq))
+                      photFlux = (grid%Jste(cellP,ifreq)+grid%Jdif(cellP,ifreq))/(hcRyd*nuArray(ifreq))
+
+                   end if                   
+
+                   photFlux = photFLux
+
+                   Qa = XSecArray(dustAbsXsecP(ns,na)+ifreq-1)
+
+
+                   EY = Yn*0.5* min(nuArray(ifreq)-grainVn(ns),&
+                        & max(0., ((nuArray(ifreq)-grainVn(ns))**2.-grainPot(ns,na)**2.)/& 
+                        & (nuArray(ifreq)-grainVn(ns))))
+
+!                   photoelHeat_d(ns,na) = photoelHeat_d(ns,na)+Qa*photFlux*EY*hcRyd/Pi
+                   photoelHeat_d(ns,na) = photoelHeat_d(ns,na)+Qa*photFlux*EY*hcRyd/Pi
+
+                   photoelHeat_g = photoelHeat_g+Qa*photFlux*(EY-Yhat*grainPot(ns,na))*& 
+                        & grainAbun(ns)*grainWeight(na)
+
+                end do
+             end do
+          end do
+
+          photoelHeat_g = photoelHeat_g*grid%Ndust(cellP)*hcRyd/grid%Hden(cellP)
+
+        end subroutine setPhotoelHeatCool
+
+        ! sets the cooling and heating rates of gas and dust due to collisions between the two phases        
+        ! see Baldwin et al 1991
+        ! only collisions with up to the 3 times ionised case are considered here
+        ! (process becomes unimportant for higher ionisation cases)
+        subroutine setDustGasCollHeatCool()
+          implicit none         
+
+          real :: Z , kT, eta, psi,xi,  S, IPerg
+          real :: eightkT_pi ! 8*k * Te/Pi [erg]
+          integer :: ss(30)
+          real :: vmean, mcp ! colliding particle mean velocity and mean particle mass
+          integer :: nelectrons, istage, ns, na
+
+          ! outer shell array
+          ss = (/1,1,2,2,3,3,3,3,3,3,4,4,5,5,5,5,5,5,&
+               &6,6,6,6,6,6,6,6,6,6,7,7/)
+
+          gasDustColl_g = 0.
+          gasDustColl_d = 0.
+
+          kT =6.336e-6*TeUsed ! ryd
+          eightkT_pi = (1.1045e-15)*TeUsed/Pi          
+
+
+          do elem = 1, nElements ! 0 for electrons
+             if ( lgElementOn(elem)) then                                   
+                   
+                   do istage = 1, min(nstages,elem+1)
+                      Z = real(istage-1)
+
+                      mcp = aWeight(elem)*amu
+                      vmean = sqrt(eightkT_pi/mcp)
+
+                      ! number of e-'s of the ionisation stage above
+                      nelectrons = elem-istage+1
+                      
+                      if (istage>1) then
+                         if (elem == 1) then
+                            IPerg = nuArray(HlevNuP(1))*ryd2erg
+                         else if (elem == 2 .and. istage == 2) then
+                            IPerg = nuArray(HeIlevNuP(1))*ryd2erg
+                         else if (elem == 2 .and. istage == 3) then
+                            IPerg = nuArray(HeIIlevNuP(1))*ryd2erg
+                         else
+                            IPerg = nuArray(elementP(elem,istage-1,nShells(elem,istage-1),1))*ryd2erg
+                         end if
+                      end if
+
+                      do ns = 1, nSpecies
+                         if (istage == 1) then
+                            S = 2*mcp*MsurfAtom(ns)/(mcp+MsurfAtom(ns))**2.
+                         else
+                            S = 1.
+                         end if
+                         do na = 1, nSizes
+                            psi = Z*grainPot(ns,na)/kT
+                            if (psi <= 0. ) then
+                               eta = 1.-psi
+                               xi = 1. - psi/2.
+                            else
+                               eta = exp(-psi)
+                               xi = (1.+psi/2.) * eta
+                            end if
+             
+                            gasDustColl_d(ns,na) = gasDustColl_d(ns,na)+& 
+                                 & ionDenUsed(elementXref(elem),istage)*& 
+                                 & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
+                                 & grid%Hden(cellP)*& 
+                                 & Pi*grainRadius(na)*grainRadius(na)*1.e-8*&
+                                 & S*vmean*(2.*kT*Ryd2erg*xi-eta*&
+                                 & (Z*grainPot(ns,na)*Ryd2erg-IPerg+& 
+                                 & 2.*kBoltzmann*grid%Tdust(ns,na,cellP)))     
+
+                            gasDustColl_g = gasDustColl_g + & 
+                                 & ionDenUsed(elementXref(elem),istage)*& 
+                                 & grainWeight(na)*grainAbun(ns)*grid%Ndust(cellP)*&
+                                 & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
+                                 & Pi*grainRadius(na)*grainRadius(na)*1.e-8*&
+                                 & S*vmean*(2.*kT*Ryd2erg*xi-eta*2.*kBoltzmann*& 
+                                 & grid%Tdust(ns,na,cellP))
+                         end do
+                      end do
+                   end do
+                end if
+             end do
+                   
+             ! add contribution of e- collisions
+             vmean = sqrt(eightkT_pi/me)
+             do ns = 1, nSpecies
+                S = 1.
+                Z=-1.
+                do na = 1, nSizes
+
+                   psi = Z*grainPot(ns,na)/kT
+                   if (psi <= 0. ) then
+                      eta = 1.-psi
+                      xi = 1. - psi/2.
+                   else
+                      eta = exp(-psi)
+                      xi = (1.+psi/2.) * eta
+                   end if
+                   
+                   gasDustColl_d(ns,na) = gasDustColl_d(ns,na)+& 
+                        & NeUsed* &
+                        & Pi*grainRadius(na)*grainRadius(na)*1.e-8*&
+                        & S*vmean*(2.*kT*Ryd2erg*xi-eta*&
+                        & (Z*grainPot(ns,na)*ryd2erg))
+                   
+                   gasDustColl_g = gasDustColl_g + & 
+                        & NeUsed* &
+                        & grainWeight(na)*grainAbun(ns)*grid%Ndust(cellP)*&
+                        & Pi*grainRadius(na)*grainRadius(na)*1.e-8*&
+                        & S*vmean*(2.*kT*Ryd2erg*xi)/&
+                        & grid%Hden(cellP)
+                end do
+             end do
+
+             ! factor of fourpi to make up for the lack of fourpi 
+             ! in the balance eqns for J
+             gasDustColl_d(:,:)= gasDustColl_d(:,:)/fourpi
+             gasDustColl_g= gasDustColl_g/fourpi
+             
+           end subroutine setDustGasCollHeatCool
+
+
         subroutine thermBalance(heatInt, coolInt)
             implicit none
 
@@ -483,6 +955,7 @@ module update_mod
             real                   :: coolFF        ! cool due to FF radiation [erg/s/Hden]
             real                   :: coolColl      ! cool due to coll excit   [erg/s/Hden]
             real                   :: coolRec       ! cool due to recombination[erg/s/Hden]
+            real                   :: fcool
             real                   :: heatIonSte    ! heat due to this ion stellar phot
             real                   :: heatIonDif    ! heat due to this ion diffuse phot
             real                   :: heatSte       ! tot heat gain due to stellar phot
@@ -499,6 +972,8 @@ module update_mod
             log10Te = log10(TeUsed)
             Te4     = TeUsed / 1.e4
 
+            ! open ff, rec beta files for H+ and He2+ (Hummer, MNRAS 268(1994) 109, Table 1.  
+
             ! find the N(H+)
             Np = grid%ionDen(cellP,elementXref(1),2)*grid%elemAbun(grid%abFileIndex(xP,yP,zP),1)
 
@@ -511,6 +986,11 @@ module update_mod
 
             coolFF = Np*NeUsed*betaFF*kBoltzmann*TeUsed/sqrt(TeUsed)
 
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'Cell: ', xp,yp,zp
+               write(57,*) 'FF H+: ', coolFF
+            end if
+
             ! cooling of gas due to recombination of H+
             ! fits to Hummer, MNRAS 268(1994) 109, Table 1.  
             ! least square fitting to m=4
@@ -519,6 +999,16 @@ module update_mod
                  & -1.06681387E-13*log10Te*log10Te*log10Te*log10Te
 
             coolRec = Np*NeUsed*betaRec*kBoltzmann*TeUsed/sqrt(TeUsed)
+
+            if (lgTraceHeating.and.taskid==0) then
+               if (nIterateT > 1) then
+                  do i = 1, 12
+                     backspace 57
+                  end do
+               end if
+
+               write(57,*) 'Rec H+: ', coolrec
+            end if
 
             ! cooling of gas due to FF radiation from He++
             ! fits to Hummer, MNRAS 268(1994) 109, Table 1. least square fitting to m=4 and 
@@ -537,6 +1027,11 @@ module update_mod
 
             coolFF = coolFF + Np*NeUsed*betaFF*kBoltzmann*TeUsed/sqrt(TeUsed/4.)
 
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'FF He++: ',Np*NeUsed*betaFF*kBoltzmann*TeUsed/sqrt(TeUsed/4.)
+            end if
+
+
             ! cooling of gas due to recombination of He++
             ! fits to Hummer, MNRAS 268(1994) 109, Table 1.  least square fitting to m=4 
             ! and scaled to Z=2
@@ -547,26 +1042,38 @@ module update_mod
 
             coolRec = coolRec + Np*NeUsed*betaRec*kBoltzmann*TeUsed/sqrt(TeUsed/4.)
 
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'Rec He++: ',Np*NeUsed*betaRec*kBoltzmann*TeUsed/sqrt(TeUsed/4.)
+            end if
+
             ! cooling of gas due to FF radiation from He+
             ! fits to Hummer and Storey, MNRAS 297(1998) 1073, Table 6. least square fitting to m=4 
 
             ! find N(He+)
             Np =  grid%ionDen(cellP,elementXref(2),2)*grid%elemAbun(grid%abFileIndex(xp, yP, zP),2)
 
-            betaFF =  1.16165402E-11 -1.26575063E-12*log10Te + &
-                 & 6.59819747E-13*log10Te*log10Te - &
-                 & 9.78757277E-14*log10Te*log10Te*log10Te -&
-                 & 8.56219782E-15*log10Te*log10Te*log10Te*log10Te
-
-
-            coolFF = coolFF + Np*NeUsed*betaFF*kBoltzmann*TeUsed/sqrt(TeUsed)
-
-            ! cooling of gas due to recombination of He+
-            ! fits to Hummer and Storey, MNRAS 297(1998) 1073, Table 6. least square fitting to m=4
             betaFF =  1.070073e-11    -2.5730207e-13*log10Te + &
                  & 2.109134e-13*log10Te*log10Te 
 
+            coolFF = coolFF + Np*NeUsed*betaFF*kBoltzmann*TeUsed/sqrt(TeUsed)
+
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'FF He+: ',Np*NeUsed*betaFF*kBoltzmann*TeUsed/sqrt(TeUsed)
+            end if
+
+
+            ! cooling of gas due to recombination of He+
+            ! fits to Hummer and Storey, MNRAS 297(1998) 1073, Table 6. least square fitting to m=4
+            betaRec =    9.4255985E-11 -4.04794384E-12*log10Te &
+                 & -1.0055237E-11*log10Te*log10Te  &
+                 & +1.99266862E-12*log10Te*log10Te*log10Te &
+                 & -1.06681387E-13*log10Te*log10Te*log10Te*log10Te 
+
             coolRec = coolRec + Np*NeUsed*betaRec*kBoltzmann*TeUsed/sqrt(TeUsed)
+
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'Rec He+: ',Np*NeUsed*betaRec*kBoltzmann*TeUsed/sqrt(TeUsed)
+            end if
 
             ! collisional excitation of Hydrogen
             ! Mathis, Ly alpha, beta
@@ -589,6 +1096,12 @@ module update_mod
      
              end if
 
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'Coll exc H: ',coolColl
+               fcool = 0.
+            end if
+
+
              ! collisional excitation of Heavies
 
              ! get the emissivities of the forb lines
@@ -600,10 +1113,18 @@ module update_mod
                    do j = 1, 10
                       do k = 1, 10
                          coolColl = coolColl + forbiddenLines(elem,ion,j,k)                         
+                         if (lgTraceHeating.and.taskid==0) then
+                            fcool = fcool + forbiddenLines(elem,ion,j,k)                         
+                         end if
                       end do
                    end do
                 end do
              end do
+
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'CELs cool: ',fcool
+               fcool = 0.
+            end if
 
              ! heating due to photoionization
 
@@ -728,8 +1249,20 @@ module update_mod
             else
                heatInt = heatSte
             end if
+           
+            if (lgTraceHeating.and.taskid==0) then
+               write(57,*) 'Dust gas coll cool: ',gasDustColl_g
+               write(57,*) 'Heat photionization: ', heatInt
+               write(57,*) 'Heat photoelectric: ', photoelHeat_g
+            end if
 
             coolInt = coolFF + coolRec + coolColl
+
+            if (lgDust .and. lgPhotoelectric) then
+               coolInt = coolInt+gasDustColl_g
+               heatInt = heatInt+photoelHeat_g
+            end if
+           
             
         end subroutine thermBalance
 
@@ -1334,7 +1867,9 @@ module update_mod
          subroutine getDustT()
             implicit none
 
+            real                   :: Tspike(nTbins),Pspike(nTbins)
             real                   :: dustAbsIntegral   ! dust absorption integral
+            real                   :: dabs
             real                   :: resLineHeat       ! resonance line heating
             real, dimension(nbins) :: radField,yint     ! radiation field
 
@@ -1358,8 +1893,13 @@ module update_mod
                do ai = 1, nSizes
 
                   dustAbsIntegral=0.
+                  if (lgTraceHeating.and.taskid==0) dabs=0.
+
                   do i = 1, nbins
                      dustAbsIntegral = dustAbsIntegral+xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)
+                     if (lgTraceHeating.and.taskid==0) then
+                        dabs = dabs+xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)                        
+                     end if
                   end do
                  
                   if (lgGas .and. convPercent>=resLinesTransfer .and. (.not.lgResLinesFirst) .and. &
@@ -1370,6 +1910,22 @@ module update_mod
                           & dustAbsIntegral*grainWeight(ai)*grainAbun(nS)*grid%Ndust(cellP)
                      resLineHeat = resLineHeating(ai,ns)
                      dustAbsIntegral = dustAbsIntegral+resLineHeat
+                  end if
+
+                  if (lgGas .and. lgPhotoelectric) then
+                     dustAbsIntegral = dustAbsIntegral+gasDustColl_d(nS,ai)-& 
+                          & photoelHeat_d(nS,ai)
+                  end if
+
+                  if (lgTraceHeating.and.taskid==0) then
+                     write(57,*) 'Dust Species: ', ns, ai
+                     write(57,*) 'Abs of cont rad field  ', dabs
+                     write(57,*) 'Res Lines Heating: ', reslineheat
+                     if (lgGas .and. lgPhotoelectric) then
+                        write(57,*) 'Grain potential ', grainPot(ns,ai)
+                        write(57,*) 'Gas-dust collision heat', gasDustColl_d(nS,ai)
+                        write(57,*) 'Photoelctric cooling: ', photoelHeat_d(nS,ai)
+                     end if
                   end if
 
                   call locate(dustEmIntegral(nS,ai,:), dustAbsIntegral, iT)
@@ -1398,6 +1954,12 @@ module update_mod
                           & dustEmIntegral(nS,ai,iT))
                   end if
                   
+                  if (lgTraceHeating.and.taskid==0) then
+                     write(57,*) 'Radiative cooling: ', dustEmIntegral(ns,ai,iT)
+                     write(57,*) 'Grain temperature: ', grid%Tdust(nS,ai,cellP), &
+                          & " species ", grainLabel(nS), " size:", grainRadius(ai)
+
+                  end if
 
                   if (lgTalk) &
                        & print*, "! getDustT: [talk] cell ", xP,yP,zP,"; Grain temperature: "&

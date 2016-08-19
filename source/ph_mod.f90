@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module xSec_mod
 
     use common_mod
@@ -747,6 +747,7 @@ module xSec_mod
         real, pointer :: CTabs(:) ! total abs cross-section [um^2] for grain mixture
         real, pointer :: CTsca(:) ! total sca cross-section [um^2] for grain mixture
         real, pointer :: Ere(:), Eim(:) 
+        real, pointer :: temp(:)
 
         print*, 'in makeDustXSec'
 
@@ -774,6 +775,25 @@ module xSec_mod
            stop
         end if
         grainAbun=0.
+
+        allocate(rho(1:nSpecies), stat = err)
+        if (err /= 0) then
+           print*, "! makeDustXsec: can't allocate rho memory"
+           stop
+        end if
+        rho=0.
+        allocate(grainVn(1:nSpecies), stat = err)
+        if (err /= 0) then
+           print*, "! makeDustXsec: can't allocate grainVn memory"
+           stop
+        end if
+        grainVn=0.
+        allocate(MsurfAtom(1:nSpecies), stat = err)
+        if (err /= 0) then
+           print*, "! makeDustXsec: can't allocate surfAtom memory"
+           stop
+        end if
+        MsurfAtom=0
 
         allocate (grainLabel(1:nSpecies), stat=err)
         if (err/=0) then
@@ -867,9 +887,6 @@ module xSec_mod
            end do
         end if
 
-        ! close grain
-        close(11) 
-
         do nSpec = 1, nSpecies
            
            read(10, *) extinctionFile, grainAbun(nSpec)
@@ -892,17 +909,39 @@ module xSec_mod
            rewind 20
 
            if (nSpec>1 .and. nWav/=nWavOld) then
-              print*, '! makeDustXSec: extinction files do not have the same number of frequency points'
-              stop
+              print*, '! makeDustXSec: [warning] extinction files do not have the same number of frequency points'
+!              stop
            end if
 
+           allocate (wav(1:nWav), stat=err)
+           if (err/=0) then
+              print*, "! makeDustXsec: error allocation memory for wav array"
+              stop
+           end if
+           allocate (tmp1(1:nWav), stat=err)
+           if (err/=0) then
+              print*, "! makeDustXsec: error allocation memory for tmp1 array"
+              stop
+           end if
+           allocate (tmp2(1:nWav), stat=err)
+           if (err/=0) then
+              print*, "! makeDustXsec: error allocation memory for tmp2 array"
+              stop
+           end if
+           allocate (tmp3(1:nWav), stat=err)
+           if (err/=0) then
+              print*, "! makeDustXsec: error allocation memory for tmp3 array"
+              stop
+           end if
+           
+           ! initialise arrays
+           tmp1 = 0.
+           tmp2 = 0.
+           tmp3 = 0.
+           wav = 0.
+              
            if (nSpec == 1) then
               ! allocate the pointers' memory
-              allocate (wav(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for wav array"
-                 stop
-              end if
               allocate (Csca(1:nSpecies,0:nSizes,1:nbins), stat=err)
               if (err/=0) then
                  print*, "! makeDustXsec: error allocation memory for Csca array"
@@ -923,32 +962,8 @@ module xSec_mod
                  print*, "! makeDustXsec: error allocation memory for CTabs array"
                  stop
               end if
-              allocate (tmp1(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp1 array"
-                 stop
-              end if
-              allocate (tmp2(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp2 array"
-                 stop
-              end if
-              allocate (tmp3(1:nWav), stat=err)
-              if (err/=0) then
-                 print*, "! makeDustXsec: error allocation memory for tmp3 array"
-                 stop
-              end if
-
-              ! initialise arrays
-              tmp1 = 0.
-              tmp2 = 0.
-              tmp3 = 0.
-              wav = 0.
-              Cabs = 0.
-              Csca = 0.
-              CTabs = 0.
-              CTsca = 0.
            end if
+
            allocate (Ere(1:nWav), stat=err)
            if (err/=0) then
               print*, "! makeDustXsec: error allocation memory for Ere array"
@@ -962,7 +977,13 @@ module xSec_mod
            Ere = 0.
            Eim = 0.
 
-           read(20, *) grainLabel(nSpec), TdustSublime(nSpec)
+           Cabs = 0.
+           Csca = 0.
+           CTabs = 0.
+           CTsca = 0.
+
+           read(20, *) grainLabel(nSpec), TdustSublime(nSpec),&
+                & rho(nSpec), grainVn(nSpec), MsurfAtom(nSpec)
 
            do i = 1, Nwav
 
@@ -1008,6 +1029,7 @@ module xSec_mod
            ! calculate efficiencies
            call getQs(Ere,Eim,Cabs(nSpec,1:nSizes,1:nbins),Csca(nSpec,1:nSizes,1:nbins))
 
+           if (associated(wav)) deallocate(wav)
            if (associated(Ere)) deallocate(Ere)
            if (associated(Eim)) deallocate(Eim)
 
@@ -1085,7 +1107,6 @@ module xSec_mod
         if (associated(Cabs)) deallocate(Cabs)
         if (associated(CTsca)) deallocate(CTsca)
         if (associated(CTabs)) deallocate(CTabs)
-
 
         do n = 1, nSpecies
            do i = 1, nbins

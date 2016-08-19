@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.0
+! Version 2.02
 module dust_mod
   use common_mod
   use continuum_mod

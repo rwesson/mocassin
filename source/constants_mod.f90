@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module constants_mod
 
     public
@@ -13,11 +13,13 @@ module constants_mod
     real, parameter :: hPlanck = 6.6262e-27        ! Planck constant [erg s]
     real, parameter :: HIonPot = 0.99946           ! ionization potential of H [Ryd]
     real, parameter :: hnu3c2 = 0.524166
+    real, parameter :: me = 9.109382e-28           ! mass of e- [g]
     real, parameter :: kBoltzmann = 1.38062e-16     ! Boltzmann constant
+    real, parameter :: Ryd2erg = 2.1799e-11        ! converts ryd to erg
     real, parameter :: RydInf = 109737.315         ! Ryd for infinite mass nuclei [1/cm]
     real, parameter :: sigma = 5.66956e-5          ! Stefan-Boltzmann constant [erg*cm^-2deg^-4s-1]
     real, parameter :: Te1Ryd = 1.578866e5         ! Te at 1 Ryd [K]
-  
+    real, parameter :: Y1 = 0.2                    ! see Baldwin et al. 1991, ApJ 374, 580
 
     ! numerical constants
     real, parameter :: rootThree = 1.732050808
@@ -47,6 +49,7 @@ module constants_mod
     integer, parameter :: nstages = 7               ! number of ionization stages 
     integer, parameter :: xSecMax = 1000000         ! max limit to xSecArray 
     integer, parameter :: nTemps=3000
+
     real, parameter :: xMax = 0.99999               ! max limit for a relative ionic abundance
 
 end module constants_mod

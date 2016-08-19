@@ -1,9 +1,9 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !  
 ! MoCaSSiN = MOnte CArlo SImulationS of Nebulae 
-! this is the plotting version
+! this is the plotting driver
 !  
-! Version 2.00
+! Version 2.02
 program MoCaSSiNplot
     use common_mod
     use constants_mod

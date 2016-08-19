@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module iteration_mod
     use common_mod
     use continuum_mod
@@ -205,6 +205,14 @@ module iteration_mod
            
            print*, 'emissionDriver in'
            
+           if (taskid==0 .and. lgWritePss) then
+              open(unit=89, file='output/qHeatPss.out', status='unknown', position='rewind', iostat=ios)
+              if (ios /= 0) then
+                 print*, "! iterationMC: can't open file for writing, output/qHeatPss.out"
+                 stop
+              end if
+           end if
+              
            ! check if min convergence was reached to carry out resonant line transfer
            if (lgDust .and. lgGas .and. convPercent>=resLinesTransfer .and. lgResLinesFirst &
                 &.and. (.not.nIterateMC==1)) then
@@ -251,6 +259,7 @@ module iteration_mod
               
               print*, 'emissionDriver out'
 
+              if (taskid==0 .and. lgWritePss) close(89)
 
               if (lgDust .and. .not.lgGas) then 
                  allocate(dustPDFTemp(0:grid(iG)%nCells, 1:nbins),&
@@ -646,6 +655,15 @@ module iteration_mod
               lgConvergedTemp      = 0
               lgBlackTemp          = 0 
 
+               if (lgTraceHeating.and.taskid==0) then
+                 open(file="output/thermalBalance.out", unit=57, status="unknown", iostat=ios)
+                 if (ios /= 0) then
+                    print*, "! iterationMC: can't open file for writing, output/thermalBalance.out"
+                    stop
+                 end if
+              end if
+
+
               print*, 'updateCell in', iG
               iCell = 0
               do i = 1, grid(iG)%nx
@@ -658,6 +676,12 @@ module iteration_mod
                     end do
                  end do
               end do
+
+
+              if (lgTraceHeating.and.taskid==0) then
+                 close (57)
+              end if
+
 
               call mpi_barrier(mpi_comm_world, ierr)
               

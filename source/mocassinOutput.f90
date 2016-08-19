@@ -1,10 +1,10 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !  
-! MoCaSSiNwarm = MOnte CArlo SImulationS of Nebulae 
-! this is the warm-start driver of the simulation 
+! MoCaSSiNoutput = MOnte CArlo SImulationS of Nebulae 
+! this is the output-only driver of the simulation 
 ! (requires grid1.out,grid2.out,grid3.out files)
 !  
-! Version 2.00
+! Version 2.02
 program MoCaSSiNoutput
     use common_mod
     use constants_mod

@@ -1,6 +1,6 @@
 ! Copyright (C) 2005 Barbara Ercolano 
 !
-! Version 2.00
+! Version 2.02
 module set_input_mod
     use common_mod
     implicit none
@@ -59,13 +59,20 @@ module set_input_mod
         nzIn(1)       = 30        
         maxIterateMC  = 30
         maxPhotons    = 0
-        nbins         = 600
+        minaQHeat     = 1.e-3
+        minConvQHeat  = 99.
+        nbins         = 600        
         MdMgValue     = 0.
         MdMgFile      = "none"               
         nAngleBins    = 0        
         nGrids        = 1
         NdustValue     = 0.
         NdustFile      = "none"
+
+        ! qheat
+        Tmax           =700.
+        nTbins         =300.
+        lgWritePss     =.false.
 
         fillingFactor = 1.
         contCube      = -1.
@@ -125,6 +132,21 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case ("traceHeating")
+               lgTraceHeating = .true.
+               print*, keyword, lgTraceHeating
+            case("quantumHeatGrain")
+               lgQheat = .true.
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword,minaQHeat,minConvQHeat
+               print*, keyword, minaQHeat,minConvQHeat
+            case("quantumHeatGrainParameters") 
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword,Tmax,nTbins,lgWritePss
+               print*, keyword,Tmax,nTbins,lgWritePss              
+            case ("noPhotoelectric")
+               print*, keyword
+               lgPhotoelectric = .false.
             case ("multiPhotoSources") 
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword,multiPhotoSources
@@ -620,7 +642,7 @@ module set_input_mod
 
         integer                       :: ios, i, iloop,nSafeLimit=10000
 
-        real                          :: E0, nphotonsold,Ltot
+        real                          :: E0, nphotonsold
 
         close(13)
         open(file=infile, unit=13, iostat=ios)
@@ -651,18 +673,31 @@ module set_input_mod
            contShapeIn(i) = contShape(i)
         end do
 
-        Ltot = 0.
-        do i = 1, nstars
-           Ltot = Ltot+ Lstar(i)
-        end do
-        Ltot = Ltot
+        ! find the number of packets to be emitted by each source 
+        ! (keep E0 constant throughout the sim)
 
-        E0 = Ltot/NphotonsTot
+        ! initial guess at Nphotons(1) -> E0
+        Nphotons(1) = NphotonsTot/nStars
+        E0 = Lstar(1)/real(Nphotons(1))
 
-        do i = 1, nStars
-           Nphotons(i) = int(Lstar(i)/E0)
-        end do
+        do iloop = 1, nSafelimit
+
+           nphotonsold=Nphotons(1)
+           ! find Nphotons(i)
+           do i = 2, nStars
+              Nphotons(i) = int(Lstar(i)/E0)
+           end do
         
+           ! impose the condition that NphotonsTot = Sum{Nphotons(i)} -> derive new Nphotons(1)        
+           Nphotons(1)=NphotonsTot
+           do i = 2, nStars
+              Nphotons(1) = Nphotons(1)-Nphotons(i)
+           end do
+        
+           if (abs(nPhotons(1)-nphotonsold)<1) exit
+
+        end do
+
         do i = 1, nStars
            print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i)
         end do                

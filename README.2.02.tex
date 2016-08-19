@@ -15,7 +15,7 @@
 \vspace{4cm}
 
 \centerline
-{\Large \bf {\sc \Huge mocassin} Version 2.01 }
+{\Large \bf {\sc \Huge mocassin} Version 2.02 }
 
 \vspace{2cm}
 
@@ -26,7 +26,7 @@
 \vspace{3cm}
 
 \centerline
-{LAST MODIFIED: 17/03/2005}
+{LAST MODIFIED: 14/07/2005}
 
 
 
@@ -46,7 +46,7 @@
 
 \noindent{\large CONTENTS}\\
 \\
-\noindent {0. What's new from 2.00 to 2.01}\\
+\noindent {0. What's new}\\
 \noindent {1. How to get MOCASSIN up and running}\\
 \indent
     1.1 Obtaining the MOCASSIN source code\\
@@ -83,15 +83,20 @@
 \indent 5.3 Running models that include dust and gas\\
 \indent 5.4 The accessories/ subdirectory\\
 \indent 5.5 Plotting dust temperatures\\
+\indent 5.6 Grain temperature spiking procedures\\
 \\
 \noindent 6. Limitations and future development\\
 
 \pagebreak
 
-\noindent{\bf \large 0. What's new from 2.00 to 2.01}\\
+\noindent{\bf \large 0. What's new}\\
 \\
-The main changes regard the introduction of multiple ionising sources placed at any 
-location in the grid. See section 3.1 (multiPhotoSources). \\
+\paragraph {from 2.01 to 2.02} Grain charge calculations. Photoelectric heating from dust grains. Gas-grain collisions. Tspiking. 
+See new keywords: {\it traceHeating}, {\it quantumHeatGrain}, {\it quantumHeatGrainParameters}, 
+{\it noPhotoelectric}
+\\
+\paragraph {from 2.00 to 2.01} The main changes regard the introduction of multiple ionising sources placed at any 
+location in the grid. See section 3.1 {\it multiPhotoSources}. \\
 The central star(s) parameters are now written to a separate output file (output/photoSource.out). \\
 This version is fully compatible with inputs of Version 2.00, but not with the grid*.out files (so mocassinWarm compiled with Version 2.01 will not work with grids produced by Version 2.00).\\
 
@@ -590,6 +595,9 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 \paragraph   { NeStart real   }  : Initial guess for the nebular electron density. \\
 		     $[0.]$\\
 
+\paragraph {noPhotoelectric} : When this keyword is included in the input file all procedures associated with the calculation ofthe grain charges and photoelectric yield are switched off as well as gas-grain collision processes. \\
+$[.false.]$\\
+
 \paragraph   { nPhotons integer}: This is the number of energy packets to be used in the Monte 
 		     Carlo simulation and it has to be specified for each model.\\
 		     $[*]$ \\
@@ -626,6 +634,12 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 		    it to be different)\\
 		    $[.false.]$\\
 
+\paragraph {quantumHeatGrain real1 real2}: This keyword activated the temperature spiking routines (quantum grain heating). It is only valid for simulations including dust. real1 is the limiting size of grain radii [um] that will be allowed to spike (i.e. grains with a < real1 will spike). real2 is the minimum convergence level for the spiking to occur. Please read the notes on {\it Grain temperature spiking procedures} contained in this manual.\\
+$[1.e-3, 99.]$\\
+
+\paragraph {quantumHeatGrainParameters real1 integer1 logical1}: This keyword provides controls over some internal parameters in the quantum grain heating procedures. They should not be modified unless you really know what you are doing.  real1 is the max temperature to be considered in the grain temperature mesh of the spiking. integer1  is the number of temperature (and enthalpy) bins considered. logical1 switches on and off the writing out of a file containing all the probability functions for all the grains in every cell. The resulting file can be really gigantic and so this value should be set to .true. only for debugging purposes and used with care. Please read the notes on {\it Grain temperature spiking procedures} contained in this manual.\\
+$[700., 300, .false.]$
+ 
 \paragraph  {  Rin real}	    : Inner radius of the ionised region, in units of $[cm]$.\\
 		     $[*]$\\
 
@@ -664,6 +678,10 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 
 \paragraph   { TeStart real}     : Initial guess for the nebular temperature. \\
 		     $[10000.]$\\
+
+\paragraph { traceHeating} : Logical variable to switch on the thermal balance channel tracing. When this is included in the input file a file called {\it thermalBalance.out} will be written to the {\it output/} directory. Be aware that depending on the size of your grid this may be quite a large file and time-consuming in the I/O phase.\\
+$[.false.]$\\ 
+
 
 \paragraph  {  TStellar real  }  : Temperature in $[K]$ of the ionizing stellar source.\\
 		     $[*]$\\
@@ -1094,6 +1112,24 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
    2 grain species and 20 grain sizes. The simulation was a multiChemistry dust 
    and gas one, so the results are also split by sector. \\
 
+
+\noindent{ \large   5.6 Grain temperature spiking routines}\\
+
+   The grain temperature spiking routines included in {\sc mocassin} are based on the Guhathakurta \& Draine (1989 ApJ 345, 230) method. This is a very powerful method and allows the time-efficient computation of the time-dependent grain temperatures due to quantum heating. For the limitations of the method also see Siebenmorgen et al. (1992 A\&A 266, 501). The temperature spikes only affect the output SED from dust grains, it is therefore advisable not to include these time consuming procedures until the model has almost converged in the case of gas+grain simulations (keep a high value of real2 - see keyword description). In the gas of dust only models, it is worth to have the procedures working right from the start since the convergence criterion is then based on dust temperatures and therefore one must take this effect into account right from the start in order to avoid copnvergence fluctuations. It is in general not worth running the quantum heating routines on large grains that are unlikely to spike. For a discussion of the general cases when quantum heating routines must be considered pls see Siebenmorgen et al. (1992 A\&A 266, 501). \\
+
+At present the grain temperature spiking routines are only implemented for carbonaceous or silicate grains. {\it mocassin} will expect to be told what type of grain he is dealing with when calculating the spiking. This is done by adding a -capital- 'S' or 'C' at the beginnig of the species label in the optical constants file. e.g. for the Draine \& Laor (1993) silicates data (dustData/sil-dlaor.nk): \\
+ {\bf S}sil\_dl  1400. 3.3  0.588 20.077\\
+ 0.10000E-02 0.99956E+00 0.97380E-04\\
+ 0.10120E-02 0.99955E+00 0.10160E-03\\
+ 0.10230E-02 0.99954E+00 0.10610E-03\\
+ 0.10350E-02 0.99953E+00 0.11060E-03\\
+ 0.10470E-02 0.99952E+00 0.11520E-03\\
+ 0.10590E-02 0.99951E+00 0.12000E-03\\
+ .........\\
+Please email (be@star.ucl.ac.uk) me if you would like to include T-spiking effects for other species. \\
+
+
+
 \pagebreak
 
 \noindent{ \bf \large 6. Limitations and future development}\\
@@ -1109,7 +1145,7 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
    systems, which include the Silicon Graphics Origin 2000 machine used for this 
    work, are generally much more expensive than Beowulf clusters. \\
 
-   Pure-dust models are less computationally expensive than gas or dist and gas ones
+   Pure-dust models are less computationally expensive than gas or dust and gas ones
    and reasonably sizes grids can be feasibly run on single processor machines. \\
 
    {\sc mocassin} was designed for the modelling of the photoionised region of planetary 
@@ -1117,9 +1153,8 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
    physical processes which are needed, for example,  for the modelling of AGNs. 
    However the inclusion of processes such as inner shell photoionisation and Compton 
    heating is straightforward and this is intended to be one of the developments of the near 
-   future.  Moreover, plans also exist to include a self-consistent treatment of PDR regions in
-   planetary nebulae.\\
-
+   future.  Moreover, current efforts are geared toward the inclusion of a self-consistent treatment 
+   for PDR processes, this requires the incorporation of a chemical network. \\
 
 
 \end{document}
