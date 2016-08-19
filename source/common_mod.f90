@@ -255,6 +255,8 @@ module common_mod
 
     !  model parameters
 
+    type(vector), pointer :: starPosition(:) ! ionising source(s) position
+
     logical            :: lgAutoPackets    ! automatic increase of packets on the fly? 
     logical            :: lgTalk           ! talk on?
     logical            :: lgDfile          ! use an external density file?
@@ -276,8 +278,8 @@ module common_mod
 
     character(len=50)  :: gridList ! grid list file name
     character(len=50), pointer  :: abundanceFIle(:) ! abundance file names
-    character(len=50)  :: contShape        ! continuumShape
-    character(len=50)  :: contShapeIn      ! continuumShape
+    character(len=50), pointer  :: contShape(:)     ! continuumShape
+    character(len=50), pointer  :: contShapeIn(:)   ! continuumShape
     character(len=50)  :: densityFile      ! density file
     character(len=50)  :: dustFile(2)      ! dust files
     character(len=50)  :: MdMgFile         ! name of MdMg file
@@ -294,10 +296,13 @@ module common_mod
     integer            :: nAbComponents=1  ! number of abundance components            
     integer            :: nBins            ! number of energy bins 
     integer            :: nElementsUsed    ! actual number of elements used
-    integer            :: nPhotons         ! # of packets to be used in the sim
+    integer, pointer   :: nPhotons(:)      ! # of packets to be used in the sim
+    integer            :: nPhotonsTot      ! # of packets to be used in the sim
     integer, dimension(maxGrids) &
                       &:: nxIn,nyIn, nzIn  ! x, y and z dimensions of the grids
+    integer            :: nStars           ! number of ionising sources
     integer            :: elementXref(nElements) ! x reference index array for elements actually used
+    integer, pointer   :: starIndeces(:,:) ! (nstars, 3) 1=x; 2=y; 3=z
 
     real               :: fillingFactor    ! filling factor epsilon
     real               :: contCube(2)      ! continuum cube
@@ -312,7 +317,7 @@ module common_mod
     real               :: Hdensity         ! constant H density values (cm-^3)
     real               :: H0Start          ! initial guess at X(H0) for regions I and II
     real               :: Lphot            ! L of ionizing source [e36 phot/sec]
-    real               :: LStar            ! L of ionizing source [e36 erg/sec]
+    real,pointer       :: LStar(:)         ! L of ionizing source [e36 erg/sec]
     real               :: meanField        ! mean ionizing field to be used with plane parallel 
                                            ! geometry [erg/sec/cm^2]
     real               :: minConvergence   ! stop when this level of convergence has been reached  
@@ -328,7 +333,7 @@ module common_mod
     real               :: R_out            ! outer radius [cm]
     real               :: SEDfreq(2)       ! 
     real               :: TeStart          ! initial guess at Te for regions I and II
-    real               :: Tstellar         ! T of ionizing source [K]
+    real, pointer      :: Tstellar(:)      ! T of ionizing source [K]
     real               :: XHILimit         ! convergence limit on X(HI)
     
 

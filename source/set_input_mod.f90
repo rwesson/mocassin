@@ -23,9 +23,12 @@ module set_input_mod
         character(len=50)   :: cValue           ! character value corresponding to keyword
         character(len=50)   :: in_file          ! input file
         character(len=50)   :: keyword          ! input parameter keyword
- 
-        ! set default values and set non oprional values to 0 or 0. or "zero"
+        character(len=50)   :: multiPhotoSources ! stars file
         
+        logical             :: lgMultiStars=.false.
+        
+        ! set default values and set non oprional values to 0 or 0. or "zero"
+       
         lgRecombination = .false.
         lgAutoPackets = .false.
         lgMultiChemistry = .false.
@@ -46,15 +49,14 @@ module set_input_mod
         lg1D          = .false.
         lgDustScattering = .true.
         lgSymmetricXYZ= .false.
-
-        contShape     = "blackbody"
         
+        nStars        = 0
         nxIn(:)       = 0
         nyIn(:)       = 0
         nzIn(:)       = 0
         nxIn(1)       = 30
         nyIn(1)       = 30
-        nzIn(1)       = 30
+        nzIn(1)       = 30        
         maxIterateMC  = 30
         maxPhotons    = 0
         nbins         = 600
@@ -64,7 +66,6 @@ module set_input_mod
         nGrids        = 1
         NdustValue     = 0.
         NdustFile      = "none"
-        nPhotons      = 100000
 
         fillingFactor = 1.
         contCube      = -1.
@@ -74,6 +75,7 @@ module set_input_mod
 
         densityLaw    = 0.
 
+        multiPhotoSources = "none"
         densityFile   = "none"
         dustFile      = "none"
         gridList      = "none"
@@ -81,7 +83,6 @@ module set_input_mod
         Hdensity      = 0.
         H0Start       = 3.e-5
         LPhot         = 0.
-        LStar         = 0.
         minConvergence= 95.
         NeStart       = 0.
         nuMax         = 15.
@@ -94,7 +95,6 @@ module set_input_mod
         R_in          = -1.
         R_out         = 0.
         TeStart       = 10000.
-        TStellar      = 0.
         XHILimit      = 0.05
 
         ! ask the user to input file name and check for errors (three chances)
@@ -125,6 +125,11 @@ module set_input_mod
             if (ios < 0) exit ! end of file reached
 
             select case (keyword)
+            case ("multiPhotoSources") 
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword,multiPhotoSources
+               print*, keyword,multiPhotoSources
+               lgMultiStars=.true.
             case("continuumCube")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, contCube(1), contCube(2)
@@ -184,6 +189,8 @@ module set_input_mod
                read(unit=10, fmt=*, iostat=ios) keyword, meanField
                lgPlaneIonization = .true.
                print*, keyword, meanField
+               allocate(Lstar(1))
+               Lstar=0.
             case ("autoPackets")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, convIncPercent, nPhotIncrease, maxPhotons
@@ -226,8 +233,11 @@ module set_input_mod
                 print*, keyword
             case ("contShape")
                 backspace 10
-                read(unit=10, fmt=*, iostat=ios) keyword, contShape
-                print*, keyword, contShape
+                nstars=1
+                allocate(contShape(1))
+                allocate(contShapeIn(1))
+                read(unit=10, fmt=*, iostat=ios) keyword, contShape(1)
+                print*, keyword, contShape(1)
             case ("nebComposition")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, cValue
@@ -251,8 +261,8 @@ module set_input_mod
                 if (taskid==0) print*, keyword, maxIterateMC, minConvergence
             case ("nPhotons")
                 backspace 10
-                read(unit=10, fmt=*, iostat=ios) keyword, nPhotons
-                print*, keyword, nPhotons
+                read(unit=10, fmt=*, iostat=ios) keyword, nPhotonsTot
+                print*, keyword, nPhotonsTot
             case ("nx")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, nxin(1)
@@ -262,7 +272,12 @@ module set_input_mod
             case ("nz")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, nzin(1)
-            case ("TeStart")
+             case ("starPosition")
+                backspace 10
+                allocate(starPosition(1))
+                read(unit=10, fmt=*, iostat=ios) keyword, starPosition(1)%x, starPosition(1)%y, starPosition(1)%z
+                print*,  keyword, starPosition(1)%x, starPosition(1)%y, starPosition(1)%z
+             case ("TeStart")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, TeStart
                 print*, keyword, TeStart
@@ -272,8 +287,9 @@ module set_input_mod
                 print*, keyword, NeStart
             case ("TStellar")
                 backspace 10
-                read(unit=10, fmt=*, iostat=ios) keyword, TStellar
-                print*, keyword, TStellar
+                allocate(TStellar(1))
+                read(unit=10, fmt=*, iostat=ios) keyword, TStellar(1)
+                print*, keyword, TStellar(1)
             case ("convLimit")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword,  XHILimit
@@ -284,10 +300,12 @@ module set_input_mod
                 print*, keyword, H0Start
             case ("LStar")
                 backspace 10
-                read(unit=10, fmt=*, iostat=ios) keyword, LStar
-                print*, keyword, LStar
+                allocate(Lstar(1))
+                read(unit=10, fmt=*, iostat=ios) keyword, LStar(1)
+                print*, keyword, LStar(1)
             case ("LPhot")
                 backspace 10
+                allocate(Lstar(1))                
                 read(unit=10, fmt=*, iostat=ios) keyword, LPhot
                 print*, keyword, LPhot
             case ("nuMax")
@@ -400,6 +418,40 @@ module set_input_mod
 
         close(10)
 
+        if (lgMultiStars) then
+           call setMultiPhotoSources(multiPhotoSources)
+        else if (lgMultiStars .and. nStars==1) then
+           print*, '! readInput: multiPhotoSources keyword and Lstar, Tstellar, ContShape are mutually exclusive'
+           stop
+        else
+           allocate(nPhotons(1))
+           nPhotons(1)=nPhotonsTot
+           if (.not.associated(starPosition)) then
+              allocate (starPosition(1))
+              starPosition(1)%x=0.
+              starPosition(1)%y=0.
+              starPosition(1)%z=0.
+              print* , '! readInput: [talk] ionising source positioned at 0.,0.,0.'
+           end if
+        end if
+
+        if (.not.associated(contShape)) then
+           print*, "! readInput: no information about the continuum shape - contShape -"
+           stop
+        end if
+        if (.not.associated(TStellar)) then
+           print*, "! readInput: no information about the stellar effective temperature - Tstellar -"
+           stop
+        end if
+        if (.not.associated(nPhotons)) then
+           print*, "! readInput: no information about the number of energy packets to be used - nPhotons -"
+           stop
+        end if
+        if (.not.associated(Lstar) .and. Lphot<=0.) then
+           print*, "! readInput: no information about the stellar luminosity - Lstar or Lphot -"
+           stop
+        end if
+
         contShapeIn = contShape
 
         print*, "mother nx, ny, nz" , nxin(1), nyin(1), nzin(1)
@@ -454,16 +506,16 @@ module set_input_mod
            print*, "! readInput [warning]: plane ionizing field specified - cannot use&
                 & symmetricXYZ - removed."
            lgSymmetricXYZ = .false.
-        else if (TStellar == 0.) then
+        else if (TStellar(1) == 0.) then
             print*, "! readInput: TStellar missing from model parameter input file" 
             stop
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
             stop
-       else if (LPhot == 0. .and. LStar == 0. .and. .not.lgPlaneIonization) then
+       else if (LPhot == 0. .and. LStar(1) == 0. .and. .not.lgPlaneIonization) then
             print*, "! readInput: LPhot and LStar missing from model parameter input file"
             stop
-        else if (LPhot /= 0. .and. LStar /= 0.) then 
+        else if (LPhot /= 0. .and. LStar(1) /= 0.) then 
             print*, "! readInput: [warning] LPhot and LStar both entered. "
         else if (maxIterateMC < 1) then
             print*, "! readInput: invalid maxIterateMC in model parameter input &
@@ -473,7 +525,7 @@ module set_input_mod
             print*, "! readInput: invalid minConvergence input (must be between 0. and 100.) ", & 
                  &  in_file, minConvergence
             stop
-        else if (nPhotons < 1) then
+        else if (nPhotons(1) < 1) then
             print*, "! readInput: invalid nPhotons in model parameter input &
                  & file", in_file, nPhotons
             stop
@@ -487,7 +539,7 @@ module set_input_mod
             print*, "! readInput: invalid grid boundaries in model parameter input & 
                  & file", in_file, nxin(1), nyin(1), nzin(1)
             stop
-        else if (TStellar < 0.) then
+        else if (TStellar(1) < 0.) then
             print*, "! readInput: invalid TStellar  in model parameter input &
                  & file", in_file, TStellar
             stop
@@ -499,7 +551,7 @@ module set_input_mod
             print*, "! readInput: invalid LPhot  in model parameter input &
                  & file", in_file, LPhot
             stop
-        else if (LStar < 0.) then
+        else if (LStar(1) < 0.) then
             print*, "! readInput: invalid LStar  in model parameter input &
                  & file", in_file, LStar
             stop
@@ -559,8 +611,79 @@ module set_input_mod
 
          end subroutine readGridList
 
+       end subroutine readInput
+       
+       subroutine setMultiPhotoSources(infile)
+        implicit none
+        
+        character(len=50), intent(in) :: infile
 
-    end subroutine readInput
+        integer                       :: ios, i, iloop,nSafeLimit=10000
+
+        real                          :: E0, nphotonsold
+
+        close(13)
+        open(file=infile, unit=13, iostat=ios)
+        if (ios /= 0) then
+           print*, "! setMultiPhotoSources: can't open ionising sources file", infile
+           stop
+        end if
+        
+        read(13,*) nStars
+        print*, "Multiple Ionising sources", nStars
+        print*, "(i, Tstellar, Lstar, ContShape, Nphotons, position)"
+
+        allocate(TStellar(nStars))        
+        allocate(Lstar(nStars))
+        allocate(ContShape(nStars))        
+        allocate(ContShapeIn(nStars))        
+        allocate(nPhotons(nStars))        
+        allocate(starPosition(nStars))       
+
+        TStellar=0.
+        Lstar=0.
+        ContShape='none'
+        ContShapeIn='none'
+        nPhotons=0.
+
+        do i = 1, nStars
+           read(13,*) TStellar(i), Lstar(i), ContShape(i), starPosition(i)%x, starPosition(i)%y, starPosition(i)%z
+           contShapeIn(i) = contShape(i)
+        end do
+
+        ! find the number of packets to be emitted by each source 
+        ! (keep E0 constant throughout the sim)
+
+        ! initial guess at Nphotons(1) -> E0
+        Nphotons(1) = NphotonsTot/nStars
+        E0 = Lstar(1)/real(Nphotons(1))
+
+        do iloop = 1, nSafelimit
+
+           nphotonsold=Nphotons(1)
+           ! find Nphotons(i)
+           do i = 2, nStars
+              Nphotons(i) = int(Lstar(i)/E0)
+           end do
+        
+           ! impose the condition that NphotonsTot = Sum{Nphotons(i)} -> derive new Nphotons(1)        
+           Nphotons(1)=NphotonsTot
+           do i = 2, nStars
+              Nphotons(1) = Nphotons(1)-Nphotons(i)
+           end do
+        
+           if (abs(nPhotons(1)-nphotonsold)<1) exit
+
+        end do
+
+        do i = 1, nStars
+           print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i)
+        end do                
+
+      end subroutine setMultiPhotoSources
+
+
+
         
 end module set_input_mod
 

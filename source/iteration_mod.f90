@@ -70,6 +70,7 @@ module iteration_mod
            integer                :: load,rest       ! 
            integer                :: size            ! size for mpi
            integer                :: iCell           ! cell index including non-active
+           integer                :: iStar           ! star index
            integer                :: ai              ! grain size counter
            integer                :: icontrib,icomp ! counters
            integer                :: imu             ! direction cosine counter
@@ -408,28 +409,33 @@ module iteration_mod
               end if
            end do
           
-           load = int(nPhotons/numtasks)
-           rest = mod(nPhotons, numtasks)           
+
+           do iStar = 1, nStars
+              print*, 'Starting transfer for ionising source ', iStar
+              
+              load = int(nPhotons(iStar)/numtasks)
+              rest = mod(nPhotons(iStar), numtasks)           
            
-           do iG = 1, nGrids
-              grid(iG)%escapedPackets = 0.
+              do iG = 1, nGrids
+                 grid(iG)%escapedPackets = 0.
+              end do
+
+              if (lgPlaneIonization) then
+                 planeIonDistribution = 0
+              end if
+
+
+              ! send the photons through and evaluate the MC 
+              ! estimators of Jste and Jdif at every grid cell
+              if (taskid < rest) then
+                 load = load+1
+                 call energyPacketDriver(iStar,load, grid(1:nGrids))
+              else
+                 call energyPacketDriver(iStar,load, grid(1:nGrids))
+              end if
+           
+              call mpi_barrier(mpi_comm_world, ierr)
            end do
-
-           if (lgPlaneIonization) then
-              planeIonDistribution = 0
-           end if
-
-
-           ! send the photons through and evaluate the MC 
-           ! estimators of Jste and Jdif at every grid cell
-           if (taskid < rest) then
-              load = load+1
-              call energyPacketDriver(load, grid(1:nGrids))
-           else
-              call energyPacketDriver(load, grid(1:nGrids))
-           end if
-           
-           call mpi_barrier(mpi_comm_world, ierr)
 
 
            if (lgPlaneIonization) then
@@ -865,8 +871,13 @@ module iteration_mod
         
            call mpi_barrier(mpi_comm_world, ierr)
 
+           nPhotonsTot = nPhotons(1)
+           do iStar=1, nStars              
+              nPhotonsTot = nPhotonsTot+nPhotons(iStar)
+           end do
+
            if (nIterateMC > 1 .and. totPercent < 95. .and. lgAutoPackets & 
-                & .and. nPhotons < maxPhotons .and. totPercentOld > 0.) then
+                & .and. nPhotonsTot < maxPhotons .and. totPercentOld > 0.) then
 
               if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
                  nPhotons = nPhotons*nPhotIncrease

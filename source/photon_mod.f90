@@ -21,14 +21,15 @@ module photon_mod
 
     contains
 
-    subroutine energyPacketDriver(n, grid, plot)
+    subroutine energyPacketDriver(iStar, n, grid, plot)
         implicit none
         
         integer, intent(in)            :: n           ! number of energy packets 
+        integer, intent(in)            :: iStar       ! central star index 
        
         type(plot_type), intent(inout), optional &
              & :: plot                                ! only used in the mocassinPlot version
-        type(grid_type), intent(inout) :: grid(*)     ! the grid(s)
+        type(grid_type), dimension(:), intent(inout) :: grid        ! the grid(s)
         
         type(vector)                   :: posVector   ! initial position vector for dust emi
 
@@ -64,9 +65,11 @@ module photon_mod
         print*, "in energyPacketDriver"
 
         ! initilize interactions stats counters
-        gasInt = 0.
-        dustAInt = 0.
-        dustSInt = 0.
+        if (iStar == 1) then
+           gasInt = 0.
+           dustAInt = 0.
+           dustSInt = 0.
+        end if
 
         call random_seed(seedSize) 
 
@@ -87,11 +90,12 @@ module photon_mod
         if (associated(seed)) deallocate(seed)
 
         Qphot = 0.
-
+        
         do iPhot = 1, n
            chTypeD = "stellar"
            call energyPacketRun(chTypeD)
         end do
+        print*, 'Star: ', iStar
         print*, 'Qphot = ', Qphot
 
         if (lgDust.and.convPercent>=resLinesTransfer .and.&
@@ -171,41 +175,46 @@ module photon_mod
         ! [erg sec^-1 cm^-2] -> no Hz^-1 as they are summed over separate bins (see
         ! Lucy A&A (1999)                                                                                                                                   
 
-        print*, 'Lstar', Lstar
-        totalEscaped=0        
-        do iG = 1, nGrids
-           do i = 0, grid(iG)%nCells
+        print*, 'Lstar', Lstar(iStar)
 
-              grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9 * Lstar / (float(nPhotons))           
+        if (iStar==nStars) then
+           totalEscaped=0        
+           do iG = 1, nGrids
+              do i = 0, grid(iG)%nCells
 
-              if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:) * 1.e-9 * Lstar / (float(nPhotons))
-              do ifreq = 1, nbins
-                 totalEscaped = totalEscaped+&
-                      & grid(iG)%escapedPackets(i,ifreq, 0)
-                 do ian = 0, nAngleBins
-                    grid(iG)%escapedPackets(i,ifreq,ian) = grid(iG)%escapedPackets(i,ifreq,ian)  &
-                        & * Lstar / (float(nPhotons))
+                 grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9 * Lstar(iStar) / (float(nPhotons(iStar)))           
+                 
+                 if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:) * 1.e-9 * Lstar(iStar) / (float(nPhotons(iStar)))
+                 do ifreq = 1, nbins
+                    totalEscaped = totalEscaped+&
+                         & grid(iG)%escapedPackets(i,ifreq, 0)
+                    do ian = 0, nAngleBins
+                       grid(iG)%escapedPackets(i,ifreq,ian) = grid(iG)%escapedPackets(i,ifreq,ian)  &
+                            & * Lstar(iStar) / (float(nPhotons(iStar)))
+                    end do
                  end do
+                 
+                 if (lgSymmetricXYZ) then
+                    grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:)/8.
+                    grid(iG)%escapedPackets(i,:,:) = grid(iG)%escapedPackets(i,:,:)/8.
+                    if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:)/8.
+                 end if
+                 
               end do
-
-              if (lgSymmetricXYZ) then
-                 grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:)/8.
-                 grid(iG)%escapedPackets(i,:,:) = grid(iG)%escapedPackets(i,:,:)/8.
-                 if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:)/8.
-              end if
-
            end do
-        end do
 
-        if (lgDust) then
-           print*, "! energyPacketDriver: [Interactions] : total -- gas -- dust abs --dust sca: "
-           print*, "! energyPacketDriver: [Interactions] ", gasInt+dustAInt+dustSInt, " - ", &
-                &  gasInt*100./(gasInt+dustAInt+dustSInt),"% - ", &
-                &  dustAInt*100./(gasInt+dustAInt+dustSInt),"% - ", &
-                &  dustSInt*100./(gasInt+dustAInt+dustSInt),"%"
+           if (lgDust) then
+              print*, "! energyPacketDriver: [Interactions] : total -- gas -- dust abs --dust sca: "
+              print*, "! energyPacketDriver: [Interactions] ", gasInt+dustAInt+dustSInt, " - ", &
+                   &  gasInt*100./(gasInt+dustAInt+dustSInt),"% - ", &
+                   &  dustAInt*100./(gasInt+dustAInt+dustSInt),"% - ", &
+                   &  dustSInt*100./(gasInt+dustAInt+dustSInt),"%"
+           end if
+
+           print*, " total Escaped Packets :",  totalEscaped
+
         end if
 
-        print*, " total Escaped Packets :",  totalEscaped
         print*, "out energyPacketDriver"
 
         contains
@@ -215,8 +224,10 @@ module photon_mod
 
             character(len=7), intent(in)     :: chType           ! stellar or diffuse?
 
-            integer, optional, intent(in)    :: xP(*), yP(*), &
-                 & zP(*), gP                                     ! cartesian axes indeces and grid index
+            integer, optional, dimension(:), intent(in)    :: xP, yP, &
+                 & zP                                            ! cartesian axes indeces 
+
+            integer, optional, intent(in)    :: gP               ! grid index
 
             type(vector),intent(in), optional:: position         ! the position of the photon
         
@@ -237,9 +248,9 @@ module photon_mod
             case ("stellar")
                 ! check for errors in the sources position
                 if (present(position) ) then
-                    if( position /= origin ) then
+                    if( position /= starPosition(iStar) ) then
                         print*, "! energyPacketRun: stellar energy packet must&
-                             & start at the origin"
+                             & start at the stellar position"
                         stop
                     end if
                 end if
@@ -384,7 +395,7 @@ module photon_mod
         end subroutine energyPacketRun
 
         ! this function initializes a photon packet
-        function initPhotonPacket(nuP,  position, lgLine, xP, yP, zP, gP)
+        function initPhotonPacket(nuP,  position, lgLine, lgStellar, xP, yP, zP, gP)
             implicit none
 
             type(photon_packet)      :: initPhotonPacket  ! the photon packet
@@ -392,12 +403,12 @@ module photon_mod
             real                     :: random            ! random number
 
             integer, intent(in)      :: nuP               ! the frequency of the photon packet
-            integer, intent(in)      :: xP(*), yP(*), &
-                 & zP(*)                                  ! indeces of position on the x, y and z axes            
+            integer, intent(in),dimension(:) :: xP, yP, &
+                 & zP                                     ! indeces of position on the x, y and z axes            
             integer, intent(in)      :: gP                ! grid index
 
 
-            logical, intent(in)      :: lgLine            ! line packet?
+            logical, intent(in)      :: lgLine, lgStellar ! line, stellar packet?
 
             type(vector), intent(in) :: position          ! the position at which the photon
                                                           ! packet is created    
@@ -410,6 +421,8 @@ module photon_mod
             initPhotonPacket%iG  = gP
             
             initPhotonPacket%nuP      = nuP       
+           
+            initPhotonPacket%lgStellar = lgStellar
 
             ! check if photon packen is line or continuum photon
             if ( lgLine ) then
@@ -427,16 +440,13 @@ module photon_mod
             initPhotonPacket%zP  = -1
 
             ! check is the photon is stellar or diffuse
-            if (position == origin) then
-
-                initPhotonPacket%lgStellar = .true.
+            if (lgStellar) then
                 
                 initPhotonPacket%xP(gP)  = xP(1)
                 initPhotonPacket%yP(gP)  = yP(1)
                 initPhotonPacket%zP(gP)  = zP(1)
 
             else
-                initPhotonPacket%lgStellar = .false.
 
                 do i = 1, nGrids                                   
                    initPhotonPacket%xP(i)  = xP(i)
@@ -512,7 +522,7 @@ module photon_mod
 
             end if
 
-            if ((lgSymmetricXYZ) .and. initPhotonPacket%lgStellar) then
+            if ((lgSymmetricXYZ) .and. initPhotonPacket%lgStellar .and. nStars==1) then
                 if (initPhotonPacket%direction%x<0.) &
                      & initPhotonPacket%direction%x = -initPhotonPacket%direction%x
                 if (initPhotonPacket%direction%y<0.) &
@@ -576,8 +586,8 @@ module photon_mod
             ! local variables
             integer                            :: nuP            ! the frequency index of the photon packet
             integer, dimension(1)              :: orX,orY,orZ    ! dummy
-            integer, optional, intent(in)      :: xP(*), yP(*), & 
-                 & zP(*)                                         ! cartesian axes indeces    
+            integer, optional, dimension(:),intent(in) :: xP, yP, & 
+                 & zP                                            ! cartesian axes indeces    
             integer, optional, intent(in)      :: gP             ! grid index
             logical                            :: lgLine_loc=.false.! line photon?
 
@@ -590,9 +600,9 @@ module photon_mod
 
                 ! check for errors in the sources position
                 if (present(position) ) then
-                    if( position /= origin ) then
+                    if( position /= starPosition(iStar) ) then
                         print*, "! newPhotonPacket: stellar photon packet must&
-                             & start at the origin"
+                             & start at the stellar position"
                         stop
                     end if
                 end if 
@@ -605,13 +615,13 @@ module photon_mod
                 end if 
                 
                 ! determine the frequency of the newly created photon packet
-                call getNu(inSpectrumProbDen, nuP)
+                call getNu(inSpectrumProbDen(iStar,:), nuP)
                 
                 if (nuP>nbins) then
                    print*, "! newPhotonPacket: insanity occured in stellar photon &
                         &nuP assignment (nuP,xP,yP,zP,activeP)", nuP, xP(gP),yP(gP),zP(gP), &
                         & grid(gP)%active(xP(gP),yP(gP),zP(gP))
-                   print*, "inSpectrumProbDen: ",inSpectrumProbDen
+                   print*, "inSpectrumProbDen: ",iStar,inSpectrumProbDen(iStar,:)
                    stop
                 end if
                 
@@ -622,13 +632,13 @@ module photon_mod
                 end if
 
                 ! initialize the new photon packet
-                orX = iOrigin
-                orY = jOrigin
-                orZ = kOrigin
-                newPhotonPacket = initPhotonPacket(nuP, origin, .false., orX,orY,orZ, 1)
+                orX = starIndeces(iStar,1)
+                orY = starIndeces(iStar,2)
+                orZ = starIndeces(iStar,3)
+                newPhotonPacket = initPhotonPacket(nuP, starPosition(iStar), .false., .true., orX,orY,orZ, 1)
 
                 if (newPhotonPacket%nu>1.) then
-                   Qphot = Qphot + (Lstar/nPhotons)/(2.1799153e-11*newPhotonPacket%nu)
+                   Qphot = Qphot + (Lstar(iStar)/nPhotons(iStar))/(2.1799153e-11*newPhotonPacket%nu)
                 end if
 
             ! if the photon is diffuse
@@ -691,7 +701,7 @@ module photon_mod
                    end if
 
                    ! initialize the new photon packet
-                   newPhotonPacket = initPhotonPacket(nuP, position, .true., xP, yP, zP, gP)
+                   newPhotonPacket = initPhotonPacket(nuP, position, .true., .false., xP, yP, zP, gP)
                 else 
                     ! continuum photon
 
@@ -714,7 +724,7 @@ module photon_mod
                     end if
 
                     ! initialize the new photon packet
-                    newPhotonPacket = initPhotonPacket(nuP, position, .false., xP, yP, zP, gP)
+                    newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
                 end if
 
             case ("dustEmi")
@@ -773,7 +783,7 @@ module photon_mod
                end if
 
                ! initialize the new photon packet
-               newPhotonPacket = initPhotonPacket(nuP, position, .false., xP, yP, zP, gP)
+               newPhotonPacket = initPhotonPacket(nuP, position, .false., .false., xP, yP, zP, gP)
 
 
             ! if the photon packet type is wrong or missing
@@ -1229,7 +1239,7 @@ module photon_mod
                          enPacket%yP(gP) = yP
                          enPacket%zP(gP) = zP            
                          
-                         enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., enPacket%xP(1:nGrids), &
+                         enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., .false., enPacket%xP(1:nGrids), &
                               & enPacket%yP(1:nGrids), enPacket%zP(1:nGrids), gP)
                      
                          vHat%x = enPacket%direction%x

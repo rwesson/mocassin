@@ -510,7 +510,7 @@ module grid_mod
 
         include 'mpif.h'
 
-        type(grid_type), intent(inout) :: grid(*) 
+        type(grid_type), dimension(:),intent(inout) :: grid
 
         ! local variables
         integer :: i, j, k, l, m, n, elem, ion, iG, jG    ! counters
@@ -742,9 +742,12 @@ module grid_mod
 
         end if
 
+        call setStarPosition(grid(1)%xAxis,grid(1)%yAxis,grid(1)%zAxis)
+
         print*, "out fillGrid"
         
       end subroutine fillGrid
+
 
       subroutine setMotherGrid(grid)
         implicit none
@@ -1373,9 +1376,9 @@ module grid_mod
            ! if we are using a plane parallel ionization then we must find the luminosity 
            ! of the ionizing plane from the input meanField
            if (lgPlaneIonization) &
-                & Lstar = (meanField/1.e36)*grid%xAxis(grid%nx)*grid%zAxis(grid%nz)
+                & Lstar(1) = (meanField/1.e36)*grid%xAxis(grid%nx)*grid%zAxis(grid%nz)
 
-           if (taskid == 0) print*, 'Total ionizing flux :', Lstar
+           if (taskid == 0) print*, 'Total ionizing flux :', Lstar(1)
 
            print*, 'out setMotherGrid'
 
@@ -1384,7 +1387,7 @@ module grid_mod
          subroutine setSubGrids(grid)
            implicit none
            
-           type(grid_type), intent(inout) :: grid(*)      ! the grid
+           type(grid_type), dimension(:),intent(inout) :: grid        ! the grid
 
            
 
@@ -2030,7 +2033,7 @@ module grid_mod
          subroutine writeGrid(grid)
            implicit none
 
-           type(grid_type), intent(in) :: grid(*)             ! grid
+           type(grid_type), dimension(:), intent(in) :: grid                ! grid
            
            ! local variables
            integer                     :: cellP               ! cell pointer
@@ -2146,6 +2149,26 @@ module grid_mod
            close(50)
         end if
 
+        ! stellar parameters
+        close(42) 
+        open(unit=42, file="output/photoSource.out", position="rewind",status="unknown", iostat = ios)   
+        if (ios /= 0 ) then
+            print*, "! writeGrid: can't open file for writing - photoSource.out"
+            stop
+        end if
+
+        
+        write(42, *) nStars, ' number of photon sources'
+        do i = 1, nStars
+           write(42, *) trim(contShapeIn(i)), TStellar(i), LStar(i), nPhotons(i), &
+                & starPosition(i)%x/grid(1)%xAxis(grid(1)%nx),&
+                & starPosition(i)%y/grid(1)%yAxis(grid(1)%ny),&
+                & starPosition(i)%z/grid(1)%zAxis(grid(1)%nz)
+        end do
+
+        write(42, *) '(contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position)'
+        close(42)
+
         ! general simulation parameters
         close(40)
         open(unit=40, file="output/grid3.out", position="rewind",status="unknown", iostat = ios)   
@@ -2160,17 +2183,13 @@ module grid_mod
         write(40, *) lgSymmetricXYZ, ' lgSymmetricXYZ'
         write(40, *) lgTalk, ' lgTalk'
         write(40, *) lg1D, ' lg1D'
-        write(40, *) '"',trim(contShapeIn),'"',' contShape'
-        write(40, *) nPhotons, ' nPhotons'
         write(40, *) nbins, ' nbins'
         write(40, *) nuStepSize, ' nuStepSize'
         write(40, *) nuMax,' nuMax'
         write(40, *) nuMin, ' nuMin'
         write(40, *) R_in, ' R_in'
-        write(40, *) TStellar, ' TStellar'
         write(40, *) XHIlimit, ' XHIlimit'
         write(40, *) maxIterateMC, minConvergence, ' maxIterateMC'
-        write(40, *) LStar, ' LStar'
         write(40, *) lgDebug, ' lgDebug'
         write(40, *) lgPlaneIonization, ' lgPlaneIonization'
         write(40, *) nAbComponents, ' nAbComponents'
@@ -2302,7 +2321,7 @@ module grid_mod
 
       logical, save :: lgfirst = .true.
       integer                        :: cellP ! cell pointer
-      integer                        :: err   ! I/O error status
+      integer                        :: err,ios   ! I/O error status
       integer                        :: i,j,k ! counters
       integer                        :: elem,&! 
 &                                       ion,i1 ! counters
@@ -2325,7 +2344,35 @@ module grid_mod
 
       print*, 'resetGrid in'
       
-      ! first read in file containing general simulation parameters
+
+      ! read stellar parameters
+      close(72) 
+      open(unit=72, file="output/photoSource.out", position="rewind",status="old", iostat = ios)   
+      if (ios /= 0 ) then
+         print*, "! writeGrid: can't open file for reading - photoSource.out"
+         stop
+      end if
+
+        
+       read(72, *) nStars
+       print*, nStars, ' photon sources'
+       print*, '(contShape, T_eff[K], L_* [E36 erg/s], nPackets, (x,y,z) position [cm])'
+       allocate(TStellar(nStars))
+       allocate(LStar(nStars))
+       allocate(nPhotons(nStars))
+       allocate(starPosition(nStars))
+       allocate(contShape(nStars))
+       allocate(contShapeIn(nStars))
+       do i = 1, nStars
+          read(72, *) contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
+               &starPosition(i)%z
+          contShapeIn(i)=contShape(i)
+          print*, i, contShape(i), TStellar(i), LStar(i), nPhotons(i), starPosition(i)%x,starPosition(i)%y,&
+               &starPosition(i)%z
+       end do
+       close(72)
+
+      ! read in file containing general simulation parameters
       close(77)
       open(unit=77, file='output/grid3.out', position='rewind',  &
 &          status='old', iostat = err)
@@ -2340,18 +2387,13 @@ module grid_mod
       read(77, *) lgSymmetricXYZ
       read(77, *) lgTalk
       read(77, *) lg1D
-      read(77, *) contShape
-      contShapeIn = contShape
-      read(77, *) nPhotons
       read(77, *) nbins
       read(77, *) nuStepSize
       read(77, *) nuMax
       read(77, *) nuMin
       read(77, *) R_in
-      read(77, *) TStellar
       read(77, *) XHIlimit
       read(77, *) maxIterateMC, minConvergence
-      read(77, *) LStar
       read(77, *) lgDebug
       read(77, *) lgPlaneIonization
       read(77, *) nAbComponents
@@ -2400,17 +2442,13 @@ module grid_mod
          print*,  lgSymmetricXYZ, ' lgSymmetricXYZ'
          print*,  lgTalk, ' lgTalk'
          print*,  lg1D, ' lg1D'
-         print*,  trim(contShape), ' contShape'
-         print*,  nPhotons, ' nPhotons'
          print*,  nbins, ' nbins'
          print*,  nuStepSize, ' nuStepSize.'
          print*,  nuMax, ' nuMax'
          print*,  nuMin, ' nuMin'
          print*,  R_in, ' R_in'
-         print*,  TStellar, ' TStellar'
          print*,  XHIlimit, ' XHIlimit'
          print*,  maxIterateMC, minConvergence, ' maxIterateMC, minConvergence'
-         print*,  LStar, ' LStar [e36 erg/s]'
          print*,  lgDebug,  ' lgDebug'
          print*,  lgPlaneIonization, ' lgPlaneIonization'
          print*,  nAbComponents, ' nAbComponents'
@@ -2743,10 +2781,54 @@ module grid_mod
       call locate(grid(1)%xAxis, 0., iOrigin)
       call locate(grid(1)%yAxis, 0., jOrigin)
       call locate(grid(1)%zAxis, 0., kOrigin)
+
+      call setStarPosition(grid(1)%xAxis,grid(1)%yAxis,grid(1)%zAxis)
       
       if (taskid == 0) print*, 'Mothergrid origin at cell:  ' , iOrigin, jOrigin, kOrigin
 
     end subroutine resetGrid      
+
+    subroutine setStarPosition(xA,yA,zA)
+      implicit none
+      
+      real, dimension(:) :: xA,yA,zA
+      
+      Integer :: i, xP,yP,zP, nxA,nyA,nzA
+
+      nxA = size(xA)
+      nyA = size(yA)
+      nzA = size(zA)
+
+      allocate(starIndeces(nStars,3))
+
+      do i = 1, nStars
+
+         starPosition(i)%x = starPosition(i)%x*xA(nxA)
+         starPosition(i)%y = starPosition(i)%y*yA(nyA)
+         starPosition(i)%z = starPosition(i)%z*zA(nzA)
+
+         call locate(xA, starPosition(i)%x, xP)
+         if (starPosition(i)%x > & 
+              & (xA(xP)+xA(xP+1))/2.) &
+              xP=xP+1
+         
+         call locate(yA, starPosition(i)%y, yP)
+         if (starPosition(i)%y > &
+              & (yA(yP)+yA(yP+1))/2.) &
+              yP=yP+1
+         
+         call locate(zA, starPosition(i)%z, zP)
+         if (starPosition(i)%z > & 
+              & (zA(zP)+zA(zP+1))/2.) &
+              zP=zP+1
+         
+         starIndeces(i,1) = xP
+         starIndeces(i,2) = yP
+         starIndeces(i,3) = zP
+
+      end do         
+
+    end subroutine setStarPosition
 
 end module grid_mod
 

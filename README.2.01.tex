@@ -15,7 +15,7 @@
 \vspace{4cm}
 
 \centerline
-{\Large \bf {\sc \Huge mocassin} Version 2.00 }
+{\Large \bf {\sc \Huge mocassin} Version 2.01 }
 
 \vspace{2cm}
 
@@ -26,7 +26,7 @@
 \vspace{3cm}
 
 \centerline
-{LAST MODIFIED: 14/02/2005}
+{LAST MODIFIED: 17/03/2005}
 
 
 
@@ -46,6 +46,7 @@
 
 \noindent{\large CONTENTS}\\
 \\
+\noindent {0. What's new from 2.00 to 2.01}\\
 \noindent {1. How to get MOCASSIN up and running}\\
 \indent
     1.1 Obtaining the MOCASSIN source code\\
@@ -87,7 +88,12 @@
 
 \pagebreak
 
-
+\noindent{\bf \large 0. What's new from 2.00 to 2.01}\\
+\\
+The main changes regard the introduction of multiple ionising sources placed at any 
+location in the grid. See section 3.1 (multiPhotoSources). \\
+The central star(s) parameters are now written to a separate output file (output/photoSource.out). \\
+This version is fully compatible with inputs of Version 2.00, but not with the grid*.out files (so mocassinWarm compiled with Version 2.01 will not work with grids produced by Version 2.00).\\
 
 \noindent{\bf \large 1. How to get MOCASSIN up and running}
 \\
@@ -542,6 +548,8 @@
                      document.\\
                      $[$.false. 'none'$]$\\
                      	   
+\paragraph    {multiPhotoSources string1} : This keyword is used to define multiple (or single) ionising sources , that can be placed at any locations. 'string1' is the name of the file containing the central star parameters. This file must contain in the first line the number of sources to be included and then each source should be specified on successive lines providing (in this order) T$_{\rm eff}$ [K], L$_*$ [E36erg/s], ContShape, x-, y-, z-position. Note that the location of the source must be given normalised to the length of the relative axis. As example is included in the example/ directory. 
+
 \paragraph    {nbins integer  }  : The total number of points to be used in the frequency mesh. \\
 		     $[$600$]$\\
 
@@ -826,7 +834,7 @@
     line of sight as requested by the user in the input.in file with the 
     inclination keyword.\\
 
-\paragraph{    The grid files}
+\paragraph{    The grid files and photoSource.out}
     As we have already mentioned elsewhere, grid files are also written out 
     after each iteration by routines contained in the grid\_mod module. These are 
     needed by the warm start driver (mocassinWarm) to re-initialise an 
@@ -877,6 +885,7 @@
     Dust+gas simulations will produce all the files above. \\
     grid4.out is written out by mocassinPlot and it just contains the volume of each
     gridcell in $[e45 cm^3]$, which is needed for visualisation purposes.\\
+    The  ionising source(s) input parameters are written out to a file named photoSource.out.\\
 
 \paragraph{    plot.out}
     The {\sc mocassin}Plot driver produces also an output file, containing the 

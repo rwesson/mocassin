@@ -854,7 +854,7 @@ module output_mod
            end if
 
            ! calculate Hbeta in units of [E36 erg/sec]
-           if (lgDebug) HbetaLuminosity(iAb) = HbetaLuminosity(iAb)*Lstar/float(Nphotons)
+           if (lgDebug) HbetaLuminosity(iAb) = HbetaLuminosity(iAb)*Lstar(1)/float(Nphotons(1))
 
         end do
 

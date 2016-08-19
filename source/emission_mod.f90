@@ -302,7 +302,7 @@ module emission_mod
 
         ! calculate number of dust emitted extra packets to be transfered from this location
         ! NOTE :1.e-16 from 1.e45 (from dV) * 1.e-36 (from Lstar) * 1.e-25 (from local forlines)
-        grid%resLinePackets(grid%active(ix,iy,iz)) = nint(lineIntensity*1.e-16/(Lstar/Nphotons))
+        grid%resLinePackets(grid%active(ix,iy,iz)) = nint(lineIntensity*1.e-16/(Lstar(1)/Nphotons(1)))
 
       end subroutine initResLinePackets
 
@@ -1372,15 +1372,13 @@ module emission_mod
 
       grid%dustPDF(grid%active(ix,iy,iz),:)=0.
 
-      contShape = 'blackbody'
-
       do n = 1, nSpecies
          do ai = 1, nSizes
 
             if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. & 
                  & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
 
-               bb = getFlux(nuArray(1), grid%Tdust(n,ai,grid%active(ix,iy,iz)))
+               bb = getFlux(nuArray(1), grid%Tdust(n,ai,grid%active(ix,iy,iz)), 'blackbody')
                grid%dustPDF(grid%active(ix,iy,iz), 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
                     & grainWeight(ai)*grainAbun(n)
 
@@ -1395,7 +1393,7 @@ module emission_mod
                if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. &
                     & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
 
-                  bb = getFlux(nuArray(i), grid%Tdust(n,ai,grid%active(ix,iy,iz)))
+                  bb = getFlux(nuArray(i), grid%Tdust(n,ai,grid%active(ix,iy,iz)), 'blackbody')
                   grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i-1) + &
                        &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*grainWeight(ai)*grainAbun(n)
 
@@ -1403,8 +1401,6 @@ module emission_mod
             end do
          end do
       end do
-
-      contShape = contShapeIn
 
       ! normalise
       do i = 1, nbins

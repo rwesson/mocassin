@@ -14,7 +14,7 @@ module continuum_mod
 
     real, pointer, save :: inSpectrumErg(:)        ! input specrum energy distribution [erg/(cm^2*s*Hz*sr)] 
     real, pointer, save :: inSpectrumPhot(:)       ! input specrum energy distribution [phot/(cm^2*s*Hz*sr)]
-    real, pointer, save :: inSpectrumProbDen(:)    ! probability density for input spectrum
+    real, pointer, save :: inSpectrumProbDen(:,:)  ! probability density for input spectrum (nstars,nbins)
 
     real, save          :: normConstantErg = 0.    ! normalization constant (area beyond input spectrum)
     real, save          :: normConstantPhot= 0.    ! normalization constant (area beyond input spectrum)    
@@ -36,7 +36,7 @@ module continuum_mod
 
         integer :: enP                       ! pointer in enArray
         integer :: err                       ! allocation error status
-        integer :: i, j                      ! counter 
+        integer :: i, j, iStar               ! counter 
         integer :: ios                       ! I/O error status
 
         real    :: SStar                     ! stellar surface [e36 cm^2]
@@ -60,139 +60,151 @@ module continuum_mod
             print*, "setContinuum: can't allocate grid memory"    
             stop    
         end if      
-        allocate(inSpectrumProbDen(nbins), stat = err)
+        allocate(inSpectrumProbDen(nStars,nbins), stat = err)
         if (err /= 0) then
             print*, "setContinuum: can't allocate grid memory"
             stop
         end if
 
-        ! initialise arrays
-        enArray           = 0.
-        Hflux             = 0.
-        inSpectrumErg     = 0.
-        inSpectrumPhot    = 0.
-        inSpectrumProbDen = 0.
-
-
-        filein = contShape
-
         ! find the Lyman limit
         call locate(nuArray, 1., lymanP)
+
+        do iStar=1, nStars
+
+           ! initialise arrays
+           enArray           = 0.
+           Hflux             = 0.
+           inSpectrumErg     = 0.
+           inSpectrumPhot    = 0.
+           inSpectrumProbDen(iStar,:) = 0.
+
+
+           filein = contShape(iStar)
+
        
-        ! open file for reading
-        close(12)
-        open(unit = 12, file=filein, status = 'old', position = 'rewind', iostat=err)
+           ! open file for reading
+           close(12)
+           open(unit = 12, file=filein, status = 'old', position = 'rewind', iostat=err)
 
-        if (err /= 0) then     
+           if (err /= 0) then     
 
-            ! then maybe a set continuum has been chosen
-            print*, 'contShape ', contShape
-            do i = 1, nbins
-                inSpectrumErg(i) = getFlux(nuArray(i), Tstellar)
-                inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd) 
+              ! then maybe a set continuum has been chosen
+              print*, 'contShape ', contShape(iStar)
+              do i = 1, nbins
+                 inSpectrumErg(i) = getFlux(nuArray(i), Tstellar(iStar), contShape(iStar))
+                 inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd) 
 
-            end do
+              end do
 
 
 
-        else
+           else
 
-            ! read in input continuum
-            do j = 1, maxLim
+              ! read in input continuum
+              do j = 1, maxLim
 
-                ! check if the end of file has been reached
-                ! NOTE: the file must be in the format of two columns
-                !       the first containing the frequency points (Hz) 
-                !       and the second containing the input spectrum points 
-                !       (erg/cm^2/s/Hz/sr). The file must be in ascending
-                !       frequency order.
+                 ! check if the end of file has been reached
+                 ! NOTE: the file must be in the format of two columns
+                 !       the first containing the frequency points (Hz) 
+                 !       and the second containing the input spectrum points 
+                 !       (erg/cm^2/s/Hz/sr). The file must be in ascending
+                 !       frequency order.
 
-                ! check if the end of the file has been reached 
-                read(unit=12, fmt=*, iostat=ios) 
-                if (ios < 0) exit ! end of file reached
+                 ! check if the end of the file has been reached 
+                 read(unit=12, fmt=*, iostat=ios) 
+                 if (ios < 0) exit ! end of file reached
 
-                backspace(12)
-                read(12, *) enArray(j), Hflux(j)
+                 backspace(12)
+                 read(12, *) enArray(j), Hflux(j)
+                 
+                 ! change to Ryd 
+                 enArray(j) = enArray(j)/cRyd
 
-                ! change to Ryd 
-                enArray(j) = enArray(j)/cRyd
+              end do
+              
+              close(12)
 
-            end do
+              ! now interpolate
+              do i = 1, nbins
 
-            close(12)
+                 ! locate this nuArray point on the enArray
+                 call locate(enArray(1:j-1), nuArray(i), enP)
 
-            ! now interpolate
-            do i = 1, nbins
+                 if (enP >= j-1 .or. enP == 0) then
+                    
+                    inSpectrumErg(i) = 0.
+                    print*, '! setContinuum: [warning] frequency point outside bounds&
+                         & of stellar atmosphere file domain - zero spectral energy assigned ',&
+                         & i, nuArray(i), enArray(1), enArray(j-1)
 
-                ! locate this nuArray point on the enArray
-                call locate(enArray(1:j-1), nuArray(i), enP)
-
-                if (enP >= j-1 .or. enP == 0) then
-
-                   inSpectrumErg(i) = 0.
-                   print*, '! setContinuum: [warning] frequency point outside bounds&
-                        & of stellar atmosphere file domain - zero spectral energy assigned ',&
-                        & i, nuArray(i), enArray(1), enArray(j-1)
-
-                else if (enP < 0) then
-
-                   print*, '! setContinuum: insanity at stellar atmosphere interpolation routine'
-                   stop
+                 else if (enP < 0) then
+                    
+                    print*, '! setContinuum: insanity at stellar atmosphere interpolation routine'
+                    stop
                    
-                else 
+                 else 
 
                     inSpectrumErg(i) = Hflux(enP) + &
                          & (nuArray(i)-enArray(enP)) * &
                          & (Hflux(enP+1)- Hflux(enP))/(enArray(enP+1)-enArray(enP))
-
+                    
                     inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
+                    
+                 end if
+                 
+                 
+                 
+              end do
 
-                end if
-
-
-              
-             end do
-
-             ! get physical flux
-             inSpectrumErg = fourPi*inSpectrumErg
-             inSpectrumPhot = fourPi*inSpectrumPhot
+              ! get physical flux
+              inSpectrumErg = fourPi*inSpectrumErg
+              inSpectrumPhot = fourPi*inSpectrumPhot
 
                       
-        end if       
+           end if
 
-        ! set the input spectrum probability density distribution
-        call setProbDen()
+           ! set the input spectrum probability density distribution
+           call setProbDen(iStar)
 
-        if (LPhot > 0. ) then  ! calculate Lstar [e36 erg/s]
-       
-           RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
 
-           LStar = fourPi*RStar*RStar*sigma*TStellar**4.
-
-           print*, "Q(H) = ", LPhot, " [e36 phot/s]"
-           print*, "LStar= ", LStar, " [e36 erg/s]"
-           print*, "RStar = ", RStar, " [e18 cm]"
-
-        else if (Lstar > 0.) then ! calculate LPhot [e36 phot/s]
-
-           RStar = sqrt(Lstar / (fourPi*sigma*TStellar**4.))
+        end do
+        
+        if (nStars==1) then
+           if (LPhot > 0. ) then  ! calculate Lstar [e36 erg/s]
+              
+              RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
+              
+              LStar(1) = fourPi*RStar*RStar*sigma*TStellar(1)**4.
+              
+              print*, "Q(H) = ", LPhot, " [e36 phot/s]"
+              print*, "LStar= ", LStar(1), " [e36 erg/s]"
+              print*, "RStar = ", RStar, " [e18 cm]"
+              
+           else if (Lstar(1) > 0.) then ! calculate LPhot [e36 phot/s]
+              
+              RStar = sqrt(Lstar(1) / (fourPi*sigma*TStellar(1)**4.))
+              
+              LPhot = fourPi*RStar*RStar*normConstantPhot*cRyd
+              
+              print*, "RStar = ", RStar, " [e18 cm]"
+              print*, "Q(H) = ", LPhot, " [e36 phot/s]"
+              print*, "LStar = ", LStar(1), " [e36erg/s]"
+              
+           end if
            
-           LPhot = fourPi*RStar*RStar*normConstantPhot*cRyd
-
-           print*, "RStar = ", RStar, " [e18 cm]"
-           print*, "Q(H) = ", LPhot, " [e36 phot/s]"
-           print*, "LStar = ", LStar, " [e36erg/s]"
-
         end if
+
+        if (associated(inSpectrumErg)) deallocate(inSpectrumErg)
+        if (associated(inSpectrumPhot)) deallocate(inSpectrumPhot)
 
         print*, 'out setContinuum'
 
-    end subroutine setContinuum
+      end subroutine setContinuum
 
 
     ! this function returns energy distribution [erg/(cm^2*s*Hz*sr)] for the 
     ! continuum specified by contShape at the specified cell  
-    function getFlux(energy, temperature)
+    function getFlux(energy, temperature, cShape)
 
         real, intent(in) :: energy     ! energy [Ryd]
         real, intent(in) :: temperature! temperature [K]
@@ -201,10 +213,12 @@ module continuum_mod
         real :: denominator            ! denominator
         real :: getFlux                ! erg/(cm^2*s*Hz*sr)
 
+        character(len=50), intent(in) :: cShape
+
 
         ! calculate the input spectrum
         ! this is the Planck function divided by h (to avoid underflow)
-        select case (contShape)
+        select case (cShape)
         case ("blackbody")
             constant = 0.5250229/hPlanck ! 2*fr1Ryd^3 / c^2 [erg/cm^2]
 
@@ -235,16 +249,17 @@ module continuum_mod
             return
 
         case default
-            print*, "! getFlux: invalid continuum shape", contShape
+            print*, "! getFlux: invalid continuum shape", cShape
             stop
         end select 
 
     end function getFlux
 
-    subroutine setProbDen()
+    subroutine setProbDen(iS)
         implicit none
 
         ! local variables
+        integer, intent(in) :: iS         ! central star index
 
         integer :: err                    ! allocation error status
         integer :: enP                    ! nuArray index 
@@ -296,20 +311,22 @@ module continuum_mod
         end if
 
         ! normalise spectrum and calculate PDF
-        inSpectrumProbDen(1) = inSpSumErg(1)*widFlx(1)/normConstantErg        
+        inSpectrumProbDen(iS,1) = inSpSumErg(1)*widFlx(1)/normConstantErg        
         do i = 2, nbins
-           inSpectrumProbDen(i) = inSpectrumProbDen(i-1) + &
+           inSpectrumProbDen(iS,i) = inSpectrumProbDen(iS,i-1) + &
 &                  inSpSumErg(i)*widFlx(i)/normConstantErg 
 
         end do
 
-        inSpectrumProbDen(nbins) = 1.
+        inSpectrumProbDen(iS,nbins) = 1.
 
-        if (contShape=='blackbody') then
+        if (contShape(iS)=='blackbody') then
            normConstantErg = Pi*normConstantErg*hPlanck
            normConstantPhot = Pi*normConstantPhot*hPlanck
         end if
 
+        if (associated(inSpSumErg)) deallocate(inSpSumErg)
+        if (associated(inSpSumPhot)) deallocate(inSpSumPhot)
 
       end subroutine setProbDen
 

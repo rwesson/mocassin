@@ -145,7 +145,7 @@ module dust_mod
         do nT = 1, nTemps
            do i = 1, nbins
 
-              bb = getFlux(nuArray(i), real(nT))
+              bb = getFlux(nuArray(i), real(nT), 'blackbody')
 
               do nS = 1, nSpecies
                  do ai = 1, nSizes                      
