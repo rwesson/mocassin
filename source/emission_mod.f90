@@ -67,9 +67,6 @@ module emission_mod
         ! check whether this cell is outside the nebula
         if (grid%active(ix, iy, iz)<=0) return  
 
-
-
-
         ! set the dust emission PDF
         if (lgDust) call setDustPDF()
 

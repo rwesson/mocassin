@@ -57,12 +57,14 @@ module xSec_mod
 
       read(21, *) nTkGamma, nlimGammaHI
       ntkold=nTkGamma
+
       read(22, *) nTkGamma, nlimGammaHeI
       if (ntkold /= ntkGamma) then
          print*, '! initGammaCont: the number of temperature points must &
               & be the same  for all gammas'
          stop
       end if
+
       read(23, *) nTkGamma, nlimGammaHeII
       if (ntkold /= ntkGamma) then
          print*, '! initGammaCont: the number of temperature points must &
@@ -75,6 +77,7 @@ module xSec_mod
          print*, "! initGammaCont: Cannot allocate grid array -0"
          stop
       end if 
+
       allocate(nuGammaHI(nlimGammaHI), stat=err)
       if (err /= 0) then
          print*, "! initGammaCont: Cannot allocate grid array -01"
@@ -90,7 +93,6 @@ module xSec_mod
          print*, "! initGammaCont: Cannot allocate grid array -03"
          stop
       end if 
-
       allocate(HINuEdgeP(nlimGammaHI), stat=err)
       if (err /= 0) then
          print*, "! initGammaCont: Cannot allocate grid array -03"
@@ -107,9 +109,11 @@ module xSec_mod
          stop
       end if 
 
-      read (21,*) tkGamma
-      read (22,*) tkGamma
-      read (23,*) tkGamma
+      read (21,*) (tkGamma(i), i=1,ntkgamma)
+      read (22,*) (tkGamma(i), i=1,ntkgamma)
+      read (23,*) (tkGamma(i), i=1,ntkgamma)
+
+
 
       ! allocate logGammaHI, logGammaHeI, logGammaHeII
       allocate(logGammaHI(nTkGamma, nlimGammaHI), stat=err)
@@ -134,22 +138,51 @@ module xSec_mod
          if (nuGammaHI(i) > (nuArray(HINuEdgeP(i))+nuArray(HINuEdgeP(i)+1))/2.) &
               & HINuEdgeP(i) = HINuEdgeP(i)+1
       end do
-      logGammaHI = log10(logGammaHI)
+
+      do itk = 1, ntkgamma
+         do i = 1, nlimGammaHI
+            if (logGammaHI(itk,i)>0.) then         
+               logGammaHI(itk,i) = log10(logGammaHI(itk,i))
+            else
+               logGammaHI(itk,i) = 0.
+            end if
+         end do
+      end do
+
       do i = 1, nlimGammaHeI
          read(22,*) nuGammaHeI(i), (logGammaHeI(itk,i), itk=1, nTkGamma)         
          call locate(nuArray, nuGammaHeI(i), HeINuEdgeP(i))
          if (nuGammaHeI(i) > (nuArray(HeINuEdgeP(i))+nuArray(HeINuEdgeP(i)+1))/2.) &
               & HeINuEdgeP(i) = HeINuEdgeP(i)+1
-
       end do
-      logGammaHeI = log10(logGammaHeI)
+
+      do itk = 1, ntkgamma
+         do i = 1, nlimGammaHeI
+            if (logGammaHeI(itk,i)>0.) then         
+               logGammaHeI(itk,i) = log10(logGammaHeI(itk,i))
+            else
+               logGammaHeI(itk,i) = 0.
+            end if
+         end do
+      end do
+
       do i = 1, nlimGammaHeII
          read(23,*) nuGammaHeII(i), (logGammaHeII(itk,i), itk=1, nTkGamma)         
          call locate(nuArray, nuGammaHeII(i), HeIINuEdgeP(i))
          if (nuGammaHeII(i) > (nuArray(HeIINuEdgeP(i))+nuArray(HeIINuEdgeP(i)+1))/2.) &
               & HeIINuEdgeP(i) = HeIINuEdgeP(i)+1
       end do
-      logGammaHeII = log10(logGammaHeII)
+
+      do itk = 1, ntkgamma
+         do i = 1, nlimGammaHeII
+            if (logGammaHeII(itk,i)>0.) then         
+               logGammaHeII(itk,i) = log10(logGammaHeII(itk,i))
+            else
+               logGammaHeII(itk,i) = 0.
+            end if
+         end do
+      end do
+
       close(21)
       close(22)
       close(23)

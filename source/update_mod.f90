@@ -1102,12 +1102,16 @@ module update_mod
             end do
 
             call dielectronic(diRec)
+            
             ! calculate dielectronic recombination part
             do elem = 3, nElements
                 do ion = 1, min(nstages-1, elem)
+                   if (diRec(elem,ion) == 0.) diRec(elem,ion) = diRec(8,ion)
                     alphaTot(elem, ion) = alphaTot(elem, ion) + diRec(elem, ion)
                 end do
             end do
+
+            
 
        end subroutine calcAlpha
             

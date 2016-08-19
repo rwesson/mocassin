@@ -29,7 +29,7 @@ source4  = source/constants_mod.f90 source/vector_mod.f90 source/common_mod.f90 
 F90  = /moz/mpi/mpich-1.2.5.2/bin/mpif90
 LIBS =	-lm
 OPT1 = -O3
-OPT2 = -CB -g
+OPT2 = -CB -g 
 
 mocassin:
 	$(F90) $(OPT2) -o mocassin $(source1) $(LIBS)

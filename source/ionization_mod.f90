@@ -348,26 +348,39 @@ module ionization_mod
 
         ! (re) initialize opacity arrays
         opacity = 0.
-      
+
         ! hydrogen helium and heavy element brems (free-free) opacity, 
         ! assuming hydrogen ff gaunt factors 
         ! xSecArray is missing factor of 1.e-20 to avoid underflow.
         fac1 = (NeUsed/1.e10) * ( (density(1,2) + density(2, 2) + &
-&                4.*density(2, 3) + eDenFFSum)/1.e10 ) / sqrTeUsed
+             & 4.*density(2, 3) + eDenFFSum)/1.e10 ) / sqrTeUsed
         fac2 = fac1 * Te1Ryd / TeUsed
-        do i = 1, nbins
-            if (contBoltz(i) < 0.995 ) then
-                ! 1-exp(hn/kT) is used only is exp is small
-                ! the last term is scaled h minus free-free absorption
 
-                fac3 = xSecArray(i-1+bremsXSecP)*(1.-contBoltz(i))*gauntFF(i)
-                FFOpacity(i) = fac3 * fac1
-            else
-                fac3 = xSecArray(i-1+bremsXSecP)*nuArray(i)*gauntFF(i)
-                FFOpacity(i) = fac3 * fac2
-            end if
-            opacity(i) = opacity(i) + FFOpacity(i)
-        end do  
+        do i = 1, nbins
+
+           if (i>1) then
+              if (FFOpacity(i-1)<1.e-35) then
+                 FFOpacity(i) = 0.
+              end if
+           else
+              if (contBoltz(i) < 0.995 ) then
+                 ! 1-exp(hn/kT) is used only is exp is small
+                 ! the last term is scaled h minus free-free absorption
+
+                 fac3 = xSecArray(i-1+bremsXSecP)*(1.-contBoltz(i))*gauntFF(i)
+
+                 FFOpacity(i) = fac3 * fac1
+
+              else
+
+                 fac3 = xSecArray(i-1+bremsXSecP)*nuArray(i)*gauntFF(i)
+                 FFOpacity(i) = fac3 * fac2
+
+              end if
+           end if
+
+           opacity(i) = opacity(i) + FFOpacity(i)
+        end do
 
        ! hydrogen lyman continuum photoelectric opacity
        call inOpacity(HlevXSecP(1), HlevNuP(1), nbins, density(1,1), 0.)
