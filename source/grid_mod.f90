@@ -422,10 +422,11 @@ module grid_mod
 
             end if
 
-            do i = 1, nbins-1
-               widFlx(i) = nuArray(i+1)-nuArray(i)
+            widFlx(1) = nuArray(2)-nuArray(1)
+            do i = 2, nbins-1
+               widFlx(i) = (nuArray(i+1)-nuArray(i-1))/2.
             end do
-            widFlx(nbins) = widFlx(nbins-1)
+            widFlx(nbins) =  nuArray(nbins)-nuArray(nbins-1)
             
             ! set the 4.9 GHz pointer
             if (nuArray(1) <= radio4p9GHz) then

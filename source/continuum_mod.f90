@@ -39,7 +39,9 @@ module continuum_mod
         integer :: err                       ! allocation error status
         integer :: i, j, iStar, iloop        ! counters
         integer :: ios                       ! I/O error status
+        integer :: numLam
 
+        integer,dimension(nbins) :: lamCount
         real    :: SStar                     ! stellar surface [e36 cm^2]
         real,dimension(maxLim)    :: tmp1, tmp2
 
@@ -49,7 +51,9 @@ module continuum_mod
   
         print*, 'in setContinuum', contShape
 
-        ios = 0.
+        ios = 0
+
+        lamCount=0
 
         ! initialize arrays 
         allocate(inSpectrumErg(nbins), stat = err)
@@ -126,92 +130,64 @@ module continuum_mod
                 ! change to Ryd 
                 tmp2(j) = (c/(enArray(j)*1.e-8))/cRyd
 
-            end do
+             end do
+             
+             close(12)
 
-            close(12)
+             do i = 1,j-1
+                
+                Hflux(i) = tmp1(j-1-i+1)
+                enArray(i) = tmp2(j-1-i+1)
 
-            do i = 1,j-1
+             end do
+             
+             numLam = j-1
 
-               Hflux(i) = tmp1(j-1-i+1)
-               enArray(i) = tmp2(j-1-i+1)
-
-            end do
-
-            ! now interpolate
-            do i = 1, nbins
-
-                ! locate this nuArray point on the enArray
-                call locate(enArray(1:j-1), nuArray(i), enP)
-
-                if (enP >= j-1) then
-
-                   inSpectrumErg(i) = 0.
-                   print*, '! setContinuum: [warning] frequency point outside upper bound&
-                        & of stellar atmosphere file domain - zero spectral energy assigned ',&
-                        & i, nuArray(i), enArray(j)
-
-                else if (enP==0 .and. Hflux(1) > 0.) then
-
-                   inSpectrumErg(i)=0.
-                   do iloop = 2, maxLim
-                      if (enArray(iloop)>0.9) exit
-                      ! extrapolate in log space 
-                      inSpectrumErg(i) = inSpectrumErg(i)+ log10(Hflux(iloop)) + &
-                           & (log10(Hflux(iloop))-log10(Hflux(1)))*&
-                           & (log10(nuarray(i))-log10(enArray(iloop)))/&
-                           & (log10(enArray(iloop))-log10(enArray(1)))
-                   end do
-                   iloop = iloop-1
-                   inSpectrumErg(i) = 10.** (inSpectrumErg(i)/iloop)
-
-                else if (enP==0 .and. Hflux(1) == 0.) then
-
-                   inSpectrumErg(i) = 0.
-
-                else if (enP < 0) then
-
-                   print*, '! setContinuum: insanity at stellar atmosphere interpolation routine'
-                   stop
-                   
-                else 
-
-                   if (enArray(enP+1)>0. .and. enArray(enP)>0..and.&
-                        & Hflux(enP+1)>0. .and. Hflux(enP)>0.) then
-                      inSpectrumErg(i) = 10.**(log10(Hflux(enP)) + &
-                           & (log10(nuArray(i))-log10(enArray(enP))) * &
-                           & (log10(Hflux(enP+1))- log10(Hflux(enP)))/&
-                           & (log10(enArray(enP+1))-log10(enArray(enP))))
-
-                   else
-                      inSpectrumErg(i) = Hflux(enP) + &
-                           & (nuArray(i)-enArray(enP)) * &
-                           & (Hflux(enP+1)- Hflux(enP))/(enArray(enP+1)-enArray(enP))
-
-                   end if
-
-                    inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
-
+             do j = 1, numLam
+                
+                if (enArray(j) >= nuArray(1)-widflx(1)/2. .and.&
+                     & enArray(j) < nuArray(1)+widflx(1)/2.) then
+                   inSpectrumErg(1) = inSpectrumErg(1)+Hflux(j)
+                   lamCount(1) = lamCount(1)+1
                 end if
-              
+                do i = 2, nbins-1
+                   if(enArray(j)>=(nuArray(i-1)+nuArray(i))/2. .and.&
+                        & enArray(j)<(nuArray(i+1)+nuArray(i))/2.) then
+                      inSpectrumErg(i) = inSpectrumErg(i)+Hflux(j)
+                      lamCount(i) = lamCount(i)+1
+                   end if
+                end do
+                if(enArray(j)>=nuArray(nbins)-widflx(nbins)/2. .and.&
+                     & enArray(j) < nuArray(nbins)+widflx(nbins)/2.) then
+                   inSpectrumErg(nbins) = inSpectrumErg(nbins)+Hflux(j)
+                   lamCount(nbins) = lamCount(nbins)+1
+                end if
+                
+             end do
+            
+             do i = 1, nbins
+                if (lamCount(i)>0) then
+                   inSpectrumErg(i) = inSpectrumErg(i)/real(lamCount(i))
+                end if
+                inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
              end do
 
-              ! get physical flux
-              inSpectrumErg = fourPi*inSpectrumErg
-              inSpectrumPhot = fourPi*inSpectrumPhot
-
-                      
-           end if
-
-           ! set the input spectrum probability density distribution
-           call setProbDen(iStar)
-
-
-        end do
-        
-        if (nStars==1) then
-           if (LPhot > 0. ) then  ! calculate Lstar [e36 erg/s]
+             ! get physical flux
+             inSpectrumErg = fourPi*inSpectrumErg
+             inSpectrumPhot = fourPi*inSpectrumPhot
               
-              RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
+          end if
+
+          ! set the input spectrum probability density distribution
+          call setProbDen(iStar)
+
+
+       end do
+        
+       if (nStars==1) then
+          if (LPhot > 0. ) then  ! calculate Lstar [e36 erg/s]
+             
+             RStar = sqrt(Lphot / (fourPi*normConstantPhot*cRyd))
               
               LStar(1) = fourPi*RStar*RStar*sigma*TStellar(1)**4.
               

@@ -576,12 +576,13 @@ module photon_mod
 
             ! see what frequency random corresponds to 
             call locate(probDen, random, nuP)
- 
-            if (nuP <= 0) nuP = 1
+             if (nuP <= 0) nuP = 1
 
-            if (probDen(nuP) /= random) then
-               nuP = nuP+1               
-            end if
+ !           if (probDen(nuP) /= random) then
+ !              nuP = nuP+1               
+ !           end if
+
+             if (random>=(probDen(nuP+1)+probDen(nuP))/2.) nuP=nuP+1
 
         end subroutine getNu
 
