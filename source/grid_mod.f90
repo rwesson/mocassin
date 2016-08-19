@@ -2747,7 +2747,6 @@ print*, z, grid(iG)%zAxis(1), grid(iG)%zAxis(grid(iG)%nz)
          end if
          read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
          read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
-         read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
       end if
       read(77, *) contCube(1),contCube(2)
       read(77, *) lgPhotoelectric

@@ -628,7 +628,7 @@ module emission_mod
         end do
         
         ! calculate the two photon emission due to HeI
-        call HeI2phot()
+        call HeI2photSub()
     end subroutine twoPhoton
 
 
@@ -746,7 +746,7 @@ module emission_mod
         
     end function hydro2phot
     
-    subroutine HeI2phot()
+    subroutine HeI2photSub()
         implicit none 
 
         ! local variables 
@@ -803,7 +803,7 @@ module emission_mod
             twoPhotHeI(i) = alphaEff21SHeI*Ay*0.66262*y/A21S11S 
         end do        
         
-    end subroutine HeI2phot
+      end subroutine HeI2photSub
 
     ! this subroutine sets the ff emission coefficients for z=1 (ffCoeff1)
     ! and z=2 (ffCoeff2)            
