@@ -1781,11 +1781,11 @@ module photon_mod
                            & enPacket%yP(1:2), enPacket%zP(1:2), gP, .true.)
                       
                       if (.not.lgIsotropic .and. .not.enPacket%lgStellar) then
-                         do ihg = 1,1000
+                         do ihg = 1,10
                             call hg(enPacket,iierr)
                             if(iierr==0) exit
                          end do
-                         if (ihg >=1000) then
+                         if (ihg >=10) then
                             print*, '! pathSegment: problem with hg [enPacket]', enPacket
                             stop
                          end if
@@ -2900,7 +2900,7 @@ module photon_mod
    real :: bmu,b,ri1,ri3,cosi3,sini3,cosb2,sinbt,sini2,bott,cosdph
    real :: cosi2,sin2i3,sin2i2,cos2i3,cos2i2,sin2,cos2,sin2cos1
    real :: cos2sin1,cosi1,sini1,sin2i1,cos2i1
-   real :: random, vin(3), vout(3), s, denom
+   real :: random, random0, vin(3), vout(3), s, denom
    real :: hgg, g2
    
    integer :: ierr
@@ -2915,8 +2915,8 @@ module photon_mod
    hgg = gSca(inpacket%nuP)
  
    ! henyey-greenstein 
-   call random_number(random) ! this is the theta dependence
-   s=2.*random-1.
+   call random_number(random0) ! this is the theta dependence
+   s=2.*random0-1.
    if (hgg.ge.0.01) then
       cost=0.5/hgg*(1.+hgg**2-((1.-hgg**2)/(1.+hgg*s))**2)
    else
@@ -2929,6 +2929,7 @@ module photon_mod
    cosp=cos(phi)
    sinp=sin(phi)
    denom=sqrt(1.-vin(3)**2)
+
    if (vin(3).lt.0.999) then
       vout(1)=sint/denom*(vin(1)*vin(3)*cosp-vin(2)*sinp) + vin(1)*cost
       vout(2)=sint/denom*(vin(2)*vin(3)*cosp+vin(1)*sinp) + vin(2)*cost
@@ -2952,10 +2953,23 @@ module photon_mod
       inpacket%direction%x =  vout(1)
       inpacket%direction%y =  vout(2)
       inpacket%direction%z =  vout(3)
-      
+            
+
       ierr = 0
    else
       ierr = 1
+
+      vout(1) = vin(1)
+      vout(2) = vin(2)
+      vout(3) = vin(3)
+
+!      print*, vout
+!      print*, vin
+!      print*, random0, random
+!      print*, hgg
+!      print*, inpacket%nuP
+!      print*, sint, cost, sinp, cosp
+      
    end if
 
    return

@@ -551,10 +551,6 @@ module set_input_mod
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, inputDustMass
                lginputDustMass = .true.  
-               if (lgSymmetricXYZ) then
-                 inputDustMass = inputDustMass / 8
-               end if
-               inputDustMass = inputDustMass / 5.028e11
             case default
                 print*, "! readInput: invalid keyword in model parameter input file", &
 &                        in_file, keyword
@@ -571,7 +567,12 @@ module set_input_mod
            stop
         end if
 
-
+        if (lginputDustMass) then
+          inputDustMass = inputDustMass / 5.028e11
+          if (lgSymmetricXYZ) then
+            inputDustMass = inputDustMass / 8
+          end if
+        end if
 
         if (lgMultiStars) then
            call setMultiPhotoSources(multiPhotoSources)
