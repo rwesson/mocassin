@@ -2944,7 +2944,8 @@ module photon_mod
    endif
 
 
-   if ( (vout(1) >= 0. .or. vout(1) < 0.) .and. &
+   if ( ( (abs(vout(1)) <= 1.) .and. (abs(vout(2)) <= 1.) .and. (abs(vout(3)) <= 1.) )&
+        & .and. (vout(1) >= 0. .or. vout(1) < 0.) .and. &
         & (vout(2) >= 0. .or. vout(2) < 0.) .and. & 
         & (vout(3) >= 0. .or. vout(3) < 0.)) then
 
