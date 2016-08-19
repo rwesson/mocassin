@@ -590,7 +590,7 @@ module photon_mod
                 end do
             end if
 
-            if ((lgSymmetricXYZ) .and. initPhotonPacket%lgStellar .and. nStars==1) then
+            if ((lgSymmetricXYZ) .and. initPhotonPacket%lgStellar .and. .not.lgMultistars) then
                 if (initPhotonPacket%direction%x<0.) &
                      & initPhotonPacket%direction%x = -initPhotonPacket%direction%x
                 if (initPhotonPacket%direction%y<0.) &
@@ -675,9 +675,9 @@ module photon_mod
                end if
             end do            
 
-!            if (nuP<nbins) then
-!               if (random>(probDen(nuP+1)+probDen(nuP))/2.) nuP=nuP+1
-!            end if
+            if (nuP<nbins) then
+               nuP=nuP+1
+            end if
 
             if (nuP>=nbins) then
                print*, 'random: ', random

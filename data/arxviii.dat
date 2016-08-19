@@ -1,0 +1,52 @@
+ 25
+** Atomic data from version 5.2 of the CHIANTI database **
+%energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
+    NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
+%comment: 35699780      Limit
+%comment: Theoretical energies are the same as the observed ones
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration CHIANTI
+%
+% K.P.Dere 1999
+% A values: Parpia, F.A., Johnson, W.R., 1982, Phys. Rev. A, 26, 1142
+%energy levels: Martin, W.C., Sugar,J., Musgrove,A., Dalton, G.R., 1995, 
+     NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
+%oscillator strengths: Wiese,W.L., Smith,M.W., Glennon,B.M., 1966, Atomic Transition Probabilities, NSRDS-NBS-4
+%comment:  hydrogenic f values
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+% K.P.Dere 1998
+
+%filename: ar_18.splups
+%oscillator strengths: Wiese,W.L., Smith,M.W., Glennon,B.M., 1966, Atomic Transition Probabilities, NSRDS-NBS-4
+%comment: hydrogenic f values
+%effective collision strengths: interpolation of R-matrix calculations of Aggarwal,K.M., Kingston,A.E., 1991-1993
+%comment: effective collision strengths are most accurate in the temperature range 5.0 < LogT < 7.0
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%  
+% K.P.Dere - Aug 1998
+ 0 23
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+ 0 0 0

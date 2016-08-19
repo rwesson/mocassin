@@ -130,7 +130,8 @@ module update_mod
         ! do not update this cell if there were no hits
         if (.not.lgHit) then
 
-            if (lgTalk) print*, "! updateCell [talk]: no photon hits, returning...", xP,yP,zP
+            if (lgTalk) print*, "! updateCell [talk]: no photon hits, &
+                 &returning...", xP,yP,zP
             
             TdustTemp(:,:,cellP)       = grid%Tdust(:,:,cellP)
             
@@ -271,28 +272,12 @@ module update_mod
          
          if (lgDust .and. lgGas .and. lgPhotoelectric) then
             allocate (grainPot(1:nSPecies, 1:nsizes))
-            if (err /= 0) then                     
-               print*, "! updateCell:cannot allocate grid memory,grainpot"                    
-               stop
-            end if
             grainPot=0.
             allocate (grainPotP(1:nSPecies, 1:nsizes))
-            if (err /= 0) then                     
-               print*, "! updateCell:cannot allocate grid memory,grainpotp"                    
-               stop
-            end if
             grainPotP=0
             allocate (photoelHeat_d(1:nSPecies, 1:nsizes))
-            if (err /= 0) then                     
-               print*, "! updateCell:cannot allocate grid memory,photoelHeat_d"                    
-               stop
-            end if
             photoelHeat_d=0.
             allocate ( gasDustColl_d(1:nSPecies, 1:nsizes))
-            if (err /= 0) then                     
-               print*, "! updateCell:cannot allocate grid memory"                    
-               stop
-            end if
             gasDustColl_d=0.
          end if
 
@@ -600,7 +585,8 @@ module update_mod
                 call setGrainPotential(isp,ai,lgGCBConv)
                 return
              else
-                print*, '! setGrainPotential: no convergence', cellP,grainPot(isp,ai),grainEmi,grainRec
+                print*, '! setGrainPotential: no convergence', &
+                     & cellP,grainPot(isp,ai),grainEmi,grainRec
                 lgGCBConv=.false.                 
                 return
              end if
@@ -644,10 +630,12 @@ module update_mod
              Yhat = Yn*min(1., max(0.,1.-Vg/(nuArray(ifreq)-grainVn(isp))))
 
              if (.not. lgDebug) then
-!                photFlux = (grid%JPEots(cellP,ifreq) + grid%Jste(cellP,ifreq))/(hcRyd*nuArray(ifreq))
+!                photFlux = (grid%JPEots(cellP,ifreq) + &
+!                & grid%Jste(cellP,ifreq))/(hcRyd*nuArray(ifreq))
                 photFlux =  grid%Jste(cellP,ifreq)/(hcRyd*nuArray(ifreq))
              else
-!                photFlux = (grid%JPEots(cellP,ifreq) + grid%Jste(cellP,ifreq)+grid%Jdif(cellP,ifreq))/& 
+!                photFlux = (grid%JPEots(cellP,ifreq) +&
+!                &  grid%Jste(cellP,ifreq)+grid%Jdif(cellP,ifreq))/& 
 !                     & (hcRyd*nuArray(ifreq))
              end if
 
@@ -1285,19 +1273,37 @@ module update_mod
 
                 if (lgDataAvailable(elem, ion)) then
                   
-                   if (ion<nstages) then
-                      call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem), ion+1)/ionDenUsed(elementXref(elem),ion), &
-                           & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
+                   if (elem == 26 .and. ion == 2) then
+                      if (nstages > 2) then
+                         call equilibrium(file_name=dataFile(elem, ion), &
+                              &ionDenUp=ionDenUsed(elementXref(elem),ion+1)/&
+                              &ionDenUsed(elementXref(elem),ion), Te=TeUsed,&
+                              &Ne=NeUsed, FlineEm=forbiddenLinesLarge(&
+                              &1:nForLevelsLarge, 1:nForLevelsLarge))
+                      else
+                         call equilibrium(file_name=dataFile(elem, ion), &
+                              &ionDenUp=0., Te=TeUsed,&
+                              &Ne=NeUsed, FlineEm=forbiddenLinesLarge(&
+                              &1:nForLevelsLarge, 1:nForLevelsLarge))
+                      end if
+                      forbiddenLinesLarge(:, :) = forbiddenLinesLarge(:, :)*& 
+                           & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
+                           & ionDenUsed(elementXref(elem), ion)                      
                    else
-                      call equilibrium(dataFile(elem, ion), 0., &
-                           & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
+                      if (ion<nstages) then
+                         call equilibrium(dataFile(elem, ion), &
+                              &ionDenUsed(elementXref(elem), ion+1)/&
+                              &ionDenUsed(elementXref(elem),ion), &
+                              & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
+                      else
+                         call equilibrium(dataFile(elem, ion), 0., &
+                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:))
+                      end if
+                      forbiddenLines(elem, ion, :, :) = forbiddenLines(elem, ion, :, :)*& 
+                           & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
+                           & ionDenUsed(elementXref(elem), ion)                      
                    end if
-                   forbiddenLines(elem, ion, :, :) = forbiddenLines(elem, ion, :, :)*& 
-                        & grid%elemAbun(grid%abFileIndex(xP,yP,zP),elem)*&
-                        & ionDenUsed(elementXref(elem), ion)
-
                 end if
-
              end do
           end do
 
@@ -1306,7 +1312,7 @@ module update_mod
           !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence 
           !          the right units are obtained by multiplying by 1.9865e-16 
           forbiddenLines = forbiddenLines*1.9865e-16   
-
+          if (lgElementOn(26) .and. ion>2) forbiddenLinesLarge = forbiddenLinesLarge*1.9865e-16
 
         end subroutine forLines
 
@@ -2005,7 +2011,8 @@ module update_mod
 
                      else
                         
-                        print*, "! resLineHeating: [warning] only dust heating from H Lyman alpha and resonance lines from heavy"
+                        print*, "! resLineHeating: [warning] only dust &
+                             &heating from H Lyman alpha and resonance lines from heavy"
                         print*, "elements is implemented in this version. please contact author B. Ercolano -1-", &
                              &iL, resLine(iL)%elem, &
                              & resLine(iL)%ion

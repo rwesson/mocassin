@@ -77,7 +77,9 @@ module output_mod
         real, pointer         :: lineLuminosity(:,:) ! MC luminosity in a given line
 
         double precision, dimension(nElements,nstages,nForLevels,nForLevels) :: wav           
-        real, pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivity
+        double precision, dimension(nForLevelsLarge,nForLevelsLarge) :: wavLarge
+        real, pointer         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
+        real, pointer         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
         real, pointer         :: TeVol(:,:,:)      ! mean Temperature for a given ion
 
         ! recombination lines stuff (1=Oii, 2=mgii,3=neii,4=cii,5=n33ii,6=n34ii)
@@ -145,6 +147,11 @@ module output_mod
            print*, "! output mod: can't allocate array forbVol memory"
            stop
         end if
+        allocate(forbVolLarge(0:nAbComponents, nForLevelsLarge,nForLevelsLarge), stat=err)
+        if (err /= 0) then
+           print*, "! output mod: can't allocate array forbVol memory"
+           stop
+        end if
         allocate(TeVol(0:nAbComponents, 1:nElements, 1:nstages), stat=err)
         if (err /= 0) then
            print*, "! output mod: can't allocate array TeVol memory"
@@ -207,7 +214,9 @@ module output_mod
         LtotAn          = 0.
         LtotMC          = 0.
         wav             = 0.
+        wavLarge        = 0.
         forbVol         = 0.
+        forbVolLarge    = 0.
         recLinesLambda  = 0.
         recLambdaOII    = 0.
         recLambdaMgII   = 0.
@@ -387,19 +396,34 @@ module output_mod
                                 if (.not.lgElementOn(elem)) exit
 
                                 if (lgDataAvailable(elem, ion)) then
-                                   do iup = 1,nForLevels
-                                      do ilow = 1, nForLevels
-                                         forbiddenLines(elem,ion,iup,ilow) = &
-                                              & forbiddenLines(elem,ion,iup,ilow)*10.**&
-                                              & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
-                                         iCount = iCount+1
+                                   if (elem == 26 .and. ion == 2) then
+                                      do iup = 1,nForLevelsLarge
+                                         do ilow = 1, nForLevelsLarge
+                                            forbiddenLinesLarge(iup,ilow) = &
+                                                 & forbiddenLinesLarge(iup,ilow)*10.**&
+                                                 & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+&
+                                                 & cMap(grid(1)%active(i,j,k))))
+                                            iCount = iCount+1
+                                         end do
                                       end do
-                                   end do
+
+                                   else
+                                      do iup = 1,nForLevels
+                                         do ilow = 1, nForLevels
+                                            forbiddenLines(elem,ion,iup,ilow) = &
+                                                 & forbiddenLines(elem,ion,iup,ilow)*10.**&
+                                                 & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+&
+                                                 & cMap(grid(1)%active(i,j,k))))
+                                            iCount = iCount+1
+                                         end do
+                                      end do
+                                   end if
+
                                 end if
 
                              end do
                           end do
-
+                          
                        end if
 
                        dV = getVolume(grid(iG), i,j,k)
@@ -438,16 +462,30 @@ module output_mod
                        ! Heavy elements forbidden lines
                        do elem = 3, nElements
                           do ion = 1, min(elem+1, nstages)                             
-                             do iup = 1, nForLevels
-                                do ilow = 1, nForLevels
-                                   forbVol(abFileUsed,elem,ion,iup,ilow) = &
-                                        & forbVol(abFileUsed,elem,ion,iup,ilow) + &
-                                        & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
-                                   forbVol(0,elem,ion,iup,ilow) = &
-                                        & forbVol(0,elem,ion,iup,ilow) + &
-                                        & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+
+                             if (elem == 26 .and. ion == 2) then
+                                do iup = 1, nForLevelsLarge
+                                   do ilow = 1, nForLevelsLarge
+                                      forbVolLarge(abFileUsed,iup,ilow) = &
+                                           & forbVolLarge(abFileUsed,iup,ilow) + &
+                                           & forbiddenLinesLarge(iup,ilow)*HdenUsed*dV
+                                      forbVolLarge(0,iup,ilow) = &
+                                           & forbVolLarge(0,iup,ilow) + &
+                                           & forbiddenLinesLarge(iup,ilow)*HdenUsed*dV
+                                   end do
                                 end do
-                             end do
+                             else
+                                do iup = 1, nForLevels
+                                   do ilow = 1, nForLevels
+                                      forbVol(abFileUsed,elem,ion,iup,ilow) = &
+                                           & forbVol(abFileUsed,elem,ion,iup,ilow) + &
+                                           & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+                                      forbVol(0,elem,ion,iup,ilow) = &
+                                           & forbVol(0,elem,ion,iup,ilow) + &
+                                           & forbiddenLines(elem,ion,iup,ilow)*HdenUsed*dV
+                                   end do
+                                end do
+                             end if
                           end do
                        end do
                        
@@ -786,15 +824,16 @@ module output_mod
               end do
 
               ! Heavy elements forbidden lines
-              do elem = 3, nElements
-                 do ion = 1, min(elem+1, nstages)
-                    do iup = 1, nForLevels
-                       do ilow = 1, nForLevels
-                          forbVol(iAb,elem, ion, iup, ilow) = forbVol(iAb,elem, ion,iup,ilow) / HbetaVol(iAb)
-                       end do
-                    end do
-                 end do
-              end do
+!              do elem = 3, nElements
+!                 do ion = 1, min(elem+1, nstages)
+!                    do iup = 1, nForLevels
+!                       do ilow = 1, nForLevels
+              forbVol(iAb,:,:,:,:) = forbVol(iAb,:,:,:,:) / HbetaVol(iAb)
+              forbVolLarge(iAb,:,:) = forbVolLarge(iAb,:,:) / HbetaVol(iAb)
+!                       end do
+!                    end do
+!                 end do
+!              end do
 
               if (lgDust .and. convPercent>resLinesTransfer) then
                  do iRes = 1, nResLines
@@ -1054,31 +1093,49 @@ module output_mod
               do ion = 1, min(elem+1, nstages)
                  if (.not.lgElementOn(elem)) exit
                  if (lgDataAvailable(elem,ion)) then
-                    do iup = 1, nForLevels
-                       do ilow = 1, nForLevels
-                          
-                          if (forbVol(iAb,elem,ion, iup, ilow) > 0.) then
-                             if (lgDebug) then
-                                if (lineLuminosity(iAb,iLine) > 0. ) then
-                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
-                                        & forbVol(iAb,elem,ion, iup, ilow), lineLuminosity(iAb,iLine), &
-                                        & forbVol(iAb,elem, ion, iup, ilow)/lineLuminosity(iAb,iLine), iLine
-                                   sumAn = sumAn + forbVol(iAb,elem,ion,iup,ilow)
-                                   sumMC = sumMC + lineLuminosity(iAb,iLine)
+                    if (elem==26 .and.  ion==2) then
+
+                       do iup = 1, nForLevelsLarge
+                          do ilow = 1, nForLevelsLarge                                                   
+                             if (forbVolLarge(iAb,iup, ilow) > 0.) then
+                                write(10, *) ' 26', ' 2 ', iup, ilow, wavLarge(iup, ilow), &
+                                     & forbVolLarge(iAb,iup,ilow), iLine
+                             end if
+                             
+                             iLine = iLine + 1
+                             
+                          end do
+                       end do
+
+                    else
+
+                       do iup = 1, nForLevels
+                          do ilow = 1, nForLevels                                                    
+                             if (forbVol(iAb,elem,ion, iup, ilow) > 0.) then
+                                if (lgDebug) then
+                                   if (lineLuminosity(iAb,iLine) > 0. ) then
+                                      write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
+                                           & forbVol(iAb,elem,ion, iup, ilow), &
+                                           &lineLuminosity(iAb,iLine), &
+                                           & forbVol(iAb,elem, ion, iup, ilow)/&
+                                           &lineLuminosity(iAb,iLine), iLine
+                                      sumAn = sumAn + forbVol(iAb,elem,ion,iup,ilow)
+                                      sumMC = sumMC + lineLuminosity(iAb,iLine)
+                                   else
+                                      write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
+                                           & forbVol(iAb,elem,ion,iup,ilow), iLine
+                                   end if
                                 else
-                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
+                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), & 
                                         & forbVol(iAb,elem,ion,iup,ilow), iLine
                                 end if
-                             else
-                                write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), & 
-                                     & forbVol(iAb,elem,ion,iup,ilow), iLine
                              end if
-                          end if
+                             
+                             iLine = iLine + 1
                           
-                          iLine = iLine + 1
-                          
+                          end do
                        end do
-                    end do
+                    end if
                  end if
               end do
            end do
@@ -1435,6 +1492,7 @@ module output_mod
            if (associated(lineLuminosity)) deallocate(lineLuminosity)
         end if
         if (associated(forbVol)) deallocate(forbVol)
+        if (associated(forbVolLarge)) deallocate(forbVolLarge)
         if (associated(TeVol)) deallocate(TeVol)
         if (associated(recLinesFlux)) deallocate(recLinesFlux)
         if (associated(denominatorIon)) deallocate(denominatorIon)
@@ -2002,19 +2060,42 @@ module output_mod
               if (.not.lgElementOn(elem)) exit
 
               if (lgDataAvailable(elem, ion)) then
+                 
+                 if (elem == 26 .and. ion == 2) then
+                    if (nstages>2) then
+                       call equilibrium(dataFile(elem, ion), &
+                            & ionDenUsed(elementXref(elem),ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), &
+                            & TeUsed, NeUsed, forbiddenLinesLarge(:,:), &
+                            & wavLarge(:,:))
+                    else
+                       call equilibrium(dataFile(elem, ion), &
+                            &0., &
+                            & TeUsed, NeUsed, forbiddenLinesLarge(:,:), &
+                            & wavLarge(:,:))
+                    end if
 
-                 if (ion<nstages) then
-                    call equilibrium(dataFile(elem, ion), ionDenUsed(elementXref(elem),ion+1)/ionDenUsed(elementXref(elem),ion), &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), wav(elem,ion,:,:))
+                    forbiddenLinesLarge(:, :) =forbiddenLinesLarge(:, :)&
+                         *elemAbundanceUsed(elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
+
                  else
-                    call equilibrium(dataFile(elem, ion), 0., &
-                         & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), wav(elem,ion,:,:))
+                    if (ion<nstages) then
+                       call equilibrium(dataFile(elem, ion), &
+                            & ionDenUsed(elementXref(elem),ion+1)/&
+                            &ionDenUsed(elementXref(elem),ion), &
+                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), &
+                            & wav(elem,ion,:,:))
+                    else
+                       call equilibrium(dataFile(elem, ion), 0., &
+                            & TeUsed, NeUsed, forbiddenLines(elem, ion,:,:), &
+                            wav(elem,ion,:,:))
+                    end if
+
+                    forbiddenLines(elem, ion, :, :) =forbiddenLines(elem, ion, :, :)&
+                         *elemAbundanceUsed(elem)*&
+                         & ionDenUsed(elementXref(elem), ion)
                  end if
-
-
-                 forbiddenLines(elem, ion, :, :) =forbiddenLines(elem, ion, :, :)*elemAbundanceUsed(elem)*&
-                      & ionDenUsed(elementXref(elem), ion)
-
               end if
 
            end do
@@ -2050,39 +2131,6 @@ module output_mod
         real                       :: x1,x2
         real                       :: hb          ! emissivity of H 4->2
         real                       :: fh          ! emissivity of H
-
-
-        T4 = TeUsed / 10000.
-
-        ! do hydrogenic ions first
-
-         
-        ! read in HI recombination lines [e-25 ergs*cm^3/s] 
-        ! (Storey and Hummer MNRAS 272(1995)41)
-!        close(94)
-!        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
-!        if (ios /= 0) then
-!            print*, "! RecLinesEmission: can't open file: data/r1b0100.dat"
-!            stop
-!        end if
-!        do iup = 15, 3, -1
-!            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min0(8, iup-1)) 
-!        end do
-
-!        close(94)
-
-        ! calculate Hbeta 
-        ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
-        ! fits to Storey and Hummer MNRAS 272(1995)41
-!        Hbeta = 10**(-0.870*log10Te + 3.57)
-!        Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
-
-        ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
-!        do iup = 15, 3, -1
-!            do ilow = 2, min0(8, iup-1)
-!                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
-!            end do
-!        end do    
 
         ! calculate Hbeta
         if (TeUsed > 26000.) then
@@ -2140,22 +2188,27 @@ module output_mod
 
         ! now do HeI
         
-        if (HdenUsed <= 100.) then
+        if (NeUsed <= 100.) then
            denint=0
-        elseif (HdenUsed > 100. .and. HdenUsed <= 1.e4) then
+        elseif (NeUsed > 100. .and. NeUsed <= 1.e4) then
            denint=1
-        elseif (HdenUsed > 1.e4 .and. HdenUsed < 1.e6) then
+        elseif (NeUsed > 1.e4 .and. NeUsed < 1.e6) then
             denint=2
-        elseif (HdenUsed >= 1.e6) then
+        elseif (NeUsed >= 1.e6) then
            denint=3
         end if
 
+
         ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+        T4 = TeUsed / 10000.
+        if (T4 < 0.5) T4=0.5
+        if (T4 > 2.0) T4=2.0
+
         if (denint>0.and.denint<3) then
            do i =1, 34
               x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
               x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
-              HeIRecLines(i) = x1+((x2-x1)*(HdenUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
+              HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
            end do
         elseif(denint==0) then
            do i = 1, 34

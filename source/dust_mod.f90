@@ -24,7 +24,7 @@ module dust_mod
       real, pointer :: scaOpacTmp(:,:)
 
       integer :: err ! allocation error status
-      integer :: iP,jP,kP ! counter
+      integer :: iP,jP,kP,i,j ! counter
       integer :: size ! size of MPI reducing string
       integer :: ios ! I/O error status
 
@@ -56,22 +56,25 @@ module dust_mod
          stop
       end if
 
+
       if (.not. lgWarm) then
          allocate(grid%Tdust(0:nSpecies, 0:nSizes, 0:grid%nCells), stat = err)
          if (err /= 0) then
             print*, "! dustOpacity: can't allocate Tdust memory"
             stop
          end if
-         grid%Tdust   = 50.
+         grid%Tdust(0:nSpecies, 0:nSizes, 0:grid%nCells)   = 50.
       end if
 
       ! initialize arrays
-      grid%absOpac = 0.
-      grid%scaOpac = 0.
+      grid%absOpac(0:grid%nCells, 1:nbins) = 0.
+      grid%scaOpac(0:grid%nCells, 1:nbins) = 0.
 
+      
       ! initialize tmp arrays
-      absOpacTmp = 0.
-      scaOpacTmp = 0.
+      absOpacTmp(0:grid%nCells, 1:nbins) = 0.
+      scaOpacTmp(0:grid%nCells, 1:nbins) = 0.
+
 
       do iP = taskid+1, grid%nx, numtasks
          do jP = 1, grid%ny
@@ -90,9 +93,12 @@ module dust_mod
       call mpi_allreduce(grid%scaOpac, scaOpacTmp, size, &
 &                             mpi_real, mpi_sum, mpi_comm_world, ierr)
 
-      
-      grid%absOpac = absOpacTmp
-      grid%scaOpac = scaOpacTmp
+      do i = 0, grid%nCells
+         do j = 1, nbins
+            grid%absOpac(i,j) = absOpacTmp(i,j)
+            grid%scaOpac(i,j) = scaOpacTmp(i,j)
+         end do
+      end do
 
       ! calculate the dust emission integrals
       if (lgFirstDustEm) then
@@ -100,7 +106,6 @@ module dust_mod
          lgFirstDustEm=.false.
       end if
       lgDust = .true.
-
 
     contains
 

@@ -85,6 +85,11 @@ module grid_mod
                  print*, "! emissionDriver: can't allocate array memory"
                  stop
               end if
+              allocate(forbiddenLinesLarge(nForLevelsLarge,nForLevelsLarge), stat=err)
+              if (err /= 0) then
+                 print*, "! emissionDriver: can't allocate array memory"
+                 stop
+              end if
 
               call setComposition(grid)
 
@@ -164,9 +169,9 @@ module grid_mod
                end do
 
                nEdges = nEdges -1
-print*, nedges
+
                call sortUp(ionEdge(1:nEdges))
-print*, 'here'
+
             end if
 
 
@@ -2437,6 +2442,7 @@ print*, 'here'
         write(40, *) nPhotonsDiffuse, 'nPhotonsDiffuse'
         write(40, *) emittingGrid, ' emittingGrid'
         write(40, *) nstages, ' emittingGrid'
+        write(40, *) lgMultistars, ' lgMultiStars'
         ! close file
         close(40)
      
@@ -2677,7 +2683,7 @@ print*, 'here'
       end if
       read(77, *) emittingGrid
       read(77, *) nstages
-
+      read(77, *) lgMultistars
 
       if (taskid == 0) then
          print*,  nGrids,'nGrids'
@@ -2718,7 +2724,7 @@ print*, 'here'
          print*,  nPhotonsDiffuse, ' nPhotonsDiffuse'
          print*,  emittingGrid, ' emittingGrid'
          print*,  nstages, ' nstages'
-
+         print*,  lgMultistars, ' lgMultiStars'
       end if
       close(77)
 
@@ -2782,7 +2788,7 @@ print*, 'here'
          if (iG>1) then
             grid(iG)%elemAbun = grid(1)%elemAbun
          end if
-print*, '1'
+
          if (lgPlaneIonization .and. iG==1) then
             allocate(planeIonDistribution(grid(iG)%nx,grid(iG)%nz), stat = err)
             if (err /= 0) then
@@ -2845,7 +2851,7 @@ print*, '1'
             grid(iG)%totalLines = 0.
             
          end if
-print*, '2'
+
          if (Ldiffuse>0.) then
             allocate(grid(iG)%LdiffuseLoc(0:grid(iG)%nCells), stat = err)
             if (err /= 0) then
@@ -2905,7 +2911,7 @@ print*, '2'
             grid(iG)%Jdif = 0. 
 
          end if
-print*, '3'
+
          allocate(grid(iG)%lgConverged(0:grid(iG)%nCells), stat = err)
          if (err /= 0) then
             print*, "Can't allocate memory to lgConverged array"
@@ -2923,7 +2929,7 @@ print*, '3'
             print*, "! resetGrid: can't allocate grid memory : Jste"
             stop
          end if
-print*, '4'
+
          if (lgDust) then
             allocate(grid(iG)%Ndust(0:grid(iG)%nCells), stat = err)
             if (err /= 0) then
@@ -2954,7 +2960,7 @@ print*, '4'
          grid(iG)%Jste = 0.        
          grid(iG)%lgConverged = 0
          grid(iG)%lgBlack = 0
-print*, '5'
+
          ! axis points
          do i = 1, grid(iG)%nx
             read(89, *) grid(iG)%xAxis(i)
@@ -2965,7 +2971,7 @@ print*, '5'
          do i = 1, grid(iG)%nz
             read(89, *) grid(iG)%zAxis(i)
          end do
-print*, '6'
+
          ! read the rest of the files into grid 
          do i = 1, grid(iG)%nx
             do j = 1, grid(iG)%ny
@@ -3015,7 +3021,7 @@ print*, '6'
                end do
             end do
          end do
-print*, '7'
+
          ! find geometric corrections
          grid(iG)%geoCorrX = (grid(iG)%xAxis(grid(iG)%nx) - grid(iG)%xAxis(grid(iG)%nx-1))/2.
          if (.not. lg1D) then
@@ -3027,7 +3033,7 @@ print*, '7'
          end if
          if (taskid == 0) print*, "Geometric grid corrections at grid: ", iG, &
            & grid(iG)%geoCorrX, grid(iG)%geoCorrY, grid(iG)%geoCorrZ
-print*, '8'
+
          ! find linear increment
          dl(iG) =  abs(grid(iG)%xAxis(2) - grid(iG)%xAxis(1))
          do i = 2, grid(iG)%nx-1
@@ -3065,7 +3071,7 @@ print*, '8'
          close(78)
          close(79)
       end if
-print*, '9'
+
       if (lgDust) close(88)
 
       ! locate the origin of the axes

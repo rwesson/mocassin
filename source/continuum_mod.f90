@@ -23,7 +23,6 @@ module continuum_mod
                
     integer, parameter  :: maxLim = 1000000        ! max number of rows in the input spectrum file
     integer             :: nuP                     ! frequency pointer
-    integer             :: lymanP                  ! frequency pointer to Lyman limit
 
     logical, save       :: lgF=.true.
 
@@ -35,7 +34,7 @@ module continuum_mod
 
         ! local variables
 
-        character(len=30) :: filein          ! input file name
+        character(len=50) :: filein          ! input file name
 
         integer :: enP                       ! pointer in enArray
         integer :: err                       ! allocation error status
@@ -117,7 +116,7 @@ module continuum_mod
 
 
            else
-
+              print*, 'contShape,spID ', contShape(iStar), spID(iStar)
               select case(spID(iStar)) 
               case ('sb99')
 
@@ -460,26 +459,17 @@ module continuum_mod
             normConstantErg   = normConstantErg  + inSpSumErg(i)*widFlx(i)   
         end do
 
-        if (lgDust) then
-           normConstantPhot=0.
-           do i = 1, nbins
-              normConstantPhot  = normConstantPhot + inSpSumPhot(i)*widFlx(i)
-           end do
-        else
-           normConstantPhot=0.
-           do i = lymanP, nbins
-              normConstantPhot  = normConstantPhot + inSpSumPhot(i)*widFlx(i)
-           end do
-        end if
+        normConstantPhot=0.
+        do i = lymanP, nbins
+           normConstantPhot  = normConstantPhot + inSpSumPhot(i)*widFlx(i)
+        end do
 
         ! normalise spectrum and calculate PDF
         inSpectrumProbDen(iS,1) = inSpSumErg(1)*widFlx(1)/normConstantErg        
         do i = 2, nbins
            inSpectrumProbDen(iS,i) = inSpectrumProbDen(iS,i-1) + &
-&                  inSpSumErg(i)*widFlx(i)/normConstantErg 
-
+                & inSpSumErg(i)*widFlx(i)/normConstantErg 
         end do
-
 
         maxp = 0.
         do i = 1, nbins

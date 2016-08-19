@@ -87,13 +87,13 @@ module iteration_mod
 
            ! re-initialize MC estimators
            do iG = 1, nGrids
-              grid(iG)%lgConverged    = 0
-              grid(iG)%lgBlack        = 0
+              grid(iG)%lgConverged(0:grid(iG)%nCells)    = 0
+              grid(iG)%lgBlack(0:grid(iG)%nCells)        = 0
               if (lgGas) then
                  ! zero out PDF arrays
-                 grid(iG)%recPDF     = 0.
-                 if (lgDebug) grid(iG)%linePDF    = 0.
-                 grid(iG)%totalLines = 0.  
+                 grid(iG)%recPDF(0:grid(iG)%nCells, 1:nbins) = 0.
+                 if (lgDebug) grid(iG)%linePDF(0:grid(iG)%nCells, 1:nLines)    = 0.
+                 grid(iG)%totalLines(0:grid(iG)%nCells) = 0.  
                  
                  ! zero out Balmer jump
                  BjumpTemp = 0.
@@ -102,7 +102,7 @@ module iteration_mod
            
               if (lgDust .and. .not.lgGas) then
                  ! zero out dust PDF arrays
-                 grid(iG)%dustPDF     = 0.
+                 grid(iG)%dustPDF(0:grid(iG)%nCells, 1:nbins)     = 0.
               end if
            end do
 
@@ -110,7 +110,7 @@ module iteration_mod
 
            iCell = 0
            do iG = 1, nGrids
-              grid(iG)%opacity = 0.
+              grid(iG)%opacity(0:grid(iG)%nCells, 1:nbins) = 0.
 
               if (lgGas) then
                  if (taskid==0) print*, '! iterateMC: ionizationDriver in', iG
@@ -161,12 +161,12 @@ module iteration_mod
               ! add dust contribution to total opacity
               if (taskid==0) print*, '! iterateMC: adding dust contribution to total opacity ',iG           
               if (lgDust) then
-                 grid(iG)%scaOpac = 0.
-                 grid(iG)%absOpac = 0.
+                 grid(iG)%scaOpac(0:grid(iG)%nCells, 1:nbins) = 0.
+                 grid(iG)%absOpac(0:grid(iG)%nCells, 1:nbins) = 0.
 
                  if((nIterateMC==1 .and. lgEquivalentTau)) then
-                    grid(iG)%scaOpac = 0.
-                    grid(iG)%absOpac = 0.
+                    grid(iG)%scaOpac(0:grid(iG)%nCells, 1:nbins) = 0.
+                    grid(iG)%absOpac(0:grid(iG)%nCells, 1:nbins) = 0.
                  else
                     do i = 1, grid(iG)%nx
                        do j = 1, grid(iG)%ny
@@ -406,7 +406,7 @@ module iteration_mod
                  call mpi_allreduce(grid(iG)%fEscapeResPhotons, fEscapeResPhotonsTemp, size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
                  
-                 grid(iG)%fEscapeResPhotons = fEscapeResPhotonsTemp
+                 grid(iG)%fEscapeResPhotons(0:grid(iG)%nCells, 1:nResLines) = fEscapeResPhotonsTemp
                  
                  size = grid(iG)%nCells+1
 
@@ -415,7 +415,7 @@ module iteration_mod
                  call mpi_allreduce(grid(iG)%resLinePackets, resLinePacketsTemp, size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
 
-                 grid(iG)%resLinePackets = resLinePacketsTemp
+                 grid(iG)%resLinePackets(0:grid(iG)%nCells) = resLinePacketsTemp
 
                  if (associated(resLinePacketsTemp)) deallocate(resLinePacketsTemp)
                  
@@ -430,10 +430,10 @@ module iteration_mod
 
            do iG = 1, nGrids
 
-              grid(iG)%Jste           = 0.
+              grid(iG)%Jste(0:grid(iG)%nCells, 1:nbins)    = 0.
               if (lgDebug) then
-                 grid(iG)%Jdif = 0.
-                 grid(iG)%linePackets    = 0.
+                 grid(iG)%Jdif(0:grid(iG)%nCells, 1:nbins) = 0.
+                 grid(iG)%linePackets(0:grid(iG)%nCells, 1:nLines) = 0.
               end if
            end do
           
@@ -447,7 +447,7 @@ module iteration_mod
               rest = mod(nPhotons(iStar), numtasks)           
            
               do iG = 1, nGrids
-                 grid(iG)%escapedPackets = 0.
+                 grid(iG)%escapedPackets(0:grid(iG)%nCells, 0:nbins,0:nAngleBins) = 0.
               end do
 
               if (lgPlaneIonization) then
@@ -746,8 +746,8 @@ module iteration_mod
               end if
 
 
-              grid(iG)%lgConverged = 0
-              grid(iG)%lgBlack     = 0
+              grid(iG)%lgConverged(0:grid(iG)%nCells) = 0
+              grid(iG)%lgBlack(0:grid(iG)%nCells)     = 0
               grid(iG)%noHit       = 0.
               grid(iG)%noIonBal    = 0.
               grid(iG)%noTeBal     = 0.

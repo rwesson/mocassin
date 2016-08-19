@@ -27,7 +27,6 @@ module set_input_mod
         character(len=50)   :: keyword          ! input parameter keyword
         character(len=50)   :: multiPhotoSources ! stars file
         
-        logical             :: lgMultiStars=.false.
         
         ! set default values and set non oprional values to 0 or 0. or "zero"
        

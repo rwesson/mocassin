@@ -1,0 +1,49 @@
+ 22
+** Atomic data from version 5.2 of the CHIANTI database **
+%experimental energy levels: Ralchenko Y., Jou, F.C., Kelleher, D.E., Kramida, A.E., Musgrove, A., Reader, J.,
+    Wiese, W.L., Olsen, K., 2005, NIST Atomic Spectra Database, Version 3.0
+%theoretical energy levels: extrapolated using the ions in the He-like sequence from C V to Ni XXVII
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  E. Landi - Oct 2004
+%experimental energy levels: Ralchenko Y., Jou, F.C., Kelleher, D.E., Kramida, A.E., Musgrove, A., Reader, J.,
+    Wiese, W.L., Olsen, K., 2005, NIST Atomic Spectra Database, Version 3.0
+%theoretical energy levels: interpolated using the ions in the He-like sequence from C V to Ni XXVII
+%A values and oscillator strengths: interpolated using the ions in the He-like sequence from C V to Ni XXVII
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  E. Landi - Oct 2004
+
+%filename: p_14.splups
+%oscillator strengths: interpolated using the ions in the He-like sequence from C V to Ni XXVII
+%effective collision strengths: interpolated using the ions in the He-like sequence from C V to Ni XXVII
+%comment: the effective collision strengths are most accurate in the range 6.2 < log T < 7.5
+%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
+%
+%  E. Landi - Oct 2004
+ 0 23
+     100.0
+     158.5
+     251.2
+     398.1
+     631.0
+    1000.0
+    1584.9
+    2511.9
+    3981.1
+    6309.6
+   10000.0
+   15848.9
+   25118.9
+   39810.7
+   63095.8
+  100000.0
+  158489.2
+  251188.7
+  398107.1
+  630957.6
+ 1000000.0
+ 1584892.5
+ 2511887.0
+0
+ 0 0 0

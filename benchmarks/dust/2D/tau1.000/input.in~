@@ -1,0 +1,20 @@
+autoPackets 0.20 2. 9e8
+output
+symmetricXYZ
+contShape  blackbody
+nebComposition noGas
+maxIterateMC  30 95.
+nPhotons 1e6
+nx 40
+ny 40
+nz 40
+LStar 0.00391
+Rin 1.96e13
+Rout 1.96e16 
+TStellar 5800.
+Ndust file 'input/diskDensity1.000.dat'
+dustFile 'input/disk_grainspecies.dat' 'input/disk_grainsizes.dat' 
+writeGrid 5. 
+inclination 2 0.2180000 1.35000
+convLimit 0.03
+

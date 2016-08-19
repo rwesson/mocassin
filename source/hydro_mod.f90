@@ -10,6 +10,48 @@ module elements_mod
 
     contains
 
+    subroutine makeCollIonData()
+      implicit none
+      
+      integer :: elem,ion, i
+
+      close(12)
+      open(unit = 12, file = 'data/cion.dat', status='old', position='rewind')
+      
+      do elem = 1, nElements
+         do ion = elem, 1, -1
+            read(12,*) (CF(i,elem,ion),i=1,5)
+         end do
+      end do
+      read(12,*)
+      read(12,*)
+      do elem = 3, nElements
+         read(12,*) (cionTherm(elem,ion) , ion=1, elem)
+      end do
+      close(12)
+
+    end subroutine makeCollIonData
+
+    subroutine makeAugerData()
+      implicit none
+      
+      integer :: elem,ion,shell,nelec,imax,i,j,ios
+
+      close(12)
+      open(unit = 12, file = 'data/auger.dat', status='old', position='rewind')
+
+      nAuger=0
+      auger =0.
+
+      do i = 1, 1696
+         read(12,*) elem,ion,shell,nelec
+         nauger(elem,ion,shell)=nelec
+         read(12,*) (auger(elem,ion,shell,j), j = 1, 10)
+      end do
+      close(12)
+
+    end subroutine makeAugerData
+
     ! this subroutine makes the data for Hydrogen and Helium
     subroutine makeHydro()
 
@@ -42,30 +84,31 @@ module elements_mod
 
      end subroutine makeHydro
      
-    ! this subroutine determines the outer shell for some species
-    ! NOTE for z>=19 ground levels differ from ground level of preceeding ion
-    ! only atomic value will be correct
+    ! this subroutine determines the outer shell and statistical weights
+     ! LS coupling
     subroutine getOuterShell(z, nElec, outShell, g0, g1)
         implicit none
         
         integer, intent(in)  :: z        ! atomic number from 1 to 30
         integer, intent(in)  :: nElec    ! number of electrons from 1 to z
         integer, intent(out) :: outShell ! number of the outer shell
-        integer, intent(out) :: g0       ! statistical weight of (z, n) ground state
-        integer, intent(out) :: g1       ! statistical weight of (z, n-1) ground state
+        integer, intent(out) :: g0       ! statistical weight of (z, nelec) ground state
+        integer, intent(out) :: g1       ! statistical weight of (z, nelec-1) ground state
             
         ! local variables
         integer, dimension(30) :: ss, gl ! data for outer shells and statistical weights
-        integer, dimension(12) :: ga
+        integer, dimension(19:30) :: glhigh
         
+ 
         ! assign the data to the local arrays
-        ss = (/1,1,2,2,3,3,3,3,3,3,4,4,5,5,5,5,5,5,&
-&               6,6,6,6,6,6,6,6,6,6,7,7/)
-!        gl = (/2,1,2,1,2,1,4,5,4,1,2,1,2,1,4,5,4,1,&
-!&               4,5,4,1,6,9,10,9,6,1,2,1/)
+        ss = (/1,1,2,2,3,3,3,3,3,3,4,4, &
+              &  5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,7,7/)
+
         gl = (/2, 1, 2, 1, 6, 9, 4, 9, 6, 1, 2, 1, 6, 9, 4, 9, 6, 1, 2, 1, &
              & 10, 21, 28, 7, 6, 25, 28, 21, 2, 1/) 
-        ga = (/2,1,4,5,4,7,6,9,10,9,2,1/)
+
+        glhigh = (/10,21,28,25,6,25,28,21,10,1,2,1/)
+        
 
         if ( .not.lgElementOn(z) ) then
             print*, "! getOuterShell: element is switched off [elem]", z
@@ -75,7 +118,7 @@ module elements_mod
         if ( z > 30 ) then
             print*, "! getOuterShell: atomic number out of range"
             stop
-        end if
+         end if
         if ( (nElec < 1) .or. (nElec > z) ) then
             print*, "! getOuterShell: number of electrons out of range"
             stop
@@ -83,61 +126,62 @@ module elements_mod
         
         ! number of the outer shell and statistical weight
         outShell = ss(nElec)
+        if (z==nElec .and.z>18) outShell = 7
+        if (z==nElec+1 .and. &
+             &(z==20.or.z==21.or.z==22.or.z==25.or.z==26)) outShell = 7
+
         g0 = gl(nElec)
         if (nElec == 1) then
             g1 = 1
         else
             g1 = gl(nElec-1)
+        end if        
+        
+        if ( (z>20) .and. nElec >= 19 .and. (z-nElec)>=1) then
+           g0 = glhigh(nElec) 
+           if (nElec == 19) then
+              g1 = gl(nElec-1)
+           else
+              g1 = glHigh(nElec-1)
+           end if
         end if
-        
-        if ( (nElec > 18) .and. (z == nElec) ) then 
-            outShell = 7
-!            g0 = ga(z-18)
-!               
-!            select case (z)
-!            case (20)
-!                g1 = 2
-!            case (21)
-!                g1 = 3
-!            case (22)
-!                g1 = 4
-!            case (25)
-!                g1 = 7
-!            case (26)
-!                g1 = 10
-!            case (30)
-!                g1 = 2
-!            end select
-        
-         end if   
+         
+        if ( z == nElec ) then 
+           if (z>20 .and. nElec >= 21) then
+              g1 = glHigh(nElec-1)
+           end if
 
-         if ( (nElec > 18) .and. ((z-nElec) == 1) ) then
-            select case (z)
-            case (20)
-                outShell = 7
-!                g0 = 2  
-            case (21)
-                outShell = 7
-!                g0 = 3
-            case (22)
-                outShell = 7
-!                g0 = 4
-            case (25) 
-                outShell = 7
-!                g0 = 7
-            case (26)
-                outShell = 7
-!                g0 = 10
-            case (30)  
-                outShell = 7
-!                g0 = 2
-            end select
-        
-         end if   
+           select case (z)
+           case (21)
+              g1 = 15
+           case (22)
+              g1 = 28
+           case (25) 
+              g1 = 7
+           case (26)
+              g1 = 30
+           end select
+
+        end if
+
+
+        if ( z-nElec == 1 ) then
+           select case (z)
+           case (21)
+              g0 = 15
+           case (22)
+              g0 = 28
+           case (25) 
+              g0 = 7
+           case (26)
+              g0 = 30
+           end select
+        end if     
+
 
      end subroutine getOuterShell
- 
-     subroutine readHeIRecLines()
+
+      subroutine readHeIRecLines()
        implicit none
        
        ! iden = 1 is 100cm^-2
@@ -151,15 +195,14 @@ module elements_mod
        do iden = 1, 3
           do iline = 1, 34
              read(13,*) (HeIrecLineCoeff(iline,iden,j), j = 1, 4)
-             HeIrecLineCoeff(iline,iden,1) = HeIrecLineCoeff(iline,iden,1)*1.e25
+             HeIrecLineCoeff(iline,iden,1) = HeIrecLineCoeff(iline,iden,1)*1.e25 
           end do
        end do
 
 
        close(13)
      end subroutine readHeIRecLines
-
-
+     
      ! this subroutine assignes continuum energy pointers 
      ! to shells for all atoms     
      subroutine setShells(nElem)
@@ -206,6 +249,7 @@ module elements_mod
                  ! lower limit so this never loop upon. 
                  ! used as flags by limitShell to check
                  ! whether this is a real shell
+!print*, nelem, ion, shell,  thres, nuArray(1)
                  if ( thres <= 0.1 )  then
                      elementP(nElem, ion, shell, 1) = 2
                      elementP(nElem, ion, shell, 2) = 1
@@ -221,7 +265,6 @@ module elements_mod
                      ! of the next major shell. Fo the k-shell returns
                      ! kShellLimit (= nuMax)
                      elementP(nElem, ion, shell, 2) = limitShell(ion, shell, nElem)
-
                  end if
              end do
              ! this is the valence pointer
@@ -230,7 +273,8 @@ module elements_mod
                  elementP(nElem, ion, outShell, 1) = elementP(nElem, ion, outShell, 1)
              end if
 
-         end do
+          end do
+
 
     end subroutine setShells
 
@@ -245,25 +289,23 @@ module elements_mod
         integer             :: limitShell
         
         ! local variables
-        real                :: kShellLimit ! high energy limit to code 
 
         if (.not.lgElementOn(nElem)) then
             print*, "! limitShell: element is not switched on [elem]", nElem
             stop
         end if 
 
-        kShellLimit = nuMax
 
         select case (shell)
         ! high energy limit to code kShellLimit = nuMax
         case (1)
-            limitShell = nbins
+            limitShell = kShellLimitP
         ! 2s shell, upper limit set to high energy limit
         case (2)
-            limitShell = nbins
+            limitShell = kShellLimitP
         ! 2p shell,  upper limit set to high energy limit 
         case (3)
-            limitShell = nbins
+            limitShell = kShellLimitP
         ! 3s shell, upper limit set to k-shell edge
         case (4)
             limitShell = elementP(nElem, ion, 1, 1) -1
@@ -276,7 +318,7 @@ module elements_mod
         ! 4s shell, upper limit set to 3d
         case (7)
             ! if the shell 6 is empty (3d) then set it to 5 (3p)
-            if (elementP(nElem, ion, 6, 1)<3.) then
+            if (elementP(nElem, ion, 6, 1)<3) then
                 limitShell = elementP(nElem, ion, 5, 1) -1
             else
                 limitShell = elementP(nElem, ion, 6, 1) -1
@@ -295,14 +337,27 @@ module elements_mod
      
          ! local variables
          integer :: i, j          ! counters
-   
+
+         ! set pointer for K-shell limit 
+         call locate(nuArray, KshellLimit, KshellLimitP)
+
+         ! set pointer for secondary ionisation
+         call locate(nuArray,7.353,secIonP)
+
+         ! set pointer for Compton recoil
+         call locate(nuArray,194., cRecoilHP)
+         call locate(nuArray,260., cRecoilHeP)
          
+         ! set xRay pointer
+         call locate(nuArray,20.6, xrayP)
+
          ! set the pointer to the Balmer jump in the nuArray
          call locate(nuArray, 0.25, BjumpP)
 
          ! set data for hydrogen and helium atoms
          call makeHydro()  
          
+         ! read in data from benj skil smit 99
          call readHeIRecLines()
 
          ! set HlevNuP (pointer to the nth H level in nuArray)           
@@ -416,7 +471,7 @@ module elements_mod
 
          ! zinc
          if (lgElementOn(30)) call setShells(30)  
- 
+
      end subroutine setPointers
 
      subroutine makeElements()
@@ -494,10 +549,14 @@ module elements_mod
              if (ios == 0) then
                 
                 close(18)
-                
-                nLines = nLines + nForLevels*nForLevels ! nForlLevels
-                lgDataAvailable(elem, ion) = .true.
-
+             
+                if (elem == 26 .and. ion ==2) then
+                   nLines = nLines + nForLevelsLarge*nForLevelsLarge! nForlLevels
+                   lgDataAvailable(elem, ion) = .true.
+                else
+                   nLines = nLines + nForLevels*nForLevels ! nForlLevels
+                   lgDataAvailable(elem, ion) = .true.
+                end if
              else
 
                 lgDataAvailable(elem, ion) = .false.
