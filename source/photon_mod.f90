@@ -543,14 +543,6 @@ module photon_mod
                      & initPhotonPacket%direction%z = -initPhotonPacket%direction%z
             end if
 
-            if (.not.(initPhotonPacket%lgStellar .and. gP==1 .and. & 
-                 & initPhotonPacket%xP(gP)==iorigin .and. initPhotonPacket%yP(gP)==jorigin .and.& 
-                 &  initPhotonPacket%zP(gP)==korigin) .and.  grid(gP)%active(initPhotonPacket%xP(gP),&
-                 & initPhotonPacket%yP(gP), initPhotonPacket%zP(gP))==0) then
-               print*, '! initPhotonPacket: photons cannot be emitted/scattered in & 
-                    & inactive cells'
-               stop
-            end if
             initPhotonPacket%origin(1) = gP
             initPhotonPacket%origin(2) = grid(gP)%active(initPhotonPacket%xP(gP),&
                  & initPhotonPacket%yP(gP), initPhotonPacket%zP(gP))
