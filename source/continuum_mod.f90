@@ -27,6 +27,7 @@ module continuum_mod
 
     contains
 
+
     subroutine setContinuum()
         implicit none
 
@@ -36,10 +37,11 @@ module continuum_mod
 
         integer :: enP                       ! pointer in enArray
         integer :: err                       ! allocation error status
-        integer :: i, j, iStar               ! counter 
+        integer :: i, j, iStar, iloop        ! counters
         integer :: ios                       ! I/O error status
 
         real    :: SStar                     ! stellar surface [e36 cm^2]
+        real,dimension(maxLim)    :: tmp1, tmp2
 
         real, dimension(maxLim) :: enArray  ! freq array as read from input spectrum file [Hz]
         real, dimension(maxLim)  :: Hflux    ! flux array as read from input spectrum file [erg/cm^2/s/Hz/sr]
@@ -100,61 +102,98 @@ module continuum_mod
 
            else
 
-              ! read in input continuum
-              do j = 1, maxLim
+            do j = 1, maxLim
 
-                 ! check if the end of file has been reached
-                 ! NOTE: the file must be in the format of two columns
-                 !       the first containing the frequency points (Hz) 
-                 !       and the second containing the input spectrum points 
-                 !       (erg/cm^2/s/Hz/sr). The file must be in ascending
-                 !       frequency order.
+                ! check if the end of file has been reached
+                ! NOTE: the file must be in the format of two columns
+                !       the first containing the lambda points (A) 
+                !       and the second containing the input spectrum points 
+                !       (erg/cm^2/s/A/sr). The file must be in ascending
+                !       wavenegth order. See e.g. Thomas Rauch's tables 
+                !       http://astro.uni-tuebingen.de/~rauch/
 
-                 ! check if the end of the file has been reached 
-                 read(unit=12, fmt=*, iostat=ios) 
-                 if (ios < 0) exit ! end of file reached
+                ! check if the end of the file has been reached 
+                read(unit=12, fmt=*, iostat=ios) 
+                if (ios < 0) exit ! end of file reached
 
-                 backspace(12)
-                 read(12, *) enArray(j), Hflux(j)
-                 
-                 ! change to Ryd 
-                 enArray(j) = enArray(j)/cRyd
+                backspace(12)
+                read(12, *) enArray(j), Hflux(j)
 
-              end do
-              
-              close(12)
+                ! change Hflux(lambda) [erg/cm^"/s/A/sr] into Hflux(nu) [erg/cm^2/s/Hz]
 
-              ! now interpolate
-              do i = 1, nbins
+                tmp1(j) = (Hflux(j)*(enArray(j)*1.e-8)**2.)/c/4.
 
-                 ! locate this nuArray point on the enArray
-                 call locate(enArray(1:j-1), nuArray(i), enP)
+                ! change to Ryd 
+                tmp2(j) = (c/(enArray(j)*1.e-8))/cRyd
 
-                 if (enP >= j-1 .or. enP == 0) then
-                    
-                    inSpectrumErg(i) = 0.
-                    print*, '! setContinuum: [warning] frequency point outside bounds&
-                         & of stellar atmosphere file domain - zero spectral energy assigned ',&
-                         & i, nuArray(i), enArray(1), enArray(j-1)
+            end do
 
-                 else if (enP < 0) then
-                    
-                    print*, '! setContinuum: insanity at stellar atmosphere interpolation routine'
-                    stop
+            close(12)
+
+            do i = 1,j-1
+
+               Hflux(i) = tmp1(j-1-i+1)
+               enArray(i) = tmp2(j-1-i+1)
+
+            end do
+
+            ! now interpolate
+            do i = 1, nbins
+
+                ! locate this nuArray point on the enArray
+                call locate(enArray(1:j-1), nuArray(i), enP)
+
+                if (enP >= j-1) then
+
+                   inSpectrumErg(i) = 0.
+                   print*, '! setContinuum: [warning] frequency point outside upper bound&
+                        & of stellar atmosphere file domain - zero spectral energy assigned ',&
+                        & i, nuArray(i), enArray(j)
+
+                else if (enP==0 .and. Hflux(1) > 0.) then
+
+                   inSpectrumErg(i)=0.
+                   do iloop = 2, maxLim
+                      if (enArray(iloop)>0.9) exit
+                      ! extrapolate in log space 
+                      inSpectrumErg(i) = inSpectrumErg(i)+ log(Hflux(iloop)) + &
+                           & (log(Hflux(iloop))-log(Hflux(1)))*&
+                           & (log(nuarray(i))-log(enArray(iloop)))/&
+                           & (log(enArray(iloop))-log(enArray(1)))
+                   end do
+                   iloop = iloop-1
+                   inSpectrumErg(i) = 10.** (inSpectrumErg(i)/iloop)
+
+                else if (enP==0 .and. Hflux(1) == 0.) then
+
+                   inSpectrumErg(i) = 0.
+
+                else if (enP < 0) then
+
+                   print*, '! setContinuum: insanity at stellar atmosphere interpolation routine'
+                   stop
                    
-                 else 
+                else 
 
-                    inSpectrumErg(i) = Hflux(enP) + &
-                         & (nuArray(i)-enArray(enP)) * &
-                         & (Hflux(enP+1)- Hflux(enP))/(enArray(enP+1)-enArray(enP))
-                    
+                   if (enArray(enP+1)>0. .and. enArray(enP)>0..and.&
+                        & Hflux(enP+1)>0. .and. Hflux(enP)>0.) then
+                      inSpectrumErg(i) = 10.**(log(Hflux(enP)) + &
+                           & (log(nuArray(i))-log(enArray(enP))) * &
+                           & (log(Hflux(enP+1))- log(Hflux(enP)))/&
+                           & (log(enArray(enP+1))-log(enArray(enP))))
+
+                   else
+                      inSpectrumErg(i) = Hflux(enP) + &
+                           & (nuArray(i)-enArray(enP)) * &
+                           & (Hflux(enP+1)- Hflux(enP))/(enArray(enP+1)-enArray(enP))
+
+                   end if
+
                     inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
-                    
-                 end if
-                 
-                 
-                 
-              end do
+
+                end if
+              
+             end do
 
               ! get physical flux
               inSpectrumErg = fourPi*inSpectrumErg

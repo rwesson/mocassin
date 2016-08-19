@@ -91,9 +91,10 @@
 
 \noindent{\bf \large 0. What's new}\\
 \\
-\paragraph {from 2.01 to 2.02} Grain charge calculations. Photoelectric heating from dust grains. Gas-grain collisions. Tspiking. 
+\paragraph {from 2.01 to 2.02}  ionising stellar atmosphere files from  http://astro.uni-tuebingen.de/~rauch can now be directly read into MOCASSIN (but please manually remove the header). Grain charge calculations. Photoelectric heating from dust grains. Gas-grain collisions. Tspiking. 
 PAH optical constants included. Dust optical constant data can be entered in terms of Qs (lambda dependent and radius dependent).
-Please refer to {\it Input file} section of this manual. 
+Please refer to {\it Input file} section of this manual. \\
+See changes to keyword: {\it contShape}\\
 See new keywords: {\it traceHeating}, {\it quantumHeatGrain}, {\it quantumHeatGrainParameters}, 
 {\it noPhotoelectric}
 \\
@@ -393,11 +394,13 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
 		     contShape NLTE140lg65 tells the program to look for the 
 		     nLTe140lg65 data file in the current directory. The stellar 
 		     atmosphere files must be in a format consisting of two columns:
-		     the first listing the frequency points in units of [Hz] and 
-		     the second containing the corresponding frequency-dependent 
-		     stellar Eddington fluxes in units of $[erg/cm^2/s/Hz/sr]$. A set
+		     the first listing the wavelength points in units of [A] and 
+		     the second containing the corresponding wavelength-dependent 
+		     stellar Eddington fluxes in units of $[erg/cm^2/s/A/sr]$. A set
 		     of stellar atmosphere flux tables have been compiled by Dr T. Rauch
-		     in a MOCASSIN-friendly format and are available www.star.ucl.ac.uk/~be\\
+		     in a MOCASSIN-friendly format and are available  
+		     http://astro.uni-tuebingen.de/~rauch/ (but please manually remove 
+		     the header from the flux tables.\\
 		     $[$blackbody$]$\\
 
 \paragraph   {convLimit real}    : This is the convergence limit for the variation of a given 
