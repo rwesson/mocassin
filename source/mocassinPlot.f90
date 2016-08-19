@@ -195,7 +195,8 @@ program MoCaSSiNplot
                             iLine = iLine+1
 
                             if (plot%lineNumber(plotNum) == iLine) &
-                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = HeIRecLinesS(l)*HdenUsed*dV
+                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
+                                 & HeIRecLinesS(l)*HdenUsed*dV
                          end do
                          
                          ! HeI triplets
@@ -204,7 +205,8 @@ program MoCaSSiNplot
                             iLine = iLine+1
                             
                             if (plot%lineNumber(plotNum) == iLine) &
-                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = HeIRecLinesT(l)*HdenUsed*dV
+                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
+                                 & HeIRecLinesT(l)*HdenUsed*dV
                          end do
                          
                          ! HeII rec lines
@@ -247,9 +249,9 @@ program MoCaSSiNplot
                          end do
                          
                          ! calculate the intensity per unit frequency 
-                         plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
-                              & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) / &
-                              & 2.1799153e-11*nuArray(plot%nuP(plotNum,1))
+!                         plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
+!                              & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) / &
+!                              & 2.1799153e-11*nuArray(plot%nuP(plotNum,1))
                          
                       else
                          
@@ -304,12 +306,12 @@ program MoCaSSiNplot
     ! calculate intensities in units of [E30 erg/s/Hz]
     ! Note:  intensities are now in E-25 * E45 ergs/sec (the E-25 comes from the emission
     ! module calculations and the E45 comes from the volume calculations to avoid
-    ! overflow. Hence intensities are in [E20 ergs/s], so we need to multiply by E-10
-    ! to give units of  [E30 erg/s].
-    plot%intensity = plot%intensity*1.e-10
+    ! overflow. Hence intensities are in [E20 ergs/s], so we need to multiply by E-16
+    ! to give units of  [E36 erg/s].
+    plot%intensity = plot%intensity*1.e-16
     
     ! per sterradian
-    plot%intensity = plot%intensity/fourPi
+!    plot%intensity = plot%intensity/fourPi
     
     if (plot%lgFilter) then
 
@@ -643,7 +645,7 @@ program MoCaSSiNplot
            do ilow = 2, min0(8, iup-1)
 
               HIRecLines(iup, ilow) = HIRecLines(iup, ilow)* &
-&                                        NeUsed*ionDenUsed(elementXref(1),2)*grid3D(iG)%elemAbun(abFileIndexUsed,1)
+                   & NeUsed*ionDenUsed(elementXref(1),2)*grid3D(iG)%elemAbun(abFileIndexUsed,1)
 
            end do
         end do
@@ -663,7 +665,7 @@ program MoCaSSiNplot
         do iup = 30, 3, -1
            do ilow = 2, min0(16, iup-1)
               HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*&
-&                                          NeUsed*ionDenUsed(elementXref(2),3)*grid3D(iG)%elemAbun(abFileIndexUsed,2)
+                   & NeUsed*ionDenUsed(elementXref(2),3)*grid3D(iG)%elemAbun(abFileIndexUsed,2)
            end do
         end do
 
@@ -687,11 +689,11 @@ program MoCaSSiNplot
            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
               aFit = log10(HeISingRead(i, 2)/HeISingRead(i, 1)) / log10(2.)
               HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) ) 
+                   & aFit*log10(TeUsed/5000.) ) 
            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
               aFit = log10(HeISingRead(i, 3)/HeISingRead(i, 2)) / log10(2.)
               HeIRecLinesS(i) = 10**(log10(HeISingRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
+                   & aFit*log10(TeUsed/10000.) )
            end if
         end do
         
@@ -713,11 +715,11 @@ program MoCaSSiNplot
            else if ((TeUsed > 5000.) .and. (TeUsed <= 10000.)) then
               aFit = log10(HeITripRead(i, 2)/HeITripRead(i, 1)) / log10(2.)
               HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 1)) + &
-&                                  aFit*log10(TeUsed/5000.) )
+                   & aFit*log10(TeUsed/5000.) )
            else if ((TeUsed > 10000.) .and. (TeUsed < 20000.)) then
               aFit = log10(HeITripRead(i, 3)/HeITripRead(i, 2)) / log10(2.)
               HeIRecLinesT(i) = 10**(log10(HeITripRead(i, 2)) + &
-&                                  aFit*log10(TeUsed/10000.) )
+                   & aFit*log10(TeUsed/10000.) )
            end if
         end do
 

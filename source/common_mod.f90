@@ -64,6 +64,7 @@ module common_mod
                                                ! 2 is highest energy for shell
                                                ! 3 is opacity offset
 
+   
 
     integer,pointer :: dustScaXsecP(:,:)       ! pointer to dust scatterring x-sec in xSecArray (species,size)
     integer,pointer :: dustAbsXsecP(:,:)       ! pointer to dust absorption x-sec in xSecArray  (species,size)
@@ -129,6 +130,8 @@ module common_mod
     real, pointer :: dustEmIntegral(:,:,:)   ! dust emission integral (species,size,temperature)
     
     ! allocatable arrays
+    real, pointer :: absOpacSpecies(:,:)     ! absOpacSpecies (nspecies, freq)
+
     real, pointer :: continuum(:)            ! continuum array (freq)
 
     real, pointer :: gauntFF(:)              ! gaunt factor
@@ -246,7 +249,8 @@ module common_mod
     end type plot_type
 
     type resLine_type
-       character(len=30)     ::  species, transition, multiplet! label
+       character(len=2)      ::   species
+       character(len=30)     ::   transition, multiplet! label
 
        integer               :: nuP  ! pointer to freq of line in nuArray
        integer               :: elem ! elemnt

@@ -51,9 +51,8 @@ module photon_mod
         integer                        :: dt(8)       ! date and time values
 
         integer                        :: totalEscaped  
-        real                           :: gasInt      ! total number of gas interactions
-        real                           :: dustAInt    ! total number of dust absorptions
-        real                           :: dustSInt    ! total number of dust scatterings
+        real                           :: absInt      ! total number of absorption events
+        real                           :: scaInt      ! total number of scattering events
         real                           :: JDifTot     ! tot JDif
         real                           :: JsteTot     ! tot Jste
         real                           :: radius      ! radius
@@ -68,9 +67,8 @@ module photon_mod
 
         ! initilize interactions stats counters
         if (iStar == 1) then
-           gasInt = 0.
-           dustAInt = 0.
-           dustSInt = 0.
+           absInt = 0.
+           scaInt = 0.
         end if
 
         call date_and_time(values=dt)
@@ -109,6 +107,7 @@ module photon_mod
 
            print*, "! energyPacketDriver: starting resonance line packets transfer"
 
+
            iCell = 0
            do igrid = 1, nGrids
 
@@ -119,9 +118,10 @@ module photon_mod
 
                        if (mod(iCell-(taskid+1),numtasks)==0) then
                           if (grid(igrid)%active(ix,iy,iz)>0) then
+
                              do iPhot = 1, grid(igrid)%resLinePackets(grid(igrid)%active(ix,iy,iz))
 
-                                chTypeD = "dustEmi"
+                                chTypeD = "diffuse"
                                 posVector%x = grid(igrid)%xAxis(ix)
                                 posVector%y = grid(igrid)%yAxis(iy)
                                 posVector%z = grid(igrid)%zAxis(iz)
@@ -186,8 +186,9 @@ module photon_mod
            totalEscaped=0        
            do iG = 1, nGrids
               do i = 0, grid(iG)%nCells
-
-                 grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9 * Lstar(iStar) / (float(nPhotons(iStar)))           
+!                 grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9 * Lstar(iStar) / (float(nPhotons(iStar)))           
+                 grid(iG)%Jste(i,:) = grid(iG)%Jste(i,:) * 1.e-9 * Lstar(iStar) / & 
+                      & (float(nPhotons(iStar)))           
                  
                  if (lgDebug) grid(iG)%Jdif(i,:) = grid(iG)%Jdif(i,:) * 1.e-9 * Lstar(iStar) / (float(nPhotons(iStar)))
                  do ifreq = 1, nbins
@@ -207,13 +208,14 @@ module photon_mod
                  
               end do
            end do
+           
+           
 
            if (lgDust) then
-              print*, "! energyPacketDriver: [Interactions] : total -- gas -- dust abs --dust sca: "
-              print*, "! energyPacketDriver: [Interactions] ", gasInt+dustAInt+dustSInt, " - ", &
-                   &  gasInt*100./(gasInt+dustAInt+dustSInt),"% - ", &
-                   &  dustAInt*100./(gasInt+dustAInt+dustSInt),"% - ", &
-                   &  dustSInt*100./(gasInt+dustAInt+dustSInt),"%"
+              print*, "! energyPacketDriver: [Interactions] : total -- abs -- sca: "
+              print*, "! energyPacketDriver: [Interactions] ", absInt+scaInt, " -- ", &
+                   &  absInt*100./(absInt+scaInt),"% -- ", &
+                   &  scaInt*100./(scaInt+absInt),"%"
            end if
 
            print*, " total Escaped Packets :",  totalEscaped
@@ -745,6 +747,13 @@ module photon_mod
                   stop
                end if
 
+               if (lgGas) then
+                  print*, "! newPhotonPacket: dustEmi-type packet should be created in a &
+                       & grid containing gas."
+                  stop
+               end if
+
+
                ! check that the position has been specified
                if (.not.present(position)) then
                   print*, "! newPhotonPacket: position of the new dust emitted &
@@ -822,7 +831,7 @@ module photon_mod
           real                            :: dS       ! distance from nearest wall 
           real                            :: dV       ! lume of this cell
           real                            :: passProb ! prob of passing the next segment
-          real                            :: probDust ! prob that the packet interacts with a grain
+          real                            :: probSca  ! prob that the packet scatters
           real                            :: radius   ! radius
           real                            :: random   ! random number
           real                            :: tauCell  ! local tau
@@ -836,13 +845,13 @@ module photon_mod
 
           character(len=7)                :: packetType ! stellar, diffuse, dustEmitted?
 
-          logical                         :: lgDustInteraction ! is the packet interacting with dust?
+          logical                         :: lgScattered ! is the packet scattering with dust?
           logical                         :: lgReturn
           
 
           ! check that the input position is not outside the grid
           if ( (enPacket%iG <= 0).or.(enPacket%iG > nGrids) ) then   
-             print*, "! pathSegment: starting position not in any defined grids",&
+             print*, "! pathSegment: starting position not in any defined gridhses",&
                   & enPacket
              stop
           else if ( (enPacket%xP(enPacket%iG) <= 0).or.&
@@ -887,6 +896,7 @@ module photon_mod
                 stop
              end if
           end if
+
           ! initialize optical depth
           absTau = 0.
 
@@ -1039,7 +1049,6 @@ module photon_mod
 
              end if
 
-
              ! cater for cells on cell wall
              if ( abs(dSx)<1.e-10 ) dSx = grid(gP)%xAxis(grid(gP)%nx)
              if ( abs(dSy)<1.e-10 ) dSy = grid(gP)%yAxis(grid(gP)%ny)
@@ -1075,11 +1084,11 @@ module photon_mod
              ! find the volume of this cell
              dV = getVolume(grid(gP), xP,yP,zP)
 
-             ! check if the packets gets absorbed within this cell
+             ! check if the packets interacts within this cell
              if ((absTau+tauCell > passProb) .and. (grid(gP)%active(xP,yP,zP)>0)) then
 
-                ! packet is absorbed 
-
+                ! packet interacts
+                
                 ! calculate where within this cell the packet is absorbed
                 dlLoc = (passProb-absTau)/grid(gP)%opacity(grid(gP)%active(xP,yP,zP), enPacket%nuP)
 
@@ -1126,8 +1135,6 @@ module photon_mod
                    idirT = int(acos(enPacket%direction%z)/dTheta)+1
                    if (idirT>totangleBinsTheta) then
                       idirT=totangleBinsTheta
-                      !                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
-!                       & idir, totanglebins, enPacket%direction, dtheta
                    end if
                    if (idirT<1 .or. idirT>totAngleBinsTheta) then
                       print*, '! energyPacketRun: error in theta direction cosine assignment',&
@@ -1144,8 +1151,6 @@ module photon_mod
                    idirP=idirP+1
                    if (idirP>totangleBinsPhi) then
                       idirP=totangleBinsPhi
-!                  print*, '! energyPacketRun: idir>totanglebins - error corrected', &
-!                       & idir, totanglebins, enPacket%direction, dtheta
                    end if
                    
                    if (idirP<1 .or. idirP>totAngleBinsPhi) then
@@ -1154,7 +1159,6 @@ module photon_mod
                       stop
                    end if
                
-
                
                    if (nAngleBins>0) then
                       if (viewPointPtheta(idirT) == viewPointPphi(idirP).or. &
@@ -1184,114 +1188,108 @@ module photon_mod
                    
                    return
                 end if
-
+                
  
-                ! check if the packet interacts with gas or dust
+                ! check if the packet is absorbed or scattered 
                 if (lgDust) then
+
+                   probSca = grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/&
+                        & (grid(gP)%opacity(grid(gP)%active(xP,yP,zP),enPacket%nuP))
                    
-                   lgDustInteraction = .true.
+                   call random_number(random)
                    
-                   if (lgGas) then
-                      probDust = grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP) + &
-                           & grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/Pi
-                      probDust = probDust /&
-                           & (grid(gP)%opacity(grid(gP)%active(xP,yP,zP),enPacket%nuP))
-                      
-                      call random_number(random)
-                      
-                      random = 1.-random
-                      if (random > probDust) lgDustInteraction = .false.         
-                      
+                   random = 1.-random
+
+                   if (random > probSca) then
+                      lgScattered = .false.         
+                   else if (random <= probSca) then
+                      lgScattered = .true.         
+                   else
+                      print*, '! pathSegment: insanity occured and scattering/absorption &
+                           & decision stage.'
+                      stop
                    end if
-               
-                   if (lgDustInteraction) then
+
+                   if (.not. lgScattered) then
+
+                      absInt = absInt + 1.
+                            
+                      if (.not.lgGas) then
+
+                         ! packet is absobed by the dust
+                         packetType = "dustEmi"
+                         exit                         
+
+                      else
+
+                         ! packet is absobed by the dust+gas
+                         packetType = "diffuse"
+                         exit    
+
+                      end if
+
+
+                   else
+
+                      scaInt = scaInt + 1.                           
                       
                       do nS = 1, nSpecies
                          if (grainabun(nS)>0. .and. grid(gP)%Tdust(nS, 0, & 
                               & grid(gP)%active(xP,yP,zP))<TdustSublime(nS)) exit
                       end do
                       if (nS>7) then
-                         print*, "! pathSegment: packet interacts with dust at position where all &
+                         print*, "! pathSegment: packet scatters with dust at position where all &
                               &grains have sublimed."
                          print*, xP,yP,zP, grid(gP)%active(xP,yP,zP), tauCell, absTau, passProb
                          stop
-                      end if
+                      end if                      
 
-                      ! packet interacts with dust
+                      ! packet is scattered by the grain
+                         
+                      ! calculate new direction
+                      ! for now assume scattering is isotropic, when phase
+                      ! function is introduced the following must be changed                         
+                         
+                      enPacket%xP(gP) = xP
+                      enPacket%yP(gP) = yP
+                      enPacket%zP(gP) = zP            
                       
+                      enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., .false., enPacket%xP(1:nGrids), &
+                           & enPacket%yP(1:nGrids), enPacket%zP(1:nGrids), gP)
+                      
+                      
+                      vHat%x = enPacket%direction%x
+                      vHat%y = enPacket%direction%y
+                      vHat%z = enPacket%direction%z
+                      
+                      ! initialize optical depth
+                      absTau = 0.
+                      
+                      ! get a random number
                       call random_number(random)
                       
-                      random = 1.-random
-                      
-                      ! check if the packet is absorbed or scattered by the dust
-                      probDust = grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/&
-                           & ( grid(gP)%absOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP) + &
-                           & grid(gP)%scaOpac(grid(gP)%active(xP,yP,zP),enPacket%nuP)/Pi)
-                      
-                      ! absorbed by dust
-                      if (random <= probDust) then
-                         
-                         dustAInt = dustAInt + 1.
-                         
-                         ! packet is absobed by the grain
-                         packetType = "dustEmi"
-                         
-                         exit
-                         
-                         ! scattered
-                      else
-                     
-                         dustSInt = dustSInt + 1.
-                         
-                         ! packet is scattered by the grain
-                         
-                         ! calculate new direction
-                         ! for now assume scattering is isotropic, when phase
-                         ! function is introduced the following must be changed                         
-                         
-                         enPacket%xP(gP) = xP
-                         enPacket%yP(gP) = yP
-                         enPacket%zP(gP) = zP            
-                         
-                         enPacket = initPhotonPacket(enPacket%nuP, rVec, .false., .false., enPacket%xP(1:nGrids), &
-                              & enPacket%yP(1:nGrids), enPacket%zP(1:nGrids), gP)
-                     
-                         vHat%x = enPacket%direction%x
-                         vHat%y = enPacket%direction%y
-                         vHat%z = enPacket%direction%z
-                         
-                      end if
-                      
-                   else 
-                      
-                      if (.not.lgGas) then
-                         print*, "! pathSegment: Insanity occured - no gas present when no dust interaction"
-                         stop
-                      end if
-                  
-                      gasInt = gasInt + 1.
-                      
-                      ! packet interacts with gas
-                      packetType = "diffuse"
-                      exit
+                      ! calculate the probability 
+                      passProb = -log(1.-random)
                       
                    end if
-                   
+                      
                 else
+                   absInt = absInt + 1.
                    
                    if (.not.lgGas) then
-                      print*, "! pathSegment: Insanity occured - no gas or dust present - & 
-                           & the grid is empty", gP, nGrids
+                      print*, "! pathSegment: Insanity occured - no gas present when no dust interaction"
                       stop
                    end if
                    
                    ! packet interacts with gas
                    packetType = "diffuse"
                    exit
-               
+                   
                 end if
+                   
                 
              else
+                   
                 ! the packet is not absorbed within this cell
                 ! add contribution of the packet to the radiation field
                 
@@ -1595,6 +1593,7 @@ module photon_mod
                           & grid(enPacket%origin(1))%escapedPackets(enPacket%origin(2), &
                           & enPacket%nuP,0) + 1.                     
                   end if
+
                   return
                end if
                
@@ -1746,8 +1745,9 @@ module photon_mod
                       
                 end if
 
-              end if
+             end if
           end do ! safelimit loop
+
 
           if (i>= safeLimit) then
              if (.not.lgPlaneIonization) then

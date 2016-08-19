@@ -1336,66 +1336,83 @@ module update_mod
 
             real                   :: dustAbsIntegral   ! dust absorption integral
             real                   :: resLineHeat       ! resonance line heating
-            real, dimension(nbins) :: radField          ! radiation field
+            real, dimension(nbins) :: radField,yint     ! radiation field
 
             integer :: nS, i, ai ! counters
-            integer :: iT ! pointer to dust temp in dust temp array
+            integer :: iT        ! pointer to dust temp in dust temp array
 
             ! radiation field at this location
             if (lgDebug) then
-               radField = grid%Jste(cellP,:) + grid%Jdif(cellP,:)
+               radField = ((grid%Jste(cellP,:) + grid%Jdif(cellP,:)))/Pi
             else
-               radField = grid%Jste(cellP,:)
+               radField = grid%Jste(cellP,:)/Pi
             end if
 
             ! zero out dust temperature arrays
             grid%Tdust(:,:,cellP) = 0.
 
+            
             ! calculate absorption integrals for each species
             do nS = 1, nSpecies
-               do ai = 1, nSizes
-                  dustAbsIntegral = 0.
-                  do i = 1, nbins
-                     dustAbsIntegral =  dustAbsIntegral + xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)/Pi
 
-                     if (lgGas .and. convPercent>=resLinesTransfer .and. (.not.lgResLinesFirst) .and. &
-                          & (.not.nIterateMC==1) ) then
-                        dustHeatingBudget(grid%abFileIndex(xp,yp,zp),0) = dustHeatingBudget(grid%abFileIndex(xp,yp,zp),0)+&
-                             & xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)/Pi
-                        dustHeatingBudget(0,0) = dustHeatingBudget(0,0)+&
-                             & xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)/Pi
-                        resLineHeat = resLineHeating(ai,ns)
-                        dustAbsIntegral = dustAbsIntegral+resLineHeat
-                     end if
-                     
+               do ai = 1, nSizes
+
+                  dustAbsIntegral=0.
+                  do i = 1, nbins
+                     dustAbsIntegral = dustAbsIntegral+xSecArray(dustAbsXsecP(nS,ai)+i-1)*radField(i)
                   end do
+                 
+                  if (lgGas .and. convPercent>=resLinesTransfer .and. (.not.lgResLinesFirst) .and. &
+                       & (.not.nIterateMC==1) ) then
+                     dustHeatingBudget(grid%abFileIndex(xp,yp,zp),0) = dustHeatingBudget(grid%abFileIndex(xp,yp,zp),0)+&  
+                          & dustAbsIntegral*grainWeight(ai)*grainAbun(nS)*grid%Ndust(cellP)
+                     dustHeatingBudget(0,0) = dustHeatingBudget(0,0)+&                                                    
+                          & dustAbsIntegral*grainWeight(ai)*grainAbun(nS)*grid%Ndust(cellP)
+                     resLineHeat = resLineHeating(ai,ns)
+                     dustAbsIntegral = dustAbsIntegral+resLineHeat
+                  end if
 
                   call locate(dustEmIntegral(nS,ai,:), dustAbsIntegral, iT)
+
+                  if (iT<ntemps) then
+                     if (dustAbsIntegral>(dustEmIntegral(nS,ai,it)+dustEmIntegral(nS,ai,it+1))/2.) &                          
+                          & it=it+1
+                  else
+                     print*, '! getDustT: [warning] grain sublimes', ns, ai, ntemps,dustEmIntegral(nS,ai,it), dustAbsIntegral
+                  end if
+                  
                   if (iT<=0) then
                      print*, "getDustT: [warning] temperature of grain = 0. K!!!!"
                      print*, cellP
                      print*, nS, dustAbsIntegral
                      print*, dustEmIntegral(nS,ai,1)
-                     stop
+                     !stop
+                     iT=1
+                     grid%Tdust(nS,ai,cellP) = 1.
+                  else if (iT>=nTemps) then
+                     grid%Tdust(nS,ai,cellP) = real(nTemps)
+                  else
+                     grid%Tdust(nS,ai,cellP) = real(iT) + &
+                          & (dustAbsIntegral-dustEmIntegral(nS,ai,iT))*&
+                          & (real(iT+1)-real(iT))/(dustEmIntegral(nS,ai,iT+1)-&
+                          & dustEmIntegral(nS,ai,iT))
                   end if
-
-                  grid%Tdust(nS,ai,cellP) = real(iT)
+                  
 
                   if (lgTalk) &
                        & print*, "! getDustT: [talk] cell ", xP,yP,zP,"; Grain temperature: "&
                        &, grid%Tdust(nS,ai,cellP), " species ", grainLabel(nS), " size:", grainRadius(ai)
 
-
                   ! find weighted mean
                   grid%Tdust(nS,0,cellP) = grid%Tdust(nS,0,cellP)+&
-                       & grid%Tdust(nS,ai,cellP)*grainAbun(nS)*grainWeight(ai)
+                       & grid%Tdust(nS,ai,cellP)*grainWeight(ai)
 
                end do
                
                grid%Tdust(0,0,cellP) = grid%Tdust(0,0,cellP)+&
                     & grid%Tdust(nS,0,cellP)*grainAbun(nS)
 
-            end do            
+            end do
             
 
           end subroutine getDustT
@@ -1455,22 +1472,23 @@ module update_mod
 
                end do
 
-               Gline=Gline/(4.*Pi)
+               Gline=Gline/Pi
 
-               heat = Gline* &
+               heat = Gline*grid%Hden(cellP)* &
                     & (1.-grid%fEscapeResPhotons(cellP, iL))*&
-                    & xSecArray(dustAbsXSecP(speciesP,sizeP)+resLine(iL)%nuP-1)*grid%Ndust(cellP)/&
-                    & (Pi*grainRadius(sizeP)*grainRadius(sizeP)*1.e-8*&
-                    & grid%absOpac(cellP, resLine(iL)%nuP))               
+                    & xSecArray(dustAbsXSecP(speciesP,sizeP)+resLine(iL)%nuP-1)/&
+                    & (grid%Ndust(cellP)*&
+                    & absOpacSpecies(speciesP,resLine(iL)%nuP))
 
                ! Harrington Monk and Clegg 1988 (section 3.2)
                resLineHeating = resLineHeating + heat
 
                dustHeatingBudget(grid%abFileIndex(xP,yP,zP),iL) = &
                     & dustHeatingBudget(grid%abFileIndex(xP,yP,zP),iL) + &
-                    & heat
+                    & heat*grainWeight(sizeP)*grainAbun(speciesP)*grid%Ndust(cellP)
                dustHeatingBudget(0,iL) = dustHeatingBudget(0,iL) + &
-                    & heat
+                    & heat*grainWeight(sizeP)*grainAbun(speciesP)*grid%Ndust(cellP)
+
 
             end do
             

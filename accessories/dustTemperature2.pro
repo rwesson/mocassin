@@ -39,6 +39,7 @@ openr,lun,gridfile,/get_lun
 ncells=0
 motherP=0
 rout=0.
+readf, lun, motherP
 readf, lun, nx,ny,nz,ncells,motherP,rout
 convergence=replicate({n:intarr(3)},nx,ny,nz)
 x=fltarr(nx)
@@ -70,21 +71,22 @@ close,lun
 free_lun,lun
 
 mocassinfile='dustGrid.out'
-dustprop=replicate({n:fltarr(1),t:fltarr(2,20)},nx,ny,nz)
+dustprop=replicate({n:fltarr(1),t:fltarr(nspecies+1,nsizes+1)},nx,ny,nz)
 openr,lun,mocassinfile,/get_lun
 readf,lun,dustprop
 close,lun 
 free_lun,lun
 
 r=fltarr(nx,ny,nz)
-r1 = fltarr(12167)
-r2 = fltarr(12167)
-r3 = fltarr(12167)
+celltot = nx*ny*nz
+r1 = fltarr(celltot)
+r2 = fltarr(celltot)
+r3 = fltarr(celltot)
 
 temp=replicate({t:fltarr(nsizes)},nx,ny,nz)
-t1=replicate({t:fltarr(nsizes)},12167)
-t2=replicate({t:fltarr(nsizes)},12167)
-t3=replicate({t:fltarr(nsizes)},12167)
+t1=replicate({t:fltarr(nsizes)},celltot)
+t2=replicate({t:fltarr(nsizes)},celltot)
+t3=replicate({t:fltarr(nsizes)},celltot)
 
 ii=1
 jj=1
@@ -97,7 +99,7 @@ for i = 0,nx-1 do for j = 0,nx-1 do for k =0,nx-1 do begin
 
    for l = 0,nsizes-1 do begin
        for m = 0,nspecies-1 do begin
-           temp[i,j,k].t[l]=temp[i,j,k].t[l]+dustprop[i,j,k].t[m,l]*dustabundances[m].abund
+           temp[i,j,k].t[l]=temp[i,j,k].t[l]+dustprop[i,j,k].t[m+1,l+1]*dustabundances[m].abund
            if (sqrt(r[i,j,k]^2-x[i]^2)/r[i,j,k] gt 0.707107 and convergence[i,j,k].n[1] eq 1) then t1[ii] = temp[i,j,k]
            if (sqrt(r[i,j,k]^2-x[i]^2)/r[i,j,k] lt 0.707107and convergence[i,j,k].n[1] eq 1) then t2[jj] = temp[i,j,k]
            if (convergence[i,j,k].n[1] eq 1) then t3[kk] = temp[i,j,k]

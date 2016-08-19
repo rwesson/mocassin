@@ -739,6 +739,7 @@ module xSec_mod
         real :: intValue ! interpolated value
         real :: normWeight ! normalization constant for grain size weighting
         real :: value ! general value variable
+        real, pointer :: da(:)
         real, pointer :: tmp1(:), tmp2(:), tmp3(:) 
         real, pointer :: wav(:) ! wavelength in [um]
         real, pointer :: Cabs(:,:,:) ! abs cross-section [um^2] for each grain species and size
@@ -757,6 +758,14 @@ module xSec_mod
 
         ! check how many species are used
         read (10, *) nSpecies        
+
+        ! allocate abundances array for dust
+        allocate (absOpacSpecies(1:nSpecies, 1:nbins), stat=err)
+        if (err/=0) then
+           print*, "! makeDustXsec: error allocation memory for absOpacSpecies array"
+           stop
+        end if
+        absOpacSpecies=0.
 
         ! allocate abundances array for dust
         allocate (grainAbun(1:nSpecies), stat=err)
@@ -792,6 +801,13 @@ module xSec_mod
            stop
         end if
         grainRadius=0.
+        allocate (da(1:nSizes), stat=err)
+        if (err/=0) then
+           print*, "! makeDustXsec: error allocation memory for da array"
+           stop
+        end if
+        da=0.
+
         allocate (grainWeight(1:nSizes), stat=err)
         if (err/=0) then
            print*, "! makeDustXsec: error allocation memory for grainWeight array"
@@ -814,10 +830,42 @@ module xSec_mod
         dustAbsXSecP = -1
 
         do ai = 1, nSizes
-           read(11,*) iskip, grainRadius(ai), grainWeight(ai)
-           normWeight = normWeight+grainWeight(ai)
+           read(11,*) iskip, grainRadius(ai), grainWeight(ai)       
         end do
-        grainWeight = grainWeight/normWeight
+
+        if (nSizes>1) then
+           da(1) = grainRadius(2)-grainRadius(1)                    
+           do ai = 2, nSizes-1
+              da(ai) = (grainRadius(ai+1)-grainRadius(ai-1))/2.              
+           end do
+           da(nSizes) = grainRadius(nSizes)-grainRadius(nSizes-1)
+        end if
+        normWeight=  0.
+        do ai = 1, nSizes
+           normWeight = normWeight+grainWeight(ai)*da(ai) 
+        end do
+        if (nSizes>1) then
+           do ai = 1, nSizes
+              grainWeight(ai) = (grainWeight(ai)*da(ai))/normWeight
+              if (.not.grainWeight(ai)>=0.) then
+                 print*, '! makeDustXSec : Invalid grain weight ', grainWeight(ai), ai
+                 stop
+              end if
+           end do
+        else if (nSizes==1) then
+           grainWeight(1) = 1.
+        else
+           print*, '! makeDustXSec : Invalid nSizes', nSizes
+           stop
+        end if
+
+        if (taskid == 0)  then
+           print*, '! makeDustXSec : Size Distribution ' 
+           print*, ' index, a [um], da [um], weight '
+           do ai = 1, nSizes
+              print*, ai, grainRadius(ai), da(ai), grainWeight(ai)
+           end do
+        end if
 
         ! close grain
         close(11) 
@@ -1037,6 +1085,16 @@ module xSec_mod
         if (associated(Cabs)) deallocate(Cabs)
         if (associated(CTsca)) deallocate(CTsca)
         if (associated(CTabs)) deallocate(CTabs)
+
+
+        do n = 1, nSpecies
+           do i = 1, nbins
+              do ai = 1, nSizes
+                 absOpacSpecies(n, i) = absOpacSpecies(n, i) + xSecArrayTemp(dustAbsXsecP(n,ai)+i-1)*&
+                      & grainWeight(ai)
+              end do
+           end do
+        end do
 
       end subroutine makeDustXsec
 

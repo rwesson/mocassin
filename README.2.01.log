@@ -1,4 +1,4 @@
-This is TeX, Version 3.14159 (Web2C 7.3.1) (format=latex 2003.2.18)  17 MAR 2005 17:49
+This is TeX, Version 3.14159 (Web2C 7.3.1) (format=latex 2003.2.18)  13 MAY 2005 18:49
 **README.2.01.tex
 (README.2.01.tex
 LaTeX2e <2001/06/01>
@@ -359,6 +359,11 @@ Underfull \hbox (badness 10000) in paragraph at lines 544--550
  []
 
 
+Underfull \hbox (badness 10000) in paragraph at lines 551--552
+
+ []
+
+
 Underfull \hbox (badness 10000) in paragraph at lines 553--555
 
  []
@@ -403,12 +408,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 606--608
 
  []
 
-
+[12]
 Underfull \hbox (badness 10000) in paragraph at lines 609--611
 
  []
 
-[12]
+
 Underfull \hbox (badness 10000) in paragraph at lines 612--617
 
  []
@@ -676,6 +681,6 @@ Here is how much of TeX's memory you used:
  3239 multiletter control sequences out of 10000+15000
  8800 words of font info for 31 fonts, out of 400000 for 1000
  14 hyphenation exceptions out of 10000
- 21i,4n,19p,643b,162s stack positions out of 3000i,100n,1500p,50000b,4000s
+ 21i,4n,19p,646b,162s stack positions out of 3000i,100n,1500p,50000b,4000s
 
-Output written on README.2.01.dvi (23 pages, 70780 bytes).
+Output written on README.2.01.dvi (23 pages, 70764 bytes).

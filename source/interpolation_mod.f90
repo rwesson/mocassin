@@ -69,9 +69,42 @@ module interpolation_mod
         
     end subroutine locate
 
+    subroutine powerIntegral(y,x,nx,x1,x2,intout)
+      implicit none
+
+      real, intent(in)  :: y(*)
+      real, intent(in)  :: x(*)      
+      real, intent(out) :: intout      
+      real (kind=16)     :: delta,pow,cvar
+
+      integer, intent(in) :: nx, x1,x2      
+      integer :: ix
+
+      intout = 0.
+
+      do ix = x1, x2-1
+         if (y(ix)>0. .and. y(ix+1)>0.) then
+            pow = log(y(ix+1)/y(ix)) / log(x(ix+1)/x(ix))
+            if (log(x(ix+1)/x(ix)) == 0.) then
+               print*, '! powerIntegral:, insanity in x-array)'
+               stop
+            end if
+            if (x(ix) == 0.) then
+               print*, '! powerIntegral:, x-array members cannot have value 0.'
+               stop
+            end if
+         end if
+
+         cvar = y(ix) / x(ix)**pow  
+         delta = (x(ix+1)**(pow+1.)-x(ix)**(pow+1.))*cvar/(pow+1.)                  
+         intout = intout + delta
+
+      end do
+
+    end subroutine powerIntegral            
+
     ! this routine will map y(x) onto x_new and return y_new(x_new)
     ! mapping is carried out by means of linear interpolation
-    ! arrays must increase monotonically
     subroutine linearMap(y, x, nx, y_new, x_new, nx_new)
       implicit none
 
@@ -81,28 +114,15 @@ module interpolation_mod
       integer, intent(in) :: nx, nx_new
       integer             :: i, ii 
 
-      ii = 1
       do i = 1, nx_new
-         do
-            if (x_new(i)>x(ii+1)) then
-               ii=ii+1
-               if (ii>=nx-1) then
-                  ii = nx-1 
-                  exit
-               end if
-            else
-               exit
-            end if
-         end do
-
-         if (x_new(i)<=x(1)) then
+         call locate(x(1:nx), x_new(i), ii)
+         if (ii==0) then
             y_new(i) = y(1)
-         else if (x_new(i)>=x(nx)) then
+         else if (ii==nx) then
             y_new(i) = y(nx)
-         else
-            y_new(i) = y(ii) + (y(ii+1)-y(ii))*(x_new(i)-x(ii))/(x(ii+1)-x(ii))
+         else 
+            y_new(i) = y(ii) +(y(ii+1)-y(ii))*(x_new(i)-x(ii))/(x(ii+1)-x(ii))
          end if
-
       end do
 
     end subroutine linearMap      
@@ -208,7 +228,7 @@ module interpolation_mod
                 stop
             end if
             u(1) = (3./(xa(2)-xa(1)))* &
-&                   ((ya(2)-ya(1))/(xa(2)-xa(1))-yp1)
+                 & ((ya(2)-ya(1))/(xa(2)-xa(1))-yp1)
         end if
         do i = 2, n-1
             if ((xa(i+1)-xa(i-1))==0.) then
@@ -244,7 +264,7 @@ module interpolation_mod
                 stop
             end if
             un=(3./(xa(n)-xa(n-1))) * &
-&               (ypn-(ya(n)-ya(n-1))/(xa(n)-xa(n-1)))
+                 & (ypn-(ya(n)-ya(n-1))/(xa(n)-xa(n-1)))
         end if
         y2a(n)=(un-qn*u(n-1))/(qn*y2a(n-1)+1.)
         

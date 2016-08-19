@@ -46,7 +46,7 @@ module constants_mod
     integer, parameter :: NnuMax = 3000             ! limit to the possible number of energy bins (nbins) 
     integer, parameter :: nstages = 7               ! number of ionization stages 
     integer, parameter :: xSecMax = 1000000         ! max limit to xSecArray 
-
+    integer, parameter :: nTemps=3000
     real, parameter :: xMax = 0.99999               ! max limit for a relative ionic abundance
 
 end module constants_mod

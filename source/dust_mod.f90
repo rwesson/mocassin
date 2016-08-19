@@ -4,6 +4,7 @@
 module dust_mod
   use common_mod
   use continuum_mod
+  use interpolation_mod
   use xSec_mod
 
   implicit none 
@@ -53,16 +54,18 @@ module dust_mod
          stop
       end if
 
-      allocate(grid%Tdust(0:nSpecies, 0:nSizes, 0:grid%nCells), stat = err)
-      if (err /= 0) then
-         print*, "! dustOpacity: can't allocate Tdust memory"
-         stop
+      if (.not. lgWarm) then
+         allocate(grid%Tdust(0:nSpecies, 0:nSizes, 0:grid%nCells), stat = err)
+         if (err /= 0) then
+            print*, "! dustOpacity: can't allocate Tdust memory"
+            stop
+         end if
+         grid%Tdust   = 50.
       end if
 
       ! initialize arrays
       grid%absOpac = 0.
       grid%scaOpac = 0.
-      grid%Tdust   = 50.
 
       ! initialize tmp arrays
       absOpacTmp = 0.
@@ -120,23 +123,19 @@ module dust_mod
 
 
       ! this subroutine calculates the dust emission integrals for each species with non-zero 
-      ! abundance for temperatures between 0 and 2000K in steps of 1K. 
+      ! abundance for temperatures between 0 and nTempsK in steps of 1K. 
       ! assumes grains emit as blackbodies
       ! to be used later to determine dust Temps according to 
-      ! Int[0,inf]{B_nu(T_d)*Q_a(nu)*d nu}=Int[0,in]{Q_a(nu)*J_nu*d nu}
-      ! this subroutine calculates the lhs of the above.
+      ! Kirchoff's law
       subroutine dustEmissionInt()
         implicit none
 
-        real :: bb ! blackbody flux                
+        real :: bb, yint(nbins) ! blackbody flux                
 
         integer :: i, nT, nS, ai  ! counters
-        integer, parameter :: nTemps=2000
 
         character(len=50) :: cShapeLoc
-
-        
-
+       
 
         allocate(dustEmIntegral(1:nSpecies,1:nSizes,nTemps), stat = err)
         if (err /= 0) then
@@ -147,24 +146,26 @@ module dust_mod
 
         cShapeLoc = 'blackbody'
 
-        do nT = 1, nTemps
-           do i = 1, nbins
+        do nS = 1, nSpecies
+           do ai = 1, nSizes                      
 
-              bb = getFlux(nuArray(i), real(nT), cShapeLoc)
+              do nT = 1, nTemps
 
-              do nS = 1, nSpecies
-                 do ai = 1, nSizes                      
-                    dustEmIntegral(nS,ai,nT) = dustEmIntegral(nS,ai,nT) + &
-                         & xSecArray(dustAbsXsecP(nS,ai)+i-1)*bb*widFlx(i)*fr1Ryd
+                 do i = 1, nbins
+                    bb = getFlux(nuArray(i), real(nT), cShapeLoc)
 
+                    dustEmIntegral(nS,ai,nT) = dustEmIntegral(nS,ai,nT)+& 
+                         & xSecArray(dustAbsXsecP(nS,ai)+i-1)*bb*fr1Ryd*widFlx(i)
                  end do
-              end do
 
+              end do
            end do
+           
         end do
+
        
         ! the hPlanck is re-introduced here (was excluded in the bb calcs)
-        dustEmIntegral = dustEmIntegral*4.*hPlanck
+        dustEmIntegral = dustEmIntegral*hPlanck*4.
         
       end subroutine dustEmissionInt
 

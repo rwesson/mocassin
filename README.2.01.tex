@@ -548,7 +548,7 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
                      document.\\
                      $[$.false. 'none'$]$\\
                      	   
-\paragraph    {multiPhotoSources string1} : This keyword is used to define multiple (or single) ionising sources , that can be placed at any locations. 'string1' is the name of the file containing the central star parameters. This file must contain in the first line the number of sources to be included and then each source should be specified on successive lines providing (in this order) T$_{\rm eff}$ [K], L$_*$ [E36erg/s], ContShape, x-, y-, z-position. Note that the location of the source must be given normalised to the length of the relative axis. As example is included in the example/ directory. 
+\paragraph    {multiPhotoSources string1} : This keyword is used to define multiple (or single) ionising sources , that can be placed at any locations. 'string1' is the name of the file containing the central star parameters. This file must contain in the first line the number of sources to be included and then each source should be specified on successive lines providing (in this order) T$_{\rm eff}$ [K], L$_*$ [E36erg/s], ContShape, x-, y-, z-position. Note that the location of the source must be given normalised to the length of the relative axis. As example is included in the example/ directory. \\
 
 \paragraph    {nbins integer  }  : The total number of points to be used in the frequency mesh. \\
 		     $[$600$]$\\
@@ -729,7 +729,7 @@ This version is fully compatible with inputs of Version 2.00, but not with the g
     file and the relative abundance of the species. \\
 \noindent    e.g. for a pure silicate model (using the Draine and Lee 1984 data) :\\
 \noindent        1\\
-\noindent       'dustData/sil\_dl' 1.0\\
+\noindent       'dustData/sil-dl.nk' 1.0\\
     The grain size distribution file should contain a first 
     line specifying how many grain sizes are to be included, the rest of the file
     should consist of three columns : index, radius (in um), weight. Grain size 

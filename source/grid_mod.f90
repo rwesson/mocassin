@@ -47,8 +47,8 @@ module grid_mod
 
         print*, "in initCartesianGrid"
         
-        elemLabel = (/' H','He','Li','Be',' B',' C',' N',' O',' F','Ne','Na','Mg',&
-             &'Al','Si',' P',' S','Cl','Ar',' K','Ca','Sc','Ti',' V','Cr','Mn','Fe',&
+        elemLabel = (/'*H','He','Li','Be','*B','*C','*N','*O','*F','Ne','Na','Mg',&
+             &'Al','Si','*P','*S','Cl','Ar','*K','Ca','Sc','Ti','*V','Cr','Mn','Fe',&
              &'Co','Ni','Cu','Zn'/)
 
        ! set up atomic weight array
@@ -1123,19 +1123,22 @@ module grid_mod
           end if
 
           if (lgDust) then
+
              allocate(grid%Ndust(0:grid%nCells), stat = err)
              if (err /= 0) then
                 print*, "! grid: can't allocate Ndust memory"
                 stop
              end if
-             allocate(grid%dustPDF(0:grid%nCells, 1:nbins), stat = err)
-             if (err /= 0) then
-                print*, "! grid: can't allocate dustPDF memory"
-                stop
-             end if
-
              grid%Ndust=0.
-             grid%dustPDF = 0.
+             
+             if (.not.lgGas) then
+                allocate(grid%dustPDF(0:grid%nCells, 1:nbins), stat = err)
+                if (err /= 0) then
+                   print*, "! grid: can't allocate dustPDF memory"
+                   stop
+                end if
+                grid%dustPDF = 0.
+             end if
 
           end if
 
@@ -1208,7 +1211,6 @@ module grid_mod
                          grid%Te(grid%active(i,j,k)) = TeStart
                       end if
                       if (lgDust) grid%Ndust(grid%active(i,j,k)) = NdustTemp(i,j,k)
-
                    end if
                 end do
              end do
@@ -1763,14 +1765,16 @@ module grid_mod
                     print*, "! grid: can't allocate Ndust memory"
                     stop
                  end if
-                 allocate(grid(iG)%dustPDF(0:grid(iG)%nCells, 1:nbins), stat = err)
-                 if (err /= 0) then
-                    print*, "! grid: can't allocate dustPDF memory"
-                    stop
-                 end if
-                 
                  grid(iG)%Ndust=0.
-                 grid(iG)%dustPDF = 0.
+
+                 if (.not.lgGas) then
+                    allocate(grid(iG)%dustPDF(0:grid(iG)%nCells, 1:nbins), stat = err)
+                    if (err /= 0) then
+                       print*, "! grid: can't allocate dustPDF memory"
+                       stop
+                    end if                
+                    grid(iG)%dustPDF = 0.
+                 end if
 
               end if
         
@@ -2002,7 +2006,9 @@ module grid_mod
               if(associated(grid%scaOpac)) deallocate(grid%scaOpac)
               if(associated(grid%Ndust)) deallocate(grid%Ndust)
               if(associated(grid%Tdust)) deallocate(grid%Tdust)
-              if(associated(grid%dustPDF)) deallocate(grid%dustPDF)
+              if (.not.lgGas) then
+                 if(associated(grid%dustPDF)) deallocate(grid%dustPDF)
+              end if
            end if
            if (associated(grid%active)) deallocate(grid%active)
            if (associated(grid%lgConverged)) deallocate(grid%lgConverged)
@@ -2164,7 +2170,7 @@ module grid_mod
         
         write(42, *) nStars, ' number of photon sources'
         do i = 1, nStars
-           write(42, *) trim(contShapeIn(i)), TStellar(i), LStar(i), nPhotons(i), &
+           write(42, *) "'",trim(contShapeIn(i)),"'", TStellar(i), LStar(i), nPhotons(i), &
                 & starPosition(i)%x/grid(1)%xAxis(grid(1)%nx),&
                 & starPosition(i)%y/grid(1)%yAxis(grid(1)%ny),&
                 & starPosition(i)%z/grid(1)%zAxis(grid(1)%nz)
@@ -2656,23 +2662,23 @@ module grid_mod
                print*, "Can't allocate grid memory, Ndust"
                stop
             end if
-
             allocate(grid(iG)%Tdust(0:nSpecies, 0:nSizes, 0:grid(iG)%nCells), stat = err)
             if (err /= 0) then
                print*, "Can't allocate grid memory, Tdust"
                stop
             end if
-
-            allocate(grid(iG)%dustPDF(0:grid(iG)%nCells, 1:nbins), stat = err)
-            if (err /= 0) then
-               print*, "Can't allocate grid memory, dustPDF"
-               stop
-            end if
-
-
             grid(iG)%Ndust = 0.
             grid(iG)%Tdust = 0.
-            grid(iG)%dustPDF=0.
+
+            if (.not.lgGas) then
+               
+               allocate(grid(iG)%dustPDF(0:grid(iG)%nCells, 1:nbins), stat = err)
+               if (err /= 0) then
+                  print*, "Can't allocate grid memory, dustPDF"
+                  stop
+               end if
+               grid(iG)%dustPDF=0.
+            end if
             
          end if
          
@@ -2738,7 +2744,6 @@ module grid_mod
                      grid(iG)%Ndust(cellP) = p00
                   end if
 
-
                end do
             end do
          end do
@@ -2779,7 +2784,7 @@ module grid_mod
          close(79)
       end if
 
-      if (lgDust) close(80)
+      if (lgDust) close(88)
 
       ! locate the origin of the axes
       call locate(grid(1)%xAxis, 0., iOrigin)

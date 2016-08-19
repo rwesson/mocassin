@@ -61,7 +61,8 @@ module iteration_mod
            real                   :: radius          ! ditance in cm from star
            real                   :: tau             ! optical depth
            real                   :: totCells        ! total # of active cells 
-
+           real                   :: totheatdust     ! total dust heating
+           
            integer, pointer       :: planeIonDistributionTemp(:,:) 
            integer, pointer       :: resLinePacketsTemp(:) ! temporary array for extra packets
            integer                :: err             ! allocation error status
@@ -94,7 +95,7 @@ module iteration_mod
                  Bjump     = 0.
               end if
            
-              if (lgDust) then
+              if (lgDust .and. .not.lgGas) then
                  ! zero out dust PDF arrays
                  grid(iG)%dustPDF     = 0.
               end if
@@ -170,6 +171,7 @@ module iteration_mod
                                            & grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + & 
                                            & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
                                            & xSecArray(dustScaXsecP(nS,ai)+freq-1)
+!                                           & xSecArray(dustScaXsecP(nS,ai)+freq-1)
                                       grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) = &
                                            & grid(iG)%absOpac(grid(iG)%active(i,j,k),freq) + & 
                                            & grainAbun(nS)*grainWeight(ai)*grid(iG)%Ndust(grid(iG)%active(i,j,k))*&
@@ -182,14 +184,15 @@ module iteration_mod
                           do freq = 1, nbins
                              grid(iG)%opacity(grid(iG)%active(i,j,k),freq) = &
                                   &grid(iG)%opacity(grid(iG)%active(i,j,k),freq) + &
-                                  & (grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq)/Pi + &
+                                  & (grid(iG)%scaOpac(grid(iG)%active(i,j,k),freq) + &
                                   &grid(iG)%absOpac(grid(iG)%active(i,j,k),freq))
-                          end do
-
+ 
+                         end do
 
                        end do
                     end do
                  end do
+
               end if
                  
            end do ! ngrids
@@ -249,7 +252,7 @@ module iteration_mod
               print*, 'emissionDriver out'
 
 
-              if (lgDust) then 
+              if (lgDust .and. .not.lgGas) then 
                  allocate(dustPDFTemp(0:grid(iG)%nCells, 1:nbins),&
                       & stat = err)
                  if (err /= 0) then
@@ -319,7 +322,7 @@ module iteration_mod
                  end if
               end if
 
-              if (lgDust) then
+              if (lgDust .and. .not.lgGas) then
                  call mpi_allreduce(grid(iG)%dustPDF, dustPDFTemp, size, mpi_real&
                       &, mpi_sum, mpi_comm_world, ierr)
 
@@ -357,7 +360,7 @@ module iteration_mod
                        end do
                     end do
                  end do
-              
+
                  call mpi_barrier(mpi_comm_world, ierr)
                  
                  if ( associated(totalLinesTemp) )&
@@ -759,7 +762,7 @@ module iteration_mod
            if (nGrids>1) then
 !              print*, " ! iterateMC: integratePathTau stuff still not implemented for multiple grids.... skipping"
            else
-!              call writeTau(grid)
+              call writeTau(grid)
            end if
 
            ! decide over final convergence of the model
@@ -826,8 +829,13 @@ module iteration_mod
                     write(21,*) "Dust Budgets: "
                     do icomp = 0, nAbComponents
                        write(21,*) " Component ", icomp
+                       totheatdust = 0.
                        do icontrib =0, nResLines
-                          write(21,*) " Contribution", icontrib, dustHeatingBudget(icomp,icontrib)
+                          totheatdust = totheatdust+dustHeatingBudget(icomp,icontrib)
+                       end do
+                       do icontrib =0, nResLines
+                          write(21,*) " Contribution", icontrib, dustHeatingBudget(icomp,icontrib)/&
+                               & totheatdust
                        end do
                     end do
                  end if

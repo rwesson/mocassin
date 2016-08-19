@@ -12,7 +12,6 @@ module emission_mod
 
     real                                :: abFileUsed  ! abundance file index used
     real                                :: BjumpTemp   ! 
-    real                                :: cellPUsed   !  cell index
     real                                :: HbetaProb   ! probability of Hbeta
     real                                :: log10Ne     ! log10(Ne) at this cell
     real                                :: log10Te     ! log10(Te) at this cell
@@ -30,6 +29,9 @@ module emission_mod
     double precision, dimension(9)         :: HeIRecLinesS         ! emissivity from HeI sing rec lines
     double precision, dimension(11)        :: HeIRecLinesT         ! emissivity from HeI trip rec lines
     double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
+
+    integer                                :: cellPUsed   !  cell index
+
 
     contains
 
@@ -68,16 +70,18 @@ module emission_mod
         if (grid%active(ix, iy, iz)<=0) return  
 
         ! set the dust emission PDF
-        if (lgDust) call setDustPDF()
+        if (lgDust .and. .not.lgGas) call setDustPDF()
 
         if (.not.lgGas) return
 
+        cellPUsed = grid%active(ix, iy, iz)
+
         ! find the physical properties of this cell
-        ionDenUsed= grid%ionDen(grid%active(ix, iy, iz), :, :)
+        ionDenUsed= grid%ionDen(cellPUsed, :, :)
 
         abFileUsed= grid%abFileIndex(ix,iy,iz)
-        NeUsed    = grid%Ne(grid%active(ix, iy, iz))
-        TeUsed    = grid%Te(grid%active(ix, iy, iz))
+        NeUsed    = grid%Ne(cellPUsed)
+        TeUsed    = grid%Te(cellPUsed)
         sqrTeUsed = sqrt(TeUsed)
 
         log10Te = log10(TeUsed)
@@ -209,7 +213,6 @@ module emission_mod
              &+emissionHeII(BjumpP-1)) *&
              & cRyd*cRyd*nuArray(BjumpP-1)*nuArray(BjumpP-1)*1.e-8/c)&
              & *grid%Hden(grid%active(ix,iy,iz))*dV
-!             &+emissionHeII(BjumpP-1)))*2.2565e11*grid%Hden(grid%active(ix,iy,iz))*dV
 
         ! calculate the emission due to HI and HeI recombination lines
         call RecLinesEmission()
@@ -255,8 +258,25 @@ module emission_mod
         
         real                :: lineIntensity
 
-        integer             :: iRes, imul
+        integer             :: iRes, imul, n, ai
         
+
+        species: do n = 1, nSpecies
+           do ai = 1, nSizes
+
+              if (grid%Tdust(n,ai,cellPUsed)>0. .and. & 
+                   & grid%Tdust(n,ai,cellPUsed)<TdustSublime(n)) exit species
+
+
+           end do
+        end do species 
+
+        if (n>nSpecies) then
+           ! all grains have sublimed
+           grid%resLinePackets(cellPUsed) = 0
+           return
+        end if
+
         ! calculate total energy deposited into grains at location icell in grid igrid
         lineIntensity=0.
         do iRes = 1, nResLines        
@@ -1020,39 +1040,47 @@ module emission_mod
         implicit none
 
         ! local variables
-        integer           :: elem, ion          ! counters
-        integer           :: err                ! allocation error status
-        integer, parameter:: NHeIILyman = 4     ! Number of HeII Lym lines included 
-        integer           :: j2TsP              ! pointer to 2s triplet state in nuArray
-        integer           :: i,iup,ilow,j       ! counters       
-        integer           :: ios                ! I/O error status
-        integer           :: nuP                ! frequency pointer in nuArray
-
         real              :: A4922             ! reference line intensity for HeI Lyman series
         real              :: aFit              ! general calculations component
         real              :: alpha2tS          ! effective rec coeff to the 2s trip HeI
         real              :: alpha2tP          ! effective rec coeff to the 2p trip HeI
+        real              :: bb                ! blackbody
         real              :: bFit              ! general calculations component
+        real              :: const             ! general calculation constant
         real              :: correction        ! general correction term
         real              :: normalize         ! normHI+normHeI+normHeII
-        real              :: normFor           ! normalization constant for for lines
+        real              :: normDust           ! normalization constant for dust        
+        real              :: normFor           ! normalization constant for lines
         real              :: normHI            ! normalization constant for HI
         real              :: normHeI           !                            HeI
         real              :: normHeII          !                            HeII
         real              :: normRec           !                            rec. lines
         real              :: T4                ! TeUsed/10000.
 
+        integer, parameter:: NHeIILyman = 4     ! Number of HeII Lym lines included 
         real, dimension(NHeIILyman) &
 &                          :: HeIILyman         ! HeII Lyman lines em. [e-25ergs*cm^3/s]
         real, dimension(NHeIILyman) &
 &                          :: HeIILymanNu       ! HeII Lyman lines freq. [Ryd]          
 
+        real, pointer     :: sumDiffuseDust(:) ! summation terms for dust emission
         real, pointer     :: sumDiffuseHI(:)   ! summation terms for HI emission
         real, pointer     :: sumDiffuseHeI(:)  ! summation terms for HeI emission   
         real, pointer     :: sumDiffuseHeII(:) ! summation terms for HeII emission   
 
+        integer           :: elem, ion          ! counters
+        integer           :: err                ! allocation error status
+        integer           :: j2TsP              ! pointer to 2s triplet state in nuArray
+        integer           :: i,iup,ilow,j       ! counters       
+        integer           :: ios                ! I/O error status
+        integer           :: nuP                ! frequency pointer in nuArray
+        integer           :: nS, ai, freq       ! dust counters
 
+        character(len=50) :: cShapeLoc
+        
         logical, save     :: lgFirst =.true.   ! first time setDiffusePDF is called? 
+
+        cShapeLoc = 'blackbody'
 
         ! allocate space for the summation arrays
         allocate(sumDiffuseHI(1:nbins), stat = err)
@@ -1098,7 +1126,6 @@ module emission_mod
             
            normHeI = normHeI + sumDiffuseHeI(i)
    
-
            sumDiffuseHeII(i) = cRyd*widFlx(i)*emissionHeII(i)/1.e15
 
            normHeII = normHeII + sumDiffuseHeII(i)
@@ -1160,8 +1187,49 @@ module emission_mod
             normHeII = normHeII + HeIILyman(i)
         end do
 
+        ! calculate dust emission
+        if (lgDust) then
+
+           allocate(sumDiffuseDust(1:nbins), stat = err)
+           if (err /= 0) then
+              print*, "! setDiffusePDF: can't allocate sumDiffuseDust array memory"
+              stop
+           end if
+
+           sumDiffuseDust = 0.
+           normDust       = 0.
+           do ai = 1, nSizes                 
+              do nS = 1, nSpecies
+
+                 if (grid%Tdust(nS,ai,cellPUsed)<TdustSublime(nS)) then
+
+                    do freq = 1, nbins 
+
+                       bb = getFlux(nuArray(freq), grid%Tdust(nS,ai,cellPUsed), cShapeLoc)                  
+                       sumDiffuseDust(freq) = sumDiffuseDust(freq) + &
+                            &  xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
+                            & grainWeight(ai)*grainAbun(nS)
+                       normDust = normDust+xSecArray(dustAbsXsecP(nS,ai)+freq-1)*bb*widFlx(freq)*&
+                            & grainWeight(ai)*grainAbun(nS)
+                    end do
+
+                 end if
+
+              end do
+           end do
+
+           ! the hPlanck is re-introduced here (was excluded in the bb calcs)
+           const = hPlanck*4.*Pi*1.e25*cRyd
+           sumDiffuseDust = sumDiffuseDust*const*grid%Ndust(cellPUsed)/grid%Hden(cellPUsed)
+           normDust = normDust*const*grid%Ndust(cellPUsed)/grid%Hden(cellPUsed)
+
+        end if
+
+
         ! Total normalization constant
         normalize = normHI + normHeI + normHeII
+
+        if (lgDust) normalize = normalize+normDust
 
         ! Sum  up energy in recombination lines
         
@@ -1205,22 +1273,40 @@ module emission_mod
         ! total energy in lines (note: this variable will later be turned into the fraction of
         ! non-ionizing line photons as in declaration)
 
-        grid%totalLines(grid%active(ix, iy, iz)) = normRec + normFor
+        grid%totalLines(cellPUsed) = normRec + normFor
 
-        do i = 1, nbins
-            if (i == 1) then
-                    grid%recPDF(grid%active(ix, iy, iz), i) = (sumDiffuseHI(i) + sumDiffuseHeI(i) +&
-&                                          sumDiffuseHeII(i) ) 
-            else
+        if (lgDust) then
 
-                    grid%recPDF(grid%active(ix, iy, iz), i) = grid%recPDF(grid%active(ix, iy, iz), i-1) +&
-&                                         (sumDiffuseHI(i) + sumDiffuseHeI(i) +&
-&                                          sumDiffuseHeII(i) )
-            end if
+           do i = 1, nbins
+              if (i == 1) then
+                 grid%recPDF(cellPUsed, i) = sumDiffuseHI(i) + sumDiffuseHeI(i) +&
+                      & sumDiffuseHeII(i) + sumDiffuseDust(i)
+              else                 
+                 grid%recPDF(cellPUsed, i) = grid%recPDF(cellPUsed, i-1) +&
+                      & sumDiffuseHI(i) + sumDiffuseHeI(i) +&
+                      & sumDiffuseHeII(i) + sumDiffuseDust(i) 
+              end if
 
-        end do
-        grid%recPDF(grid%active(ix, iy, iz), :) = grid%recPDF(grid%active(ix, iy, iz), :)/normalize
-        grid%recPDF(grid%active(ix, iy, iz), nbins) = 1.0000000001
+           end do           
+
+        else
+
+           do i = 1, nbins
+              if (i == 1) then
+                 grid%recPDF(cellPUsed, i) = (sumDiffuseHI(i) + sumDiffuseHeI(i) +&
+                      & sumDiffuseHeII(i) ) 
+              else                 
+                 grid%recPDF(cellPUsed, i) = grid%recPDF(cellPUsed, i-1) +&
+                      & (sumDiffuseHI(i) + sumDiffuseHeI(i) +&
+                      & sumDiffuseHeII(i) )
+              end if
+           end do
+
+        end if
+
+        grid%recPDF(cellPUsed, :) = grid%recPDF(cellPUsed, :)/grid%recPDF(cellPUsed, nbins)
+
+        grid%recPDF(cellPUsed, nbins) = 1.
 
         ! calculate the PDF for recombination and forbidden lines
         if (lgDebug) then 
@@ -1230,15 +1316,15 @@ module emission_mod
               do ilow = 2, min(8, iup-1)
                  if (i == 1) then
 
-                    grid%linePDF(grid%active(ix, iy, iz), i) = HIRecLines(iup, ilow) / &
+                    grid%linePDF(cellPUsed, i) = HIRecLines(iup, ilow) / &
 &                                                  grid%totalLines(grid%active(ix,iy,iz))
 
 
 
                  else
                     
-                    grid%linePDF(grid%active(ix, iy, iz), i) = grid%linePDF(grid%active(ix, iy, iz), i-1) + &
-&                        HIRecLines(iup, ilow) / grid%totalLines(grid%active(ix, iy, iz))
+                    grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
+&                        HIRecLines(iup, ilow) / grid%totalLines(cellPUsed)
 
 
 
@@ -1250,22 +1336,22 @@ module emission_mod
 
            ! HeI singlet recombination lines
            do j = 1, 9
-              grid%linePDF(grid%active(ix, iy, iz), i) = grid%linePDF(grid%active(ix, iy, iz), i-1) + &
-&                           HeIRecLinesS(j) / grid%totalLines(grid%active(ix, iy, iz))
+              grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
+&                           HeIRecLinesS(j) / grid%totalLines(cellPUsed)
               i = i+1 
            end do
 
            ! HeI triplet recombination lines
            do j = 1, 11
-              grid%linePDF(grid%active(ix, iy, iz), i) = grid%linePDF(grid%active(ix, iy, iz), i-1) + &
-&                           HeIRecLinesT(j) / grid%totalLines(grid%active(ix, iy, iz))
+              grid%linePDF(cellPUsed, i) = grid%linePDF(cellPUsed, i-1) + &
+&                           HeIRecLinesT(j) / grid%totalLines(cellPUsed)
               i = i+1
            end do
 
            ! HeII recombination lines
            do iup = 3, 30
               do ilow = 2, min(16, iup -1)
-                 grid%linePDF(grid%active(ix, iy, iz), i) = grid%linePDF(grid%active(ix, iy,&
+                 grid%linePDF(cellPUsed, i) = grid%linePDF(grid%active(ix, iy,&
                       & iz), i-1) + HeIIRecLines(iup, ilow) / grid&
                       &%totalLines(grid%active(ix,iy,iz))
                  i = i+1
@@ -1280,12 +1366,12 @@ module emission_mod
                  if (lgDataAvailable(elem, ion)) then
                     do iup = 1, nForLevels
                        do ilow = 1, nForLevels
-                          grid%linePDF(grid%active(ix, iy, iz), i) = grid%linePDF(grid%active(ix, iy&
+                          grid%linePDF(cellPUsed, i) = grid%linePDF(grid%active(ix, iy&
                                &, iz), i-1) + forbiddenLines(elem, ion, iup, ilow)&
                                & / grid%totalLines(grid%active(ix,iy,iz))
                        
-                          if (grid%linePDF(grid%active(ix, iy, iz), i) > 1. ) grid&
-                               &%linePDF(grid%active(ix, iy, iz), i) = 1. 
+                          if (grid%linePDF(cellPUsed, i) > 1. ) grid&
+                               &%linePDF(cellPUsed, i) = 1. 
                           i = i+1
 
                        end do
@@ -1294,7 +1380,7 @@ module emission_mod
 
               end do
            end do
-           grid%linePDF(grid%active(ix, iy, iz), nLines) = 1.
+           grid%linePDF(cellPUsed, nLines) = 1.
 
            ! calculate the probability of Hbeta
            HbetaProb = HIRecLines(4,2) / (grid%totalLines(grid%active(ix,iy,iz))&
@@ -1307,11 +1393,13 @@ module emission_mod
         normalize = normalize + grid%totalLines(grid%active(ix,iy,iz))
 
         grid%totalLines(grid%active(ix,iy,iz)) = grid%totalLines(grid%active(ix,iy,iz)) / normalize
-
         ! deallocate arrays
         if ( associated(sumDiffuseHI) ) deallocate(sumDiffuseHI)
         if ( associated(sumDiffuseHeI) ) deallocate(sumDiffuseHeI)
         if ( associated(sumDiffuseHeII) ) deallocate(sumDiffuseHeII)
+        if (lgDust) then
+           if ( associated(sumDiffuseDust) ) deallocate(sumDiffuseDust)
+        end if
 
     end subroutine setDiffusePDF  
 
@@ -1332,11 +1420,12 @@ module emission_mod
       do n = 1, nSpecies
          do ai = 1, nSizes
 
-            if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. & 
+            if (grid%Tdust(n,ai,grid%active(ix,iy,iz))>0. .and. &
                  & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
 
                bb = getFlux(nuArray(1), grid%Tdust(n,ai,grid%active(ix,iy,iz)), cShapeLoc)
-               grid%dustPDF(grid%active(ix,iy,iz), 1) = xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
+               grid%dustPDF(grid%active(ix,iy,iz), 1) = grid%dustPDF(grid%active(ix,iy,iz), 1)+&
+                    & xSecArray(dustAbsXsecP(n,ai))*bb*widFlx(1)*&
                     & grainWeight(ai)*grainAbun(n)
 
             end if
@@ -1351,12 +1440,18 @@ module emission_mod
                     & grid%Tdust(n,ai,grid%active(ix,iy,iz))<TdustSublime(n)) then
 
                   bb = getFlux(nuArray(i), grid%Tdust(n,ai,grid%active(ix,iy,iz)), cShapeLoc)
-                  grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i-1) + &
+                  grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i) + &
                        &  xSecArray(dustAbsXsecP(n,ai)+i-1)*bb*widFlx(i)*grainWeight(ai)*grainAbun(n)
 
                end if
             end do
          end do
+      end do
+
+
+      do i=2, nbins
+         grid%dustPDF(grid%active(ix,iy,iz),i) = grid%dustPDF(grid%active(ix,iy,iz),i-1) + &
+              grid%dustPDF(grid%active(ix,iy,iz),i)
       end do
 
       ! normalise
@@ -1366,6 +1461,7 @@ module emission_mod
               & grid%dustPDF(grid%active(ix,iy,iz),i)/grid%dustPDF(grid%active(ix,iy,iz),nbins)
 
       end do
+
 
     end subroutine setDustPDF
 
@@ -2020,7 +2116,7 @@ module emission_mod
 
       if (taskid == 0) then
          print*, "! initResLines: The following resonance lines have been initialised and will &
-              &be included in the radiative transfe"
+              &be included in the radiative transfer"
          do i = 1, nResLines
             do j = 1, resLine(i)%nmul
                print*, i, resLine(i)%elem, resLine(i)%ion, resLine(i)%nmul, resLine(i)%wav

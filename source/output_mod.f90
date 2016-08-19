@@ -2261,6 +2261,7 @@ module output_mod
       ! 0.55um = 0.165690899
       ! 1.00um = 0.0912 
       nuR = 0.0912
+!      nuR = 0.0912
       
 
       ! find the optical depth
@@ -2401,17 +2402,15 @@ module output_mod
             end do
             
             do imu = 1, nAngleBins
-               if (imu>0) then               
-                  if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
-                  if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
-               else
-                  if (lgSymmetricXYZ) SED(freq,imu) = SED(freq,imu)*8.
-                  SED(freq,imu) = SED(freq,imu)*8./(4.*Pi)
-               end if
+               if (viewPointTheta(imu)>0.) SED(freq,imu) = SED(freq,imu)/dTheta
+               if (viewPointPhi(imu)>0.) SED(freq,imu) = SED(freq,imu)/dPhi
             end do
 
             lambda = c/(nuArray(freq)*fr1Ryd)
             
+         
+            if (lgSymmetricXYZ) SED(freq,0) = SED(freq,0)*8.
+
             totalE = totalE +  SED(freq,0)
             
             SED(freq,0) = SED(freq,0)/(Pi)
@@ -2420,21 +2419,14 @@ module output_mod
             write(16,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, (SED(freq,imu)*&
                  & nuArray(freq)/widflx(freq), imu=0,nAngleBins )
 
-
          end do
       end do
 
       write(16,*) ' '
-      if (lgSymmetricXYZ) then
-         write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', 8.*totalE
-         print*, 'Total energy radiated out of the nebula [e36 erg/s]:', 8.*totalE, Lstar, nphotons
-      else
-         write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE
-         print*, 'Total energy radiated out of the nebula [e36 erg/s]:', totalE, Lstar, nphotons
-      end if
+      write(16,*) 'Total energy radiated out of the nebula [e36 erg/s]:', totalE
+      print*, 'Total energy radiated out of the nebula [e36 erg/s]:', totalE, Lstar, nphotons
       write(16,*) 'All SEDs given per unit direction'
-      write(16,*) 'To obtain total emission over all directions'
-      write(16,*) 'must multiply by 4.Pi'
+      write(16,*) 'To obtain total emission over all directions must multiply by Pi'
 
 
       close(16)
