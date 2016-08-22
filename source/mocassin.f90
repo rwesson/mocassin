@@ -57,50 +57,47 @@ program MoCaSSiN
     if (taskid == 0) then
         print*, "MOCASSIN 2005 Version 2.0"
         print*, " "
-    end if
 
-    ! read the input parameters of the simulation
-    call readInput()
+        ! read the input parameters of the simulation
+        call readInput()
 
-    if (taskid == 0) then
         print*, " "
-    end if
 
-    ! initialize the 3D cartesian grid
+        ! initialize the 3D cartesian grid
 
-    do iGrid = 1, nGrids
-       call initCartesianGrid(grid3D(iGrid), nxIn(iGrid), nyIn(iGrid), nzIn(iGrid))
-    end do
+        do iGrid = 1, nGrids
+           call initCartesianGrid(grid3D(iGrid), nxIn(iGrid), nyIn(iGrid), nzIn(iGrid))
+        end do
 
-    ! initialize opacities x sections array
-    call initXSecArray()
-    ! set the ionzing continuum according to the contShape variable
-    call setContinuum()
+        ! initialize opacities x sections array
+        call initXSecArray()
+        ! set the ionzing continuum according to the contShape variable
+        call setContinuum()
 
-    call fillGrid(grid3D(1:nGrids))
+        call fillGrid(grid3D(1:nGrids))
 
-    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
+        call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
 
-    if (taskid==0) then
-       do iGrid = 1, nGrids
-          print*, 'Grid : ', iGrid
-          print*, 'active cells: ', grid3D(iGrid)%nCells
-       end do
-    end if
+        do iGrid = 1, nGrids
+            print*, 'Grid : ', iGrid
+            print*, 'active cells: ', grid3D(iGrid)%nCells
+        end do
 
-    ! prepare atomica data stuff
-    if (lgGas) call makeElements()
+        ! prepare atomica data stuff
+        if (lgGas) call makeElements()
 
-    if (taskid==0) print*, 'active elements: ', nElementsUsed
+        print*, 'active elements: ', nElementsUsed
 
-    ! if grains are included, calculate the dust opacity
-    if (lgDust) then
-       if (taskid==0) print*, '! mocassin: calling dustDriver'
-       do iGrid = 1, nGrids
-          call dustDriver(grid3D(iGrid))
-       end do
-       if (taskid==0) print*, '! mocassin: dustDriver done'
-    end if
+        ! if grains are included, calculate the dust opacity
+        if (lgDust) then
+           if (taskid==0) print*, '! mocassin: calling dustDriver'
+           do iGrid = 1, nGrids
+              call dustDriver(grid3D(iGrid))
+           end do
+           print*, '! mocassin: dustDriver done'
+        end if
+
+    endif
 
     call mpi_barrier(mpi_comm_world, ierr)
 
