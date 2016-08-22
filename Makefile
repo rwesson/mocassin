@@ -1,7 +1,7 @@
 # standard
 FC = mpif90
 LD = mpif90
-FFLAGS += -cpp -fno-range-check -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
+FFLAGS += -O2 -cpp -fno-range-check -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
 
 #IBM
 #FC = mpxlf90_r
