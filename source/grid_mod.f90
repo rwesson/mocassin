@@ -333,7 +333,7 @@ module grid_mod
             widFlx(1) = nuArray(2)-nuArray(1)
             do i = 2, nbins-1
                widFlx(i) = (nuArray(i+1)-nuArray(i-1))/2.
-               print*, i, nuArray(i), widFlx(i)
+               !print*, i, nuArray(i), widFlx(i)
             end do
             widFlx(nbins) =  nuArray(nbins)-nuArray(nbins-1)
             
