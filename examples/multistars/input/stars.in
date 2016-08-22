@@ -1,5 +1,0 @@
-3
-40000.0 2000. blackbody 0. 0. 0.
-20000.0 1500.0 blackbody 0.5 0.2 0.2
-28000.0 1700.1 blackbody 0.8 0.1 0.2
-TStellar(i), Lstar(i), ContShape(i), starPosition(i)%x, starPosition(i)%y, starPosition(i)%z
