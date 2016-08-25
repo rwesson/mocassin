@@ -52,13 +52,8 @@ module composition_mod
         ! check what elements can be switched off
         do nelem = 1, nElements
            off = 1
-           do i = 1, nAbComponents
-              if (grid%elemAbun(i,nelem) > 1.e-12) then 
-                 off = 0
-              end if
-           end do
-           
-           
+           if (maxval(grid%elemAbun(:,nelem)) .gt. 1.e-12) off = 0
+
            if (off==0) then
               elementXref(nelem) = icount
               icount = icount+1
