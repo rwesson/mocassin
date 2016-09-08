@@ -58,7 +58,7 @@ mocassinPlot: $(SOURCES) source/mocassinPlot.o
 clean:
 	/bin/rm -f source/*.o *~ source/*.mod mocassin mocassinWarm mocassinOutput mocassinPlot
 
-install:
+install: mocassin mocassinWarm mocassinOutput mocassinPlot
 	test -e ${DESTDIR}${PREFIX}/share/mocassin || mkdir -p ${DESTDIR}${PREFIX}/share/mocassin
 	test -e ${DESTDIR}${PREFIX}/bin || mkdir -p ${DESTDIR}${PREFIX}/bin
 	test -e ${MANDIR} || mkdir -p ${MANDIR}
