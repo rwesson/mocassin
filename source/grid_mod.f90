@@ -435,11 +435,14 @@ module grid_mod
 !         end if        
 
 
+         if (allocated(viewPointPTheta)) deallocate(viewPointPTheta) ! todo:would be better to work out when this is no longer needed and deallocate there
          allocate(viewPointPTheta(0:totAngleBinsTheta), stat = err)
          if (err /= 0) then
             print*, "! initCartesianGrid: Can't allocate grid memory, viewAnglePTheta "
             stop
          end if
+
+         if (allocated(viewPointPPhi)) deallocate(viewPointPPhi) ! todo:would be better to work out when this is no longer needed and deallocate here
          allocate(viewPointPPhi(0:totAngleBinsPhi), stat = err)
          if (err /= 0) then
             print*, "! initCartesianGrid: Can't allocate grid memory, viewAnglePPhi "
