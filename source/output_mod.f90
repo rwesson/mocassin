@@ -922,7 +922,7 @@ module output_mod
         if (present(extMap)) then
            open(unit=10, status='unknown', position='rewind', file='output/lineFlux.ext', action="write", iostat=ios)
            if (ios /= 0) then
-              print*, "! outputGas: can't open file for writing: output/lineFlux.out"
+              print*, "! outputGas: can't open file for writing: output/lineFlux.ext"
               stop
            end if
         else
