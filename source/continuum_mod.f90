@@ -187,9 +187,15 @@ module continuum_mod
                     
                  end do
                  
-                 where (lamCount .gt. 0)
-                   inSpectrumErg = inSpectrumErg / real(lamCount)
-                 endwhere
+
+                 do i = 1, nbins
+                    if (lamCount(i)>0) then
+
+                       inSpectrumErg(i) = inSpectrumErg(i)/real(lamCount(i))
+                    end if
+
+                    inSpectrumPhot(i) = inSpectrumErg(i)/ (nuArray(i)*hcRyd)
+                 end do
                  
                  do i = 2, nbins-1
                     if (inSpectrumErg(i) <= 0. .and. inSpectrumErg(i-1)>0.) then
@@ -426,12 +432,22 @@ module continuum_mod
 
 !        if (taskid==0) print*,'Ionising/illuminating spectrum:'
         
-        inSpSumErg = real(inSpectrumErg)
-        inSpSumPhot =real(inSpectrumPhot)
+        do i = 1, nbins
+!           if (taskid==0) print*, i, nuArray(i),  inSpectrumErg(i)
+           inSpSumErg(i)  =  real(inSpectrumErg(i))
+           inSpSumPhot(i) =  real(inSpectrumPhot(i))
+        end do
 
         ! calculate normalization constants 
-        normConstantErg=sum(inSpSumErg*widFlx)
-        normConstantPhot=sum(inSpSumPhot(lymanP:nbins)*widFlx(lymanP:nbins))
+        normConstantErg=0.
+        do i = 1, nbins
+            normConstantErg   = normConstantErg  + inSpSumErg(i)*widFlx(i)   
+        end do
+
+        normConstantPhot=0.
+        do i = lymanP, nbins
+           normConstantPhot  = normConstantPhot + inSpSumPhot(i)*widFlx(i)
+        end do
 
         ! normalise spectrum and calculate PDF
         inSpectrumProbDen(iS,1) = inSpSumErg(1)*widFlx(1)/normConstantErg        
@@ -439,11 +455,15 @@ module continuum_mod
            inSpectrumProbDen(iS,i) = inSpectrumProbDen(iS,i-1) + &
                 & inSpSumErg(i)*widFlx(i)/normConstantErg 
         end do
+        maxp = 0.
+        do i = 1, nbins
+           if (inSpectrumProbDen(iS,i)>maxp) maxp = inSpectrumProbDen(iS,i)
+        end do
 
-        maxp = maxval(inSpectrumProbDen(iS,:))
-        where (inSpectrumProbDen(iS,:) .ge. maxp)
-          inSpectrumProbDen(iS,:) = 1.
-        endwhere
+        do i = 1, nbins
+           if (inSpectrumProbDen(iS,i)>=maxp) inSpectrumProbDen(iS,i)=1.
+
+        end do
 
         if (contShape(iS)=='blackbody') then
            normConstantErg = Pi*normConstantErg*hPlanck

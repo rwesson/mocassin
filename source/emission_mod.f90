@@ -736,7 +736,6 @@ module emission_mod
             ! find the free-free emission coefficient for He++
             ffCoeff2(i) = ffCoeff(nuArray(i), 2, gauntFFHeII(i)) 
         end do
-
     end subroutine free_free
     
     ! this function calculates the ff emission coeficient for interactions between
@@ -802,7 +801,11 @@ module emission_mod
         Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*grids(iG)%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),1)
 
         ! calculate emission due to HI recombination lines [e-25 ergs/s/cm^3]
-        HIRecLines = HIRecLines*Hbeta
+        do iup = 15, 3, -1
+            do ilow = 2, min(8, iup-1)
+                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
+            end do
+        end do    
 
         ! add contribution of Lyman alpha 
         ! fits to Storey and Hummer MNRAS 272(1995)41
@@ -831,7 +834,11 @@ module emission_mod
         HeII4686 = HeII4686*NeUsed*grids(iG)%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),3)
 
         ! calculate emission due to HeI recombination lines [e-25 ergs/s/cm^3]
-        HeIIRecLines = HeIIRecLines*HeII4686
+        do iup = 30, 3, -1
+            do ilow = 2, min(16, iup-1)
+                HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
+             end do
+        end do    
 
         ! now do HeI
         
@@ -840,7 +847,7 @@ module emission_mod
         elseif (grids(iG)%Ne(grids(iG)%active(ix,iy,iz)) > 100. .and. grids(iG)%Ne(grids(iG)%active(ix,iy,iz)) <= 1.e4) then
            denint=1
         elseif (grids(iG)%Ne(grids(iG)%active(ix,iy,iz)) > 1.e4 .and. grids(iG)%Ne(grids(iG)%active(ix,iy,iz)) <= 1.e6) then
-           denint=2
+            denint=2
         elseif (grids(iG)%Ne(grids(iG)%active(ix,iy,iz)) > 1.e6) then
            denint=3
         end if
@@ -855,9 +862,13 @@ module emission_mod
 
            end do
        elseif(denint==0) then
-           HeIRecLines = HeIrecLineCoeff(:,1,1)*(T4**(HeIrecLineCoeff(:,1,2)))*exp(HeIrecLineCoeff(:,1,3)/T4)
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,1,1)*(T4**(HeIrecLineCoeff(i,1,2)))*exp(HeIrecLineCoeff(i,1,3)/T4)
+           end do
         elseif(denint==3) then
-           HeIRecLines = HeIrecLineCoeff(:,3,1)*(T4**(HeIrecLineCoeff(:,3,2)))*exp(HeIrecLineCoeff(:,3,3)/T4)
+           do i = 1, 34
+              HeIRecLines(i) = HeIrecLineCoeff(i,3,1)*(T4**(HeIrecLineCoeff(i,3,2)))*exp(HeIrecLineCoeff(i,3,3)/T4)
+           end do
         end if
         HeIRecLines=HeIRecLines*NeUsed*grids(iG)%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
 
@@ -1014,12 +1025,22 @@ module emission_mod
         sumDiffuseHeII = 0.
 
         ! perform summations
-        sumDiffuseHI = real(cRyd*widFlx*emissionHI/1.e15)
-        normHI = sum(sumDiffuseHI)
-        sumDiffuseHeI =  real(cRyd*widFlx*emissionHeI/1.e15)
-        normHeI = sum(sumDiffuseHeI)
-        sumDiffuseHeII = real(cRyd*widFlx*emissionHeII/1.e15)
-        normHeII = sum(sumDiffuseHeII)
+        do i = 1, nbins
+
+           sumDiffuseHI(i) = real(cRyd*widFlx(i)*emissionHI(i)/1.e15)
+           
+           normHI = normHI + sumDiffuseHI(i)
+           
+           sumDiffuseHeI(i) =  real(cRyd*widFlx(i)*emissionHeI(i)/1.e15)
+            
+           normHeI = normHeI + sumDiffuseHeI(i)
+   
+           sumDiffuseHeII(i) = real(cRyd*widFlx(i)*emissionHeII(i)/1.e15)
+
+           normHeII = normHeII + sumDiffuseHeII(i)
+
+        end do
+
 
         ! Add contribution of HeI lines able to ionize HI 
         
@@ -1061,7 +1082,9 @@ module emission_mod
         HeIILyman(4) = HeIILyman(4)*NeUsed*ionDenUsed(elementXref(2),3)*grids(iG)%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2)
 
         ! calculate emission due to HeII Lyman lines [e-25 ergs/s/cm^3]
-        HeIILyman(1:NHeIILyman-1) = HeIILyman(1:NHeIILyman-1)*HeIILyman(4)
+        do i = 1, NHeIILyman-1
+            HeIILyman(i) = HeIILyman(i)*HeIILyman(4)
+        end do
 
         ! add contributions in respective bins
         do i = 1, NHeIILyman
@@ -1154,7 +1177,23 @@ module emission_mod
 
         ! Sum  up energy in recombination lines
         
-        normRec = real(sum(HIRecLines) + sum(HeIRecLines) + sum(HeIIRecLines))
+        normRec = 0.
+        ! HI
+        do iup = 3, 15
+            do ilow = 2, min0(8, iup-1)
+                normRec = normRec+real(HIRecLines(iup, ilow))
+            end do
+        end do
+        ! HeII            
+        do iup = 3, 30
+            do ilow = 2, min0(16, iup-1)
+                normRec = normRec+real(HeIIRecLines(iup, ilow))
+            end do
+        end do
+        ! HeI singlets
+        do i = 1, 34
+            normRec = normRec+real(HeIRecLines(i))
+        end do
 
         ! Sum  up energy in forbidden lines
 
@@ -1180,9 +1219,7 @@ module emission_mod
               end if
            end do
         end do
-!print *,":::1:::",normFor
-!        normFor = real(sum(forbiddenLinesLarge, forbiddenLinesLarge.gt.1.e-35) + sum(forbiddenLines, forbiddenLines.gt.1.e-35))
-!print *,":::2:::",normFor
+
         ! total energy in lines (note: this variable will later be turned into the fraction of
         ! non-ionizing line photons as in declaration)
 

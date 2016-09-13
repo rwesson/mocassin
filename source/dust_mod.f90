@@ -98,8 +98,12 @@ module dust_mod
 &                             mpi_real, mpi_sum, mpi_comm_world, ierr)
 
 
-      grid%absOpac = absOpacTmp
-      grid%scaOpac = scaOpacTmp
+      do iP = 0, grid%nCells
+         do jP = 1, nbins
+            grid%absOpac(iP,jP) = absOpacTmp(iP,jP)
+            grid%scaOpac(iP,jP) = scaOpacTmp(iP,jP)
+         end do
+      end do
 
       ! calculate the dust emission integrals
       if (lgFirstDustEm) then
