@@ -1,7 +1,12 @@
 # standard
 FC = mpif90
 LD = mpif90
-FFLAGS += -O2 -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
+
+ifeq ($(FC),ifort)
+  FFLAGS += -O2 -cpp -DPREFIX=\"${PREFIX}\" -module source/
+else
+  FFLAGS += -O2 -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
+endif
 
 #IBM
 #FC = mpxlf90_r
