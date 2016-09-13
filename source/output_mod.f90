@@ -1073,10 +1073,10 @@ module output_mod
                        sumAn = sumAn + HIVol(iAb,iup,ilow)
                        sumMC = sumMC + lineLuminosity(iAb,iLine)
                     else
-                       write(10, *) iup, ilow, HIVol(iAb,iup,ilow), iLine
+                       write(10, *) iup, ilow, HIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,1))
                     end if
                  else
-                    write(10, *) iup, ilow, HIVol(iAb,iup,ilow), iLine
+                    write(10, *) iup, ilow, HIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,1))
                  end if
                  iLine = iLine + 1
               end do
@@ -1094,10 +1094,10 @@ module output_mod
                     sumAn = sumAn + HeIVol(iAb,l)
                     sumMC = sumMC + lineLuminosity(iAb,iLine) 
                  else
-                    write(10, *) l,"            ", HeIVol(iAb,l), iLine
+                    write(10, *) l,HeIrecLineCoeff(l,1,4),"            ", HeIVol(iAb,l), iLine
                  end if
               else
-                 write(10, *) l,"            ",  HeIVol(iAb,l), iLine
+                 write(10, *) l,HeIrecLineCoeff(l,1,4),"            ",  HeIVol(iAb,l), iLine
               end if
               iLine = iLine + 1
            end do
@@ -1116,10 +1116,10 @@ module output_mod
                        sumAn = sumAn + HeIIVol(iAb,iup,ilow)
                        sumMC = sumMC + lineLuminosity(iAb,iLine)
                     else
-                       write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine
+                       write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
                     end if
                  else
-                    write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine
+                    write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
                  end if
                  
                  iLine = iLine + 1
@@ -1370,7 +1370,35 @@ module output_mod
         end if
 
       contains
-      
+
+!get wavelength of H I and He II lines
+!calculation is just for lineFlux.out, nothing else depends on it
+!hence hackiness
+        real function hwavelength(ilow,iup,z)
+        implicit none
+        integer, intent(in) :: ilow, iup,z
+        real :: rydberg !
+
+        if (z .eq. 1) rydberg = 0.00109679454
+        if (z .eq. 2) rydberg = 0.00109725525
+        hwavelength = ((rydberg*real(z)**2)*(1/real(ilow)**2 - 1/real(iup)**2))**(-1)
+        return
+        end function hwavelength
+
+
+!convert vacuum wavelength to air wavelength
+!formula from Morton, 2000, ApJS, 130, 403
+        real function wave_a(wave_v)
+        implicit none
+        real, intent(in) :: wave_v !in angstroms
+        real :: n,s !conversion factors
+
+        s = 1.e4/wave_v
+        n = 1 + 0.0000834254 + 0.02406147 / (130 - s**2) + 0.00015998 / (38.9 - s**2)
+        wave_a = wave_v/n
+        return
+        end function wave_a
+
 ! optical recombination lines subroutines added by Zhang Yong (PKU) February 2003
 !***************** for recombination****************************************************
 
