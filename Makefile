@@ -3,9 +3,9 @@ FC = mpif90
 LD = mpif90
 
 ifeq ($(FC),ifort)
-  FFLAGS += -O2 -cpp -DPREFIX=\"${PREFIX}\" -module source/
+  FFLAGS += -cpp -DPREFIX=\"${PREFIX}\" -module source/
 else
-  FFLAGS += -O2 -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
+  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
 endif
 
 #IBM
@@ -37,6 +37,8 @@ else ifeq ($(CO),valgrind)
   FFLAGS += -g
 else ifeq ($(CO),gprof)
   FFLAGS += -pg
+else
+  FFLAGS += -O2
 endif
 
 .PHONY: all clean new install uninstall
