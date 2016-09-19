@@ -652,8 +652,8 @@ module elements_mod
                    ! (direct + cascades)
                    atomic_data_array(elem,ion)%alphaTotal = 0.
                    do j = 2, atomic_data_array(elem,ion)%NLEVS
-               !       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
-                      read(unit=11,fmt=*,iostat=ios) atomic_data_array(elem,ion)%br,atomic_data_array(elem,ion)%z,atomic_data_array(elem,ion)%a_r(:),atomic_data_array(elem,ion)%a_d(:) !a_fit, b_fit
+               !       read(unit=121,fmt=*,iostat=ios) a_fit, b_fit
+                      read(unit=121,fmt=*,iostat=ios) atomic_data_array(elem,ion)%br,atomic_data_array(elem,ion)%z,atomic_data_array(elem,ion)%a_r(:),atomic_data_array(elem,ion)%a_d(:) !a_fit, b_fit
                       if (ios<0) then
                          exit
                       else
