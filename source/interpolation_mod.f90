@@ -1,4 +1,4 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 !
 ! Version 2.02
 module interpolation_mod
@@ -6,20 +6,20 @@ module interpolation_mod
 
     subroutine sortUp(arr)
       implicit none
-      
+
       real, dimension(:), intent(inout) :: arr
       real, allocatable :: tmp(:)
 
       real       :: min
-      
+
 
       integer    :: i, j
-      integer    :: n ! size 
+      integer    :: n ! size
 
       n = size(arr)
 
       allocate(tmp(n))
-      
+
       min = 1.e30
       do i = 1, n
          if (arr(i) < min) min = arr(i)
@@ -32,18 +32,18 @@ module interpolation_mod
          end do
          tmp(j) = min
       end do
-      
+
       arr = tmp
-      
+
       deallocate(tmp)
 
-    end subroutine sortUp            
-      
+    end subroutine sortUp
+
     ! given an array xa of length n, and given a value x, this
     ! routine returns a value ns, such that x is located between
-    ! xa(ns) and xa(ns+1) 
+    ! xa(ns) and xa(ns+1)
     ! ns = 0 or ns=n is returned to indicate that x is out
-    ! of range. 
+    ! of range.
 
     subroutine locate(xa,x,ns)
 
@@ -88,9 +88,9 @@ module interpolation_mod
 
       real, intent(out)   :: y_new(*)
       real, intent(in)    :: y(*), x(*), x_new(*)
-      
+
       integer, intent(in) :: nx, nx_new
-      integer             :: i, ii 
+      integer             :: i, ii
 
       do i = 1, nx_new
          call locate(x(1:nx), x_new(i), ii)
@@ -98,16 +98,16 @@ module interpolation_mod
             y_new(i) = y(1)
          else if (ii==nx) then
             y_new(i) = y(nx)
-         else 
+         else
             y_new(i) = y(ii) +(y(ii+1)-y(ii))*(x_new(i)-x(ii))/(x(ii+1)-x(ii))
          end if
       end do
 
-    end subroutine linearMap      
+    end subroutine linearMap
 
-    ! subroutine polint carries out polynomial interpoation 
-    ! or extrapolation. given arrays xa nd ya, each of length 
-    ! n, and given a value x, it returns a value y and an 
+    ! subroutine polint carries out polynomial interpoation
+    ! or extrapolation. given arrays xa nd ya, each of length
+    ! n, and given a value x, it returns a value y and an
     ! error estimate dy.
     subroutine polint(xa, ya,  x, y, dy)
         implicit none
@@ -120,13 +120,13 @@ module interpolation_mod
 
         integer :: i, m                       ! counters
         integer :: n                          ! size of the arrays
-        integer :: ns = 1            
+        integer :: ns = 1
 
         real :: den, ho, hp, w
-        real, dimension(size(xa)) :: c, d 
+        real, dimension(size(xa)) :: c, d
 
         ! locate the index ns closest to the table entry
-        call locate(xa, x, ns) 
+        call locate(xa, x, ns)
 
         c = ya
         d = ya
@@ -155,10 +155,10 @@ module interpolation_mod
                 d(i) = hp*den
                 c(i) = ho*den
             end do
-    
-            ! after each column in the table, decide the 
-            ! correction c or d to be added to the 
-            ! accumulating value of y. 
+
+            ! after each column in the table, decide the
+            ! correction c or d to be added to the
+            ! accumulating value of y.
             if ( (2*ns) < (n-m) ) then
                 dy = c(ns+1)
             else
@@ -169,7 +169,7 @@ module interpolation_mod
             y = y+dy
         end do
 
-    end subroutine polint        
+    end subroutine polint
 
     ! subroutine spline given arrays wa and ya each of length
     ! n and given yp1 and ypn for the first derivatives of
@@ -185,9 +185,9 @@ module interpolation_mod
         real, dimension(:), intent(inout) :: xa, ya
         real, intent(in) :: yp1, ypn
         real, dimension(:), intent(out) :: y2a
-                
+
         ! local variables
-            
+
         integer :: i, k               ! counters
         integer :: n                  ! size of the arrays
         integer, parameter :: nmax=500! safety limit
@@ -211,25 +211,25 @@ module interpolation_mod
         do i = 2, n-1
             if ((xa(i+1)-xa(i-1))==0.) then
                 print*, "! spline: bad xa input or x out of range [i+1, i-1] ", (i+1), (i-1)
-                stop   
-            end if               
+                stop
+            end if
             sig = (xa(i)-xa(i-1))/(xa(i+1)-xa(i-1))
             p=sig*y2a(i-1)+2.
             y2a(i)=(sig-1.)/p
-            if ((xa(i+1)-xa(i))==0.) then    
-                print*, "! spline: bad xa input or x out of range [i+1, i] ", (i+1), (i)    
+            if ((xa(i+1)-xa(i))==0.) then
+                print*, "! spline: bad xa input or x out of range [i+1, i] ", (i+1), (i)
                 stop
             end if
-            if ((xa(i)-xa(i-1))==0.) then    
-                print*, "! spline: bad xa input or x out of range [i, i-1] ", (i), (i-1)    
+            if ((xa(i)-xa(i-1))==0.) then
+                print*, "! spline: bad xa input or x out of range [i, i-1] ", (i), (i-1)
                 stop
             end if
 
-            
+
             u(i)= ya(i+1)
-            u(i)=u(i) - ya(i) 
-            u(i) = u(i) / (xa(i+1)-xa(i)) 
-            u(i)= u(i) - (ya(i)-ya(i-1))/(xa(i)-xa(i-1)) 
+            u(i)=u(i) - ya(i)
+            u(i) = u(i) / (xa(i+1)-xa(i))
+            u(i)= u(i) - (ya(i)-ya(i-1))/(xa(i)-xa(i-1))
             u(i)=(6.*u(i)/(xa(i+1)-xa(i-1)) - sig*u(i-1))/p
        end do
         if (ypn > .99e30) then
@@ -238,14 +238,14 @@ module interpolation_mod
         else
             qn=0.5
             if ((xa(n)-xa(n-1))==0.) then
-                print*, "! spline: bad xa input or x out of range [n, n-1] ", n, (n-1)              
+                print*, "! spline: bad xa input or x out of range [n, n-1] ", n, (n-1)
                 stop
             end if
             un=(3./(xa(n)-xa(n-1))) * &
                  & (ypn-(ya(n)-ya(n-1))/(xa(n)-xa(n-1)))
         end if
         y2a(n)=(un-qn*u(n-1))/(qn*y2a(n-1)+1.)
-        
+
         do k = (n-1), 1, -1
             y2a(k) = y2a(k)*y2a(k+1)+u(k)
         end do
@@ -255,7 +255,7 @@ module interpolation_mod
     ! subroutine splint, given the arrays xa and ya each of
     ! length n and given the array y2a, which is the output
     ! from the subroutine spline, it returns a cubic spline
-    ! interpolated value y for the given x 
+    ! interpolated value y for the given x
     ! NOTE: if x is out of range splint will return the limit
     ! values
     subroutine splint(xa, ya, y2a, x, y)
@@ -281,13 +281,13 @@ module interpolation_mod
            y = ya(n)
            return
        end if
-      
+
        klo = 1
        khi = n
-   
+
        do i = 1, imax
            if ( (khi-klo) <= 1) exit
-           k = (khi+klo)/2  
+           k = (khi+klo)/2
            if (xa(k) > x) then
                khi=k
            else
@@ -296,13 +296,13 @@ module interpolation_mod
        end do
 
        h=xa(khi)-xa(klo)
-       
+
        if (h==0.) then
            print*, "! splint: bad xa input or x out of range [khi, klow] ", khi, klo
            stop
        end if
 
-       a = (xa(khi) - x)/h        
+       a = (xa(khi) - x)/h
        b = (x - xa(klo))/h
        y = a*ya(klo)+b*ya(khi) + &
             & ((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi)) * &
@@ -310,9 +310,9 @@ module interpolation_mod
 
     end subroutine splint
 
-    ! this function performs a linear interpolation of a scalar quantity in a 
+    ! this function performs a linear interpolation of a scalar quantity in a
     ! frequency dependent 3D grid. the interpolation coefficients t1, t2, t3 are
-    ! are left to be calculated in the calling program, so that only a small 
+    ! are left to be calculated in the calling program, so that only a small
     ! number or arguments need to be passed to the procedure
     function interpGrid(s3Dgrid, s4DGrid, s5Dgrid, xP, yP, zP, freqP, elem, ion, t1, t2, t3)
         implicit none
@@ -320,30 +320,30 @@ module interpolation_mod
         integer, intent(in)                  :: xP, yP, zP      ! x, y and z axes  indeces
         integer, intent(in), optional        :: freqP           ! frequency index
         integer, intent(in), optional        :: elem            ! element index
-        integer, intent(in), optional        :: ion             ! ion index             
+        integer, intent(in), optional        :: ion             ! ion index
 
         real, intent(in), dimension(:,:,:),&
 &                          optional           :: s3Dgrid          ! 3D scalar grid
-        real, intent(in), dimension(:,:,:,:),&  
+        real, intent(in), dimension(:,:,:,:),&
 &                          optional           :: s4Dgrid          ! 4D scalar grid
-        real, intent(in), dimension(:,:,:,:,:),&  
+        real, intent(in), dimension(:,:,:,:,:),&
 &                          optional           :: s5Dgrid          ! 5D scalar grid
         real, intent(in)                     :: t1, t2, t3      ! interpolation coefficients
         real                                 :: interpGrid      ! interpolated value
 
-        if ( present(freqP) .and. (.not.present(elem)) .and. (.not.present(ion)) ) then 
+        if ( present(freqP) .and. (.not.present(elem)) .and. (.not.present(ion)) ) then
             if(.not.present(s4Dgrid)) then
                 print*, "! interpGrid: insanity occurred - arguments incompatible"
                 stop
             end if
-            interpGrid = &  
+            interpGrid = &
 &                   ((1.-t1)  * (1.-t2) * (1.-t3))* s4Dgrid(xP  , yP   , zP   , freqP) + &
 &                   ((t1   )  * (1.-t2) * (1.-t3))* s4Dgrid(xP+1, yP   , zP   , freqP) + &
 &                   ((t1   )  * (t2   ) * (1.-t3))* s4Dgrid(xP+1, yP+1 , zP   , freqP) + &
 &                   ((1.-t1)  * (t2   ) * (t3   ))* s4Dgrid(xP  , yP+1 , zP+1 , freqP) + &
-&                   ((1.-t1)  * (t2   ) * (1.-t3))* s4Dgrid(xP  , yP+1 , zP   , freqP) + &   
-&                   ((t1   )  * (1.-t2) * (t3   ))* s4Dgrid(xP+1, yP   , zP+1 , freqP) + &   
-&                   ((1.-t1)  * (1.-t2) * (t3   ))* s4Dgrid(xP  , yP   , zP+1 , freqP) + &   
+&                   ((1.-t1)  * (t2   ) * (1.-t3))* s4Dgrid(xP  , yP+1 , zP   , freqP) + &
+&                   ((t1   )  * (1.-t2) * (t3   ))* s4Dgrid(xP+1, yP   , zP+1 , freqP) + &
+&                   ((1.-t1)  * (1.-t2) * (t3   ))* s4Dgrid(xP  , yP   , zP+1 , freqP) + &
 &                   ((t1   )  * (t2   ) * (t3   ))* s4Dgrid(xP+1, yP+1 , zP+1 , freqP)
         else if ((.not.present(freqP)) .and. present(elem) .and. present(ion) ) then
            if(.not.present(s5Dgrid)) then

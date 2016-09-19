@@ -1,4 +1,4 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 !! Version 2.02
 module output_mod
     use common_mod
@@ -18,7 +18,7 @@ module output_mod
 
         ! local variables
 
-        logical                     :: lgInSlit !is this cell within the slit? 
+        logical                     :: lgInSlit !is this cell within the slit?
 
         integer                     :: i,j,k,l,iG, &     ! counters
              & iup,ilow,iLine,elem,ion,iCount,iAb,iRes
@@ -40,9 +40,9 @@ module output_mod
         real                        :: factor2  ! calculations factor
         real                        :: g        ! alpha*h*nu (used to calculate line intensities)
         real, allocatable               :: HbetaLuminosity(:) ! MC Hbeta luminosity [E36 erg/sec]
-        real, allocatable               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]        
+        real, allocatable               :: HbetaVol(:) ! analytical Hbeta vol em  [E36  erg/sec]
         real                        :: LtotAn   ! HbetaVol * sumAn
-        real                        :: LtotMC   ! HbetaLuminosity * sumMC 
+        real                        :: LtotMC   ! HbetaLuminosity * sumMC
         real                        :: sumAn    ! sum of the relative an intensities
         real                        :: sumMC    ! sum of the relative MC intensities
         real                        :: Te10000  ! TeUsed/10000.miser_qinfo -A
@@ -60,14 +60,14 @@ module output_mod
              &                                       linePacketsUsed ! linePackets at this cell
         real, dimension(nElements) ::  elemAbundanceUsed  ! local abundances
         real, allocatable         :: resLinesVol(:,:)    ! resonance lines volume emission
-        real, allocatable         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected 
+        real, allocatable         :: resLinesVolCorr(:,:)! resonance lines volume emissivity corrected
         real, allocatable         :: HIVol(:,:,:)        ! analytical HI rec lines volume emissivity
         real, allocatable         :: HeIVol(:,:)        ! analytical HeI  volume emissivity
         real, allocatable         :: HeIIVol(:,:,:)      ! analytical HeII rec lines volume emissivity
         real, allocatable         :: ionDenVol(:,:,:)    ! volume av ion abun per H+ particle
         real, allocatable         :: lineLuminosity(:,:) ! MC luminosity in a given line
 
-        double precision, dimension(nElements,nstages,nForLevels,nForLevels) :: wav           
+        double precision, dimension(nElements,nstages,nForLevels,nForLevels) :: wav
         double precision, dimension(nForLevelsLarge,nForLevelsLarge) :: wavLarge
         real, allocatable         :: forbVol(:,:,:,:,:)  ! analytical forbidden lines volume emissivit
         real, allocatable         :: forbVolLarge(:,:,:)  ! analytical forbidden lines volume emissivity
@@ -77,11 +77,11 @@ module output_mod
 
         real(kind=8), allocatable          :: RecLinesFlux(:,:,:)    ! 1st is ion num, 2nd is emissivity
         real(kind=8), dimension(500)   :: recLambdaOII           ! lambda in angstrom
-        real(kind=8), dimension(500)   :: recLambdaMgII    
+        real(kind=8), dimension(500)   :: recLambdaMgII
         real(kind=8), dimension(500)   :: recLambdaNeII
         real(kind=8), dimension(500)   :: recLambdaCII
         real(kind=8), dimension(500)   :: recLambdaN33II      !   3-3, Kisielius & Storey 2002
-        real(kind=8), dimension(500)   :: recLambdaN34II      !   3d-4f, Escalante & Victor 1990   
+        real(kind=8), dimension(500)   :: recLambdaN34II      !   3d-4f, Escalante & Victor 1990
 
         real(kind=8), dimension(500) :: recFlux               ! local rec lines fluxes from subroutine
         real(kind=8), dimension(500) :: recLinesLambda        ! local rec lines wavelengths from subroutine
@@ -89,11 +89,11 @@ module output_mod
         real                         :: denIon=0.
 
 
-        print*, "in outputGas" 
+        print*, "in outputGas"
 
         ! allocate and initialize arrays and variables
 
-        
+
         if (convPercent >= resLinesTransfer .and. lgDust) then
            allocate(resLinesVol(0:nAbComponents, 1:nResLines), stat=err)
            if (err /= 0) then
@@ -183,7 +183,7 @@ module output_mod
               stop
            end if
            HbetaLuminosity = 0.
-           lineLuminosity  = 0.        
+           lineLuminosity  = 0.
         end if
 
 
@@ -215,9 +215,9 @@ module output_mod
         sumMC           = 0.
         TeVol           = 0.
         totLinePackets  = 0
-        totEscapedPackets=0          
- 
-        if (present(extMap)) then 
+        totEscapedPackets=0
+
+        if (present(extMap)) then
 
            if (ngrids>1) then
               print*, '! outputGas: no multiple grids are allowed with extinction maps (yet)'
@@ -241,11 +241,11 @@ module output_mod
 
            do i = 1, grid(1)%nx
               do j = 1, grid(1)%ny
-                 do k = 1, grid(1)%nz         
+                 do k = 1, grid(1)%nz
                     if (grid(1)%active(i,j,k)>0) then
                        read(19, *) l,l,l, cMap(grid(1)%active(i,j,k))
                     else
-                       read(19, *) 
+                       read(19, *)
                     end if
                  end do
               end do
@@ -288,7 +288,7 @@ module output_mod
            if (lg2D) then
               yPloc = 1
            else
-              yPloc = grid(iG)%ny                           
+              yPloc = grid(iG)%ny
            end if
 
 
@@ -299,7 +299,7 @@ module output_mod
 !print*, i, j,k
                     ! temporary arrangement
                     if (lg1D ) then
-                       if (grid(iG)%ionDen(grid(iG)%active(i,j,k),elementXref(1),1) > 0.95) then 
+                       if (grid(iG)%ionDen(grid(iG)%active(i,j,k),elementXref(1),1) > 0.95) then
                           print*, 'R_out = ', grid(iG)%xAxis(i-1), ' (',i-1,')'
                           exit outer
                        end if
@@ -335,7 +335,7 @@ module output_mod
                        log10Ne         = log10(NeUsed)
                        sqrTeUsed = sqrt(TeUsed)
 
-                       ! recalculate line emissivities at this cell 
+                       ! recalculate line emissivities at this cell
 
                        ! calculate the emission due to HI and HeI rec lines
                        call RecLinesEmission()
@@ -362,14 +362,14 @@ module output_mod
                                 HIRecLines(iup, ilow) = &
                                      & HIRecLines(iup, ilow)*10.**(-(cMap(grid(1)%active(i,j,k))*flam(iCount)&
                                      & +cMap(grid(1)%active(i,j,k))))
-                                iCount = iCount + 1 
+                                iCount = iCount + 1
 
                              end do
                           end do
 
                           ! He I recombination lines
                           do l = 1, 34
-                             HeIRecLines(l) = HeIRecLines(l)*10.**& 
+                             HeIRecLines(l) = HeIRecLines(l)*10.**&
                                   & (-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
                              iCount = iCount + 1
                           end do
@@ -378,7 +378,7 @@ module output_mod
                           ! HeII rec lines
                           do iup = 3, 30
                              do ilow = 2, min(16, iup-1)
-                                HeIIRecLines(iup,ilow) = HeIIRecLines(iup,ilow)*& 
+                                HeIIRecLines(iup,ilow) = HeIIRecLines(iup,ilow)*&
                                      & 10.**(-(cMap(grid(1)%active(i,j,k))*flam(iCount)+cMap(grid(1)%active(i,j,k))))
                                 iCount = iCount + 1
                              end do
@@ -417,7 +417,7 @@ module output_mod
 
                              end do
                           end do
-                          
+
                        end if
 
 !                       dV = getVolume(grid(iG), i,j,k)
@@ -454,7 +454,7 @@ module output_mod
                           dV = getVolume(grid(iG), i,j,k)
                        end if
 
- 
+
 
 
 
@@ -491,7 +491,7 @@ module output_mod
 
                        ! Heavy elements forbidden lines
                        do elem = 3, nElements
-                          do ion = 1, min(elem+1, nstages)                             
+                          do ion = 1, min(elem+1, nstages)
 
                              if (elem == 26 .and. ion == 2) then
                                 do iup = 1, nForLevelsLarge
@@ -521,7 +521,7 @@ module output_mod
                              end if
                           end do
                        end do
-                       
+
                        if (lgDust .and. convPercent>resLinesTransfer) then
 
                           do iRes =1, nResLines
@@ -551,58 +551,58 @@ module output_mod
                                            & ionDenUsed(elementXref(1),2)*&
                                            &  real(NeUsed*HdenUsed*dV* (grid(iG)%fEscapeResPhotons(cellPUsed, iRes)))
                                    else
-                                      
+
                                       print*, "! outputGas: [warning] only dust heating from H Lyman &
                                            &alpha and resonance lines from heavy"
                                       print*, "elements is implemented in this version. please contact &
                                            &author B. Ercolano -1-", ires
-                                      
+
                                    end if
 
                                 else if (resLine(iRes)%elem>2) then
-                                   
+
                                    resLinesVol(abFileUsed, iRes) = resLinesVol(abFileUsed, iRes)+&
-                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,& 
+                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,&
                                         &resLine(iRes)%moclow(imul),resLine(iRes)%mochigh(imul))*HdenUsed*dV)
                                    resLinesVolCorr(abFileUsed, iRes) = resLinesVolCorr(abFileUsed, iRes)+&
-                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,& 
+                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,&
                                         & resLine(iRes)%moclow(imul),resLine(iRes)%mochigh(imul))*&
                                         & HdenUsed*dV*(grid(iG)%fEscapeResPhotons(cellPUsed, iRes)))
                                    resLinesVol(0, iRes) = resLinesVol(0, iRes)+&
-                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,& 
+                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,&
                                         &resLine(iRes)%moclow(imul),resLine(iRes)%mochigh(imul))*HdenUsed*dV)
                                    resLinesVolCorr(0, iRes) = resLinesVolCorr(0, iRes)+&
-                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,& 
+                                        &real(forbiddenLines(resLine(iRes)%elem,resLine(iRes)%ion,&
                                         & resLine(iRes)%moclow(imul),resLine(iRes)%mochigh(imul))*&
                                         & HdenUsed*dV*(grid(iG)%fEscapeResPhotons(cellPUsed, iRes)))
 
-                                   
+
                                 else
-                                   
+
                                    print*, "! outputGas: [warning] only dust heating from H Lyman &
                                         &alpha and resonance lines from heavy"
-                                   print*, "elements is implemented in this version. please & 
-                                        &contact author B. Ercolano -2-", ires                                   
+                                   print*, "elements is implemented in this version. please &
+                                        &contact author B. Ercolano -2-", ires
 
                                 end if
-                                
+
                              end do
-                             
+
                           end do
                        end if
-                       
+
                        if (lgRecombination) then
-                          
+
                           if (lgElementOn(8)) then
                              denIon = ionDenUsed(elementXref(8),3)*&
                                   & grid(iG)%elemAbun(abFileUsed,8)*HdenUsed
-                             
+
                              recFlux = 0.
                              recLinesLambda = 0.
                              ! rec lines for OII
                              call roii(recLinesLambda, recFlux,TeUsed, NeUsed)
-                             
-                             do nrec = 1, 500 
+
+                             do nrec = 1, 500
                                 recLinesFlux(abFileUsed,1,nrec) = recLinesFlux(abFileUsed,1,nrec) + &
                                      &recFlux(nrec)*HIRecLines(4,2)*&
                                      & HdenUsed*dV*&
@@ -612,24 +612,24 @@ module output_mod
                                      &recFlux(nrec)*HIRecLines(4,2)*&
                                      & HdenUsed*dV*&
                                      &ionDenUsed(elementXref(8),3)*&
-                                     &grid(iG)%elemAbun(abFileUsed,8)/ionDenUsed(elementXref(1),2)                               
+                                     &grid(iG)%elemAbun(abFileUsed,8)/ionDenUsed(elementXref(1),2)
                              end do
                              recLambdaOII = recLinesLambda
                           end if
 
-                          if (lgElementOn(12)) then                                                     
+                          if (lgElementOn(12)) then
                              recFlux = 0.
                              recLinesLambda = 0.
                              ! rec lines for MgII 4481
                              call rmgii(recFlux, recLinesLambda, TeUsed)
 
                              recLinesFlux(abFileUsed,2,:) = recLinesFlux(abFileUsed,2,:) + recFlux*&
-                                  &HIRecLines(4,2)*HdenUsed*dV*& 
+                                  &HIRecLines(4,2)*HdenUsed*dV*&
                                   &ionDenUsed(elementXref(12),3)*&
                                   &grid(iG)%elemAbun(abFileUsed,12)/ionDenUsed(elementXref(1),2)
 
                              recLinesFlux(0,2,:) = recLinesFlux(0,2,:) + recFlux*&
-                                  &HIRecLines(4,2)*HdenUsed*dV*& 
+                                  &HIRecLines(4,2)*HdenUsed*dV*&
                                   &ionDenUsed(elementXref(12),3)*&
                                   &grid(iG)%elemAbun(abFileUsed,12)/ionDenUsed(elementXref(1),2)
 
@@ -715,11 +715,11 @@ module output_mod
 
 
                        ! calculate line packets luminosities
-                       ! first of all sum over all the cells                    
+                       ! first of all sum over all the cells
                        if (lgDebug) then
                           do l = 1, nLines
                              lineLuminosity(abFileUsed,l) = lineLuminosity(abFileUsed,l) + linePacketsUsed(l)
-                             lineLuminosity(0,l) = lineLuminosity(0,l) + linePacketsUsed(l)                            
+                             lineLuminosity(0,l) = lineLuminosity(0,l) + linePacketsUsed(l)
                              totLinePackets    = totLinePackets + nint(linePacketsUsed(l))
                           end do
 
@@ -736,7 +736,7 @@ module output_mod
                        end if
 
                        ! calculate mean temperatures for the ions
-                       ! and the mean <ion>/<H+> 
+                       ! and the mean <ion>/<H+>
                        factor1 = TeUsed*NeUsed*HdenUsed*dV
                        factor2 = NeUsed*HdenUsed*dV
 
@@ -755,7 +755,7 @@ module output_mod
                                   & ionDenUsed(elementXref(elem),ion)*factor2
 
 
-                             ! this is the definition used in the lexington benchmark 
+                             ! this is the definition used in the lexington benchmark
 !                                denominatorIon(abFileUsed,elem,ion) = denominatorIon(abFileUsed,elem,ion) + &
 !                                     & ionDenUsed(elementXref(1),2)*factor2
 
@@ -770,7 +770,7 @@ module output_mod
                                   & ionDenUsed(elementXref(elem),ion)*factor2
 
 
-                             ! this is the definition used in the lexington benchmark 
+                             ! this is the definition used in the lexington benchmark
 !                                denominatorIon(0,elem,ion) = denominatorIon(0,elem,ion) + &
 !                                     & ionDenUsed(elementXref(1),2)*factor2
 
@@ -839,13 +839,13 @@ module output_mod
            else
 
               ! HI rec lines
-              do ilow = 2, 8 
+              do ilow = 2, 8
                  do iup = ilow+1, 30
                     HIVol(iAb,iup,ilow) = HIVol(iAb,iup,ilow) /HbetaVol(iAb)
                  end do
               end do
 
-              ! HeI 
+              ! HeI
               HeIVol(iAb,:) = HeIVol(iAb,:) / HbetaVol(iAb)
 
 
@@ -900,7 +900,7 @@ module output_mod
            ! module calculations and the E45 comes from the volume calculations to avoid
            ! overflow. Hence Hbeta is in [E20 ergs/s], so we need to multiply by E-16
            ! to give units of  [E36 erg/s].
-           HbetaVol(iAb) = HbetaVol(iAb)*1.e-16         
+           HbetaVol(iAb) = HbetaVol(iAb)*1.e-16
 
            ! correct for symmetry case
 !           if (lgSymmetricXYZ ) then
@@ -918,7 +918,7 @@ module output_mod
            if (lgDebug) HbetaLuminosity(iAb) = HbetaLuminosity(iAb)
         end do
 
-        ! write the lineFlux.out file          
+        ! write the lineFlux.out file
         if (present(extMap)) then
            open(unit=10, status='unknown', position='rewind', file='output/lineFlux.ext', action="write", iostat=ios)
            if (ios /= 0) then
@@ -938,7 +938,7 @@ module output_mod
         do iAb = 0, nAbComponents
 
            ! The following code generates a first output with the some common nebular lines
-           write(10, *)              
+           write(10, *)
            if (iAb>0) write(10, *) "Component: ", iAb
            write(10, *)
            write(10, *) "Line Ratios (Hbeta=1.) :               Analytical"
@@ -950,43 +950,43 @@ module output_mod
            end do
            write(10, *) "HeII 4686", HeIIVol(iAb,4,3)
            if (lgElementOn(7) .and. lgDataAvailable(7,2)) then
-              write(10, *) 
+              write(10, *)
               write(10, *) "[NII] 5755", forbVol(iAb,7,2,4,5)
               write(10, *) "[NII] 6548", forbVol(iAb,7,2,2,4)
               write(10, *) "[NII] 6584", forbVol(iAb,7,2,3,4)
            end if
-           if (lgElementOn(8) .and. lgDataAvailable(8,2)) then              
+           if (lgElementOn(8) .and. lgDataAvailable(8,2)) then
               write(10, *)
               write(10, *) "[OII] 3726", forbVol(iAb,8,2,1,3)
               write(10, *) "[OII] 3729", forbVol(iAb,8,2,1,2)
               write(10, *) "[OII] 7318,9", forbVol(iAb,8,2,2,4)+forbVol(iAb,8,2,2,5)
               write(10, *) "[OII] 7330,0", forbVol(iAb,8,2,3,4)+forbVol(iAb,8,2,3,5)
            end if
-           if (lgElementOn(8) .and. lgDataAvailable(8,3)) then                 
+           if (lgElementOn(8) .and. lgDataAvailable(8,3)) then
               write(10, *)
               write(10, *) "[OIII] 4363", forbVol(iAb,8,3,4,5)
               write(10, *) "[OIII] 4932", forbVol(iAb,8,3,1,4)
               write(10, *) "[OIII] 4959", forbVol(iAb,8,3,2,4)
               write(10, *) "[OIII] 5008", forbVol(iAb,8,3,3,4)
            end if
-           if (lgElementOn(10) .and. lgDataAvailable(10,3)) then              
+           if (lgElementOn(10) .and. lgDataAvailable(10,3)) then
               write(10, *)
               write(10, *) "[NeIII] 3869", forbVol(iAb,10,3,1,4)
               write(10, *) "[NeIII] 3967", forbVol(iAb,10,3,2,4)
            end if
-           if (lgElementOn(16) .and. lgDataAvailable(16,2)) then                 
+           if (lgElementOn(16) .and. lgDataAvailable(16,2)) then
               write(10, *)
               write(10, *) "[SII] 4069",  forbVol(iAb,16,2,1,5)
               write(10, *) "[SII] 4076",  forbVol(iAb,16,2,1,4)
               write(10, *) "[SII] 6717",  forbVol(iAb,16,2,1,3)
               write(10, *) "[SII] 6731",  forbVol(iAb,16,2,1,2)
            end if
-           if (lgElementOn(16) .and. lgDataAvailable(16,3)) then             
-              write(10, *) 
+           if (lgElementOn(16) .and. lgDataAvailable(16,3)) then
+              write(10, *)
               write(10, *) "[SIII] 6312",  forbVol(iAb,16,3,4,5)
            end if
            if (lgElementOn(17) .and. lgDataAvailable(17,3)) then
-              write(10, *) 
+              write(10, *)
               write(10, *) "[ClIII] 5518",  forbVol(iAb,17,3,1,3)
               write(10, *) "[ClIII] 5538",  forbVol(iAb,17,3,1,2)
            end if
@@ -995,7 +995,7 @@ module output_mod
               write(10, *) "[ClIV] 7531",  forbVol(iAb,17,4,2,4)
               write(10, *) "[ClIV] 8046",  forbVol(iAb,17,4,3,4)
            end if
-           if (lgElementOn(18) .and. lgDataAvailable(18,3)) then              
+           if (lgElementOn(18) .and. lgDataAvailable(18,3)) then
               write(10, *)
               write(10, *) "[ArIII] 7136",  forbVol(iAb,18,3,1,4)
               write(10, *) "[ArIII] 7752",  forbVol(iAb,18,3,2,4)
@@ -1003,7 +1003,7 @@ module output_mod
            if (lgElementOn(18) .and. lgDataAvailable(18,4)) then
               write(10, *)
               write(10, *) "[ArIV] 4712",  forbVol(iAb,18,4,1,3)
-              write(10, *) "[ArIV] 4741",  forbVol(iAb,18,4,1,2)                
+              write(10, *) "[ArIV] 4741",  forbVol(iAb,18,4,1,2)
            end if
 
            write(10, *)
@@ -1011,14 +1011,14 @@ module output_mod
            write(10, *) "                  Ne:"
            if (lgElementOn(16) .and. lgDataAvailable(16,2)) &
                 & write(10, *) "[SII] 6731/6717 ", forbVol(iAb,16,2,1,2)/ forbVol(iAb,16,2,1,3)
-           if (lgElementOn(8) .and. lgDataAvailable(8,2)) &              
+           if (lgElementOn(8) .and. lgDataAvailable(8,2)) &
                 & write(10, *) "[OII] 3729/3726 ", forbVol(iAb,8,2,1,2)/ forbVol(iAb,8,2,1,3)
-           if (lgElementOn(17) .and. lgDataAvailable(17,3)) &             
+           if (lgElementOn(17) .and. lgDataAvailable(17,3)) &
                 & write(10, *) "[ClIII] 5537/5517 ", forbVol(iAb,17,3,1,2)/ forbVol(iAb,17,3,1,3)
            if (lgElementOn(18) .and. lgDataAvailable(18,4)) &
                 & write(10, *) "[ArIV] 4740/4712 ", forbVol(iAb,18,4,1,2)/ forbVol(iAb,18,4,1,3)
            write(10, *) "                  Te:"
-           if (lgElementOn(7) .and. lgDataAvailable(7,2)) & 
+           if (lgElementOn(7) .and. lgDataAvailable(7,2)) &
                 & write(10, *) "[NII](6584+6546)/5754 ", (forbVol(iAb,7,2,2,4)+forbVol(iAb,7,2,3,4))/&
                 &forbVol(iAb,7,2,4,5)
            if (lgElementOn(8) .and. lgDataAvailable(8,2)) &
@@ -1030,12 +1030,12 @@ module output_mod
 
            write(10, *)
            write(10, *)
-           
+
            if (lgDust .and. convPercent>resLinesTransfer) then
               write(10,*) " Resonance Lines Attenuated by dust absorption"
               write(10,*) " Line                               Uncorrected         Corrected"
               do iRes = 1, nResLines
-                 
+
                  if (lgElementOn(resLine(iRes)%elem)) then
                     write(10,*) trim(resLine(iRes)%species), resLine(iRes)%ion, resLinesVol(iAb,iRes), &
                          &resLinesVolCorr(iAb,iRes)
@@ -1045,7 +1045,7 @@ module output_mod
 
            if (lgDebug ) then
               if (HbetaLuminosity(iAb)>0.) then
-                 write(10, *) "Line Ratios :               Analytical     MC         & 
+                 write(10, *) "Line Ratios :               Analytical     MC         &
                       &                        Analytical/MC:"
                  write(10, *) "Hbeta [E36 erg/s]:     ", &
                       & HbetaVol(iAb), HbetaLuminosity(iAb), HbetaVol(iAb)/HbetaLuminosity(iAb)
@@ -1092,7 +1092,7 @@ module output_mod
                     write(10, *) l,"            ",  HeIVol(iAb,l),  lineLuminosity(iAb,iLine), &
                          & HeIVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
                     sumAn = sumAn + HeIVol(iAb,l)
-                    sumMC = sumMC + lineLuminosity(iAb,iLine) 
+                    sumMC = sumMC + lineLuminosity(iAb,iLine)
                  else
                     write(10, *) l,HeIrecLineCoeff(l,1,4),"            ", HeIVol(iAb,l), iLine
                  end if
@@ -1102,7 +1102,7 @@ module output_mod
               iLine = iLine + 1
            end do
 
-              
+
            write(10, *)
            write(10, *) "HeII recombination lines:"
            write(10, *)
@@ -1121,11 +1121,11 @@ module output_mod
                  else
                     write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
                  end if
-                 
+
                  iLine = iLine + 1
               end do
            end do
-              
+
            write(10, *)
            write(10, *) "Heavy ions forbidden lines"
            write(10, *)
@@ -1137,21 +1137,21 @@ module output_mod
                     if (elem==26 .and.  ion==2) then
 
                        do iup = 1, nForLevelsLarge
-                          do ilow = 1, nForLevelsLarge                                                   
+                          do ilow = 1, nForLevelsLarge
                              if (forbVolLarge(iAb,iup, ilow) > 0.) then
                                 write(10, *) ' 26', ' 2 ', iup, ilow, wavLarge(iup, ilow), &
                                      & forbVolLarge(iAb,iup,ilow), iLine
                              end if
-                             
+
                              iLine = iLine + 1
-                             
+
                           end do
                        end do
 
                     else
 
                        do iup = 1, nForLevels
-                          do ilow = 1, nForLevels                                                    
+                          do ilow = 1, nForLevels
                              if (forbVol(iAb,elem,ion, iup, ilow) > 0.) then
                                 if (lgDebug) then
                                    if (lineLuminosity(iAb,iLine) > 0. ) then
@@ -1167,29 +1167,29 @@ module output_mod
                                            & forbVol(iAb,elem,ion,iup,ilow), iLine
                                    end if
                                 else
-                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), & 
+                                   write(10, *) elem, ion, iup, ilow, wav(elem,ion, iup, ilow), &
                                         & forbVol(iAb,elem,ion,iup,ilow), iLine
                                 end if
                              end if
-                             
+
                              iLine = iLine + 1
-                          
+
                           end do
                        end do
                     end if
                  end if
               end do
            end do
-              
+
            if (lgRecombination) then
               write(10,*)
               write(10,*)
               write(10,*) "Recombination Lines for CII, Davey et al. (2000)"
-              write(10,*) 
+              write(10,*)
               do i = 1, 159
                  write(10,*) recLambdaCII(i), recLinesFlux(iAb,4,i)
               end do
-                 
+
               write(10,*)
               write(10,*)
               write(10,*) "Recombination Lines for NII, Kisielius & Storey(2000)"
@@ -1202,7 +1202,7 @@ module output_mod
               do i = 1,23
                  write(10,*) recLambdaN34II(i), recLinesFlux(iAb,6, i)
               end do
-             
+
               write(10,*)
               write(10,*)
               write(10,*) "Recombination Lines for OII, Storey & Hummer(1994) and Liu et al. (1995)"
@@ -1210,7 +1210,7 @@ module output_mod
               do i = 1, 415
                  write(10,*) recLambdaOII(i), recLinesFlux(iAb,1,i)
               end do
-              
+
               write(10,*)
               write(10,*)
               write(10,*) "Recombination Lines for NeII, Kisielius et al. (1998)&
@@ -1219,47 +1219,47 @@ module output_mod
               do i = 1,439
                  write(10,*) recLambdaNeII(i), recLinesFlux(iAb,3,i)
               end do
-              
+
               write(10,*)
               write(10,*)
               write(10,*) "Recombination Lines for MgII 4481, similar to CII 4667"
               write(10,*)
               write(10,*) "4481.21 ", recLinesFlux(iAb,2,1)+recLinesFlux(iAb,2,2)&
                    &+recLinesFlux(iAb,2,3)
-                 
+
            end if
 
            LtotAn = HbetaVol(iAb)*sumAn
            if(lgDebug) LtotMC = HbetaLuminosity(iAb)*sumMC
-           
+
         end do
-        
+
         ! close lineFlux.out file
         close(10)
-        
+
         ! write the temperature.out file
         open(unit=20, status='unknown', position='rewind', file='output/temperature.out', action="write",iostat=ios)
         if (ios /= 0) then
            print*, "! outputGas: can't open file for writing: output/temperature.out"
            stop
         end if
-        
+
         open(unit=27, status='unknown', position='append', file='output/summary.out', action="write",iostat=ios)
         if (ios /= 0) then
            print*, "! iterationMC: can't open file for writing: output/summary.out"
            stop
         end if
 
-        
+
         ! write ionratio.out file
         open(unit=30, status='unknown', position='rewind', file='output/ionratio.out', action="write",iostat=ios)
         if (ios /= 0) then
            print*, "! outputGas: can't open file for writing: output/ionratio.out"
            stop
         end if
-        
+
         if (lgDebug) then
-           
+
            open(unit=60, status='unknown', position='rewind', file='output/ionDen.out', action="write",iostat=ios)
            if (ios /= 0) then
               print*, "! outputGas: can't open file for writing: output/ionDen.out"
@@ -1267,35 +1267,35 @@ module output_mod
            end if
 
         end if
-        
-        
+
+
         write(20, *)
         write(20, *) "Mean ionic temperatures Te(ion)"
         write(20, *)
         write(20, *) "Total, integrated over all nebular components"
-        
+
         write(30, *)
         write(30, *) "Mean ionic ratio <ion>/<H+>"
         write(30, *)
         write(30, *) "Total, integrated over all nebular components"
-        write(30, *) 
-        
+        write(30, *)
+
         do iAb = 0, nAbComponents
-           
+
            if (iAb>0) then
-              
+
               write(20, *)
               write(20, *) "Mean ionic temperatures Te(ion)"
               write(20, *)
               write(20, *) "Component : ", iAb
-              write(20, *) 
-              
+              write(20, *)
+
               write(30, *)
               write(30, *) "Mean ionic ratio <ion>/<H+>"
               write(30, *)
               write(30, *) "Component : ", iAb
-              write(30, *) 
-              
+              write(30, *)
+
            end if
 
            write(20, *) "Element      Ion        Te(Element,ion)"
@@ -1315,9 +1315,9 @@ module output_mod
                  write(30, *) elem, ion, ionDenVol(iAb,elem, ion)
               end do
            end do
-           
+
            if (lgDebug) then
-              
+
               write(60, *)
               do iG = 1, nGrids
                  print*, 'Grid : ', iG
@@ -1338,14 +1338,14 @@ module output_mod
 
               close(60)
            end if
-           
+
         end do
 
         close(20)
         close(27)
         close(30)
         close(60)
-             
+
         if (allocated(HIVol)) deallocate(HIVol)
         if (allocated(HeIVol)) deallocate(HeIVol)
         if (allocated(HeIIVol)) deallocate(HeIIVol)
@@ -1359,8 +1359,8 @@ module output_mod
         if (allocated(recLinesFlux)) deallocate(recLinesFlux)
         if (allocated(denominatorIon)) deallocate(denominatorIon)
         if (allocated(denominatorTe)) deallocate(denominatorTe)
-        
-        if (present(extMap)) then 
+
+        if (present(extMap)) then
            if (allocated(cMap)) deallocate(cMap)
            if (allocated(flam)) deallocate(flam)
         end if
@@ -1936,7 +1936,7 @@ module output_mod
 
 
     ! this subroutine is the driver for the calculation of the emissivity
-    ! from the heavy elements forbidden lines. 
+    ! from the heavy elements forbidden lines.
     subroutine forLines()
         implicit none
 
@@ -1950,7 +1950,7 @@ module output_mod
               if (.not.lgElementOn(elem)) exit
 
               if (lgDataAvailable(elem, ion)) then
-                 
+
                  if (elem == 26 .and. ion == 2) then
                     if (nstages>2) then
                        call equilibrium(dataFile(elem, ion), &
@@ -1994,12 +1994,12 @@ module output_mod
 
         ! scale the forbidden lines emissivity to give units of [10^-25 erg/s/Ngas]
         ! comment: the forbidden line emissivity is so far in units of cm^-1/s/Ngas
-        !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence 
-        !          the right units are obtained by multiplying by 1.9865e-16*1e25 
-        !          which is 1.9865*1e9 
+        !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence
+        !          the right units are obtained by multiplying by 1.9865e-16*1e25
+        !          which is 1.9865*1e9
         forbiddenLines = forbiddenLines*1.9865e9
 
-    end subroutine forLines    
+    end subroutine forLines
 
     subroutine RecLinesEmission()
         implicit none
@@ -2024,8 +2024,8 @@ module output_mod
 
         ! do hydrogenic ions first
 
-         
-        ! read in HI recombination lines [e-25 ergs*cm^3/s] 
+
+        ! read in HI recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
 !        close(94)
 !        open(unit = 94,  action="read", file = "data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
@@ -2034,13 +2034,13 @@ module output_mod
 !            stop
 !        end if
 !        do iup = 15, 3, -1
-!            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min(8, iup-1)) 
+!            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min(8, iup-1))
 !        end do
 
 !        close(94)
 
-        ! calculate Hbeta 
-        ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        ! calculate Hbeta
+        ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE
         ! fits to Storey and Hummer MNRAS 272(1995)41
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
 !        Hbeta = Hbeta*NeUsed*ionDenUsed(elementXref(1),2)*elemAbundanceUsed(1)
@@ -2050,14 +2050,14 @@ module output_mod
 !            do ilow = 2, min(8, iup-1)
 !                HIRecLines(iup, ilow) = HIRecLines(iup, ilow)*Hbeta
 !            end do
-!        end do    
+!        end do
 
         ! calculate Hbeta
 !        if (TeUsed > 26000.) then
 !           print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
 !                & calculations may be uncertain"
 !        end if
-        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE
 
         ! fits to Storey and Hummer MNRAS 272(1995)41
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
@@ -2067,19 +2067,19 @@ module output_mod
         hb = fh
         do ilow = 2, 8
            do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh)              
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh)
               HIRecLines(iup, ilow) = (fh/hb)*Hbeta
            enddo
         enddo
 
 
-        ! add contribution of Lyman alpha 
+        ! add contribution of Lyman alpha
         ! fits to Storey and Hummer MNRAS 272(1995)41
-        Lalpha = 10**(-0.897*log10Te + 5.05) 
+        Lalpha = 10**(-0.897*log10Te + 5.05)
         HIRecLines(30, 8) =HIRecLines(30, 8) + elemAbundanceUsed(1)*&
              & ionDenUsed(elementXref(1),2)*&
-             & NeUsed*Lalpha 
-        
+             & NeUsed*Lalpha
+
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
@@ -2104,10 +2104,10 @@ module output_mod
             do ilow = 2, min(16, iup-1)
                 HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
             end do
-        end do    
+        end do
 
         ! now do HeI
-        
+
         if (NeUsed <= 100.) then
            denint=0
         elseif (NeUsed > 100. .and. NeUsed <= 1.e4) then
@@ -2140,9 +2140,9 @@ module output_mod
 
     end subroutine outputGas
 
-        
-    ! read atomic data for higher level H transitions. 
-    ! authors: Wang Wei, Yu Pei (PKU) 
+
+    ! read atomic data for higher level H transitions.
+    ! authors: Wang Wei, Yu Pei (PKU)
     subroutine hdatx
       implicit none
       integer                    :: ios         ! I/O error status
@@ -2160,7 +2160,7 @@ module output_mod
       real, dimension(15)              :: densx
       real, dimension(15)              :: tempx
       real, dimension(5000,15,15)      :: ex
-      common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu      
+      common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu
       close(337)
       open(unit =337, file = PREFIX//"/share/mocassin/data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
         if (ios /= 0) then
@@ -2171,7 +2171,7 @@ module output_mod
       read(337,*) ntempx,ndensx
         do ia=1,ntempx
            do ib=1,ndensx
-                read(337,25) densx(ib),tempx(ia),ntop,ndum,nlu,nll 
+                read(337,25) densx(ib),tempx(ia),ntop,ndum,nlu,nll
 25              format(1x,e10.3,5x,e10.3,5x,4i5)
                 ne=(2*ntop-nlu-nll)*(nlu-nll+1)/2
                 read(337,30) (ex(j,ia,ib),j=1,ne)
@@ -2179,7 +2179,7 @@ module output_mod
            enddo
         enddo
       close(337)
-      
+
     end subroutine hdatx
 
 
@@ -2374,15 +2374,15 @@ module output_mod
 
       type(grid_type), intent(in) :: grid(*)
 
-      type(vector) :: aVec, uHat        
-      
+      type(vector) :: aVec, uHat
+
       real, allocatable :: outTau(:)
 
       integer :: err, i, ios
 
       ! find the run of the optical depths from the illuminated
       ! surface to the edge of the nebula
-            
+
       ! allocate space for temporary optical depth arrays
       allocate (outTau(1:nbins), stat = err)
       if (err /= 0) then
@@ -2399,87 +2399,87 @@ module output_mod
       outTau = 0.
 
       do i = 1, nbins
-        
+
          aVec%x = 0.
          aVec%y = 0.
-         aVec%z = 0.      
+         aVec%z = 0.
 
          uHat%x = 1.
          uHat%y = 0.
          uHat%z = 0.
-         
+
          ! find the optical depth
          call integratePathTauNu(grid, aVec, uHat, i, outTau(i))
 
       end do
- 
-     
+
+
       write(73, *) " Optical depth from the centre to the edge of the nubula "
       write(73, *) " direction: 1,0,0"
       write(73, *) " lambda [um]    tau(R_max) "
-      
+
       do i = 1, nbins
          write(73, *) (c/(nuArray(i)*fr1Ryd))*1.e4, outTau(i)
       end do
-      
+
       write(73,*) ' '
 
       ! initialize arrays with zero
       outTau = 0.
 
       do i = 1, nbins
-        
+
          aVec%x = 0.
          aVec%y = 0.
-         aVec%z = 0.      
+         aVec%z = 0.
 
          uHat%x = 0.
          uHat%y = 0.
          uHat%z = 1.
-         
+
          ! find the optical depth
          call integratePathTauNu(grid, aVec, uHat, i, outTau(i))
 
       end do
- 
-     
+
+
       write(73, *) " Optical depth from the centre to the edge of the nubula "
       write(73, *) " direction: 0,0,1"
       write(73, *) " lambda [um]    tau(R_max) "
-      
+
       do i = 1, nbins
          write(73, *) (c/(nuArray(i)*fr1Ryd))*1.e4, outTau(i)
       end do
-      
+
       write(73,*) ' '
 
       ! initialize arrays with zero
       outTau = 0.
 
       do i = 1, nbins
-        
+
          aVec%x = 0.
          aVec%y = 0.
-         aVec%z = 0.      
+         aVec%z = 0.
 
          uHat%x = 0.
          uHat%y = 1.
          uHat%z = 0.
-         
+
          ! find the optical depth
          call integratePathTauNu(grid, aVec, uHat, i, outTau(i))
 
       end do
- 
-     
+
+
       write(73, *) " Optical depth from the centre to the edge of the nubula "
       write(73, *) " direction: 0,1,0"
       write(73, *) " lambda [um]    tau(R_max) "
-      
+
       do i = 1, nbins
          write(73, *) (c/(nuArray(i)*fr1Ryd))*1.e4, outTau(i)
       end do
-      
+
       write(73,*) ' '
 
 
@@ -2487,7 +2487,7 @@ module output_mod
 
 
       close(73)
-      
+
       if(allocated(outTau)) deallocate(outTau)
 
     end subroutine writeTauNu
@@ -2500,24 +2500,24 @@ module output_mod
 
       integer :: ios, err                        ! I/O error status
       integer :: i,j,k,freq, imu, iG, ic, ijk    ! counters
-      
+
       real, allocatable :: SED(:,:),sSED(:,:),dSED(:,:)               ! SED array
 
       real          :: theta1, theta2, phi1, phi2
       real          :: lambda                    ! lambda [cm]
       real          :: totalE                    ! total energy [erg/sec]
 
-      print*, 'in writeSED'      
+      print*, 'in writeSED'
 
       close(16)
 
-      open(unit=16,file='output/SED.out',status='unknown', position='rewind',iostat=ios, action="write")              
+      open(unit=16,file='output/SED.out',status='unknown', position='rewind',iostat=ios, action="write")
       if (ios /= 0) then
          print*, "! writeSED: Cannot open output/SED.out for writing"
          stop
       end if
 
-!      open(unit=116,file='output/sourceSED.out',status='unknown', position='rewind',iostat=ios, action="write")              
+!      open(unit=116,file='output/sourceSED.out',status='unknown', position='rewind',iostat=ios, action="write")
 !      if (ios /= 0) then
 !         print*, "! writeSED: Cannot open output/sourceSED.out for writing"
 !         stop
@@ -2536,13 +2536,13 @@ module output_mod
 !      sSED=0.
 !      dSED=0.
 
-      write(16,*) 'Spectral energy distribution at the surface of the nebula: ' 
+      write(16,*) 'Spectral energy distribution at the surface of the nebula: '
       write(16,*) '  viewPoints = ', (viewPointTheta(i), viewPointPhi(i), ' , ', i = 1, nAngleBins)
-      write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            ' 
+      write(16,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            '
      write(16,*) '                                       [Jy * pc^2]              '
 
-!      write(116,*) 'Spectral energy distribution of sources: ' 
-!      write(116,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            ' 
+!      write(116,*) 'Spectral energy distribution of sources: '
+!      write(116,*) '   nu [Ryd]        lambda [um]         F(nu)*D^2            '
 !     write(116,*) '                                       [Jy * pc^2]              '
 
       totalE=0.
@@ -2561,7 +2561,7 @@ module output_mod
               do j = 1, grid(iG)%ny
                do k = 1, grid(iG)%nz
                 ijk = grid(iG)%active(i,j,k)
-                if (ijk.gt.0) then 
+                if (ijk.gt.0) then
 !                   do ic=1,nStars
 !                      if (grid(iG)%active(starIndeces(ic,1),&
 !                           &starIndeces(ic,2),starIndeces(ic,3)).eq.ijk) then
@@ -2588,7 +2588,7 @@ module output_mod
                       do imu = 0, nAngleBins
                          SED(freq,imu)=SED(freq,imu)+&
                               &grid(iG)%escapedPackets(ijk,freq,imu)*&
-                              &grid(iG)%echoVol(i,j,k) 
+                              &grid(iG)%echoVol(i,j,k)
 ! mult by echoVol() corrects for actual percentage of cell that was illuminated
                       end do
                    endif
@@ -2599,7 +2599,7 @@ module output_mod
             endif
          end do
       end do
-      
+
 
 
       do freq = 1, nbins
@@ -2609,8 +2609,8 @@ module output_mod
 !         end do
 
          lambda = c/(nuArray(freq)*fr1Ryd)
-            
-         
+
+
          if (lgSymmetricXYZ) then
             SED(freq,0) = SED(freq,0)*8.
 !            sSED(freq,0) = sSED(freq,0)*8.
@@ -2619,15 +2619,15 @@ module output_mod
 
 
          totalE = totalE +  SED(freq,0)
-            
+
          ! dilute the SEDs -  user must still divide by D^2 in pc
          ! the 1.e18 is absorbed later
-         SED(freq,0) = SED(freq,0)/(4.*Pi*3.08*3.08) 
-!         sSED(freq,0) = sSED(freq,0)/(4.*Pi*3.08*3.08) 
+         SED(freq,0) = SED(freq,0)/(4.*Pi*3.08*3.08)
+!         sSED(freq,0) = sSED(freq,0)/(4.*Pi*3.08*3.08)
          ! convert to Jy
          SED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15*widflx(freq))
 !         sSED(freq,0) = 1.e23*SED(freq,0)/(3.2898e15)*widflx(freq)
-           
+
 
          do imu = 1, nAngleBins
 
@@ -2667,7 +2667,7 @@ module output_mod
             end if
 
             write(74,*) nuArray(freq), c/(nuArray(freq)*fr1Ryd)*1.e4, equivalentTau(freq), SEDnoExt(freq)
-            
+
          end do
 
          close(74)
@@ -2684,13 +2684,13 @@ module output_mod
 
       write(16,*) 'dTheta: ', dTheta
       write(16,*) 'dPhi: ', dPhi
-      
+
 
       write(16,*) ' '
       if (nuArray(1)<radio4p9GHzP) then
-         write(16,*) 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
+         write(16,*) 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', &
               & SED(radio4p9GHzP,0)*Pi*1.e23/(nuArray(radio4p9GHzP)*fr1Ryd)
-         print*, 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', & 
+         print*, 'Flux at 4.9GHz (must multiply by 1.e36/(4 Pi D[cm]^2 to obtain units of [Jy]) :', &
               & SED(radio4p9GHzP,0)*Pi*1.e23/(nuArray(radio4p9GHzP)*fr1Ryd)
       end if
 
@@ -2709,20 +2709,20 @@ module output_mod
     subroutine writeContCube(grid, freq1,freq2)
       implicit none
 
-      type(grid_type), intent(in) :: grid(*)     
+      type(grid_type), intent(in) :: grid(*)
 
       integer :: ios,ix,iy,iz, iG        ! I/O error status, counters
       integer ::  freq, imu, ifreq1, ifreq2      ! counters
-      
+
       real, intent(inout)         :: freq1,freq2 ! wavelengths in um
       real                        :: contI(0:nanglebins) ! continuum int in band
 
-      print*, 'in writeContCube'      
+      print*, 'in writeContCube'
 
 
       close(19)
 
-      open(unit=19,file='output/contCube.out',status='unknown', position='rewind',iostat=ios, action="write")       
+      open(unit=19,file='output/contCube.out',status='unknown', position='rewind',iostat=ios, action="write")
       if (ios /= 0) then
          print*, "! writeContCube: Cannot open file for writing"
          stop
@@ -2739,7 +2739,7 @@ module output_mod
 
 
       do iG = 1, nGrids
-         
+
          do ix = 1, grid(iG)%nx
             do iy = 1, grid(iG)%ny
                do iz = 1, grid(iG)%nz
@@ -2754,7 +2754,7 @@ module output_mod
                            contI(imu) = contI(imu)+&
                                 & grid(iG)%escapedPackets(grid(iG)%active(ix,iy,iz),freq,imu)
                         end do
-                     
+
                         if (imu>0) then
                            if (viewPointTheta(imu)>0.) contI(imu) = contI(imu) / dTheta
                            if (viewPointPhi(imu)>0.) contI(imu) = contI(imu) / dPhi
@@ -2763,7 +2763,7 @@ module output_mod
                         end if
 
                      end do
-                  
+
                      write(19,*) iG, ix,iy,iz, (contI(imu), imu=0,nanglebins)
 
                   else
@@ -2776,7 +2776,7 @@ module output_mod
             end do
          end do
 
-      end do      
+      end do
 
 
       write(19,*) ' '
@@ -2785,7 +2785,7 @@ module output_mod
 
 
       close(19)
-            
+
       print*, 'writeContCube'
 
     end subroutine writeContCube

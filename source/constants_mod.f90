@@ -1,14 +1,14 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 ! changed nStages from 6 to 9 for the modelling of higher energy ions (nw2006)
 !
 ! Version 2.02
 module constants_mod
 
     public
- 
+
     ! physical constant
     real, parameter :: A0 = 6.30e-18               ! H0 phot x sec at the edge [cm^2]
-    real, parameter :: amu = 1.66053e-24           ! [g]           
+    real, parameter :: amu = 1.66053e-24           ! [g]
     real, parameter :: c = 2.9979250e10            ! speed of light [cm/s]
     real, parameter :: fr1Ryd = 3.28984e15         ! frequency a 1 Ryd [Hz]
     real, parameter :: hPlanck = 6.6262e-27        ! Planck constant [erg s]
@@ -26,9 +26,9 @@ module constants_mod
 
     ! numerical constants
     real, parameter :: rootThree = 1.732050808
-    real, parameter :: kShellLimit = 7.35e4        ! high energy limit to code 
-    
-    ! pi 
+    real, parameter :: kShellLimit = 7.35e4        ! high energy limit to code
+
+    ! pi
     real, parameter :: pi = 3.141592654
     real, parameter :: twoPi = 2.*pi
     real, parameter :: fourPi = 4.*pi
@@ -42,16 +42,16 @@ module constants_mod
     real, parameter :: radToDeg = 180./pi
 
     ! hard limits
-    integer, parameter :: maxGrids = 50000           ! limit to the number of grids to be used 
+    integer, parameter :: maxGrids = 50000           ! limit to the number of grids to be used
     integer, parameter :: maxTau = 10000000         ! limit to the optical depth arrays
     integer, parameter :: nElements = 30            ! number of elements
     integer, parameter :: nForLevels = 17           ! number of levels
-    integer, parameter :: nForLevelsLarge = 142     ! number of levels for FeII 
-    integer, parameter :: nHlevel =  10             ! number of levels in the H atom 
-    integer, parameter :: nHeIlevel = 9             ! number of levels in the HeI singlets 
-    integer, parameter :: nHeIIlevel = 9            ! number of levels in the HeII singlets    
-    integer, parameter :: NnuMax = 3000             ! limit to the possible number of energy bins (nbins) 
-    integer, parameter :: xSecMax = 1000000         ! max limit to xSecArray 
+    integer, parameter :: nForLevelsLarge = 142     ! number of levels for FeII
+    integer, parameter :: nHlevel =  10             ! number of levels in the H atom
+    integer, parameter :: nHeIlevel = 9             ! number of levels in the HeI singlets
+    integer, parameter :: nHeIIlevel = 9            ! number of levels in the HeII singlets
+    integer, parameter :: NnuMax = 3000             ! limit to the possible number of energy bins (nbins)
+    integer, parameter :: xSecMax = 1000000         ! max limit to xSecArray
     integer, parameter :: nTemps=3000
     integer, parameter :: recursionLimit=5000
 

@@ -1,4 +1,4 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 !
 ! Version 2.02
 module set_input_mod
@@ -12,7 +12,7 @@ module set_input_mod
     subroutine readInput()
         implicit none
 
-        ! local variables 
+        ! local variables
 
         integer             :: err              ! allocation error status
         integer             :: i, j             ! counters
@@ -24,11 +24,11 @@ module set_input_mod
         character(len=50)   :: keyword          ! input parameter keyword
         character(len=50)   :: multiPhotoSources ! stars file
 
-        logical :: lgOutputExists ! to check for existence of output directory        
-        
+        logical :: lgOutputExists ! to check for existence of output directory
+
         ! set default values and set non oprional values to 0 or 0. or "zero"
 
-        lgIsotropic   = .false.       
+        lgIsotropic   = .false.
         lgRecombination = .false.
         lgAutoPackets = .false.
         lgMultiDustChemistry = .false.
@@ -45,7 +45,7 @@ module set_input_mod
         lgMdMh        = .false.
         lgNeInput     = .false.
         lgNeutral     = .true.
-        lgOutput      = .false. 
+        lgOutput      = .false.
         lgPlaneIonization = .false.
         lg1D          = .false.
         lgDustScattering = .true.
@@ -55,20 +55,20 @@ module set_input_mod
         lgforceTDust  = .false.
         lgOutputExists= .false.
 
-        nPhotonsDiffuse = 0        
+        nPhotonsDiffuse = 0
         nStars        = 0
         nxIn(:)       = 0
         nyIn(:)       = 0
         nzIn(:)       = 0
         nxIn(1)       = 30
         nyIn(1)       = 30
-        nzIn(1)       = 30        
+        nzIn(1)       = 30
         maxIterateMC  = 30
         maxPhotons    = 0
-        nbins         = 600        
+        nbins         = 600
         MdMgValue     = 0.
-        MdMgFile      = "none"               
-        nAngleBins    = 0        
+        MdMgFile      = "none"
+        nAngleBins    = 0
         nGrids        = 1
         NdustValue     = 0.
         NdustFile      = "none"
@@ -94,8 +94,8 @@ module set_input_mod
         dustFile      = "none"
         gridList      = "none"
 
-        nu0           = 0.  
-        Ldiffuse      = 0. 
+        nu0           = 0.
+        Ldiffuse      = 0.
         Tdiffuse      = 0.
         shapeDiffuse  = "none"
         Hdensity      = 0.
@@ -149,14 +149,14 @@ module set_input_mod
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, echot1, echot2, echoTemp
                !print "(1X,A4,1X,3es12.4)",keyword,echot1,echot2,echoTemp
-               print*, '! readInput [Reminder]: Light echo option - is the inclination correctly specified? [see Readme]' 
+               print*, '! readInput [Reminder]: Light echo option - is the inclination correctly specified? [see Readme]'
                print*, '! readInput [Warning]: Light echo option - '
                print*, '!   The actual volume of material illuminated by the echo is probably'
                print*, '!   much smaller than that illuminated in this grid.  Be sure to perform'
                print*, '!   volume correction. See echo.out file for volume illuminated in this grid.'
 !               echot1 = echot1 * 2.59020684e15 !ct
 !               echot2 = echot2 * 2.59020684e15
-               lgEcho = .true.                 
+               lgEcho = .true.
             case("NoSourceSED")
                lgNosource = .true.
                !print*, keyword, lgNosource
@@ -173,14 +173,14 @@ module set_input_mod
                   print*, " !out_in: Max 10 ionisation stages allowed. &
                        &If more are required (and you have the relevant atomic data), &
                        & please update the data/ directory (and let B. Ercolano know ;-) &
-                       & and edit the data/fileNames.dat file"  
+                       & and edit the data/fileNames.dat file"
                   stop
                end if
                !print*, keyword, nstages
             case ("getEquivalentTau")
-               lgEquivalentTau = .true.               
+               lgEquivalentTau = .true.
                !print*, keyword, lgEquivalentTau
-            case ("diffuseSource") 
+            case ("diffuseSource")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse, emittingGrid
                !print*, keyword, Ldiffuse, Tdiffuse, shapeDiffuse, nPhotonsDiffuse, emittingGrid
@@ -192,14 +192,14 @@ module set_input_mod
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword,minaQHeat,minConvQHeat
                !print*, keyword, minaQHeat,minConvQHeat
-            case("quantumHeatGrainParameters") 
+            case("quantumHeatGrainParameters")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword,Tmax,nTbins,lgWritePss
-               !print*, keyword,Tmax,nTbins,lgWritePss              
+               !print*, keyword,Tmax,nTbins,lgWritePss
             case ("noPhotoelectric")
                !print*, keyword
                lgPhotoelectric = .false.
-            case ("multiPhotoSources") 
+            case ("multiPhotoSources")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword,multiPhotoSources
                !print*, keyword,multiPhotoSources
@@ -228,7 +228,7 @@ module set_input_mod
             case("recombinationLines")
                lgRecombination=.true.
                !print*, keyword
-            case ("fillingFactor") 
+            case ("fillingFactor")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, fillingFactor
                !print*, keyword, fillingFactor
@@ -290,7 +290,7 @@ module set_input_mod
                backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword
                 lg1D = .true.
-                !print*, keyword        
+                !print*, keyword
                 print*, 'ERROR: oneD option is not currently avalable!!!!'
                 stop
              case ("densityFile")
@@ -322,7 +322,7 @@ module set_input_mod
             case ("nbins")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, nbins
-                !print*, keyword, nbins                
+                !print*, keyword, nbins
             case ("talk")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword
@@ -344,8 +344,8 @@ module set_input_mod
                 read(unit=10, fmt=*, iostat=ios) keyword, contShape(1)
                 if (contShape(1) == 'powerlaw') then
                    backspace 10
-                   read(unit=10, fmt=*, iostat=ios) keyword, contShape(1), pwlIndex                   
-                   !print*, keyword, contShape(1), pwlIndex                   
+                   read(unit=10, fmt=*, iostat=ios) keyword, contShape(1), pwlIndex
+                   !print*, keyword, contShape(1), pwlIndex
                 else
                    !print*, keyword, contShape(1)
                 end if
@@ -354,7 +354,7 @@ module set_input_mod
                 else
                    spID(1) = 'rauch'
                 end if
-                tstep = 0.                
+                tstep = 0.
             case ("nebComposition")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, cValue
@@ -362,7 +362,7 @@ module set_input_mod
                 !print*, keyword, cValue
                 allocate(abundanceFile(1:nAbComponents))
                 abundanceFile = cValue
-            case ("Hdensity") 
+            case ("Hdensity")
                 backspace 10
                 read(unit=10, fmt=*, iostat=ios) keyword, Hdensity
                 lgHdenConstant = .true.
@@ -426,7 +426,7 @@ module set_input_mod
                 !print*, keyword, LStar(1)
             case ("LPhot")
                 backspace 10
-                if (.not. allocated(LStar)) allocate(Lstar(0:1))                
+                if (.not. allocated(LStar)) allocate(Lstar(0:1))
                 read(unit=10, fmt=*, iostat=ios) keyword, LPhot
                 !print*, keyword, LPhot
             case ("nuMax")
@@ -520,7 +520,7 @@ module set_input_mod
                       print*,'grid axes read in from file:',trim(NdustFile),nxin(1),nyin(1),nzin(1)
                    endif
                    close(11)
-                   
+
                    lgDust = .true.
                 else
                    print*, "! readInput: invalid keyword in Ndust field ", keyword
@@ -532,7 +532,7 @@ module set_input_mod
                 !print*, keyword, convWriteGrid
             case ("inclination")
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins 
+               read(unit=10, fmt=*, iostat=ios) keyword, nAngleBins
                if (nAngleBins>2) then
                   print*, '! readInput: only two inclination anges are allowed per simulation. &
                        & If more inclinations are required please run mocassinWarm for the other&
@@ -557,11 +557,11 @@ module set_input_mod
             case ("dustMass")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, inputDustMass
-               lginputDustMass = .true.  
+               lginputDustMass = .true.
             case ("gasMass")
                backspace 10
                read(unit=10, fmt=*, iostat=ios) keyword, inputGasMass
-               lginputGasMass = .true.  
+               lginputGasMass = .true.
                print*,"Using gasMass keyword. Be sure to specify gas density file or Hdensity 1.0"
             case default
                 print*, "! readInput: unrecognised keyword in model parameter input file", &
@@ -600,7 +600,7 @@ module set_input_mod
            print*,"! readInput: you have asked to scale gasMass but there is no gas"
            stop
         endif
-        
+
         if (lginputDustMass .and. lginputGasMass) then
            if (lgDust .and. lgGas) then
               if (lgMdMg .or. lgMdMh) then
@@ -670,7 +670,7 @@ module set_input_mod
 
         print*, "mother nx, ny, nz" , nxin(1), nyin(1), nzin(1)
 
-        ! check for missing or invalid values in the model parameters input file        
+        ! check for missing or invalid values in the model parameters input file
         if (lg1D) then
            nyIn = 1
            nzIn = 1
@@ -698,7 +698,7 @@ module set_input_mod
         else if ( (.not.lgDust) .and. (.not.lgGas) )then
            print*, "! readInput: the grid is completely empty. no gas or dust present.",  &
                 lgGas,lgDust
-           stop                      
+           stop
         else if ( lgDebug .and. .not.(lgGas) ) then
            print*, "! readInput: debugging mode can only be used when a gas component is present. &
                 & debugging mode will be turned off."
@@ -724,7 +724,7 @@ module set_input_mod
                 & symmetricXYZ - removed."
            lgSymmetricXYZ = .false.
         else if (TStellar(1) == 0. .and. Tdiffuse==0. .and. contShape(1) /= 'powerlaw') then
-            print*, "! readInput: TStellar missing from model parameter input file" 
+            print*, "! readInput: TStellar missing from model parameter input file"
             stop
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
@@ -740,7 +740,7 @@ module set_input_mod
                  & file", in_file, maxIterateMC
             stop
          else if (minConvergence < 0. .or. minConvergence > 100.) then
-            print*, "! readInput: invalid minConvergence input (must be between 0. and 100.) ", & 
+            print*, "! readInput: invalid minConvergence input (must be between 0. and 100.) ", &
                  &  in_file, minConvergence
             stop
         else if (nPhotons(1) < 0) then
@@ -755,7 +755,7 @@ module set_input_mod
                stop
             end if
         else if (nxin(1) < 1 .or. nyin(1) < 1 .or. nzin(1) < 1) then
-            print*, "! readInput: invalid grid boundaries in model parameter input & 
+            print*, "! readInput: invalid grid boundaries in model parameter input &
                  & file", in_file, nxin(1), nyin(1), nzin(1)
             stop
         else if (TStellar(1) < 0.) then
@@ -784,7 +784,7 @@ module set_input_mod
             stop
         else if (nuMin > 1.4e-6) then
             print*, "! readInput [waring]:  nuMin  in model parameter input &
-                 & file is too large to include 5GHz flux calculations", in_file,nuMin            
+                 & file is too large to include 5GHz flux calculations", in_file,nuMin
         else if (R_out < 0.) then
             print*, "! readInput: invalid R_out  in model parameter input &
                  & file", in_file, R_out
@@ -805,21 +805,21 @@ module set_input_mod
         end if
 
         TStellar(0) = Tdiffuse
-        
+
         contains
 
           subroutine readGridList(filename)
             implicit none
-            
+
             real                          :: skipR
 
             character(len=50), intent(in) :: filename
-            character(len=50)             ::  skipC            
+            character(len=50)             ::  skipC
 
             integer                       :: i
             integer                       :: ios
             integer                       :: skip
-            
+
             close(17)
             open (unit = 17, file = filename, status = "old", &
                  &position="rewind",  iostat = ios, action="read")
@@ -827,7 +827,7 @@ module set_input_mod
                print*, "! readGridList: can't open file for reading ", filename
                stop
             end if
-            
+
             do i = 2, nGrids
               read(17, *) skip, nxIn(i), nyIn(i), nzIn(i), skipC, skipR
               read(17, *) skipR, skipR, skipR, skipR, skipR, skipR
@@ -838,10 +838,10 @@ module set_input_mod
          end subroutine readGridList
 
        end subroutine readInput
-       
+
        subroutine setMultiPhotoSources(infile)
         implicit none
-        
+
         character(len=50), intent(in) :: infile
 
         integer                       :: ios, i
@@ -853,20 +853,20 @@ module set_input_mod
            print*, "! setMultiPhotoSources: can't open ionising sources file", infile
            stop
         end if
-        
+
         read(13,*) nStars
         print*, "Multiple Ionising sources", nStars
         print*, "(i, Tstellar, Lstar, ContShape, Nphotons, position)"
 
         allocate(deltaE(0:nStars))
-        allocate(spID(0:nStars))        
-        allocate(tStep(nStars))        
-        allocate(TStellar(0:nStars))        
+        allocate(spID(0:nStars))
+        allocate(tStep(nStars))
+        allocate(TStellar(0:nStars))
         allocate(Lstar(nStars))
-        allocate(ContShape(0:nStars))        
-        allocate(ContShapeIn(0:nStars))        
-        allocate(nPhotons(nStars))        
-        allocate(starPosition(nStars))       
+        allocate(ContShape(0:nStars))
+        allocate(ContShapeIn(0:nStars))
+        allocate(nPhotons(nStars))
+        allocate(starPosition(nStars))
 
         TStellar=0.
         Lstar=0.
@@ -881,14 +881,14 @@ module set_input_mod
                 & spID(i), tStep(i)
            contShapeIn(i) = contShape(i)
         end do
-        
-        
+
+
         print*, 'i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i), deltaE(i)'
         do i = 1, nStars
            nPhotons(i) = NphotonsTot/nStars
            deltaE(i) = Lstar(i)/nPhotons(i)
            print*, i, Tstellar(i), Lstar(i), contShape(i), Nphotons(i), starPosition(i), deltaE(i)
-        end do                
+        end do
 
         if (Ldiffuse>0. .and. nPhotonsDiffuse>0) then
            deltaE(0) = Ldiffuse/nPhotonsDiffuse
@@ -901,6 +901,6 @@ module set_input_mod
         end if
 
       end subroutine setMultiPhotoSources
-        
+
 end module set_input_mod
 

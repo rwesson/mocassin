@@ -1,8 +1,8 @@
-! Copyright (C) 2005 Barbara Ercolano 
-!  
-! MoCaSSiN = MOnte CArlo SImulationS of Nebulae 
+! Copyright (C) 2005 Barbara Ercolano
+!
+! MoCaSSiN = MOnte CArlo SImulationS of Nebulae
 ! this is the plotting driver
-!  
+!
 ! Version 2.02
 program MoCaSSiNplot
     use common_mod
@@ -24,7 +24,7 @@ program MoCaSSiNplot
 
     real(kind=8), allocatable    :: flinePlot(:,:,:,:)
     real(kind=8), allocatable    :: flinePlotLarge(:,:)
-    real, allocatable   :: image(:,:,:,:)    
+    real, allocatable   :: image(:,:,:,:)
 
     ! filter transmission stuff
     real            :: frequency(5000), frequencyTemp(5000),tranCoeff(5000),tranCoeffTemp(5000)
@@ -45,15 +45,15 @@ program MoCaSSiNplot
     integer         :: iLine          ! line counter
     integer         :: iup, ilow, l   ! energy levels pointerst
     integer         :: ios            ! I/O error status
-    integer         :: nxMax,nyMax,nzMax ! 
+    integer         :: nxMax,nyMax,nzMax !
     integer         :: maxCells       ! maxCells
     integer         :: plotNum        ! counter
     integer         :: tranP          ! transmnission coeff index
-    integer         :: tranMaxP       ! maximum tran coeff index 
-    integer         :: contP          ! continuum index counter 
-    integer         :: yP             ! 
+    integer         :: tranMaxP       ! maximum tran coeff index
+    integer         :: contP          ! continuum index counter
+    integer         :: yP             !
 
-    logical         :: lgContinuum    ! 
+    logical         :: lgContinuum    !
 
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
@@ -63,7 +63,7 @@ program MoCaSSiNplot
     if (taskid == 0) then
         print*, "MOCASSIN 2005 plot Version 2.00"
         print*, " "
-    end if 
+    end if
 
     filename = 'input/plot.in'
 
@@ -71,7 +71,7 @@ program MoCaSSiNplot
     ! reset the 3D cartesian grid
     call resetGrid(grid3D)
 
-    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis,grid3D)      
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis,grid3D)
 
     ! prepare atomica data stuff
     call makeElements()
@@ -79,7 +79,7 @@ program MoCaSSiNplot
     maxCells = grid3D(1)%nCells
     do iG = 1, ngrids
        if (grid3D(iG)%nCElls>maxCElls) maxCElls = grid3D(iG)%nCElls
-    end do       
+    end do
 
     print*, nstages
     allocate(flinePlot(nElements,nstages, nForLevels,nForLevels), stat=err)
@@ -115,18 +115,18 @@ program MoCaSSiNplot
           print*, "! readPlot: can't open band file for reading: ", bandFile
           stop
        end if
-  
+
        frequency = 0.
        tranCoeff = 0.
 
        tranMaxP = 0
        do i = 1, 5000
-           
+
           read(unit=72,fmt=*,iostat=ios) frequency(i), tranCoeff(i)
 
           if (ios < 0) exit
 
-          ! the following assumes that wavelengths are in band file are in angstroms       
+          ! the following assumes that wavelengths are in band file are in angstroms
           frequency(i) = 910.998/frequency(i)
 
           tranMaxP = tranMaxP + 1
@@ -137,7 +137,7 @@ program MoCaSSiNplot
           frequencyTemp(i) = frequency(1+tranMaxP-i)
           tranCoeffTemp(i) = tranCoeff(1+tranMaxP-i)
        end do
-       
+
        frequency = frequencyTemp
        tranCoeff = tranCoeffTemp
 
@@ -160,7 +160,7 @@ program MoCaSSiNplot
     do iG = 1, nGrids
 
 
-       if (lg2D) then 
+       if (lg2D) then
           yP = 1
        else
           yP = grid3D(iG)%ny
@@ -170,14 +170,14 @@ program MoCaSSiNplot
           do j = 1, yP
              do k = 1, grid3D(iG)%nz
 
-                ! find the volume of this cell 
+                ! find the volume of this cell
                 dV = getVolume(grid3D(iG), i,j,k)
 
                 if (taskid ==0) write(29, *) grid3D(iG)%xAxis(i),grid3D(iG)%yAxis(j),grid3D(iG)%zAxis(k),dV
 
                 ! check this cell is in the ionized region
                 if (grid3D(iG)%active(i,j,k) >0) then
-                   
+
                    ! find the physical properties of this cell
                    HdenUsed        = grid3D(iG)%Hden(grid3D(iG)%active(i,j,k))
                    ionDenUsed      = grid3D(iG)%ionDen(grid3D(iG)%active(i,j,k), :, :)
@@ -185,9 +185,9 @@ program MoCaSSiNplot
                    TeUsed          = grid3D(iG)%Te(grid3D(iG)%active(i,j,k))
                    abFileIndexUsed = grid3D(iG)%abFileIndex(i,j,k)
                    log10TeLoc      = log10(TeUsed)
-                   
-                   ! recalculate line emissivities at this cell 
-                   
+
+                   ! recalculate line emissivities at this cell
+
                    ! calculate the emission due to HI and HeI rec lines
                    call RecLinesEmission()
 
@@ -195,13 +195,13 @@ program MoCaSSiNplot
                    ! forbidden lines
                    call forLines()
 
-                   ! find the volume of this cell 
+                   ! find the volume of this cell
                    dV = getVolume(grid3D(iG), i,j,k)
 
                    do plotNum = 1, plot%nPlots
 
                       if (plot%lgLine(plotNum)) then
-                      
+
                          ! initialise line number counter
                          iLine = 1
 
@@ -209,30 +209,30 @@ program MoCaSSiNplot
                          ! HI rec lines
                          do ilow = 2,8
                             do iup = ilow+1, 30
-                               
+
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & real(HIRecLines(iup,ilow)*HdenUsed*dV)
                                iLine = iLine+1
-                               
+
                             end do
                          end do
-                      
-                         do l = 1, 34 
+
+                         do l = 1, 34
                             if (plot%lineNumber(plotNum) == iLine) &
-                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = & 
+                                 & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = &
                                  & real(HeIRecLines(l)*HdenUsed*dV)
 
                             iLine = iLine+1
 
                          end do
-                         
-                         
+
+
                          ! HeII rec lines
                          do iup = 3, 30
                             do ilow = 2, min(16, iup-1)
-                               
-                               
+
+
                                if (plot%lineNumber(plotNum) == iLine) &
                                     & plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                     & real(HeIIRecLines(iup,ilow)*HdenUsed*dV)
@@ -241,27 +241,27 @@ program MoCaSSiNplot
 
                             end do
                          end do
-                         
+
                          ! Heavy elements forbidden lines
                          do elem = 3, nElements
                             do ion = 1, min(elem+1, nstages)
 
                                if (.not.lgElementOn(elem)) exit
                                if (lgDataAvailable(elem,ion)) then
-                                  
+
                                   if (elem == 26 .and. ion ==2) then
 
                                      do iup = 1, nforlevelsLarge
                                         do ilow = 1, nforlevelsLarge
-                                                                                   
-                                           if (plot%lineNumber(plotNum) == iLine) then 
-                                              
+
+                                           if (plot%lineNumber(plotNum) == iLine) then
+
 !                                              print*, flinePlotLarge(iup,ilow), elem,ion,iup,ilow
                                               plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                                    & real(flinePlotLarge(iup,ilow)*HdenUsed*dV)
-                                              
+
                                            end if
-                                           
+
                                            iLine = iLine+1
 
                                         end do
@@ -271,126 +271,126 @@ program MoCaSSiNplot
 
                                      do iup = 1, nforlevels
                                         do ilow = 1, nforlevels
-                                        
-                                           
-                                           if (plot%lineNumber(plotNum) == iLine) then 
-                                              
+
+
+                                           if (plot%lineNumber(plotNum) == iLine) then
+
 !                                              print*, flinePlot(elem,ion,iup,ilow), elem,ion,iup,ilow
                                               plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
                                                    & real(flinePlot(elem,ion,iup,ilow)*HdenUsed*dV)
-                                              
+
                                            end if
-                                           
+
                                            iLine = iLine+1
 
                                         end do
                                      end do
-                                     
+
                                   end if
                                end if
                             end do
                          end do
-                         
-                         ! calculate the intensity per unit frequency 
+
+                         ! calculate the intensity per unit frequency
 !                         plot%intensity(iG, grid3D(iG)%active(i,j,k),plotNum) = &
 !                              & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) / &
 !                              & 2.1799153e-11*nuArray(plot%nuP(plotNum,1))
-                         
+
                       else
-                         
+
                          print*, " ! mocassinPlot: no continuum plots are available in this version. &
                               &Please contact Barbara Ercolano (be@star.ucl.ac.uk)"
                          stop
-                         
+
                          do contP = 1, nbins
-                            
+
                             if ( (contP >= plot%nuP(plotNum,1)) .and. (contP <= plot%nuP(plotNum,2)) &
                                  &  .and. (continuum(contP) >=1.e-20) ) then
-                               
-                               if (plot%lgFilter) then 
-                                  
+
+                               if (plot%lgFilter) then
+
                                   call locate(frequency(1:tranMaxP), nuArray(contP), tranP)
                                   if ( nuArray(contP) >= (frequency(tranP) + frequency(tranP+1))/2. ) &
                                        tranP = tranP+1
                                   if( (tranP <= 0) .or. (tranP >= tranMaxP) ) coeff = 0.
-                                  
+
                                   coeff(plotNum) = tranCoeff(tranP)
-                                  
-                                  ! continuum is in units of [e-40 erg/cm^3/s/Hz]; multiply by 1.e-15 
+
+                                  ! continuum is in units of [e-40 erg/cm^3/s/Hz]; multiply by 1.e-15
                                   ! to bring to the same units as the lines, also cRyd at the bottom (2.1799153e-11)
                                   ! so just multipy by 4.587e-5
                                   plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = &
                                        & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) + &
                                     & continuum(contP)*4.587e-5*HdenUsed*dV*coeff(plotNum)/nuArray(contP)
                                else
-                                  ! continuum is in units of [e-40 erg/cm^3/s/Hz]; multiply by 1.e-15 
+                                  ! continuum is in units of [e-40 erg/cm^3/s/Hz]; multiply by 1.e-15
                                   ! to bring to the same units as the lines, also cRyd at the bottom (2.1799153e-11)
                                   ! so just multipy by 4.587e-5
                                   plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) = &
                                        & plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum) + &
                                        & continuum(contP)*4.587e-5*HdenUsed*dV/nuArray(contP)
                                end if
-                               
+
                             end if
                          end do
-                         
+
                       end if
                    end do ! plots
 
                 end if ! inner/outer cell condition
-                
+
              end do
           end do
        end do
     end do
 
     if (taskid == 0) close(29)
-       
+
     ! calculate intensities in units of [E30 erg/s/Hz]
     ! Note:  intensities are now in E-25 * E45 ergs/sec (the E-25 comes from the emission
     ! module calculations and the E45 comes from the volume calculations to avoid
     ! overflow. Hence intensities are in [E20 ergs/s], so we need to multiply by E-16
     ! to give units of  [E36 erg/s].
     plot%intensity = plot%intensity*1.e-16
-    
+
     ! per sterradian
 !    plot%intensity = plot%intensity/fourPi
-    
+
     if (plot%lgFilter) then
 
        do plotNum = 1, plot%nPlots
-          
+
           if (plot%lgLine(plotNum)) then
              call locate(frequency(1:tranMaxP), nuArray(plot%nuP(plotNum,1)), tranP)
              if ( nuArray(plot%nuP(plotNum,1)) >= (frequency(tranP) + frequency(tranP+1))/2. ) &
                   tranP = tranP+1
-             if( (tranP <= 0) .or. (tranP >= tranMaxP) ) then 
+             if( (tranP <= 0) .or. (tranP >= tranMaxP) ) then
                 print*, 'mocassinPlot: [warning] frequency outside the band', nuArray(plot%nuP(plotNum,1))
                 coeff = 0.
              end if
-             
+
              coeff(plotNum) = tranCoeff(tranP)
-             
+
           else
              coeff(plotNum) = 1.
           end if
-          
+
        end do
-       
+
     else
-          
+
        coeff = 1.
-       
+
     end if
-       
+
     open(unit=28, file='output/plot.out', status='unknown',  action="write",position='rewind',iostat=ios)
     if (ios /= 0) then
        print*, "! readPlot: can't open file for writing: output/plot.out"
        stop
     end if
-    
+
     iCount = 0
-       
+
     ! allocate pointers depending on nLines
     nxMax=grid3D(1)%nx
     nyMax=grid3D(1)%ny
@@ -413,47 +413,47 @@ program MoCaSSiNplot
        do i = 1, grid3D(iG)%nx
           do j = 1, yP
              do k = 1, grid3D(iG)%nz
-                
+
                 if (plot%lgFilter) then
                    do plotNum = 1, plot%nPlots
                       image(iG,i,j,k) = image(iG,i,j,k) + plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum)*coeff(plotNum)
                    end do
-                   
-                   iCount = iCount + 1 
+
+                   iCount = iCount + 1
                    write(28,*) iCount,' ',(plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum),' ', &
                         & plotNum = 1, plot%nPlots), image(iG,i,j,k)
 
                 else
 
-                   iCount = iCount + 1 
+                   iCount = iCount + 1
                    write(28,*) iCount,' ',(plot%intensity(iG,grid3D(iG)%active(i,j,k),plotNum),' ', &
                         & plotNum = 1, plot%nPlots)
-                   
+
                 end if
-             
+
              end do
           end do
        end do
     end do
 !******************************************************************************
-       
+
     ! free all space allocated to the 3D grid
     do iG=1, nGrids
        call freeGrid(grid3D(iG))
     end do
-    
+
     ! free all space allocated to the plot
     call freePlot(plot)
-    
+
     if (allocated(ionDenUsed)) deallocate(ionDenUsed)
     if (allocated(fLinePlot)) deallocate(fLinePlot)
-    
+
 
     call mpi_finalize(ierr)
     stop 'mpi done'
-    
 
-    
+
+
     contains
 
       function readPlot(filename)
@@ -477,7 +477,7 @@ program MoCaSSiNplot
         integer                   :: ios         ! I/O error status
         integer                   :: maxLim      ! loop limit
         integer                   :: code        ! line code number (0 if cont)
-        
+
 
         close(77)
         open(unit=77, file=filename, status='old', position='rewind', action="read",iostat=ios)
@@ -505,15 +505,15 @@ program MoCaSSiNplot
            print*, '! readPlot: band or mono must be specified for plots'
            stop
         end select
-                    
+
         do i = 1, maxLim
-           
+
         read(unit=77,fmt=*,iostat=ios) lineOrcont
 
            if (ios < 0) exit
 
            readPlot%nPlots = readPlot%nPlots + 1
-           
+
         end do
 
         readPlot%nPlots = readPlot%nPlots - 1
@@ -604,7 +604,7 @@ program MoCaSSiNplot
         implicit none
 
         type(plot_type), intent(inout) :: plot
-        
+
         if (allocated(plot%intensity))  deallocate(plot%intensity)
         if (allocated(plot%lgLine))     deallocate(plot%lgLine)
         if (allocated(plot%lineNumber)) deallocate(plot%lineNumber)
@@ -612,24 +612,24 @@ program MoCaSSiNplot
 
       end subroutine freePlot
 
-      
+
 
       ! this subroutine is the driver for the calculation of the emissivity
-      ! from the heavy elements forbidden lines. 
+      ! from the heavy elements forbidden lines.
       subroutine forLines()
         implicit none
 
         integer                     :: elem, ion ! counters
-          
+
         ! re-initialize forbiddenLines
         fLinePlot = 0.
-        
+
         do elem = 3, nElements
            do ion = 1, min(elem+1, nstages)
               if (.not.lgElementOn(elem)) exit
-                
+
               if (lgDataAvailable(elem, ion)) then
-                 
+
                  if (elem == 26 .and. ion ==2) then
 
                     if (ion<min(elem+1,nstages)) then
@@ -669,16 +669,16 @@ program MoCaSSiNplot
 
         ! scale the forbidden lines emissivity to give units of [10^-25 erg/s/Ngas]
         ! comment: the forbidden line emissivity is so far in units of cm^-1/s/Ngas
-        !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence 
-        !          the right units are obtained by multiplying by 1.9865e-16*1e25 
-        !          which is 1.9865*1e9 
+        !          the energy [erg] of unit wave number [cm^-1] is 1.9865e-16, hence
+        !          the right units are obtained by multiplying by 1.9865e-16*1e25
+        !          which is 1.9865*1e9
         flinePlot = flinePlot*1.9865e9
 
         if (lgElementOn(26) .and. ion>=2) flinePlotLarge = flinePlotLarge*1.9865e9
 
 
       end subroutine forLines
-    
+
     subroutine RecLinesEmission()
         implicit none
 
@@ -701,13 +701,13 @@ program MoCaSSiNplot
         T4 = TeUsed / 10000.
 
         ! do hydrogenic ions first
-        
+
         ! calculate Hbeta
         if (TeUsed > 26000.) then
            print*, "! recLineEmission: [warning] temperature exceeds 26000K - Hbeta &
                 & calculations may be uncertain"
         end if
-        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE 
+        Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE
 
         ! fits to Storey and Hummer MNRAS 272(1995)41
 !        Hbeta = 10**(-0.870*log10Te + 3.57)
@@ -718,21 +718,21 @@ program MoCaSSiNplot
 
         do ilow = 2, 8
            do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh)              
+              call hlinex(iup,ilow,TeUsed,NeUsed,fh)
               HIRecLines(iup, ilow) = (fh/hb)*Hbeta
 
            enddo
         enddo
 
 
-        ! add contribution of Lyman alpha 
+        ! add contribution of Lyman alpha
         ! fits to Storey and Hummer MNRAS 272(1995)41
-        Lalpha = 10**(-0.897*log10TeLoc + 5.05) 
+        Lalpha = 10**(-0.897*log10TeLoc + 5.05)
 
         HIRecLines(30, 8) =HIRecLines(30, 8) + grid3D(iG)%elemAbun(abFileIndexUsed,1)*&
              & ionDenUsed(elementXref(1),2)*&
-             & NeUsed*Lalpha 
-        
+             & NeUsed*Lalpha
+
 
         ! read in HeII recombination lines [e-25 ergs*cm^3/s]
         ! (Storey and Hummer MNRAS 272(1995)41)
@@ -757,10 +757,10 @@ program MoCaSSiNplot
             do ilow = 2, min(16, iup-1)
                 HeIIRecLines(iup, ilow) = HeIIRecLines(iup, ilow)*HeII4686
             end do
-        end do    
+        end do
 
         ! now do HeI
-        
+
         if (NeUsed <= 100.) then
            denint=0
         elseif (NeUsed > 100. .and. NeUsed <= 1.e4) then
@@ -795,7 +795,7 @@ program MoCaSSiNplot
     end subroutine RecLinesEmission
 
 end program MoCaSSiNplot
-   
-    
+
+
 
 

@@ -8,24 +8,24 @@
     ! where U = h*nu/k*T and gams = Z^2 * Ryd / k*T. To obtain the stated
     ! accuracy the full number of significant figures must be retained.
     !
-    ! this subroutine uses a two-dimensional chebyshev epansion computed 
-    ! from expressions given bu Karzas and Latter (ApJSuppl., V.6, P.167, 
+    ! this subroutine uses a two-dimensional chebyshev epansion computed
+    ! from expressions given bu Karzas and Latter (ApJSuppl., V.6, P.167,
     ! 1961) augmented by various limiting forms of energy-specific gaunt-
     ! factors.
     ! D.G.Hummer, Jila, May 1987. ApJ 327, 477
     ! modified with correct limits, J Ferguson, July 94
-    ! modified for MOCASSIN by B Ercolano (Ercolano et al 2003, MNRAS 340, 1136) 
+    ! modified for MOCASSIN by B Ercolano (Ercolano et al 2003, MNRAS 340, 1136)
     subroutine getGauntFF(z, log10Te, xlf, g, iflag)
         implicit none
 
-        integer, intent(out) :: iflag                ! explanation given in each area        
+        integer, intent(out) :: iflag                ! explanation given in each area
 
         real, intent(in) :: log10Te                  ! log10(Te)
         real, intent(in) ::  z                       ! log10 of nuclear charge
         real, dimension(:), intent(in) :: xlf        ! array of log10(h*nu/Ryd)
         real, dimension(size(xlf)), intent(out) :: g ! array of values of g
 
-        ! local variables 
+        ! local variables
         integer ::  i, ir, j
 
         real, dimension(11) :: b
@@ -40,7 +40,7 @@
         real :: u                                    ! U = h*nu/k*T
         real :: xlrkt                                ! log(ryd/kt)
 
-        dd = (/8.986940175e+00, -4.009515855e+00,  8.808871266e-01,& 
+        dd = (/8.986940175e+00, -4.009515855e+00,  8.808871266e-01,&
 &          2.640245111e-02, -4.580645915e-02, -3.568055702e-03,&
 &          2.827798067e-03,  3.365860195e-04, -8.006936989e-01,&
 &          9.466021705e-01,  9.043402532e-02, -9.608451450e-02,&
@@ -48,7 +48,7 @@
 &         -1.078209202e-03, -3.781305103e-01,  1.102726332e-01,&
 &         -1.543619180e-02,  8.310561114e-03,  2.179620525e-02,&
 &          4.259726289e-03, -4.181588794e-03, -1.770208330e-03,&
-&          1.877213132e-02, -1.004885705e-01, -5.483366378e-02,& 
+&          1.877213132e-02, -1.004885705e-01, -5.483366378e-02,&
 &         -4.520154409e-03,  8.366530426e-03,  3.700273930e-03,&
 &          6.889320423e-04,  9.460313195e-05,  7.300158392e-02,&
 &          3.576785497e-03, -4.545307025e-03, -1.017965604e-02,&
@@ -63,14 +63,14 @@
 &         -2.096101038e-04,  1.553822487e-03,  1.509584686e-03,&
 &          6.212627837e-04,  4.098322531e-03,  1.635218463e-03,&
 &         -5.918883504e-04, -2.333091048e-03, -2.484138313e-03,&
-&         -1.359996060e-03, -5.371426147e-05,  5.553549563e-04,& 
+&         -1.359996060e-03, -5.371426147e-05,  5.553549563e-04,&
 &          3.837562402e-05,  2.938325230e-03,  2.393747064e-03,&
 &          1.328839809e-03,  9.135013312e-05, -7.137252303e-04,&
 &         -7.656848158e-04, -3.504683798e-04, -8.491991820e-04,&
 &         -3.615327726e-04,  3.148015257e-04,  8.909207650e-04,&
 &          9.869737522e-04,  6.134671184e-04,  1.068883394e-04,&
 &         -2.046080100e-04/)
-      
+
         d = reshape( dd, (/8, 11/) )
 
         ! compute temperature dependent coeffcients for U expansion
@@ -100,7 +100,7 @@
             end do
             c(j) = 0.25*(b(1)-b(3))
         end do
-        
+
         ! sum U expansion
         ! loop through energy at fixed temperature
         do i = 1, size(xlf)
@@ -109,7 +109,7 @@
             ! criteria set by hummer limits. it is a wedge from
             ! log(hnu),log(T)) =
             ! (-5,2.5) to (-5,4) to (-1,8) to (4,8) to (-1.5,2.5).
-            ! these limits correspond to the gamma^2 and U limits 
+            ! these limits correspond to the gamma^2 and U limits
             ! given above
             if(abs(txu)<=2.0) then
                 ir = 6

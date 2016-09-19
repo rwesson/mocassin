@@ -1,4 +1,4 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 !
 ! Version 2.02
 module ionization_mod
@@ -11,14 +11,14 @@ module ionization_mod
     real, allocatable :: FFOpacity(:)       ! FF opacity
     real, allocatable :: log10nuArray(:)    ! log10(nu) at this cell
 
-    real, allocatable & 
-         &:: density(:,:)               ! abundance*ionDensity*HDen [cm^-3] 
+    real, allocatable &
+         &:: density(:,:)               ! abundance*ionDensity*HDen [cm^-3]
 
     real, save :: log10Ne               ! log10(Ne) at this cell
     real, save :: log10Te               ! log10(Te) at this cell
     real, save :: sqrTeUsed             ! sqr(Te) at this cell
     real, save :: eDenFFSum=0.          ! sum of heavy elements free electrons
-    
+
 
     contains
 
@@ -28,7 +28,7 @@ module ionization_mod
 
         integer, intent(in) :: ix, iy, iz    ! pointers to cell in the x,y,z grid
 
-        logical, save :: firstLg=.true.      ! first time?        
+        logical, save :: firstLg=.true.      ! first time?
 
         type(grid_type), intent(inout) :: grid
 
@@ -41,11 +41,11 @@ module ionization_mod
         ! check whether this cell is outside the nebula
         if (grid%active(ix,iy,iz) <= 0) return
 
-        if (firstLg) then        
+        if (firstLg) then
            allocate(density(nElements, nStages), stat=err)
            if (err /= 0) then
               print*, "! ionizationDriver: can't allocate grid memory"
-              stop 
+              stop
            end if
         end if
 
@@ -75,44 +75,44 @@ module ionization_mod
                 end if
 
                 density(n, i) = ionDenUsed(elementXref(n), i)*grid%elemAbun(grid%abFileIndex(ix,iy,iz),n)*&
-                     & grid%Hden(grid%active(ix, iy, iz))                
+                     & grid%Hden(grid%active(ix, iy, iz))
            end do
         end do
 
         ! initialize arrays if this is the first time the procedure is called
         if (firstLg) then
-            allocate(log10nuArray(nbins), stat = err)                                                  
-            if (err /= 0) then                     
-                print*, "! ionizationDriver: can't allocate grid memory"                    
+            allocate(log10nuArray(nbins), stat = err)
+            if (err /= 0) then
+                print*, "! ionizationDriver: can't allocate grid memory"
                 stop
-            end if  
+            end if
             allocate(contBoltz(nbins), stat = err)
             if (err /= 0) then
                 print*, "! ionizationDriver: can't allocate grid memory"
                 stop
             end if
             allocate(gauntFF(nbins), stat = err)
-            if (err /= 0) then 
+            if (err /= 0) then
                 print*, "! ionizationDriver: can't allocate grid memory"
                 stop
             end if
-            allocate(gauntFFHeII(nbins), stat = err)                                                  
-            if (err /= 0) then                     
-                print*, "! ionizationDriver: can't allocate grid memory"                    
+            allocate(gauntFFHeII(nbins), stat = err)
+            if (err /= 0) then
+                print*, "! ionizationDriver: can't allocate grid memory"
                 stop
-            end if  
+            end if
             allocate(FFOpacity(nbins), stat = err)
             if (err /= 0) then
                 print*, "! ionizationDriver: can't allocate grid memory"
-                stop 
+                stop
             end if
- 
+
             contBoltz = 0.
             FFOpacity = 0.
             gauntFF = 0.
             gauntFFHeII = 0.
-            log10nuArray = log10(nuArray)    
-            
+            log10nuArray = log10(nuArray)
+
             firstLg = .false.
 
        end if
@@ -120,7 +120,7 @@ module ionization_mod
         ! re-evaluate gaunt factors and boltzmann factors
         call BoltGaunt()
 
-        ! (re)evauate the sum of heavy elements free electrons density  
+        ! (re)evauate the sum of heavy elements free electrons density
          call eDenSum()
 
         ! reevaluate all opacities if new ionization
@@ -129,12 +129,12 @@ module ionization_mod
     end subroutine ionizationDriver
 
 
-    ! this subroutine evaluates boltzmann  factors for the continuum 
+    ! this subroutine evaluates boltzmann  factors for the continuum
     ! and related variables
     subroutine BoltGaunt()
         implicit none
 
-        ! local variables 
+        ! local variables
         integer :: i                            ! counter
         integer :: iflag                        ! status flag returned by getGauntFF
         integer :: max                          ! upper nu limit given by 0 exp
@@ -155,8 +155,8 @@ module ionization_mod
             end do
 
             ! set max
-            max = i 
- 
+            max = i
+
             ! zero out the remainder
             do i = max, nbins
                 contBoltz(i) = 0.
@@ -168,7 +168,7 @@ module ionization_mod
         if ( abs(1. - TeOld2/TeUsed) > 0.10 ) then
             call getGauntFF(0., log10Te, log10nuArray, gauntFF, iflag)
             ! following is for ionized helium
-            call getGauntFF(0.30103, log10Te, log10nuArray, gauntFFHeII, iflag) 
+            call getGauntFF(0.30103, log10Te, log10nuArray, gauntFFHeII, iflag)
             TeOld2 = TeUsed
         end if
     end subroutine BoltGaunt
@@ -183,24 +183,24 @@ module ionization_mod
     ! where U = h*nu/k*T and gams = Z^2 * Ryd / k*T. To obtain the stated
     ! accuracy the full number of significant figures must be retained.
     !
-    ! this subroutine uses a two-dimensional chebyshev epansion computed 
-    ! from expressions given bu Karzas and Latter (ApJSuppl., V.6, P.167, 
+    ! this subroutine uses a two-dimensional chebyshev epansion computed
+    ! from expressions given bu Karzas and Latter (ApJSuppl., V.6, P.167,
     ! 1961) augmented by various limiting forms of energy-specific gaunt-
     ! factors.
     ! D.G.Hummer, Jila, May 1987. ApJ 327, 477
     ! modified with correct limits, J Ferguson, July 94
-    ! modified for MOCASSIN by B Ercolano (Ercolano et al 2003, MNRAS 340, 1136) 
+    ! modified for MOCASSIN by B Ercolano (Ercolano et al 2003, MNRAS 340, 1136)
     subroutine getGauntFF(z, log10Te, xlf, g, iflag)
         implicit none
 
-        integer, intent(out) :: iflag                ! explanation given in each area        
+        integer, intent(out) :: iflag                ! explanation given in each area
 
         real, intent(in) :: log10Te                  ! log10(Te)
         real, intent(in) ::  z                       ! log10 of nuclear charge
         real, dimension(:), intent(in) :: xlf        ! array of log10(h*nu/Ryd)
         real, dimension(size(xlf)), intent(out) :: g ! array of values of g
 
-        ! local variables 
+        ! local variables
         integer ::  i, ir, j
 
         real, dimension(11) :: b
@@ -215,7 +215,7 @@ module ionization_mod
         real :: u                                    ! U = h*nu/k*T
         real :: xlrkt                                ! log(ryd/kt)
 
-        dd = (/8.986940175e+00, -4.009515855e+00,  8.808871266e-01,& 
+        dd = (/8.986940175e+00, -4.009515855e+00,  8.808871266e-01,&
 &          2.640245111e-02, -4.580645915e-02, -3.568055702e-03,&
 &          2.827798067e-03,  3.365860195e-04, -8.006936989e-01,&
 &          9.466021705e-01,  9.043402532e-02, -9.608451450e-02,&
@@ -223,7 +223,7 @@ module ionization_mod
 &         -1.078209202e-03, -3.781305103e-01,  1.102726332e-01,&
 &         -1.543619180e-02,  8.310561114e-03,  2.179620525e-02,&
 &          4.259726289e-03, -4.181588794e-03, -1.770208330e-03,&
-&          1.877213132e-02, -1.004885705e-01, -5.483366378e-02,& 
+&          1.877213132e-02, -1.004885705e-01, -5.483366378e-02,&
 &         -4.520154409e-03,  8.366530426e-03,  3.700273930e-03,&
 &          6.889320423e-04,  9.460313195e-05,  7.300158392e-02,&
 &          3.576785497e-03, -4.545307025e-03, -1.017965604e-02,&
@@ -238,14 +238,14 @@ module ionization_mod
 &         -2.096101038e-04,  1.553822487e-03,  1.509584686e-03,&
 &          6.212627837e-04,  4.098322531e-03,  1.635218463e-03,&
 &         -5.918883504e-04, -2.333091048e-03, -2.484138313e-03,&
-&         -1.359996060e-03, -5.371426147e-05,  5.553549563e-04,& 
+&         -1.359996060e-03, -5.371426147e-05,  5.553549563e-04,&
 &          3.837562402e-05,  2.938325230e-03,  2.393747064e-03,&
 &          1.328839809e-03,  9.135013312e-05, -7.137252303e-04,&
 &         -7.656848158e-04, -3.504683798e-04, -8.491991820e-04,&
 &         -3.615327726e-04,  3.148015257e-04,  8.909207650e-04,&
 &          9.869737522e-04,  6.134671184e-04,  1.068883394e-04,&
 &         -2.046080100e-04/)
-      
+
         d = reshape( dd, (/8, 11/) )
 
         ! compute temperature dependent coeffcients for U expansion
@@ -275,7 +275,7 @@ module ionization_mod
             end do
             c(j) = 0.25*(b(1)-b(3))
         end do
-        
+
         ! sum U expansion
         ! loop through energy at fixed temperature
         do i = 1, size(xlf)
@@ -284,7 +284,7 @@ module ionization_mod
             ! criteria set by hummer limits. it is a wedge from
             ! log(hnu),log(T)) =
             ! (-5,2.5) to (-5,4) to (-1,8) to (4,8) to (-1.5,2.5).
-            ! these limits correspond to the gamma^2 and U limits 
+            ! these limits correspond to the gamma^2 and U limits
             ! given above
             if(abs(txu)<=2.0) then
                 ir = 6
@@ -329,10 +329,10 @@ module ionization_mod
         end do
     end subroutine getGauntFF
 
-    
+
     ! this subroutine sums up the free electron density over all species
     subroutine eDenSum()
-        implicit none 
+        implicit none
 
         ! local variables
         integer :: n, i                                           ! counters
@@ -359,8 +359,8 @@ module ionization_mod
         ! (re) initialize opacity arrays
         opacity = 0.
 
-        ! hydrogen helium and heavy element brems (free-free) opacity, 
-        ! assuming hydrogen ff gaunt factors 
+        ! hydrogen helium and heavy element brems (free-free) opacity,
+        ! assuming hydrogen ff gaunt factors
         ! xSecArray is missing factor of 1.e-20 to avoid underflow.
         fac1 = (NeUsed/1.e10) * ( (density(1,2) + density(2, 2) + &
              & 4.*density(2, 3) + eDenFFSum)/1.e10 ) / sqrTeUsed
@@ -396,8 +396,8 @@ module ionization_mod
        call inOpacity(HlevXSecP(1), HlevNuP(1), nbins, density(1,1), 0.)
 
        ! NOTE: the opacity due to the excited levels of HI, HeI and HeII is
-       ! neglected for now as it requires calculations of the densities of 
-       ! the excited levels populations -> 4th argument in inOpacity is density 
+       ! neglected for now as it requires calculations of the densities of
+       ! the excited levels populations -> 4th argument in inOpacity is density
        ! of the lower level [cm^-3]
 
        ! helium singlets HeI (ground special because it extends to the high energy limit)
@@ -412,20 +412,20 @@ module ionization_mod
 
        contains
 
-         ! this subroutine enters the total phoo cross section 
+         ! this subroutine enters the total phoo cross section
          ! for all subshells into opacity array. it drives inOpacity
-         ! to put in total opacities            
+         ! to put in total opacities
          subroutine putOpacity(nElem)
              implicit none
 
              integer, intent(in)               :: nElem
 
              ! local variables
-             integer :: nIon                  ! counter  
+             integer :: nIon                  ! counter
              integer :: nuLowP, nuHighP       ! pointers to lower and highert limit of energy range
              integer :: nShell                ! counter
              integer :: xSecP                 ! pointer to x scetion in xSecArray
-        
+
 
              do nIon = 1, min(nElem, nstages)
                  if ( density(nElem, nIon) > 0. ) then
@@ -442,9 +442,9 @@ module ionization_mod
              end do
           end subroutine putOpacity
 
-         ! this subroutine adds the opacity of individual species, 
+         ! this subroutine adds the opacity of individual species,
          ! it can include stimulated emission. the departure coefficient b
-         ! can be set to zero. 
+         ! can be set to zero.
          subroutine inOpacity(xSecP, nuLowP, nuHighP, den, b)
              implicit none
 
@@ -480,8 +480,8 @@ module ionization_mod
 
 
         end subroutine inOpacity
-    
-    end subroutine addOpacity       
+
+    end subroutine addOpacity
 
 end module ionization_mod
 

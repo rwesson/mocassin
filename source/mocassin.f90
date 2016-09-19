@@ -1,4 +1,4 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 ! Department of Physics and Astronomy
 ! University College London
 ! Gower Street
@@ -11,7 +11,7 @@
 ! modify it under the terms of the GNU General Public License
 ! as published by the Free Software Foundation; either version 2
 ! of the License, or (at your option) any later version. This requires
-! that any chnages or improvements made to the program should also be 
+! that any chnages or improvements made to the program should also be
 ! made freely available.
 
 ! This program is distributed in the hope that it will be useful,
@@ -23,11 +23,11 @@
 ! along with this program; if not, write to the Free Software
 ! Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-!  
-! MoCaSSiN = MOnte CArlo SImulationS of Nebulae 
+!
+! MoCaSSiN = MOnte CArlo SImulationS of Nebulae
 ! Version 2.02
 ! this is the main driver of the simulation
-!  
+!
 program MoCaSSiN
     use common_mod
     use constants_mod
@@ -46,7 +46,7 @@ program MoCaSSiN
 
     real            :: test                   ! test
     integer         :: i, iGrid               ! allocation error status
-    real, dimension(2) :: timing              ! cputimer 
+    real, dimension(2) :: timing              ! cputimer
     integer         :: nhours, nminutes, nseconds
 
     call cpu_time(timing(1))

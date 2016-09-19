@@ -1,4 +1,4 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 !
 ! Version 2.02
 module vector_mod
@@ -46,7 +46,7 @@ module vector_mod
 
   interface operator(==)
       module procedure equivalence
-  end interface 
+  end interface
 
   ! notEquivalence(/=)
 
@@ -54,8 +54,8 @@ module vector_mod
       module procedure notEquivalence
   end interface
 
-  ! note that the following two operators are costumised 
-  ! for use in the mocassinPlot routines, these are only 
+  ! note that the following two operators are costumised
+  ! for use in the mocassinPlot routines, these are only
   ! meaningful in the context of this program
 
   ! >=
@@ -64,8 +64,8 @@ module vector_mod
      module procedure greaterEqual
   end interface
 
-  ! <= 
-  
+  ! <=
+
   interface operator(<=)
      module procedure lessEqual
   end interface
@@ -160,7 +160,7 @@ contains
   end function divideVec
 
   ! add two vectors
-  
+
   type(vector) function add(a,b)
     type(vector), intent(in) :: a
     type(vector), intent(in) :: b
@@ -186,7 +186,7 @@ contains
   logical function equivalence(a,b)
     type(vector), intent(in) :: a
     type(vector), intent(in) :: b
-    
+
     if( (a%x == b%x) .and.&
          & (a%y == b%y) .and.&
          & (a%z == b%z) ) then
@@ -197,7 +197,7 @@ contains
   end function equivalence
 
   logical function greaterEqual(a,b)
-    type(vector), intent(in) :: a 
+    type(vector), intent(in) :: a
     type(vector), intent(in) :: b
 
     if( (a%z <= b%z) .and.&
@@ -210,7 +210,7 @@ contains
   end function greaterEqual
 
   logical function lessEqual(a,b)
-    type(vector), intent(in) :: a 
+    type(vector), intent(in) :: a
     type(vector), intent(in) :: b
 
     if( (a%z >= b%z) .and.&
@@ -230,7 +230,7 @@ contains
     if( (a%x == b%x) .and.&
          & (a%y == b%y) .and.&
          & (a%z == b%z) ) then
-      notEquivalence = .false.   
+      notEquivalence = .false.
     else
       notEquivalence = .true.
     end if
@@ -238,12 +238,12 @@ contains
 
 
   ! get polar form of a cartesian vector
-  
+
   subroutine getPolar(vec, r, theta, phi)
 
     implicit none
     type(vector) :: vec
-    real :: r, theta, phi, cosTheta 
+    real :: r, theta, phi, cosTheta
 
     r = modulus(vec)
     if ((vec%y == 0.) .and. (vec%x == 0)) then
@@ -280,7 +280,7 @@ contains
     cosb = cos(b)
     sinb = sin(b)
 
-    rotateX%x = a%x 
+    rotateX%x = a%x
     rotateX%y = cosb * a%y + sinb * a%z
     rotateX%z =-sinb * a%y + cosb * a%z
 

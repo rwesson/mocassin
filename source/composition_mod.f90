@@ -1,9 +1,9 @@
-! Copyright (C) 2005 Barbara Ercolano 
+! Copyright (C) 2005 Barbara Ercolano
 !
 ! Version 2.02
 module composition_mod
     use constants_mod
-    use common_mod   
+    use common_mod
 
     contains
 
@@ -15,16 +15,16 @@ module composition_mod
         ! local variables
         integer :: icount            ! counter
         integer :: nelem             ! counter
-        integer :: ios               ! I/O error status     
+        integer :: ios               ! I/O error status
         integer :: i,j               ! counters
-        integer :: off               ! off everywhere? 
+        integer :: off               ! off everywhere?
 
         ! open file containing composition data
 
 
-        do i = 1, nAbComponents 
+        do i = 1, nAbComponents
 
-           close(80)        
+           close(80)
            open(unit=80, action="read", file = abundanceFile(i), status="old", position="rewind", &
 &                                                     iostat = ios)
            if (ios /= 0) then
@@ -47,8 +47,8 @@ module composition_mod
 
         ! initialise nElementsUsed
         nElementsUsed = nElements
-        icount = 1         
-        
+        icount = 1
+
         ! check what elements can be switched off
         do nelem = 1, nElements
            off = 1
@@ -65,12 +65,12 @@ module composition_mod
            else
               lgElementOn(nelem) = .false.
               nElementsUsed = nElementsUsed - 1
-              elementXref(nelem) = 0            
+              elementXref(nelem) = 0
            end if
-           
+
         end do
-        
+
     end subroutine setComposition
-      
+
 end module composition_mod
 
