@@ -2247,6 +2247,7 @@ module grid_mod
                     print*, "! setSubGrid: can't allocate grid memory,ionDen"  
                     stop
                  end if
+if (allocated(ionDenUsed)) deallocate (ionDenUsed)
                  allocate(ionDenUsed(1:nElementsUsed, 1:nstages), stat = err)
                  if (err /= 0) then
                     print*, "! setSubGrid: can't allocate grid memory,ionDenUsed"

@@ -7,6 +7,7 @@ module emission_mod
     use continuum_mod
     use grid_mod
     use xSec_mod
+    use elements_mod
 
     type(resLine_type), allocatable         :: resLine(:)  ! resonant lines
 
@@ -1988,22 +1989,12 @@ module emission_mod
     double precision   :: sumN                      ! normalization factor for populations
     double precision        :: sqrTe                     ! sqrt(Te)
     
-    double precision, allocatable          :: a(:,:)      ! transition rates array
-    double precision, allocatable          :: cs(:,:)     ! collisional strengths array
-    double precision, allocatable          :: e(:)        ! energy levels array
-    double precision, allocatable          :: qeff(:,:)   ! q eff  array
-    double precision, allocatable          :: qom(:,:,:)  ! qom array
-    double precision, allocatable          :: tnij(:,:)   ! tnij array
     double precision, allocatable          :: x(:,:)      ! matrix arrays
     double precision, allocatable          :: y(:)        !       
     double precision, allocatable          :: n(:), n2(:) ! level population arrays
 
     real                 :: a_r(4),a_d(5),z,br       !
-    real, allocatable     :: alphaTotal(:)             ! maximum 100-level ion
     real                 :: qomInt                    ! interpolated value of qom
-    real, allocatable     :: logTemp(:)                ! log10 temperature points array
-    real, allocatable     :: qq(:)                     ! qq array
-    real, allocatable     :: qq2(:)                    ! 2nd deriv qq2 array
 
     real, intent(in) &
          & :: Te, &    ! electron temperature [K]
@@ -2014,6 +2005,7 @@ module emission_mod
     integer  :: gx               ! stat weight reader  
     integer  :: i, j, k, l, iT   ! counters/indeces
     integer  :: i1, j1, i2, j2, i3, j3  ! counters/indeces
+    integer  :: elem, ion       ! location of atomic data in the array
 
     integer  :: ios              ! I/O error status
     integer  :: nLev             ! number of levels in atomic data file
@@ -2037,323 +2029,101 @@ module emission_mod
     character(len = *), &
          & intent(in)  :: file_name   ! ionic data file name
 
+    do i=3,nelements
+      do j=1,10
+        if (trim(atomic_data_array(i,j)%ion) .eq. trim(file_name)) then
+          goto 888
+        endif
+      enddo
+    enddo
+
+888 elem = i
+    ion = j
 
     sqrTe   = sqrt(Te)
-    log10Te = log10(Te) 
+    log10Te = log10(Te)
 
-    ! open file containing atomic data
-    close(11)
-    open(unit=11,  action="read", file = PREFIX//"/share/mocassin/"//file_name, status="old", position="rewind", &
-         & iostat = ios)
-
-    if (ios /= 0) then
-       print*, "! equilibrium: can't open file: ", PREFIX,"/share/mocassin/",file_name
-       stop
-    end if
-
-    ! read reference heading
-    read(11, *) numLines
-    do i = 1, numLines
-       read(11, '(78A1)') text
-
-    end do
-    
-    ! read number of levels and temperature points available
-    read(11, *) nLev, nTemp
-
-    if (nLev > size(fLineEm(1,:))) then
+    if (atomic_data_array(elem,ion)%nlevs > size(fLineEm(1,:))) then
        print*, '! equilibrium: model ion has more levels than &
-            &allowed by nForLevels - please enlarge', nLev, &
+            &allowed by nForLevels - please enlarge', atomic_data_array(elem,ion)%nlevs, &
             & size(fLineEm(1,:)),  nForLevels, file_name
        stop
     end if
-
-    ! allocate space for labels array
-    allocate(label(nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate label array memory"
-       stop
-    end if
-    
-    ! allocate space for tempertaure points array
-    allocate(logTemp(nTemp), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate logTemp array memory"
-       stop
-    end if
-    
-    ! allocate space for transition probability  array
-    allocate(a(nLev, nLev), stat = err)
-    if (err /= 0) then 
-       print*, "! equilibrium: can't allocate a array memory"
-       stop
-    end if
-
-    ! allocate space for transition probability  array
-    allocate(alphaTotal(nLev), stat = err)
-    if (err /= 0) then 
-       print*, "! equilibrium: can't allocate a array memory"
-       stop
-    end if
-    
-    ! allocate space for energy levels array
-    allocate(e(nLev), stat = err)
-    if (err /= 0) then 
-       print*, "! equilibrium: can't allocate e array memory"
-       stop
-    end if
-    
-    ! allocate space for statistical weights array
-    allocate(g(nLev), stat = err)
-    if (err /= 0) then 
-       print*, "! equilibrium: can't allocate g array memory"
-       stop
-    end if
-    
-    ! allocate space for qom array
-    allocate(qom(nTemp, nLev, nLev), stat = err)
-    if (err /= 0) then 
-       print*, "! equilibrium: can't allocate qom array memory"
-       stop
-    end if
-    
-    ! allocate space for collisional strengths array
-    allocate(cs(nLev, nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate cm array memory"
-       stop
-    end if
-    
-    ! allocate space for q eff array
-    allocate(qeff(nLev, nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate qeff array memory"
-       stop
-    end if
-        
-    ! allocate space for tnij array
-    allocate(tnij(nLev, nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate tnij array memory"
-       stop
-    end if
-
-    ! allocate space for x array
-
-    allocate(x(nLev, nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate x array memory"
-       stop
-    end if
-         
-    ! allocate space for y array
-    allocate(y(nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate y array memory"
-       stop
-    end if
-    
-    ! allocate space for qq array
-    allocate(qq(nTemp), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate qq array memory"
-       stop
-    end if
-    
-    ! allocate space for qq2 array
-    allocate(qq2(nTemp), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate qq2 array memory"
-       stop
-    end if
-    
-    ! allocate space for n array
-    allocate(n(nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate n array memory"
-       stop
-    end if
-    
-    ! allocate space for n2 array
-    allocate(n2(nLev), stat = err)
-    if (err /= 0) then
-       print*, "! equilibrium: can't allocate n2 array memory"
-       stop
-    end if
-
-    ! zero out arrays
-    a = 0.
-    cs = 0.
-    e = 0.
-    fLineEm = 0.
-    g = 0
-    n = 0.
-    n2 = 0.
-    qom = 0.
-    qeff = 0.
-    qq = 0.
-    qq2 = 0.
-    logTemp = 0.
-    tnij = 0.
-    x = 0.d0
-    y = 0.
-    ! read labels
-    do i = 1, nLev
-       read(11, '(A20)') label(i)
-       
-    end do
-
-    ! read temperetaure points and get logs
-    do i = 1, nTemp
-       read(11, *) logTemp(i)
-       logTemp(i) = log10(logTemp(i))
-
-    end do
-    
-    ! read iRats
-    read(11, *) iRats
-
-    k=0
-    if (iRats == 1) then
-       do i = 1, safeLim
-          ! read in data
-          read(11, *) ilow(2), iup(2), (qom(k,ilow(2),iup(2)), k = 1, nTemp)     
-          if (ilow(2)>=nLev-1) then
-!             print*,ilow(2), iup(2), nLev
-!             print*, (qom(k,ilow(2),iup(2)), k = 1, nTemp)
-             exit
-          end if
-       end do
-
-       do k =1 , 2502
-          
-          read(11, *) i, j, ax,  i1, j1, ax1,  i2, j2, ax2,  i3, j3, ax3
-          
-          a(i,j) = ax
-          a(i1,j1) = ax1
-          a(i2,j2) = ax2   
-          a(i3,j3) = ax3
-       end do
-       read(11, *) i, j, ax,  i1, j1, ax1,  i2, j2, ax2
-
-       a(i,j) = ax
-       a(i1,j1) = ax1
-       a(i2,j2) = ax2   
-       
-    else if (iRats == 0) then
-       k=0
-       do i = 1, safeLim
-          ! read in data
-          read(11, *) ilow(2), iup(2), qx
-          
-          ! check if end of qx dat
-          if (qx == 0.d0) exit
-          
-          ! ilow(2) always starts with a non zero value
-          ! so the else condition is true at first and k initialized
-          if (ilow(2) == 0) then
-             ilow(2) = ilow(1)
-             k = k + 1
-          else 
-             ilow(1) = ilow(2)
-             k = 1
-          end if
-          
-          ! the same as above
-          if (iup(2) == 0) then
-             iup(2) = iup(1)                                                  
-          else
-             iup(1) = iup(2)
-          end if
-          
-          qom(k, ilow(2), iup(2)) = qx 
-          
-       end do
-
-
-       ! read in transition probabilities
-       do k = 1, nLev-1
-          do l = k+1, nLev
-             read(11, *) i, j, ax
-          
-             a(j,i) = ax
-          end do
-       end do
-    end if
-
-    ! read statistical weights, energy levels [1/cm]
-    do j = 1, nLev
-       read(11, *) i, gx, ex
-       
-       g(i) = gx
-       e(i) = ex
-    end do
+    br = atomic_data_array(elem,ion)%br
+    z = atomic_data_array(elem,ion)%z
+    a_r = atomic_data_array(elem,ion)%a_r
+    a_d = atomic_data_array(elem,ion)%a_d
+    nlev = atomic_data_array(elem,ion)%nlevs
+    ntemp = atomic_data_array(elem,ion)%ntemps
 
     ! read power law fit coefficients [e-13 cm^3/s]
     ! and calculate total recombination coefficient
     ! (direct + cascades)
-    alphaTotal = 0.
-    
+    atomic_data_array(elem,ion)%alphaTotal = 0.
+
     do j = 2, nLev
 !       read(unit=11,fmt=*,iostat=ios) a_fit, b_fit
-       read(unit=11,fmt=*,iostat=ios) br,z,a_r(:),a_d(:) !a_fit, b_fit
-       if (ios<0) then
+       if (atomic_data_array(elem,ion)%br .le. 0.d0) then
           exit
        else
-          alphaTotal(1) = 1.
+         atomic_data_array(elem,ion)%alphaTotal(1) = 1.
        end if
-                  
 !       alphaTotal(j) = a_fit * (TeUsed/1.e4)**(b_fit) * 1.e-13
-       alphaTotal(j)=1.e-13*br*z*a_r(1)*(Te*1.e-4/z**2)**a_r(2)/(1.+a_r(3)*&
-            & (Te*1.e-4/Z**2)**a_r(4))+1.0e-12*br*(a_d(1)& 
+       atomic_data_array(elem,ion)%alphaTotal(j)=1.e-13*br*z*a_r(1)*(Te*1.e-4/z**2)**a_r(2)/(1.+a_r(3)*&
+            & (Te*1.e-4/Z**2)**a_r(4))+1.0e-12*br*(a_d(1)&
             & /(Te*1.e-4)+a_d(2)+a_d(3)*Te*1.e-4+a_d(4)*(Te*1.e-4)**2)*&
-            & (Te*1.e-4)**(-1.5)*exp(-a_d(5)*1.e4/Te)              
-
+            & (Te*1.e-4)**(-1.5)*exp(-a_d(5)*1.e4/Te)
     end do
 
-    ! close atomic data file 
-    close(11)
-    
     ! form matrices
     ! set up qeff
     do i = 2, nLev
        do j = i, nLev
           do iT = 1, nTemp
-             qq(iT) = real(qom(iT, i-1, j))
+             atomic_data_array(elem,ion)%qq(iT) = real(atomic_data_array(elem,ion)%qom(iT, i-1, j))
+
           end do
-          
+
           if (nTemp == 1) then  
              ! collisional strength available only for one temperature - assume constant
-             qomInt = qq(1)
+             qomInt = atomic_data_array(elem,ion)%qq(1)
           else if (nTemp == 2) then
              ! collisional strength available only for one temperature - linear interpolation
-             qomInt = qq(1) + &
-                  (qq(2)-qq(1)) / (logTemp(2)-logTemp(1)) * (log10Te - logTemp(1))
+             qomInt = atomic_data_array(elem,ion)%qq(1) + &
+                  (atomic_data_array(elem,ion)%qq(2)-atomic_data_array(elem,ion)%qq(1)) / (atomic_data_array(elem,ion)%logTemp(2)-atomic_data_array(elem,ion)%logTemp(1)) * (log10Te - atomic_data_array(elem,ion)%logTemp(1))
           else
              ! set up second derivatives for spline interpolation
-             call spline(logTemp, qq, 1.e30, 1.e30, qq2)
-             
+             call spline(atomic_data_array(elem,ion)%logTemp, atomic_data_array(elem,ion)%qq, 1.e30, 1.e30,  atomic_data_array(elem,ion)%qq2)
              ! get interpolated qom for level
-             call splint(logTemp, qq, qq2, log10Te, qomInt)
+             call splint(atomic_data_array(elem,ion)%logTemp, atomic_data_array(elem,ion)%qq, atomic_data_array(elem,ion)%qq2, log10Te, qomInt)
           end if
-          
+
           ! set collisional strength
-          cs(i-1, j) = qomInt
-          
+          atomic_data_array(elem,ion)%cs(i-1, j) = qomInt
+
           ! the calculation constant here is the energy [erg] 
                 ! allocated to unit wavenumber [1/cm] divided by the 
           ! boltzmann constant k.
           constant = 1.4388463d0
           ! exponential factor 
-          delTeK = (e(i-1)-e(j))*constant
+          delTeK = (atomic_data_array(elem,ion)%e(i-1)-atomic_data_array(elem,ion)%e(j))*constant
           expFac = exp( delTeK/Te )
-          qeff(i-1, j) = 8.63d-6 * cs(i-1, j) * expFac /&
-               &(g(i-1)*sqrTe)
-          qeff(j, i-1) = 8.63d-6 * cs(i-1, j) / (g(j)*sqrTe)
+
+          atomic_data_array(elem,ion)%qeff(i-1, j) = 8.63d-6 * atomic_data_array(elem,ion)%cs(i-1, j) * expFac /&
+               &(atomic_data_array(elem,ion)%g(i-1)*sqrTe)
+          atomic_data_array(elem,ion)%qeff(j, i-1) = 8.63d-6 * atomic_data_array(elem,ion)%cs(i-1, j) / (atomic_data_array(elem,ion)%g(j)*sqrTe)
+
        end do
     end do
 
-    
+    allocate(x(nlev,nlev))
+    allocate(y(nlev))
+    allocate(n(nlev))
+
+    x=0.
+    y=0.
+    n=0.
+
     ! set up x
     do i= 2, nLev
        do j = 1, nLev
@@ -2365,21 +2135,22 @@ module emission_mod
 
           if (j /= i) then
 
-             x(i, j) = x(i, j) + Ne*qeff(j, i)
-             x(i, i) = x(i, i) - Ne*qeff(i, j)
+             x(i, j) = x(i, j) + Ne*atomic_data_array(elem,ion)%qeff(j, i)
+             x(i, i) = x(i, i) - Ne*atomic_data_array(elem,ion)%qeff(i, j)
              if (j > i) then
 
-                x(i, j) = x(i, j) + a(j, i)
+                x(i, j) = x(i, j) + atomic_data_array(elem,ion)%a(j, i)
              else 
 
-                x(i, i) = x(i, i) - a(i, j)
+                x(i, i) = x(i, i) - atomic_data_array(elem,ion)%a(i, j)
              end if
           end if
        end do
-       
+
        ! when coefficients are available use the following:
 
-       y(i) = -Ne*ionDenUp*alphaTotal(i)
+       y(i) = -Ne*ionDenUp*atomic_data_array(elem,ion)%alphaTotal(i)
+
     end do
 
     call luSlv(x, y, nLev)
@@ -2397,9 +2168,9 @@ module emission_mod
     ! now find emissivity and wavelengths
     do i = 1, nLev-1
        do j = i+1, nLev
-          if (a(j,i) /= 0.d0) then
-             Eji = (e(j)-e(i))
-             fLineEm(i,j) = a(j,i) * Eji * n(j)
+          if (atomic_data_array(elem,ion)%a(j,i) /= 0.d0) then
+             Eji = (atomic_data_array(elem,ion)%e(j)-atomic_data_array(elem,ion)%e(i))
+             fLineEm(i,j) = atomic_data_array(elem,ion)%a(j,i) * Eji * n(j)
              if (Eji>0.) then
                 if (present(wav)) wav(i,j) = 1.e8/Eji
              else
@@ -2409,23 +2180,9 @@ module emission_mod
        end do
     end do
 
-    ! deallocate arrays
-    if( allocated(alphaTotal) ) deallocate(alphaTotal)
-    if( allocated(label) ) deallocate(label)
-    if( allocated(logTemp) ) deallocate(logTemp)
-    if( allocated(a) ) deallocate(a)
-    if( allocated(cs) ) deallocate(cs)
-    if( allocated(n) ) deallocate(n)
-    if( allocated(n2) ) deallocate(n2)
-    if( allocated(qeff) ) deallocate(qeff) 
-    if( allocated(qq) ) deallocate(qq)
-    if( allocated(qq2) ) deallocate(qq2)
-    if( allocated(tnij) ) deallocate(tnij) 
-    if( allocated(x) ) deallocate(x) 
-    if( allocated(y) ) deallocate(y) 
-    if( allocated(e) ) deallocate(e)
-    if( allocated(g) ) deallocate(g)
-    if( allocated(qom) ) deallocate(qom)
+    deallocate(x)
+    deallocate(y)
+    deallocate(n)
 
   end subroutine equilibrium
 
