@@ -495,8 +495,7 @@ module elements_mod
        integer, parameter :: safeLim = 100000 ! loop safety limit
 
        close(17)
-       open(file=PREFIX//'/share/mocassin/data/fileNames.dat', action="read", unit=17, status='old', &
-            & position='rewind', iostat=ios)
+       open(file=PREFIX//'/share/mocassin/data/fileNames.dat', action="read", unit=17, status='old', position='rewind', iostat=ios)
 
        if (ios/=0) then
 
@@ -633,7 +632,6 @@ module elements_mod
                       do k = 1, atomic_data_array(elem,ion)%NLEVS-1
                          do l = k+1, atomic_data_array(elem,ion)%NLEVS
                             read(121, *) i, j, ax
-
                             atomic_data_array(elem,ion)%a(j,i) = ax
                          end do
                       end do
@@ -707,8 +705,7 @@ module elements_mod
              if(.not.lgElementOn(elem)) exit
 
              close(18)
-             open(file=PREFIX//"/share/mocassin/"//dataFile(elem,ion), unit=18, action="read", status='old', &
-                  & position='rewind', iostat=ios)
+             open(file=PREFIX//"/share/mocassin/"//dataFile(elem,ion), unit=18, action="read", status='old', position='rewind', iostat=ios)
 
              if (ios == 0) then
 

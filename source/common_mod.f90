@@ -466,6 +466,8 @@ module common_mod
     integer            :: nSpeciesMax      ! max number of grain species
     integer            :: nResLines=0      ! number of resonant lines to be transfered
 
+! CEL atomic data
+
     type atomic_data
         integer :: NTEMPS
         integer :: NLEVS
@@ -486,5 +488,42 @@ module common_mod
     end type atomic_data
 
     type(atomic_data), dimension(3:nElements, 1:10) :: atomic_data_array
+
+! HeI2phot
+
+    real, dimension(41) :: Ay_dat        ! data point in Ay (rates) [1/s]
+    real, dimension(41) :: y_dat         ! data point in y (=nu/nu0)
+
+! H I emissivity
+! units are [e-25erg/s/N_gas]
+    double precision, dimension(3:30, 2:8) :: HIRecLineData ! data
+    double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines
+
+! He II
+
+    integer, parameter:: NHeIILyman = 4     ! Number of HeII Lym lines included
+    real, dimension(NHeIILyman) :: HeIILymanData     ! HeII Lyman lines em.  [e-25ergs*cm^3/s]
+    real, dimension(NHeIILyman) :: HeIILymanNu       ! HeII Lyman lines freq. [Ryd]
+    double precision, dimension(3:30, 2:16) :: HeIIRecLineData ! HeII rec line data (Storey & Hummer 1995)
+    double precision, dimension(3:30, 2:16) :: HeIIRecLines    ! emissivity from HeII rec lines
+
+! dielectronic recombination
+
+    type direcdata
+        integer :: elem   ! atomic number
+        integer :: n      ! number of electrons
+        real :: a,b,c,d,f ! fitting coefficients
+        integer :: g      ! temperature flag
+    end type direcdata
+
+    type(direcdata), dimension(25) :: direc_coeffs
+
+    type aldropequidata
+        integer :: elem   ! atomic number
+        integer :: n      ! number of electrons
+        real :: a,b,t0,t1 ! fitting coefficients
+    end type aldropequidata
+
+    type(aldropequidata), dimension(167) :: aldropequi_coeffs
 
 end module common_mod

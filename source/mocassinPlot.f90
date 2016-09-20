@@ -734,20 +734,6 @@ program MoCaSSiNplot
              & NeUsed*Lalpha
 
 
-        ! read in HeII recombination lines [e-25 ergs*cm^3/s]
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        close(95)
-        open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file: ",trim(PREFIX),"/share/mocassin/data/r2b0100.dat"
-            stop
-        end if
-        do iup = 30, 3, -1
-            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min(16, iup-1))
-        end do
-
-        close(95)
-
         ! calculate HeII 4686 [E-25 ergs*cm^3/s]
         HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)
         HeII4686 = HeII4686*NeUsed*grid3D(iG)%elemAbun(abFileIndexUsed,2)*ionDenUsed(elementXref(2),3)

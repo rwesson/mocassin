@@ -1703,8 +1703,7 @@ module update_mod
             ! and the dielectronic recombination data
             if (lgFirst) then
                 close(17)
-                open (unit=17, file=PREFIX//'/share/mocassin/data/radrec.dat', status='old',position='rewind', &
-                     & iostat = ios, action="read")
+                open (unit=17, file=PREFIX//'/share/mocassin/data/radrec.dat', status='old',position='rewind', iostat = ios, action="read")
 
                 do ion = 4, 30
                     if (ion /= 11) then
@@ -1783,93 +1782,54 @@ module update_mod
         subroutine dielectronic(diRec)
             implicit none
 
-            real, intent(out), dimension(nElements, nstages) &
-                 &:: diRec   ! total recombination coeffs
+            real, intent(out), dimension(nElements, nstages) :: diRec   ! total recombination coeffs
 
             ! local variables
 
-            integer              :: elem      ! atomic number
-            integer              :: ion       ! ionization stage
-            integer              :: n         ! number of electrons
-            integer              :: ios       ! I/O error status
-            integer              :: g         ! temperature flag
+            integer                             :: ion
+            real                                :: t         ! t = TeUsed/10000., t0,t1 are fitting par
+            real                                :: alpha
+            real, dimension(nElements, nstages) :: aldroPequi! high T dielec rec coeff by A&P73
 
-            real, dimension(nElements, nstages) :: &
-                                    aldroPequi! high T dielec rec coeff by A&P73
-
-            real                 :: a,b,c,d,f ! fitting coefficients
-            real                 :: t,t0,t1   ! t = TeUsed/10000., t0,t1 are fitting par
-            real                 :: alpha
+            aldroPequi = 0.
 
             t = TeUsed/10000.
 
             alpha = 0.
             aldroPequi=0.
 
-            close(18)
-            open (unit=18, file=PREFIX//'/share/mocassin/data/dielectronic.dat', status='old',position='rewind', &
-                 &iostat = ios, action="read")
-            do i = 1, 10000
-               read(unit=18, fmt=*, iostat=ios) elem, n, a, b, c, d, f, g
-               if (ios < 0) exit ! end of file reached
-               ion = elem + 1 - n
+            do i = 1, size(direc_coeffs)
+               ion = direc_coeffs(i)%elem + 1 - direc_coeffs(i)%n
 
                if (ion <= nstages) then
 
-                  if (g == 0) then
-                     diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2)*t**(-3./2.)*exp(-f/t)
-                  else if (g == 1) then
-                     if (TeUsed < 20000.) then
-                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2)*t**(-3./2.)*exp(-f/t)
-                     end if
-                  else if (g == 2) then
-                     if (TeUsed >= 20000.) then
-                        diRec(elem, ion) = (10.**(-12))*(a/t+b+c*t+d*t**2)*t**(-3./2.)*exp(-f/t)
-                     end if
+                  if (direc_coeffs(i)%g == 0) then
+                     diRec(direc_coeffs(i)%elem, ion) = (10.**(-12))*(direc_coeffs(i)%a/t+direc_coeffs(i)%b+direc_coeffs(i)%c*t+direc_coeffs(i)%d*t**2)*t**(-3./2.)*exp(-direc_coeffs(i)%f/t)
+                  else if (direc_coeffs(i)%g == 1 .and. TeUsed .lt. 20000.) then
+                     diRec(direc_coeffs(i)%elem, ion) = (10.**(-12))*(direc_coeffs(i)%a/t+direc_coeffs(i)%b+direc_coeffs(i)%c*t+direc_coeffs(i)%d*t**2)*t**(-3./2.)*exp(-direc_coeffs(i)%f/t)
+                  else if (direc_coeffs(i)%g == 2 .and. TeUsed .ge. 20000.) then
+                     diRec(direc_coeffs(i)%elem, ion) = (10.**(-12))*(direc_coeffs(i)%a/t+direc_coeffs(i)%b+direc_coeffs(i)%c*t+direc_coeffs(i)%d*t**2)*t**(-3./2.)*exp(-direc_coeffs(i)%f/t)
                   end if
                end if
             end do
-            close(18)
 
             ! calculate the high temperatures dielectronic recombination coeficients of
             ! Aldrovandi and Pequignot 1973
             t = TeUsed
 
-            close(17)
-            open (unit=17, file=PREFIX//'/share/mocassin/data/aldrovandi.dat', status='old',position='rewind', iostat = ios, action="read")
-            if (ios /= 0) then
-               print*, "! dielectronic: can't open file ",PREFIX,"/share/mocassin/data/alrovandi.dat"
-               stop
-            end if
-
-            do i = 1, 100000
-               read(unit=17, fmt=*, iostat=ios) elem, n, a, b, t0, t1
-               if (ios < 0) exit ! end of file reached
-               ion = elem + 1 - n
-
-               alpha = a*t**(-3./2.)*exp(-t0/t)*(1.+b*exp(-t1/t))
-
-               ion = elem-n+1
-
-               if (ion <= nstages) aldroPequi(elem, ion) = alpha
-
+            do i = 1, size(aldropequi_coeffs)
+               ion = aldropequi_coeffs(i)%elem + 1 - aldropequi_coeffs(i)%n
+               alpha = aldropequi_coeffs(i)%a*t**(-3./2.)*exp(-aldropequi_coeffs(i)%t0/t)*(1.+aldropequi_coeffs(i)%b*exp(-aldropequi_coeffs(i)%t1/t))
+               if (ion <= nstages) aldroPequi(aldropequi_coeffs(i)%elem, ion) = alpha
             end do
 
-            close(17)
-
-
             if (TeUsed>60000.) then
-
                diRec = aldroPequi
-
             else
-               do elem = 1, nElements
-                  do ion = 1, nstages
-                     if (diRec(elem,ion) == 0.) diRec(elem,ion) = aldroPequi(elem,ion)
-                  end do
-               end do
+               where (direc .eq. 0.)
+                 diRec = aldroPequi
+               endwhere
             end if
-
 
           end subroutine dielectronic
 

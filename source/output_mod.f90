@@ -478,7 +478,6 @@ module output_mod
                        HeIVol(abFileUsed,:) = HeIVol(abFileUsed,:) + real(HeIRecLines(:)*HdenUsed*dV)
                        HeIVol(0,:) = HeIVol(0,:) + real(HeIRecLines(:)*HdenUsed*dV)
 
-
                        ! HeII rec lines
                        do iup = 3, 30
                           do ilow = 2, min(16, iup-1)
@@ -1301,7 +1300,7 @@ module output_mod
            write(20, *) "Element      Ion        Te(Element,ion)"
            write(20, *)
            do elem = 1, nElements
-              do ion = 1, nstages
+              do ion = 1, min(nstages,elem+1)
                  write(20, *) elem, ion,  TeVol(iAb,elem, ion)
               end do
            end do
@@ -1311,7 +1310,7 @@ module output_mod
            write(30, *) "Element      Ion        <ion>/<H+>I     <ion>/<H+>II"
            write(30, *)
            do elem = 1, nElements
-              do ion = 1, nstages
+              do ion = 1, min(nstages,elem+1)
                  write(30, *) elem, ion, ionDenVol(iAb,elem, ion)
               end do
            end do
@@ -1325,7 +1324,7 @@ module output_mod
                     do j = 1, grid(iG)%ny
                        do k = 1, grid(iG)%nz
                           do elem = 1, nElements
-                             do ion = 1, nstages
+                             do ion = 1, min(nstages,elem+1)
                                 if (grid(iG)%active(i,j,k)<=0) exit
                                 if (.not.lgElementOn(elem)) exit
                                 write(60, *) i,j,k, elem, ion, grid(iG)%ionDen(grid(iG)%active(i,j,k),elementXref(elem), ion)
@@ -2080,20 +2079,10 @@ module output_mod
              & ionDenUsed(elementXref(1),2)*&
              & NeUsed*Lalpha
 
+        ! reinitialise HeIIRecLines
+        ! file used to be read in here
 
-        ! read in HeII recombination lines [e-25 ergs*cm^3/s]
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        close(95)
-        open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file:",PREFIX,"/share/mocassin/data/r2b0100.dat"
-            stop
-        end if
-        do iup = 30, 3, -1
-            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min(16, iup-1))
-        end do
-
-        close(95)
+        HeIIRecLines = HeIIRecLineData
 
         ! calculate HeII 4686 [E-25 ergs*cm^3/s]
         HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)

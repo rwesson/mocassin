@@ -12,9 +12,8 @@ module emission_mod
     type(resLine_type), allocatable         :: resLine(:)  ! resonant lines
 
     ! units are [e-25erg/s/N_gas]
-    double precision, dimension(3:30, 2:8) :: HIRecLines           ! emissivity from HI rec lines
+
     double precision, dimension(34)        :: HeIRecLines          ! emissivity from HeI rec lines
-    double precision, dimension(3:30, 2:16):: HeIIRecLines         ! emissivity from HeII rec lines
 
     real                                :: BjumpTemp   !
     real                                :: HbetaProb   ! probability of Hbeta
@@ -681,25 +680,9 @@ module emission_mod
         real                :: fit1, fit2    ! interpolation coefficients
         real                :: y             ! nu/nu0
 
-        real, dimension(41) :: Ay_dat        ! data point in Ay (rates) [1/s]
-        real, dimension(41) :: y_dat         ! data point in y (=nu/nu0)
-
         ! assume all HeI singlets finally end up in the 2^1S
         ! use total recombination cofficient to all singlets Benjamin, Skillman and SMits, ApJ, 1999, 514, 307
         alphaEff21SHeI = 6.23*((TeUsed/10000.)**(-0.827))
-
-        ! read in rates from data/HeI2phot.dat
-        close(93)
-        open(unit = 93,  action="read", file = PREFIX//"/share/mocassin/data/HeI2phot.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! HeI2phot: can't open file: ",PREFIX,"/share/mocassin/data/HeI2phot.dat"
-            stop
-        end if
-        do i = 1, 41
-            read(unit = 93, fmt = *) y_dat(i), Ay_dat(i)
-        end do
-
-        close(93)
 
         ! calculate coefficients as a function of frequency
         j = 1
@@ -775,25 +758,13 @@ module emission_mod
         real                       :: T4          ! TeUsed/10000.
         real                       :: x1, x2
 
-
         T4 = TeUsed / 10000.
 
+        ! copy HI data into array. this is where reading from file used to happen
+
+        HIRecLines = HIRecLineData
+
         ! do hydrogenic ions first
-
-
-        ! read in HI recombination lines [e-25 ergs*cm^3/s]
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        close(94)
-        open(unit = 94,  action="read", file = PREFIX//"/share/mocassin/data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file:",PREFIX,"/share/mocassin/data/r1b0100.dat"
-            stop
-        end if
-        do iup = 15, 3, -1
-            read(94, fmt=*) (HIRecLines(iup, ilow), ilow = 2, min(8, iup-1))
-        end do
-
-        close(94)
 
         ! calculate Hbeta
         ! Hbeta = 2530./(TeUsed**0.833) ! TeUsed < 26000K CASE
@@ -816,19 +787,9 @@ module emission_mod
              & NeUsed*Lalpha
 
 
-        ! read in HeII recombination lines [e-25 ergs*cm^3/s]
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        close(95)
-        open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! RecLinesEmission: can't open file:",PREFIX,"/share/mocassin/data/r2b0100.dat"
-            stop
-        end if
-        do iup = 30, 3, -1
-            read(95, fmt=*) (HeIIRecLines(iup, ilow), ilow = 2, min(16, iup-1))
-        end do
+        ! copy array. this is where the file used to be read in
 
-        close(95)
+        HeIIRecLines = HeIIRecLinedata
 
         ! calculate HeII 4686 [E-25 ergs*cm^3/s]
         HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)
@@ -860,7 +821,6 @@ module emission_mod
               x2=HeIrecLineCoeff(i,denint+1,1)*(T4**(HeIrecLineCoeff(i,denint+1,2)))*exp(HeIrecLineCoeff(i,denint+1,3)/T4)
 
               HeIRecLines(i) = x1+((x2-x1)*(NeUsed-100.**denint)/(100.**(denint+1)-100.**(denint)))
-
            end do
        elseif(denint==0) then
            do i = 1, 34
@@ -872,7 +832,6 @@ module emission_mod
            end do
         end if
         HeIRecLines=HeIRecLines*NeUsed*grids(iG)%elemAbun(grids(iG)%abFileIndex(ix,iy,iz),2)*ionDenUsed(elementXref(2),2)
-
     end subroutine RecLinesEmission
 
 
@@ -968,12 +927,6 @@ module emission_mod
         real              :: treal
         real              :: T4                ! TeUsed/10000.
 
-        integer, parameter:: NHeIILyman = 4     ! Number of HeII Lym lines included
-        real, dimension(NHeIILyman) &
-&                          :: HeIILyman         ! HeII Lyman lines em. [e-25ergs*cm^3/s]
-        real, dimension(NHeIILyman) &
-&                          :: HeIILymanNu       ! HeII Lyman lines freq. [Ryd]
-
         real, allocatable     :: sumDiffuseDust(:) ! summation terms for dust emission
         real, allocatable     :: sumDiffuseHI(:)   ! summation terms for HI emission
         real, allocatable     :: sumDiffuseHeI(:)  ! summation terms for HeI emission
@@ -989,6 +942,8 @@ module emission_mod
         integer           :: nS, ai, freq, iT   ! dust counters
 
         character(len=50) :: cShapeLoc
+
+        real,dimension(NHeIILyman) :: HeIILyman ! HeII Lyman lines em. [e-25ergs*cm^3/s]
 
         cShapeLoc = 'blackbody'
 
@@ -1064,19 +1019,9 @@ module emission_mod
 
         ! Add contribution of HeII lines able to ionize HI and HeII
 
-        ! read in HeII Lyman line ratios up to level n=5 [e-25 ergs*cm^3/s]
-        ! (Storey and Hummer MNRAS 272(1995)41)
-        close(98)
-        open(unit = 98,  action="read", file = PREFIX//"/share/mocassin/data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
-        if (ios /= 0) then
-            print*, "! setDiffusePDF: can't open file:",PREFIX,"/share/mocassin/data/r2a0100.dat"
-            stop
-        end if
-        do i = 1, NHeIILyman
-            read(98, fmt=*) HeIILyman(i), HeIILymanNu(i)
-        end do
+        ! copy HeIILymanData into new array.  this is where file used to be read in
 
-        close(98)
+        HeIILyman = HeIILymanData
 
         ! calculate Lyman alpha first
         HeIILyman(4) = 10.**(-0.792*log10(TeUsed)+6.01)

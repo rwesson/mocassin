@@ -25,8 +25,7 @@ module composition_mod
         do i = 1, nAbComponents
 
            close(80)
-           open(unit=80, action="read", file = abundanceFile(i), status="old", position="rewind", &
-&                                                     iostat = ios)
+           open(unit=80, action="read", file = abundanceFile(i), status="old", position="rewind", iostat = ios)
            if (ios /= 0) then
               print*, "! setComposition: can't open file: ", abundanceFile(i)
               stop

@@ -37,6 +37,7 @@ program MoCaSSiN
     use output_mod
     use set_input_mod
     use xSec_mod
+    use readdata_mod
 
     implicit none
 
@@ -60,6 +61,9 @@ program MoCaSSiN
 
         ! read the input parameters of the simulation
         call readInput()
+
+        ! read in data files
+        call readdata()
 
         print*, " "
 

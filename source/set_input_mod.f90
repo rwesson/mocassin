@@ -821,8 +821,7 @@ module set_input_mod
             integer                       :: skip
 
             close(17)
-            open (unit = 17, file = filename, status = "old", &
-                 &position="rewind",  iostat = ios, action="read")
+            open (unit = 17, file = filename, status = "old", position="rewind", iostat = ios, action="read")
             if (ios/=0) then
                print*, "! readGridList: can't open file for reading ", filename
                stop
