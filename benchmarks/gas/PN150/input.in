@@ -6,8 +6,8 @@ Hdensity 3000.
 TeStart 12000.
 contShape  blackbody
 nebComposition "input/abunPN150.in"
-maxIterateMC  20 95.
-nPhotons 120000
+maxIterateMC  10 95.
+nPhotons 1000000
 nx 13
 ny 13
 nz 13

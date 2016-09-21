@@ -1,4 +1,4 @@
-autoPackets 0.20 2. 1000000000
+autoPackets 0.20 2. 10000000
 TStellar 20000.
 output
 symmetricXYZ
@@ -7,7 +7,7 @@ TeStart 6000.
 contShape  blackbody
 nebComposition "input/abunHII20.in"
 maxIterateMC  20 100.
-nPhotons 10000000
+nPhotons 1000000
 nx 13
 ny 13
 nz 13

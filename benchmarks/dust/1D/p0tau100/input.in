@@ -3,7 +3,7 @@ output
 symmetricXYZ
 contShape  blackbody
 nebComposition noGas
-maxIterateMC  30 95.
+maxIterateMC  10 95.
 nPhotons 100000
 nx 21
 ny 21
