@@ -1,4 +1,4 @@
-autoPackets 0.20 2. 900000000
+autoPackets 0.20 2. 10000000
 output
 symmetricXYZ
 contShape  blackbody
