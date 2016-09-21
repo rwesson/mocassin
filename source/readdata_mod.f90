@@ -5,7 +5,7 @@ use common_mod
 
 contains
 
-    subroutine readdata()
+    subroutine readData()
 
         implicit none
         integer :: i, ios                    ! counter, io state
@@ -52,7 +52,7 @@ contains
 
         open(unit = 94,  action="read", file = PREFIX//"/share/mocassin/data/r1b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! readData: can't open file:",PREFIX,"/share/mocassin/data/r1b0100.dat"
+            print*, "! readData: can't open file: ",PREFIX,"/share/mocassin/data/r1b0100.dat"
             stop
         end if
 
@@ -67,7 +67,7 @@ contains
 
         open(unit = 98,  action="read", file = PREFIX//"/share/mocassin/data/r2a0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! readData: can't open file:",PREFIX,"/share/mocassin/data/r2a0100.dat"
+            print*, "! readData: can't open file: ",PREFIX,"/share/mocassin/data/r2a0100.dat"
             stop
         end if
 
@@ -82,7 +82,7 @@ contains
 
         open(unit = 95,  action="read", file = PREFIX//"/share/mocassin/data/r2b0100.dat", status = "old", position = "rewind", iostat=ios)
         if (ios /= 0) then
-            print*, "! readData: can't open file:",PREFIX,"/share/mocassin/data/r2b0100.dat"
+            print*, "! readData: can't open file: ",PREFIX,"/share/mocassin/data/r2b0100.dat"
             stop
         end if
         do iup = 30, 3, -1
@@ -116,7 +116,7 @@ contains
 
         close(17)
 
-    end subroutine readdata
+    end subroutine readData
 
 end module readdata_mod
 
