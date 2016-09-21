@@ -62,9 +62,6 @@ program MoCaSSiN
         ! read the input parameters of the simulation
         call readInput()
 
-        ! read in data files
-        call readdata()
-
         print*, " "
 
         ! initialize the 3D cartesian grid
@@ -88,7 +85,10 @@ program MoCaSSiN
         end do
 
         ! prepare atomica data stuff
-        if (lgGas) call makeElements()
+        if (lgGas) then
+          call makeElements()
+          call readData()
+        endif
 
         print*, 'active elements: ', nElementsUsed
 
