@@ -422,11 +422,13 @@ module set_input_mod
             case ("LStar")
                 backspace 10
                 allocate(Lstar(0:1))
+                Lstar = 0.
                 read(unit=10, fmt=*, iostat=ios) keyword, LStar(1)
                 !print*, keyword, LStar(1)
             case ("LPhot")
                 backspace 10
                 if (.not. allocated(LStar)) allocate(Lstar(0:1))
+                Lstar = 0.
                 read(unit=10, fmt=*, iostat=ios) keyword, LPhot
                 !print*, keyword, LPhot
             case ("nuMax")
