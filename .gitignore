@@ -1,12 +1,14 @@
 *.o
 *.mod
-mocassin
+mocassin*
 mocassinWarm
 mocassinPlot
 mocassinOutput
 mocassinFluorescence
 input
-output
+output*
 breaks
 testing
 prof*
+log*
+.gitignore
