@@ -29,7 +29,7 @@ SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
 	source/continuum_mod.o source/ionization_mod.o source/pathIntegration_mod.o \
 	source/grid_mod.o source/dust_mod.o source/emission_mod.o source/photon_mod.o  \
-	source/update_mod.o source/output_mod.o source/iteration_mod.o
+	source/update_mod.o source/output_mod.o source/iteration_mod.o source/readdata_mod.o
 
 ifeq ($(CO),debug) #to show all compiler warnings
   FFLAGS += -fbounds-check -Wall -Wuninitialized -g -pg #-ffpe-trap=zero,overflow,invalid,underflow,denormal -fbacktrace -fcheck=all
