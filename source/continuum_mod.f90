@@ -419,7 +419,6 @@ module continuum_mod
         ! local variables
         integer, intent(in) :: iS         ! central star index
 
-        integer :: err                    ! allocation error status
         integer :: i                      ! counter
 
         real :: maxp

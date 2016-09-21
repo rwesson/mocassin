@@ -683,7 +683,6 @@ program MoCaSSiNplot
         implicit none
 
         ! local variables
-        integer                    :: ios         ! I/O error status
         integer                    :: i           ! counters
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level

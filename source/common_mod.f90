@@ -472,7 +472,7 @@ module common_mod
         integer :: NTEMPS
         integer :: NLEVS
         integer :: irats
-        character(len=20) :: ion
+        character(len=50) :: ion
         real,allocatable :: logtemp(:)
         real,allocatable :: roott(:)
         character(len=20),allocatable :: label(:)

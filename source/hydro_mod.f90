@@ -487,11 +487,11 @@ module elements_mod
        logical :: lgFileExists !some data files don't exist yet
 
        character(len=1) :: comments(78)
-       integer :: J,K,L,N,NCOMS,ID(2),JD(2),KP1,NLEV1,GX,ionl,dummy
-       real :: WN,QX
+       integer :: J,K,L,NCOMS,GX
+       real :: QX
        real  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
        double precision     ::  ax1,ax2,ax3,ax, ex                    ! readers
-       integer  :: iT, i1, j1, i2, j2, i3, j3  ! counters/indices
+       integer  :: i1, j1, i2, j2, i3, j3  ! counters/indices
        integer, parameter :: safeLim = 100000 ! loop safety limit
 
        close(17)

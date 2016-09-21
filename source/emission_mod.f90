@@ -36,7 +36,6 @@ module emission_mod
 
 
         type(grid_type), intent(inout) :: grids(*) ! the cartesian grid
-        type(grid_type)                :: grid
 
         ! local variables
 
@@ -668,7 +667,6 @@ module emission_mod
 
         ! local variables
         integer             :: i, j          ! counters
-        integer             :: ios           ! I/O error status
 
         real, parameter     :: A21S11S=51.3  ! HeI 2q [1/s]
                                              ! Almog & Netzer, MNRAS 238(1989)57
@@ -747,7 +745,6 @@ module emission_mod
         implicit none
 
         ! local variables
-        integer                    :: ios         ! I/O error status
         integer                    :: i, denint   ! counters
         integer                    :: ilow,&      ! pointer to lower level
 &                                      iup        ! pointer to upper level
@@ -937,7 +934,6 @@ module emission_mod
         integer           :: err                ! allocation error status
         integer           :: j2TsP              ! pointer to 2s triplet state in nuArray
         integer           :: i,iup,ilow,j       ! counters
-        integer           :: ios                ! I/O error status
         integer           :: nuP                ! frequency pointer in nuArray
         integer           :: nS, ai, freq, iT   ! dust counters
 
@@ -1924,19 +1920,17 @@ module emission_mod
          & intent(inout), optional :: wav         ! wavelength of transition [A]
 
 
-    double precision     ::  ax1,ax2,ax3,ax, ex                    ! readers
     double precision     :: constant                  ! calculations constant
     double precision     :: delTeK                    ! Boltzmann exponent
     double precision     :: expFac                    ! calculations factor
     double precision     :: Eji                       ! energy between levels j and i
 
-    double precision       :: qx                        ! reader
-    double precision   :: sumN                      ! normalization factor for populations
-    double precision        :: sqrTe                     ! sqrt(Te)
+    double precision     :: sumN                      ! normalization factor for populations
+    double precision     :: sqrTe                     ! sqrt(Te)
 
     double precision, allocatable          :: x(:,:)      ! matrix arrays
     double precision, allocatable          :: y(:)        !
-    double precision, allocatable          :: n(:), n2(:) ! level population arrays
+    double precision, allocatable          :: n(:)        ! level population arrays
 
     real                 :: a_r(4),a_d(5),z,br       !
     real                 :: qomInt                    ! interpolated value of qom
@@ -1946,30 +1940,13 @@ module emission_mod
          & Ne, &       ! electron density [cm^-3]
          & ionDenUp    ! ion density of the upper ion stage
 
-    real  :: iRats            ! coll strength (iRats=0) or (coll rates)/10**iRats
-    integer  :: gx               ! stat weight reader
-    integer  :: i, j, k, l, iT   ! counters/indeces
-    integer  :: i1, j1, i2, j2, i3, j3  ! counters/indeces
-    integer  :: elem, ion       ! location of atomic data in the array
+    integer  :: i, j, iT         ! counters/indeces
+    integer  :: elem, ion        ! location of atomic data in the array
 
-    integer  :: ios              ! I/O error status
     integer  :: nLev             ! number of levels in atomic data file
-    integer  :: numLines         ! number of lines for atomic data refernce
-
     integer  :: nTemp            ! number of temperature points in atomic data file
-    integer  :: err              ! allocation error status
 
     integer, parameter :: safeLim = 100000 ! loop safety limit
-
-    integer, allocatable :: g(:)              ! statistical weight array
-
-    integer, dimension(2) :: ilow, &      ! lower index
-         & iup          ! upper index
-
-    character(len = 20), allocatable :: &
-         & label(:)! labels array
-
-    character(len = 75) :: text  ! lines of text
 
     character(len = *), &
          & intent(in)  :: file_name   ! ionic data file name
