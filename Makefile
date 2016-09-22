@@ -3,28 +3,28 @@ FC = mpif90
 LD = mpif90
 
 ifeq ($(FC),ifort)
-  FFLAGS += -cpp -DPREFIX=\"${PREFIX}\" -module source/
+  FFLAGS += -cpp -DPREFIX=\"$(PREFIX)\" -module source/
 else
-  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"${PREFIX}\" -I/usr/include/mpich
+  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -I/usr/include/mpich
 endif
 
 #IBM
 #FC = mpxlf90_r
 #LD = mpxlf90_r
-#FFLAGS += -O3 -qstrict -qrealsize=4 -bmaxdata:0x40000000 -qmaxmem=-1 -cpp -DPREFIX=\"${PREFIX}\"
+#FFLAGS += -O3 -qstrict -qrealsize=4 -bmaxdata:0x40000000 -qmaxmem=-1 -cpp -DPREFIX=\"$(PREFIX)\"
 
 #SUN
 #FC = mpf90
 #LD = mpf90
-#FFLAGS += -fast -xarch=v9b -ftrap=%none -lmpi -cpp -DPREFIX=\"${PREFIX}\"
+#FFLAGS += -fast -xarch=v9b -ftrap=%none -lmpi -cpp -DPREFIX=\"$(PREFIX)\"
 
 #SGI
 #FC = f90
 #LD = f90
-#FFLAGS += -64 -C -mpio -OPT:Olimit=3495 -O3 -lmpi -cpp -DPREFIX=\"${PREFIX}\"
+#FFLAGS += -64 -C -mpio -OPT:Olimit=3495 -O3 -lmpi -cpp -DPREFIX=\"$(PREFIX)\"
 
 PREFIX=/usr
-MANDIR=${DESTDIR}${PREFIX}/share/man/man1
+MANDIR=$(DESTDIR)$(PREFIX)/share/man/man1
 SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
 	source/continuum_mod.o source/ionization_mod.o source/pathIntegration_mod.o \
@@ -66,24 +66,24 @@ clean:
 	/bin/rm -f source/*.o *~ source/*.mod mocassin mocassinWarm mocassinOutput mocassinPlot
 
 install: mocassin mocassinWarm mocassinOutput mocassinPlot
-	test -e ${DESTDIR}${PREFIX}/share/mocassin || mkdir -p ${DESTDIR}${PREFIX}/share/mocassin
-	test -e ${DESTDIR}${PREFIX}/bin || mkdir -p ${DESTDIR}${PREFIX}/bin
-	test -e ${MANDIR} || mkdir -p ${MANDIR}
-	cp -r data/ ${DESTDIR}${PREFIX}/share/mocassin
-	cp -r dustData/ ${DESTDIR}${PREFIX}/share/mocassin
-	cp -r benchmarks/ ${DESTDIR}${PREFIX}/share/mocassin
-	cp -r examples/ ${DESTDIR}${PREFIX}/share/mocassin
-	install -m 644 man/mocassin.1 ${MANDIR}
-	gzip -f ${MANDIR}/mocassin.1
-	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinWarm.1.gz
-	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinOutput.1.gz
-	ln -s -f ${MANDIR}/mocassin.1.gz ${MANDIR}/mocassinPlot.1.gz
-	install mocassin ${DESTDIR}${PREFIX}/bin
-	install mocassinWarm ${DESTDIR}${PREFIX}/bin
-	install mocassinPlot ${DESTDIR}${PREFIX}/bin
-	install mocassinOutput ${DESTDIR}${PREFIX}/bin
+	test -e $(DESTDIR)$(PREFIX)/share/mocassin || mkdir -p $(DESTDIR)$(PREFIX)/share/mocassin
+	test -e $(DESTDIR)$(PREFIX)/bin || mkdir -p $(DESTDIR)$(PREFIX)/bin
+	test -e $(MANDIR) || mkdir -p $(MANDIR)
+	cp -r data/ $(DESTDIR)$(PREFIX)/share/mocassin
+	cp -r dustData/ $(DESTDIR)$(PREFIX)/share/mocassin
+	cp -r benchmarks/ $(DESTDIR)$(PREFIX)/share/mocassin
+	cp -r examples/ $(DESTDIR)$(PREFIX)/share/mocassin
+	install -m 644 man/mocassin.1 $(MANDIR)
+	gzip -f $(MANDIR)/mocassin.1
+	ln -s -f $(MANDIR)/mocassin.1.gz $(MANDIR)/mocassinWarm.1.gz
+	ln -s -f $(MANDIR)/mocassin.1.gz $(MANDIR)/mocassinOutput.1.gz
+	ln -s -f $(MANDIR)/mocassin.1.gz $(MANDIR)/mocassinPlot.1.gz
+	install mocassin $(DESTDIR)$(PREFIX)/bin
+	install mocassinWarm $(DESTDIR)$(PREFIX)/bin
+	install mocassinPlot $(DESTDIR)$(PREFIX)/bin
+	install mocassinOutput $(DESTDIR)$(PREFIX)/bin
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/mocassin*
-	rm -f ${MANDIR}/mocassin*.1.gz
-	rm -rf ${DESTDIR}${PREFIX}/share/mocassin
+	rm -f $(DESTDIR)$(PREFIX)/bin/mocassin*
+	rm -f $(MANDIR)/mocassin*.1.gz
+	rm -rf $(DESTDIR)$(PREFIX)/share/mocassin
