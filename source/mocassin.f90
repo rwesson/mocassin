@@ -11,7 +11,7 @@
 ! modify it under the terms of the GNU General Public License
 ! as published by the Free Software Foundation; either version 2
 ! of the License, or (at your option) any later version. This requires
-! that any chnages or improvements made to the program should also be
+! that any changes or improvements made to the program should also be
 ! made freely available.
 
 ! This program is distributed in the hope that it will be useful,
@@ -58,50 +58,49 @@ program MoCaSSiN
     if (taskid == 0) then
         print*, "MOCASSIN 2005 Version 2.0"
         print*, " "
-
-        ! read the input parameters of the simulation
-        call readInput()
-
-        print*, " "
-
-        ! initialize the 3D cartesian grid
-
-        do iGrid = 1, nGrids
-           call initCartesianGrid(grid3D(iGrid), nxIn(iGrid), nyIn(iGrid), nzIn(iGrid))
-        end do
-
-        ! initialize opacities x sections array
-        call initXSecArray()
-        ! set the ionzing continuum according to the contShape variable
-        call setContinuum()
-
-        call fillGrid(grid3D(1:nGrids))
-
-        call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
-
-        do iGrid = 1, nGrids
-            print*, 'Grid : ', iGrid
-            print*, 'active cells: ', grid3D(iGrid)%nCells
-        end do
-
-        ! prepare atomica data stuff
-        if (lgGas) then
-          call makeElements()
-          call readData()
-        endif
-
-        print*, 'active elements: ', nElementsUsed
-
-        ! if grains are included, calculate the dust opacity
-        if (lgDust) then
-           if (taskid==0) print*, '! mocassin: calling dustDriver'
-           do iGrid = 1, nGrids
-              call dustDriver(grid3D(iGrid))
-           end do
-           print*, '! mocassin: dustDriver done'
-        end if
-
     endif
+
+    ! read the input parameters of the simulation
+    call readInput()
+
+    print*, " "
+
+    ! initialize the 3D cartesian grid
+
+    do iGrid = 1, nGrids
+       call initCartesianGrid(grid3D(iGrid), nxIn(iGrid), nyIn(iGrid), nzIn(iGrid))
+    end do
+
+    ! initialize opacities x sections array
+    call initXSecArray()
+    ! set the ionzing continuum according to the contShape variable
+    call setContinuum()
+
+    call fillGrid(grid3D(1:nGrids))
+
+    call setStarPosition(grid3D(1)%xAxis,grid3D(1)%yAxis,grid3D(1)%zAxis, grid3D(1:nGrids))
+
+    do iGrid = 1, nGrids
+        print*, 'Grid : ', iGrid
+        print*, 'active cells: ', grid3D(iGrid)%nCells
+    end do
+
+    ! prepare atomica data stuff
+    if (lgGas) then
+      call makeElements()
+      call readData()
+    endif
+
+    print*, 'active elements: ', nElementsUsed
+
+    ! if grains are included, calculate the dust opacity
+    if (lgDust) then
+       if (taskid==0) print*, '! mocassin: calling dustDriver'
+       do iGrid = 1, nGrids
+          call dustDriver(grid3D(iGrid))
+       end do
+       print*, '! mocassin: dustDriver done'
+    end if
 
     call mpi_barrier(mpi_comm_world, ierr)
 
