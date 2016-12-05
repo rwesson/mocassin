@@ -766,6 +766,13 @@ module grid_mod
            stop
         end if
 
+! break if no gas or dust present
+
+        if (totalGasMass + totalDustMass .eq. 0.) then
+          print *,"! fillGrid: total mass in grid is zero. Terminating."
+          stop
+        endif
+
         ! print out Grid
 !        if (taskid == 0) then
 !           print*, "Mother Grid:"
