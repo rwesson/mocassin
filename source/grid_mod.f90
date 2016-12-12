@@ -766,13 +766,6 @@ module grid_mod
            stop
         end if
 
-! break if no gas or dust present
-
-        if (totalGasMass + totalDustMass .eq. 0.) then
-          print *,"! fillGrid: total mass in grid is zero. Terminating."
-          stop
-        endif
-
         ! print out Grid
 !        if (taskid == 0) then
 !           print*, "Mother Grid:"
@@ -1743,6 +1736,14 @@ module grid_mod
                  print*, '                                          [Msol]   : ', totalDustMass*5.025e11
               end if
               print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
+
+! break if no gas or dust present
+
+              if (totalMass + totalDustMass .eq. 0.) then
+                print *,"! fillGrid: total mass in grid is zero. Terminating."
+                stop
+              endif
+
               if (lgEcho) then
                  print*, 'Total volume of the echo [e45 cm^3]: ', echoVolume*846732407.," or ",echoVolume," ly^3"
                  open(unit=99, status='unknown', position='rewind', file='output/echo.out', action="write",iostat=ios)
@@ -3319,6 +3320,7 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
             end if
 
             ! allocate pointers depending on nLines
+
             if (nLines > 0) then
 
                allocate(grid(iG)%linePackets(0:grid(iG)%nCells, 1:nLines), stat = err)
