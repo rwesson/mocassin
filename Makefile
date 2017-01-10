@@ -23,7 +23,14 @@ endif
 #LD = f90
 #FFLAGS += -64 -C -mpio -OPT:Olimit=3495 -O3 -lmpi -cpp -DPREFIX=\"$(PREFIX)\"
 
-PREFIX=/usr
+# set prefix depending on OS
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+  PREFIX=/usr/local
+else
+  PREFIX=/usr
+endif
+
 MANDIR=$(DESTDIR)$(PREFIX)/share/man/man1
 SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
