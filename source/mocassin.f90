@@ -56,7 +56,7 @@ program MoCaSSiN
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
 
     if (taskid == 0) then
-        print*, "MOCASSIN 2005 Version 2.02.72"
+        print*, "MOCASSIN 2005 Version ",VERSION
         print*, " "
     endif
 

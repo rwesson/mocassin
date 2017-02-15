@@ -2,12 +2,6 @@
 FC = mpif90
 LD = mpif90
 
-ifeq ($(FC),ifort)
-  FFLAGS += -cpp -DPREFIX=\"$(PREFIX)\" -module source/
-else
-  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -I/usr/include/mpich
-endif
-
 #IBM
 #FC = mpxlf90_r
 #LD = mpxlf90_r
@@ -29,6 +23,17 @@ ifeq ($(OS),Darwin)
   PREFIX=/usr/local
 else
   PREFIX=/usr
+endif
+
+# get version from changelog if debian package, or git log otherwise
+VERSION := $(shell if [ -e debian/ ]; then dpkg-parsechangelog -S version; else git describe --always --tags --dirty; fi)
+
+# set flags
+
+ifeq ($(FC),ifort)
+  FFLAGS += -cpp -DPREFIX=\"$(PREFIX)\" -DVERSION=\"$(VERSION)\" -module source/
+else
+  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -DVERSION=\"$(VERSION)\" -I/usr/include/mpich
 endif
 
 MANDIR=$(DESTDIR)$(PREFIX)/share/man/man1
