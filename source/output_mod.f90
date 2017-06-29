@@ -460,10 +460,11 @@ module output_mod
 
                        ! Hbeta
                        HbetaVol(abFileUsed) = HbetaVol(abFileUsed) + real(HIRecLines(4,2)*HdenUsed*dV)
-
                        HbetaVol(0) = HbetaVol(0) + real(HIRecLines(4,2)*HdenUsed*dV)
-
-
+if (HbetaVol(0) .ne. HbetaVol(0)) then
+  print *,real(HIRecLines(4,2)),HdenUsed,dV
+  stop
+endif
                        ! HI rec lines
                        do ilow = 2, 8
                           do iup = ilow+1, 30
@@ -1067,36 +1068,36 @@ module output_mod
 
                  if (lgDebug) then
                     if (lineLuminosity(iAb,iLine) > 0. ) then
-                       write(10, *) iup, ilow, HIVol(iAb,iup,ilow), lineLuminosity(iAb,iLine), &
+                       write(10, *) 1,2,iup, ilow, HIVol(iAb,iup,ilow), lineLuminosity(iAb,iLine), &
                             & HIVol(iAb,iup,ilow)/lineLuminosity(iAb,iLine), iLine
                        sumAn = sumAn + HIVol(iAb,iup,ilow)
                        sumMC = sumMC + lineLuminosity(iAb,iLine)
                     else
-                       write(10, *) iup, ilow, HIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,1))
+                       write(10, *) 1,2,iup, ilow, HIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,1))
                     end if
                  else
-                    write(10, *) iup, ilow, HIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,1))
+                    write(10, *) 1,2,iup, ilow, HIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,1))
                  end if
                  iLine = iLine + 1
               end do
            end do
 
            write(10, *)
-           write(10, *) "HeI "
+           write(10, *) "HeI recombination lines:"
            write(10, *)
            do l = 1, 34
 
               if (lgDebug) then
                  if (lineLuminosity(iAb,iLine) > 0. ) then
-                    write(10, *) l,"            ",  HeIVol(iAb,l),  lineLuminosity(iAb,iLine), &
+                    write(10, *) 2,2,l,"            ",  HeIVol(iAb,l),  lineLuminosity(iAb,iLine), &
                          & HeIVol(iAb,l)/lineLuminosity(iAb,iLine), iLine
                     sumAn = sumAn + HeIVol(iAb,l)
                     sumMC = sumMC + lineLuminosity(iAb,iLine)
                  else
-                    write(10, *) l,HeIrecLineCoeff(l,1,4),"            ", HeIVol(iAb,l), iLine
+                    write(10, *) 2,2,l,HeIrecLineCoeff(l,1,4),"            ", HeIVol(iAb,l), iLine
                  end if
               else
-                 write(10, *) l,HeIrecLineCoeff(l,1,4),"            ",  HeIVol(iAb,l), iLine
+                 write(10, *) 2,2,l,HeIrecLineCoeff(l,1,4),"            ",  HeIVol(iAb,l), iLine
               end if
               iLine = iLine + 1
            end do
@@ -1110,15 +1111,15 @@ module output_mod
 
                  if (lgDebug ) then
                     if ( lineLuminosity(iAb,iLine) > 0. ) then
-                       write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), lineLuminosity(iAb,iLine), &
+                       write(10, *) 2,3,iup, ilow, HeIIVol(iAb,iup,ilow), lineLuminosity(iAb,iLine), &
                             & HeIIVol(iAb,iup,ilow)/lineLuminosity(iAb,iLine), iLine
                        sumAn = sumAn + HeIIVol(iAb,iup,ilow)
                        sumMC = sumMC + lineLuminosity(iAb,iLine)
                     else
-                       write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
+                       write(10, *) 2,3,iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
                     end if
                  else
-                    write(10, *) iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
+                    write(10, *) 2,3,iup, ilow, HeIIVol(iAb,iup,ilow), iLine, wave_a(hwavelength(ilow,iup,2))
                  end if
 
                  iLine = iLine + 1
@@ -2063,13 +2064,23 @@ module output_mod
 
         call hlinex(4,2,TeUsed,NeUsed,fh)
         hb = fh
-        do ilow = 2, 8
-           do iup = 30, ilow+1, -1
-              call hlinex(iup,ilow,TeUsed,NeUsed,fh)
-              HIRecLines(iup, ilow) = (fh/hb)*Hbeta
-           enddo
-        enddo
-
+        if (hb.eq.0.d0.or.hb.gt.huge(1.0)) then
+          HIRecLines(:,:) = 0.d0 !needs fixing upstream, it should not be zero
+        else
+          do ilow = 2, 8
+             do iup = 30, ilow+1, -1
+                call hlinex(iup,ilow,TeUsed,NeUsed,fh)
+                HIRecLines(iup, ilow) = (fh/hb)*Hbeta
+if (HIRecLines(iup, ilow) .gt. huge(1.0)) then
+  print *,iup,ilow
+  print *,TeUsed,NeUsed
+  print *,fh
+!  stop
+  HIRecLines(iup, ilow)=0.d0
+endif
+             enddo
+          enddo
+        endif
 
         ! add contribution of Lyman alpha
         ! fits to Storey and Hummer MNRAS 272(1995)41
@@ -2148,6 +2159,7 @@ module output_mod
       real, dimension(15)              :: densx
       real, dimension(15)              :: tempx
       real, dimension(5000,15,15)      :: ex
+
       common/hdatax/densx,tempx,ex,ntempx,ndensx,ntop,nll,nlu
       close(337)
       open(unit =337, file = PREFIX//"/share/mocassin/data/e1bx.d", status = "old", position = "rewind", iostat=ios, action="read")
@@ -2212,62 +2224,68 @@ module output_mod
       data maxv/4/ni/2,3,4,5,6/       ! interpolation parameters
 
       ncut=0 ! RW 19/06/2016 - was not initialised previously
+
+!are we calculating something at higher temperature than the data exists for?
+      if (xt.gt.maxval(tempx)) then
+        print *,"temperature out of range!"
+        print *,"temperature is ",xt,"but emissivity data only goes up to ",maxval(tempx)
+        print *,"emissivity calculated for T=",maxval(tempx)
+        xt=maxval(tempx)
+      endif
+
+      if (xd .eq. 0.d0) then ! no material = no emission
+        fh = 0.d0
+        return
+      endif
+
 !          interpolation variables
-        do i=1,ndensx
-            x(i)=log10(densx(i))
-        enddo
-        do i=1,ntempx
-            y(i)=sqrt(tempx(i))
-            f(1,i)=1.0          ! f is emissivity smoothing function in temp
-            f(2,i)=y(i)
-        enddo
-            nus=0
-            nls=0
+      x=log10(densx)
+      y=sqrt(tempx)
+      f(1,:)=1.0          ! f is emissivity smoothing function in temp
+      f(2,:)=y
+      nus=0
+      nls=0
 !          set keys to locate transitions of interest
-        if((nus+nls).eq.0) then
-             ns=2
-             ks=999
-        else
-             ns=1
-             ks=(((ncut-nus)*(ncut+nus-1))/2)+nls
-        endif
-             k=(2*ntop-nll-nl+1)*(nl-nll)/2+ntop-nu+1
+      if((nus+nls).eq.0) then
+        ns=2
+        ks=999
+      else
+        ns=1
+        ks=(((ncut-nus)*(ncut+nus-1))/2)+nls
+      endif
+      k=(2*ntop-nll-nl+1)*(nl-nll)/2+ntop-nu+1
 
-        do it=1,ntempx
-           do id=1,ndensx
-                if(ns.eq.1) then
-                     r(it,id)=ex(k,it,id)/ex(ks,it,id)
-                else
-                     r(it,id)=ex(k,it,id)
-                endif
-           enddo
-        enddo
+      if(ns.eq.1) then
+        r=ex(k,:,:)/ex(ks,:,:)
+      else
+        r=ex(k,:,:)
+      endif
 !          interpolate in r-table
-        nt=1
-
-        xp=log10(xd)           ! interpolate in log(dens)
-        yp=sqrt(xt)             ! interpolate in temp**0.5
+      nt=1
+      xp=log10(xd)           ! interpolate in log(dens)
+      yp=sqrt(xt)             ! interpolate in temp**0.5
 !          find interpolation box
-        i=1
-        if(xp.lt.x(i)) then
-                goto 88
+      i=1
+      if(xp.lt.x(i)) then
+        goto 88
+      endif
+86    if(xp.ge.x(i).and.xp.le.x(i+1)) then
+        goto 88
+      else
+        i=i+1
+        if(i.eq.ndensx) then
+          i = ndensx - 1
+!         stop 'dens overflow'
         endif
-86      if(xp.ge.x(i).and.xp.le.x(i+1)) then
-                goto 88
-        else
-            i=i+1
-            if(i.eq.ndensx) then
-                  i = ndensx - 1
-!                     stop 'dens overflow'
-            endif
-                goto 86
-        endif
-88      i0=i
-        j=1
-        if(yp.lt.y(j)) then
-                goto 92
-        endif
-90      if(yp.ge.y(j).and.yp.le.y(j+1)) then
+        goto 86
+      endif
+
+88    i0=i
+      j=1
+      if(yp.lt.y(j)) then
+        goto 92
+      endif
+90    if(yp.ge.y(j).and.yp.le.y(j+1)) then
                 goto 92
         else
            j = j+1
