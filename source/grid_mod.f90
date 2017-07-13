@@ -665,6 +665,7 @@ module grid_mod
               totalDustMass = totalDustMass * massFac
            endif
 
+
 !BEKS 2010: scale the dust mass here using dustMass keyword.
            if (lgDust .and. lginputDustMass) then
               if (lgGas .and. (lgMdMh .or. lgMdMg)) then
@@ -890,6 +891,7 @@ module grid_mod
 
         print*, "out fillGrid"
 
+
       end subroutine fillGrid
 
 
@@ -909,7 +911,6 @@ module grid_mod
         real                           :: norm, scale  ! normalisation and scaling for meanField
         real                           :: radius       ! distance from the origin
         real                           :: random       ! random nmumber
-        real                           :: totalMass    ! total ionized mass
         real                           :: totalVolume  ! total active volume
         real                      :: echoVolume, vol   ! just echo volume
 
@@ -937,6 +938,7 @@ module grid_mod
         character(len=40)              :: keyword      ! character string readers
 
         print*, 'in setMotherGrid'
+
 
         ! this is the mother grid
         grid%motherP = 0
@@ -1621,7 +1623,7 @@ module grid_mod
                 & 58.71, 63.546, 65.37 /)
 
            totalDustMass = 0.
-           totalMass = 0.
+           totalGasMass = 0.
            totalVolume = 0.
            echoVolume = 0.
 
@@ -1638,7 +1640,7 @@ module grid_mod
                           do elem = 1, nElements
                              gasCell = gasCell + grid%elemAbun(grid%abFileIndex(i,j,k),elem)*&
                                   & aWeight(elem)*amu
-                             totalMass = totalMass + &
+                             totalGasMass = totalGasMass + &
                                   & grid%Hden(grid%active(i,j,k))*dV*grid%elemAbun(grid%abFileIndex(i,j,k),elem)*&
                                   & aWeight(elem)*amu
                           end do
@@ -1728,8 +1730,8 @@ module grid_mod
 
               print*, 'Mothergrid :'
               if (lgGas) then
-                 print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
-                 print*, '                                         [Msol]   : ', totalMass*5.025e11
+                 print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalGasMass
+                 print*, '                                         [Msol]   : ', totalGasMass*5.025e11
               end if
               if (lgDust) then
                  print*, 'Total dust mass of ionized region by mass [1.e45 g]: ', totalDustMass
@@ -1739,7 +1741,7 @@ module grid_mod
 
 ! break if no gas or dust present
 
-              if (totalMass + totalDustMass .eq. 0.) then
+              if (totalGasMass + totalDustMass .eq. 0.) then
                 print *,"! fillGrid: total mass in grid is zero. Terminating."
                 stop
               endif
@@ -1796,6 +1798,7 @@ module grid_mod
 
            print*, 'out setMotherGrid'
 
+
          end subroutine setMotherGrid
 
          subroutine setSubGrids(grid)
@@ -1815,7 +1818,7 @@ module grid_mod
            real                           :: H0in         ! estimated H0 at the inner radius for regionI
            real                           :: MhMg         ! hdrogen to gas mass ratio
            real                           :: radius       ! distance from the origin
-           real                           :: totalMass    ! total ionized mass
+           real                           :: totalGasMass    ! total ionized mass
            real                           :: totalVolume  ! total active volume
            real                      :: echoVolume, vol   ! just echo volume
 
@@ -2474,7 +2477,7 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
                  if (lgMultiDustChemistry .and. allocated(dustAbunIndexTemp)) deallocate(dustAbunIndexTemp)
               end if
 
-              totalMass = 0.
+              totalGasMass = 0.
               totalVolume = 0.
               echoVolume = 0.
 
@@ -2491,7 +2494,7 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
                                 gasCell = gasCell + &
                                      & grid(iG)%elemAbun(grid(iG)%abFileIndex(ix,iy,iz),elem)*&
                                      & aWeight(elem)*amu
-                                totalMass = totalMass + &
+                                totalGasMass = totalGasMass + &
                                      & grid(iG)%Hden(grid(iG)%active(ix,iy,iz))*dV*&
                                      & grid(iG)%elemAbun(grid(iG)%abFileIndex(ix,iy,iz),elem)*&
                                      & aWeight(elem)*amu
@@ -2581,8 +2584,8 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
 
                  print*, 'Sub Grid: ', iG
                  if (lgGas) &
-                    &print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalMass
-                     print*, '                                         [Msol]   : ', totalMass*5.025e11
+                    &print*, 'Total gas mass of ionized region by mass [1.e45 g]: ', totalGasMass
+                     print*, '                                         [Msol]   : ', totalGasMass*5.025e11
 
 
                  print*, 'Total volume of the active region [e45 cm^3]: ', totalVolume
