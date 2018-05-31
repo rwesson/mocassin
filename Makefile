@@ -5,7 +5,7 @@ LD = mpif90
 ifeq ($(FC),ifort)
   FFLAGS += -cpp -DPREFIX=\"$(PREFIX)\" -module source/
 else
-  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -I/usr/include/mpich
+  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -I/usr/include
 endif
 
 #IBM
@@ -84,6 +84,12 @@ install: mocassin mocassinWarm mocassinOutput mocassinPlot
 	install mocassinOutput $(DESTDIR)$(PREFIX)/bin
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/mocassin*
-	rm -f $(MANDIR)/mocassin*.1.gz
+	rm -f $(DESTDIR)$(PREFIX)/bin/mocassin
+	rm -f $(DESTDIR)$(PREFIX)/bin/mocassinOutput
+	rm -f $(DESTDIR)$(PREFIX)/bin/mocassinPlot
+	rm -f $(DESTDIR)$(PREFIX)/bin/mocassinWarm
+	rm -f $(MANDIR)/mocassin.1.gz
+	rm -f $(MANDIR)/mocassinOutput.1.gz
+	rm -f $(MANDIR)/mocassinPlot.1.gz
+	rm -f $(MANDIR)/mocassinWarm.1.gz
 	rm -rf $(DESTDIR)$(PREFIX)/share/mocassin
