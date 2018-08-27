@@ -2219,7 +2219,7 @@ module emission_mod
 
       nResLines =0
       do i = 1, safeLimit
-         read(unit=19,fmt='(A2,A110,I4)',iostat=ios) label,reader, nmul
+         read(unit=19,fmt='(A2,A111,I4)',iostat=ios) label,reader, nmul
          if (ios/=0) exit
          do j = 1, nmul
             read(unit=19,fmt=*, iostat=ios)
