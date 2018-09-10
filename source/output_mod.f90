@@ -2664,6 +2664,7 @@ endif
 
          open (unit=74,file='output/equivalentTau.out',action='write', position='rewind',&
               & iostat=ios, status='unknown')
+         write (74,*) "# frequency (Ryd)  wavelength (um)    equivalentTau    SED"
 
          do freq = 1, nbins
             if (SEDnoExt(freq)>0. .and. SED(freq,0)>0.) then
