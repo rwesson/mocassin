@@ -26,7 +26,7 @@ else
 endif
 
 # get version from changelog if debian package, or git log otherwise
-VERSION := $(shell if [ -e debian/ ]; then dpkg-parsechangelog -S version; else git describe --always --tags --dirty; fi)
+VERSION := $(shell if [ -e debian/ ]; then dpkg-parsechangelog -S version; elif [ "`command -v git`" != "" ]; then git describe --always --tags --dirty; else echo "2.0.73"; fi)
 
 # set flags
 

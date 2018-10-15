@@ -56,7 +56,7 @@ program MoCaSSiN
     call mpi_comm_size(MPI_COMM_WORLD, numtasks, ierr)
 
     if (taskid == 0) then
-        print*, "MOCASSIN 2005 Version 2.0.73"
+        print*, "MOCASSIN version ",VERSION
         print*, "Data directories: ",PREFIX,"/share/mocassin/data,"
         print*, "                  ",PREFIX,"/share/mocassin/dustData"
         print*, " "
