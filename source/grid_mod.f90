@@ -3589,27 +3589,21 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
 
          call locate(xA, starPosition(i)%x, xP)
          if (xP<nxA) then
-            if (starPosition(i)%x > &
-                 & (xA(xP)+xA(xP+1))/2.) &
-                 xP=xP+1
+            if (starPosition(i)%x > (xA(xP)+xA(xP+1))/2.) xP=xP+1
          end if
 
          call locate(yA, starPosition(i)%y, yP)
          if (yP<nyA) then
-            if (starPosition(i)%y > &
-                 & (yA(yP)+yA(yP+1))/2.) &
-                 yP=yP+1
+            if (starPosition(i)%y > (yA(yP)+yA(yP+1))/2.) yP=yP+1
          end if
 
          call locate(zA, starPosition(i)%z, zP)
          if (zP<nzA) then
-            if (starPosition(i)%z > &
-                 & (zA(zP)+zA(zP+1))/2.) &
-                 zP=zP+1
+            if (starPosition(i)%z > (zA(zP)+zA(zP+1))/2.) zP=zP+1
          end if
 
 
-         if (grid(1)%active(xp,yp,zp)>=0) then
+         if (grid(1)%active(xp,yp,zp).ge.0) then
             starIndeces(i,1) = xP
             starIndeces(i,2) = yP
             starIndeces(i,3) = zP
