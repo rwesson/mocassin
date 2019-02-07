@@ -565,8 +565,12 @@ module set_input_mod
                lginputGasMass = .true.
                print*,"Using gasMass keyword. Be sure to specify gas density file or Hdensity 1.0"
             case default
-                print*, "! readInput: unrecognised keyword in model parameter input file", &
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword
+               if (keyword(1:1).ne."#") then
+                 print*, "! readInput: unrecognised keyword in model parameter input file", &
 &                        in_file, keyword
+               endif
             end select
 
          end do
@@ -729,9 +733,11 @@ module set_input_mod
            print*, "! readInput [warning]: plane ionizing field specified - cannot use&
                 & symmetricXYZ - removed."
            lgSymmetricXYZ = .false.
-        else if (TStellar(1) == 0. .and. Tdiffuse==0. .and. contShape(1) /= 'powerlaw') then
-            print*, "! readInput: TStellar missing from model parameter input file"
-            stop
+        else if (TStellar(1) == 0. .and. Tdiffuse==0. .and. size(contShape).ge.1) then
+            if (contShape(1) /= 'powerlaw') then
+              print*, "! readInput: TStellar missing from model parameter input file"
+              stop
+            endif
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
             stop
