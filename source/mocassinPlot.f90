@@ -13,6 +13,7 @@ program MoCaSSiNplot
     use output_mod
     use set_input_mod
     use xSec_mod
+    use readdata_mod
 
     implicit none
 
@@ -61,7 +62,7 @@ program MoCaSSiNplot
 
 
     if (taskid == 0) then
-        print*, "MOCASSIN 2005 plot Version 2.00"
+        print*, "MOCASSIN 2005 plot Version ",VERSION
         print*, " "
     end if
 
@@ -75,6 +76,8 @@ program MoCaSSiNplot
 
     ! prepare atomica data stuff
     call makeElements()
+    call readData()
+    HeIIRecLines = HeIIRecLinedata
 
     maxCells = grid3D(1)%nCells
     do iG = 1, ngrids
@@ -155,7 +158,6 @@ program MoCaSSiNplot
     call hdatx
     ! read in data from benj skil smit 99
     call readHeIRecLines()
-
 
     do iG = 1, nGrids
 
@@ -732,6 +734,7 @@ program MoCaSSiNplot
              & ionDenUsed(elementXref(1),2)*&
              & NeUsed*Lalpha
 
+        HeIIRecLines = HeIIRecLineData
 
         ! calculate HeII 4686 [E-25 ergs*cm^3/s]
         HeII4686 = 10.**(-.997*log10(TeUsed)+5.16)

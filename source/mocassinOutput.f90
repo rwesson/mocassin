@@ -32,7 +32,7 @@ program MoCaSSiNoutput
     lgRecombination = .true.
 
     if (taskid == 0) then
-        print*, "MOCASSIN 2005 output Version 2.00"
+        print*, "MOCASSIN 2005 output Version ",VERSION
         print*, "Creating output files from current grid*.out files "
         print*, " stored in the output/ directory"
         print*, " "
