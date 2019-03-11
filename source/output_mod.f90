@@ -1187,7 +1187,8 @@ endif
               write(10,*) "Recombination Lines for CII, Davey et al. (2000)"
               write(10,*)
               do i = 1, 159
-                 write(10,*) recLambdaCII(i), recLinesFlux(iAb,4,i)
+                 write(10,*) recLambdaCII(i), recLinesFlux(iAb,4,i), iLine
+                 iLine = iLine + 1
               end do
 
               write(10,*)
@@ -1195,12 +1196,14 @@ endif
               write(10,*) "Recombination Lines for NII, Kisielius & Storey(2000)"
               write(10,*)
               do i = 1,115
-                 write(10,*) recLambdaN33II(i), recLinesFlux(iAb,5,i)
+                 write(10,*) recLambdaN33II(i), recLinesFlux(iAb,5,i), iLine
+                 iLine = iLine + 1
               end do
               write(10,*) "3d--4f Escalante & Victor(1990)"
               write(10,*)
               do i = 1,23
-                 write(10,*) recLambdaN34II(i), recLinesFlux(iAb,6, i)
+                 write(10,*) recLambdaN34II(i), recLinesFlux(iAb,6, i), iLine
+                 iLine = iLine + 1
               end do
 
               write(10,*)
@@ -1208,7 +1211,8 @@ endif
               write(10,*) "Recombination Lines for OII, Storey & Hummer(1994) and Liu et al. (1995)"
               write(10,*)
               do i = 1, 415
-                 write(10,*) recLambdaOII(i), recLinesFlux(iAb,1,i)
+                 write(10,*) recLambdaOII(i), recLinesFlux(iAb,1,i), iLine
+                 iLine = iLine + 1
               end do
 
               write(10,*)
@@ -1217,7 +1221,8 @@ endif
                    & and Storey (private commumication)"
               write(10,*)
               do i = 1,439
-                 write(10,*) recLambdaNeII(i), recLinesFlux(iAb,3,i)
+                 write(10,*) recLambdaNeII(i), recLinesFlux(iAb,3,i), iLine
+                 iLine = iLine + 1
               end do
 
               write(10,*)
@@ -1225,7 +1230,8 @@ endif
               write(10,*) "Recombination Lines for MgII 4481, similar to CII 4667"
               write(10,*)
               write(10,*) "4481.21 ", recLinesFlux(iAb,2,1)+recLinesFlux(iAb,2,2)&
-                   &+recLinesFlux(iAb,2,3)
+                   &+recLinesFlux(iAb,2,3), iLine
+                 iLine = iLine + 1
 
            end if
 
