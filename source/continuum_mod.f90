@@ -35,6 +35,7 @@ module continuum_mod
         ! local variables
 
         character(len=50) :: filein          ! input file name
+        character(len=1) :: junk             ! used in file reading
 
         integer :: err                       ! allocation error status
         integer :: i, j, k, iStar            ! counters
@@ -224,8 +225,9 @@ module continuum_mod
                     !       http://astro.uni-tuebingen.de/~rauch/
 
                     ! check if the end of the file has been reached
-                    read(unit=12, fmt=*, iostat=ios)
+                    read(unit=12, fmt=*, iostat=ios) junk
                     if (ios < 0) exit ! end of file reached
+                    if (junk.eq."*") cycle
 
                     backspace(12)
                     read(12, *) enArray(j), Hflux(j)
