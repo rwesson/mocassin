@@ -1840,7 +1840,7 @@ module grid_mod
            open (unit= 71, file=gridList,  action="read", status = "old", position = "rewind", &
                 & iostat = ios)
            if (ios /= 0) then
-              print*, "! setsubGrids: can't open grid list file", gridList
+              print*, "! setsubGrids: can't open grid list file ", gridList
               stop
            end if
 
@@ -2029,21 +2029,21 @@ module grid_mod
               open (unit= 72, file=dFileRead,  action="read", status = "old", position = "rewind", &
                    & iostat = ios)
               if (ios /= 0) then
-                 print*, "! setsubGrids: can't open subgrid density file", dFileRead
+                 print*, "! setsubGrids: can't open subgrid density file ", dFileRead
                  stop
               end if
 
               if (lgDust) then
                  allocate(NdustTemp(1:grid(iG)%nx,1:grid(iG)%ny,1:grid(iG)%nz), stat = err)
                  if (err /= 0) then
-                    print*, "! setSubGrids: can't allocate NdustTemp memory for subGrid", iG
+                    print*, "! setSubGrids: can't allocate NdustTemp memory for subGrid ", iG
                     stop
                  end if
                  NdustTemp = 0.
                  if (lgMultiDustChemistry) then
                     allocate(dustAbunIndexTemp(1:grid(iG)%nx,1:grid(iG)%ny,1:grid(iG)%nz), stat = err)
                     if (err /= 0) then
-                       print*, "! setSubGrids: can't allocate dustAbunIndexTemp memory for subGrid", iG
+                       print*, "! setSubGrids: can't allocate dustAbunIndexTemp memory for subGrid ", iG
                        stop
                     end if
                     dustAbunIndexTemp = 0.
@@ -2062,7 +2062,7 @@ module grid_mod
               if (lgGas) then
                  allocate(HdenTemp(1:grid(iG)%nx, 1:grid(iG)%ny, 1:grid(iG)%nz), stat = err)
                  if (err /= 0) then
-                    print*, "! setSubGrid: can't allocate sub grid memory: HdenTemp", iG
+                    print*, "! setSubGrid: can't allocate sub grid memory: HdenTemp ", iG
                     stop
                  end if
                  HdenTemp = 0.
