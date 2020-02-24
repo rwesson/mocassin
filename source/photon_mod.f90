@@ -29,7 +29,7 @@ module photon_mod
         integer, intent(in)            :: n           ! number of energy packets
         integer, intent(in)            :: iStar       ! central star index
 
-        integer, intent(inout), optional &
+        integer, intent(in), optional &
              & :: gpLoc                               ! local grid (only used for extra diffuse sources)
         integer, intent(inout), optional &
              & :: cellLoc(3)                          ! local cell (only used for extra diffuse sources)
