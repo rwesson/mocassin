@@ -75,9 +75,9 @@ install: mocassin mocassinWarm mocassinOutput mocassinPlot
 	cp -R examples $(DESTDIR)$(PREFIX)/share/mocassin
 	install -m 644 man/mocassin.1 $(MANDIR)
 	gzip -f $(MANDIR)/mocassin.1
-	ln -s -f $(MANDIR)/mocassin.1.gz $(MANDIR)/mocassinWarm.1.gz
-	ln -s -f $(MANDIR)/mocassin.1.gz $(MANDIR)/mocassinOutput.1.gz
-	ln -s -f $(MANDIR)/mocassin.1.gz $(MANDIR)/mocassinPlot.1.gz
+	ln -s -f mocassin.1.gz $(MANDIR)/mocassinWarm.1.gz
+	ln -s -f mocassin.1.gz $(MANDIR)/mocassinOutput.1.gz
+	ln -s -f mocassin.1.gz $(MANDIR)/mocassinPlot.1.gz
 	install mocassin $(DESTDIR)$(PREFIX)/bin
 	install mocassinWarm $(DESTDIR)$(PREFIX)/bin
 	install mocassinPlot $(DESTDIR)$(PREFIX)/bin
