@@ -252,6 +252,7 @@ module iteration_mod
               call initResLines(grid(1:nGrids))
 
               do iG = 1, nGrids
+                 if (allocated(fEscapeResPhotonsTemp)) deallocate(fEscapeResPhotonsTemp)
                  allocate(fEscapeResPhotonsTemp(0:grid(iG)%nCells, 1:nResLines), stat &
                       &= err)
                  if (err /= 0) then
@@ -261,6 +262,7 @@ module iteration_mod
                  end if
                  fEscapeResPhotonsTemp = 0.
 
+                 if (allocated(resLinePacketsTemp)) deallocate(resLinePacketsTemp)
                  allocate(resLinePacketsTemp(0:grid(iG)%nCells), stat &
                       &= err)
                  if (err /= 0) then
@@ -437,7 +439,6 @@ module iteration_mod
                  size = grid(iG)%nCells+1
 
                  if (allocated(fEscapeResPhotonsTemp)) deallocate(fEscapeResPhotonsTemp)
-
                  call mpi_allreduce(grid(iG)%resLinePackets, resLinePacketsTemp, size, &
                       & mpi_real, mpi_sum, mpi_comm_world, ierr)
 
@@ -981,10 +982,19 @@ module iteration_mod
                  end do
               end do
 
-              convPercent               = 100.*convPercent / totCells
-              noHitPercent              = 100.*noHitPercent(iG) / totCells
-              grid(iG)%noIonBal         = 100.*noIonBalPercent(iG) / totCells
-              grid(iG)%noTeBal          = 100.*noTeBalPercent(iG) / totCells
+              if (totCells .gt. 0) then
+                convPercent               = 100.*convPercent / totCells
+                noHitPercent              = 100.*noHitPercent(iG) / totCells
+                grid(iG)%noIonBal         = 100.*noIonBalPercent(iG) / totCells
+                grid(iG)%noTeBal          = 100.*noTeBalPercent(iG) / totCells
+              else
+                print *,"! iterationMC: no active cells in grid ",iG
+                convPercent               = 0
+                noHitPercent              = 0
+                grid(iG)%noIonBal         = 0
+                grid(iG)%noTeBal          = 0
+              endif
+
               totPercent = totPercent + convPercent*grid(iG)%nCells/100.
 
               if (taskid == 0) then

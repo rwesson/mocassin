@@ -1951,6 +1951,12 @@ module emission_mod
     character(len = *), &
          & intent(in)  :: file_name   ! ionic data file name
 
+
+    if (ionDenUp .ne. ionDenUp) then !NaN test, results from division by zero in the call. to be fixed upstream from here
+      fLineEm = 0.d0
+      return
+    endif
+
     do i=3,nelements
       do j=1,10
         if (trim(atomic_data_array(i,j)%ion) .eq. trim(file_name)) then

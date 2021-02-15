@@ -39,7 +39,7 @@ program MoCaSSiNwarm
     lgWarm = .true.
 
     if (taskid == 0) then
-        print*, "MOCASSIN 2005 warm Version 2.00"
+        print*, "MOCASSIN 2005 warm Version ",VERSION
         print*, " "
     end if
 

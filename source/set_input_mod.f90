@@ -25,6 +25,7 @@ module set_input_mod
         character(len=50)   :: multiPhotoSources ! stars file
 
         logical :: lgOutputExists ! to check for existence of output directory
+        real                :: nphotonsin ! to allow scientific notation in input
 
         ! set default values and set non oprional values to 0 or 0. or "zero"
 
@@ -279,7 +280,8 @@ module set_input_mod
                Lstar=0.
             case ("autoPackets")
                backspace 10
-               read(unit=10, fmt=*, iostat=ios) keyword, convIncPercent, nPhotIncrease, maxPhotons
+               read(unit=10, fmt=*, iostat=ios) keyword, convIncPercent, nPhotIncrease, nphotonsin
+               maxPhotons=int(nphotonsin,int64)
                lgAutoPackets = .true.
                !print*, keyword, convIncPercent, nPhotIncrease, maxPhotons
                if (maxPhotons .eq. 0) then
@@ -378,7 +380,8 @@ module set_input_mod
                 !print*, keyword, maxIterateMC, minConvergence
             case ("nPhotons")
                 backspace 10
-                read(unit=10, fmt=*, iostat=ios) keyword, nPhotonsTot
+                read(unit=10, fmt=*, iostat=ios) keyword, nphotonsin
+                nPhotonsTot=int(nphotonsin,int64)
                 !print*, keyword, nPhotonsTot
             case ("nx")
                 backspace 10
@@ -562,8 +565,12 @@ module set_input_mod
                lginputGasMass = .true.
                print*,"Using gasMass keyword. Be sure to specify gas density file or Hdensity 1.0"
             case default
-                print*, "! readInput: unrecognised keyword in model parameter input file", &
+               backspace 10
+               read(unit=10, fmt=*, iostat=ios) keyword
+               if (keyword(1:1).ne."#") then
+                 print*, "! readInput: unrecognised keyword in model parameter input file", &
 &                        in_file, keyword
+               endif
             end select
 
          end do
@@ -726,9 +733,11 @@ module set_input_mod
            print*, "! readInput [warning]: plane ionizing field specified - cannot use&
                 & symmetricXYZ - removed."
            lgSymmetricXYZ = .false.
-        else if (TStellar(1) == 0. .and. Tdiffuse==0. .and. contShape(1) /= 'powerlaw') then
-            print*, "! readInput: TStellar missing from model parameter input file"
-            stop
+        else if (TStellar(1) == 0. .and. Tdiffuse==0. .and. size(contShape).ge.1) then
+            if (contShape(1) /= 'powerlaw') then
+              print*, "! readInput: TStellar missing from model parameter input file"
+              stop
+            endif
         else if (R_in < 0.) then
             print*, "! readInput: Invalid Rin parameter in the input file", R_in
             stop

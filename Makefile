@@ -2,12 +2,6 @@
 FC = mpif90
 LD = mpif90
 
-ifeq ($(FC),ifort)
-  FFLAGS += -cpp -DPREFIX=\"$(PREFIX)\" -module source/
-else
-  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -I/usr/include
-endif
-
 #IBM
 #FC = mpxlf90_r
 #LD = mpxlf90_r
@@ -23,7 +17,25 @@ endif
 #LD = f90
 #FFLAGS += -64 -C -mpio -OPT:Olimit=3495 -O3 -lmpi -cpp -DPREFIX=\"$(PREFIX)\"
 
-PREFIX=/usr
+# set prefix depending on OS
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+  PREFIX=/usr/local
+else
+  PREFIX=/usr
+endif
+
+# get version from changelog if debian package, or git log otherwise
+VERSION := $(shell if [ -e debian/ ]; then dpkg-parsechangelog -S version; elif [ "`command -v git`" != "" ]; then git describe --always --tags --dirty; else echo "2.0.73"; fi)
+
+# set flags
+
+ifeq ($(FC),ifort)
+  FFLAGS += -cpp -DPREFIX=\"$(PREFIX)\" -DVERSION=\"$(VERSION)\" -module source/
+else
+  FFLAGS += -cpp -Jsource/ -ffree-line-length-0 -lm -DPREFIX=\"$(PREFIX)\" -DVERSION=\"$(VERSION)\" -I/usr/local/include
+endif
+
 MANDIR=$(DESTDIR)$(PREFIX)/share/man/man1
 SOURCES = source/constants_mod.o source/vector_mod.o source/common_mod.o source/interpolation_mod.o \
 	source/set_input_mod.o source/hydro_mod.o source/ph_mod.o source/composition_mod.o \
@@ -67,12 +79,13 @@ clean:
 
 install: mocassin mocassinWarm mocassinOutput mocassinPlot
 	test -e $(DESTDIR)$(PREFIX)/share/mocassin || mkdir -p $(DESTDIR)$(PREFIX)/share/mocassin
+	test -e $(DESTDIR)$(PREFIX)/share/doc/mocassin || mkdir -p $(DESTDIR)$(PREFIX)/share/doc/mocassin
 	test -e $(DESTDIR)$(PREFIX)/bin || mkdir -p $(DESTDIR)$(PREFIX)/bin
 	test -e $(MANDIR) || mkdir -p $(MANDIR)
 	cp -R data $(DESTDIR)$(PREFIX)/share/mocassin
 	cp -R dustData $(DESTDIR)$(PREFIX)/share/mocassin
 	cp -R benchmarks $(DESTDIR)$(PREFIX)/share/mocassin
-	cp -R examples $(DESTDIR)$(PREFIX)/share/mocassin
+	cp -R examples $(DESTDIR)$(PREFIX)/share/doc/mocassin
 	install -m 644 man/mocassin.1 $(MANDIR)
 	gzip -f $(MANDIR)/mocassin.1
 	ln -s -f mocassin.1.gz $(MANDIR)/mocassinWarm.1.gz
@@ -93,3 +106,4 @@ uninstall:
 	rm -f $(MANDIR)/mocassinPlot.1.gz
 	rm -f $(MANDIR)/mocassinWarm.1.gz
 	rm -rf $(DESTDIR)$(PREFIX)/share/mocassin
+	rm -rf $(DESTDIR)$(PREFIX)/share/doc/mocassin

@@ -16,7 +16,7 @@ mocassin, mocassinWarm, mocassinOutput, mocassinPlot
 
 The benchmark problems
 
-Once you have downloaded, unpacked and compiled \fBmocassin\fR successfully you can first of all try to run one or more of the available benchmark problems. These were designed at a series of workshops on photoionised plasma codes held at Meudon (France) and Lexington (USA). The latest version of these benchmarks are included in Pequignot et al. (2001) in Spectroscopic Challenges of Photoionised Plasmas, ASP Conference Series Vol 247; G. Ferland and D.W. Savina eds (http://adsabs.harvard.edu/abs/2001ASPC..247.....F). Should these conference proceedings not be available to you, the same benchmarks are also reported in Ercolano et al., 2003, MNRAS, 340, 1136 (http://cdsads.u-strasbg.fr/abs/2003MNRAS.340.1136E). Here you will also find some more general info about \fBmocassin\fR. (There is also a link to this paper on the publications page (http://mocassin.nebulousresearch.org/publications.php)).
+Once you have downloaded, unpacked and compiled \fBmocassin\fR successfully you can first of all try to run one or more of the available benchmark problems. These were designed at a series of workshops on photoionised plasma codes held at Meudon (France) and Lexington (USA). The latest version of these benchmarks are included in Pequignot et al. (2001) in Spectroscopic Challenges of Photoionised Plasmas, ASP Conference Series Vol 247; G. Ferland and D.W. Savina eds (http://adsabs.harvard.edu/abs/2001ASPC..247.....F). Should these conference proceedings not be available to you, the same benchmarks are also reported in Ercolano et al., 2003, MNRAS, 340, 1136 (http://cdsads.u-strasbg.fr/abs/2003MNRAS.340.1136E). Here you will also find some more general info about \fBmocassin\fR. (There is also a link to this paper on the publications page (http://mocassin.nebulousresearch.org/publications)).
 
 Please note that the \fBmocassin\fR results included in the Pequignot et al. (2001) (http://cdsads.u-strasbg.fr/abs/2001ASPC..247..533P) were only from a very early version of the code. Best results are those listed in the Ercolano et al., 2003, MNRAS, 340, 1136 (http://cdsads.u-strasbg.fr/abs/2003MNRAS.340.1136E) paper.
 
@@ -110,7 +110,7 @@ As for the 1D benchmarks you will have to copy the input files of the benchmark 
 .SH Running things other than benchmark cases
 
 
-Once you have convinced yourself that \fBmocassin\fR is behaving as it should, you can run your own simulations. If you are not confident that this is the case, please contact me (http://mocassin.nebulousresearch.org/contact.php) before going any further.
+Once you have convinced yourself that \fBmocassin\fR is behaving as it should, you can run your own simulations. If you are not confident that this is the case, please contact me (http://mocassin.nebulousresearch.org/contact) before going any further.
 
 The first step is to define your model. This is done via a set of keywords included in the input.in file. YOU SHOULD NEVER HAVE TO CHANGE ANYTHING IN THE SOURCE CODE (I hope). If you find you have to, please let me know. The rest of this section will list and describe all the keywords that can be included in the input file. The number of keywords you decide to use and the order you decide to list them in is entirely up to you. If you have missed out some required and fundamental keyword the simulation will stop and tell you what you have missed out. However, you should be aware that, for most of these keywords, default values are defined, so make sure that the default value is actually what you want before you decide to leave a given keyword out. Default values to each keyword are given below, enclosed by square brackets. The fundamental keywords, which must be specified in every input file are marked by an asterisk in the square brackets and have no default value.
 
@@ -158,7 +158,7 @@ Default value: \fBblackbody\fR
 
 This is the convergence limit for the variation of a given parameter, in each grid cell from one Monte Carlo iteration to the next (e.g. 0.05 means changes of 5% maximum). In the case of a pure-gas (or gas+dust) simulation the criterion is based on the rate of change of neutral hydrogen. In the case of dust-only the criterion is based on the rate of change of the dust temperatures.
 
-Other convergence criteria can also be used, at the moment, this would require a simple editing of some source modules. If you would like to use a different convergence criterion please email me (http://mocassin.nebulousresearch.org/contact.php) and I can do the editing for you.
+Other convergence criteria can also be used, at the moment, this would require a simple editing of some source modules. If you would like to use a different convergence criterion please email me (http://mocassin.nebulousresearch.org/contact) and I can do the editing for you.
 
 Default value: \fB0.05\fR
 
@@ -515,7 +515,7 @@ Default value: \fB\fR*
 .TP
 .B nStages integer
 
-This is the number of ionisation stages to be used in the model.  Max allowed is currently 10. If you have the atomic data necessary and would like to use more than 10 ionisation stages please contact me (http://mocassin.nebulousresearch.org/contact.php), or if you are confident you can edit the data/fileNames.dat and include the new data files to the pool.
+This is the number of ionisation stages to be used in the model.  Max allowed is currently 10. If you have the atomic data necessary and would like to use more than 10 ionisation stages please contact me (http://mocassin.nebulousresearch.org/contact), or if you are confident you can edit the data/fileNames.dat and include the new data files to the pool.
 
 Default value: \fB7\fR
 
@@ -591,7 +591,7 @@ Default value: \fB.false.\fR
 
 This keyword is used when the ionisation source is from a plane and not from a point source. real1 must contain the value of the incident ionizing flux above υ = real2 [Ryd] (constant at each point on the plane) in units of [phot/s/cm2]. If real2 = 0. then the real1 is assumed to be the bolometric flux.
 
-When this keyword is specified the density distribution must be defined via the densityFile option. The ionizing plane is the x-z plane. the energy packets are reflected when they hit the y-z and the y-x planes and can escape from the x-z planes. (This can be easily changed to suit. please contact me (http://mocassin.nebulousresearch.org/contact.php) if your work requires it to be different)
+When this keyword is specified the density distribution must be defined via the densityFile option. The ionizing plane is the x-z plane. the energy packets are reflected when they hit the y-z and the y-x planes and can escape from the x-z planes. (This can be easily changed to suit. please contact me (http://mocassin.nebulousresearch.org/contact) if your work requires it to be different)
 
 Default value: \fB.false.\fR
 
@@ -730,7 +730,7 @@ Default value: \fB0.\fR
 .B Input files
 
 
-The source files are contained in a subdirectory called source/.  \fBmocassin\fR looks for the input.in file from a subdirectory called input/. The atomic data files should all be contained in a subdirectory named data/. Most of the atomic data files should not need to be changed at all. Unless you decide to update some of them, in which case (under the GPL agreement) you should also email me (http://mocassin.nebulousresearch.org/contact.php) with the changes so that I can include them in the public version of the code. The dust optical data library and other dust related data files are contained in a subdirectory named dustData/.
+The source files are contained in a subdirectory called source/.  \fBmocassin\fR looks for the input.in file from a subdirectory called input/. The atomic data files should all be contained in a subdirectory named data/. Most of the atomic data files should not need to be changed at all. Unless you decide to update some of them, in which case (under the GPL agreement) you should also email me (http://mocassin.nebulousresearch.org/contact) with the changes so that I can include them in the public version of the code. The dust optical data library and other dust related data files are contained in a subdirectory named dustData/.
 
 The user's input files may be a combination of the following files, depending on the processes included in a given simulation.
 
@@ -834,7 +834,7 @@ The file tauNu.out contains the frequency dependent optical depth tau(nu) [which
 
 tau.out
 
-THIS FILE IS NOT PRODUCED ANY MORE IN VERSIONS >= 2.02.49 PLEASE CONTACT ME (http://mocassin.nebulousresearch.org/contact.php) IF YOU NEED IT. The file tau.out contains the run of the optical depth from the centre of the nebula to the outer edge along the three axial directions. The optical depths are calculated at the neutral hydrogen ionisation threshold, nu = 1.0 Ryd (13.6 eV), at the neutral Helium ionisation threshold, nu = 1.8 Ryd, and at the singly ionised Helium ionisation threshold, nu = 4.0 Ryd. The first column of the file gives the distance in [cm] from the centre of the nebula and the second column gives the optical depth from the centre to that point. This file is not always calculated correctly if the internal switches are not set up properly. Please use equivalentTau. See description above.
+THIS FILE IS NOT PRODUCED ANY MORE IN VERSIONS >= 2.02.49 PLEASE CONTACT ME (http://mocassin.nebulousresearch.org/contact) IF YOU NEED IT. The file tau.out contains the run of the optical depth from the centre of the nebula to the outer edge along the three axial directions. The optical depths are calculated at the neutral hydrogen ionisation threshold, nu = 1.0 Ryd (13.6 eV), at the neutral Helium ionisation threshold, nu = 1.8 Ryd, and at the singly ionised Helium ionisation threshold, nu = 4.0 Ryd. The first column of the file gives the distance in [cm] from the centre of the nebula and the second column gives the optical depth from the centre to that point. This file is not always calculated correctly if the internal switches are not set up properly. Please use equivalentTau. See description above.
 
 
 ionDen.out
@@ -891,7 +891,7 @@ Calculation of the line emissivities using the first method, although straightfo
 .TP
 .B Running multiple spatial grids
 
-\fBWARNING: This section is out of date -- new help is in the process of being written as we speak -- almost ;-) . Please email me (http://mocassin.nebulousresearch.org/contact.php) if you want to use multiple grids and need some help\fR
+\fBWARNING: This section is out of date -- new help is in the process of being written as we speak -- almost ;-) . Please email me (http://mocassin.nebulousresearch.org/contact) if you want to use multiple grids and need some help\fR
 
 From Version 2.00 onwards you can choose to run simulations including multiple spatial sampling. A typical example of when this would be need is for the modelling of knots embedded in a gaseous nebula. The density enhancement in the knot requires a finer spatial grid than one that may be sufficient to model the main nebula. In such cases the subgrid describing the knot can be modelled simultaneously and self consistently by \fBmocassin\fR's multigrid routines. The radiation field will be safely transferred from mother to sub grids with (hopefully) no error being introduced by the process. The overheads involved only reflect the eventual introduction of extra grid cells.
 
@@ -965,7 +965,7 @@ It is worth noticing that since the x y and z positions in the knot_den.in files
 
 The makeSubgrids.f90 file will also process the cube.dat file (which is the original mother grid density file provided by the user) turning off all the cells that are to be replaced by subgrids. The new file will be called cubenew.dat in the above example and this is the file that must be specified in the input.in file of \fBmocassin\fR.
 
-The makeSubgrids.f90 file can only create subgrids of homogeneous density and chemical indeces. It should be very easy for the user to customise the grids obtained to included their 'favourite' density/chemistry distribution.
+The makeSubgrids.f90 file can only create subgrids of homogeneous density and chemical indices. It should be very easy for the user to customise the grids obtained to included their 'favourite' density/chemistry distribution.
 
 The output from multigrid models will be summarised in the usual files and an overall, as well as grid by grid result will be provided.
 
@@ -1042,7 +1042,7 @@ At present the grain temperature spiking routines are only implemented for carbo
   0.10590E-02 0.99951E+00 0.12000E-03
   .........
 
-Please email me (http://mocassin.nebulousresearch.org/contact.php) if you would like to include T-spiking effects for other species.
+Please email me (http://mocassin.nebulousresearch.org/contact) if you would like to include T-spiking effects for other species.
 
 
 
