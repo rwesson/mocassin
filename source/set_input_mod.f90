@@ -25,7 +25,7 @@ module set_input_mod
         character(len=50)   :: multiPhotoSources ! stars file
 
         logical :: lgOutputExists ! to check for existence of output directory
-        real                :: nphotonsin ! to allow scientific notation in input
+        real(kind=8)        :: nphotonsin ! to allow scientific notation in input
 
         ! set default values and set non oprional values to 0 or 0. or "zero"
 

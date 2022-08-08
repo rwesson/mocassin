@@ -59,7 +59,7 @@ module iteration_mod
            integer                :: freq,nS         ! counters
            integer                :: ifreq, ian      ! counters
            integer                :: ios,iG          ! I/O error status
-           integer                :: load,rest       !
+           integer(kind=8)        :: load,rest       !
            integer                :: size            ! size for mpi
            integer                :: iCell           ! cell index including non-active
            integer                :: iStar           ! star index
@@ -474,9 +474,8 @@ module iteration_mod
            do iStar = 1, nStars
               if(taskid==0) print*, 'iterateMC: Starting transfer for ionising source ', iStar
 
-              load = int(nPhotons(iStar)/numtasks)
+              load = nPhotons(iStar)/numtasks
               rest = mod(nPhotons(iStar), numtasks)
-
 
               if (lgPlaneIonization) then
                  planeIonDistribution = 0
@@ -523,7 +522,7 @@ module iteration_mod
                              cellLoc(2)  = jj
                              cellLoc(3)  = kk
 
-                             load = int(nPhotonsDiffuseLoc/numtasks)
+                             load = nPhotonsDiffuseLoc/numtasks
                              rest = mod(nPhotonsDiffuseLoc, numtasks)
 
 

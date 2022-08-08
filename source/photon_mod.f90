@@ -26,7 +26,7 @@ module photon_mod
     subroutine energyPacketDriver(iStar, n, grid, gpLoc, cellLoc)
         implicit none
 
-        integer, intent(in)            :: n           ! number of energy packets
+        integer(kind=8), intent(in)    :: n           ! number of energy packets
         integer, intent(in)            :: iStar       ! central star index
 
         integer, intent(in), optional &
@@ -46,7 +46,7 @@ module photon_mod
         integer                        :: iCell       ! cell counter
         integer                        :: igrid,ix,iy,iz ! location indeces
         integer                        :: ierr        ! allocation error status
-        integer                        :: iPhot       ! counter
+        integer(kind=8)                :: iPhot       ! counter
         integer                        :: seedSize    ! pseudo random number generator seed
         integer, dimension(2)          :: inX,inY,inZ ! initial position indeces
         integer, allocatable               :: seed(:)     ! seed array
@@ -59,7 +59,6 @@ module photon_mod
         character(len=7)               :: chTypeIn    ! character type
 
         type(vector)                   :: positionIn  ! position of packet absorption
-
 
         if (iStar == 0) then
            deltaE(0) = grid(gpLoc)%LdiffuseLoc(grid(gpLoc)%active(cellLoc(1),cellLoc(2),cellLoc(3)))/NphotonsDiffuseLoc
