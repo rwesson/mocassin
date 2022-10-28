@@ -1093,7 +1093,7 @@ module iteration_mod
                 & .and. nPhotonsTot < maxPhotons .and. totPercentOld > 0.) then
 
               if ( (totPercent-totPercentOld)/totPercentOld <= convIncPercent ) then
-                 nPhotons = nint(nPhotons*nPhotIncrease)
+                 nPhotons = nint(nPhotons*nPhotIncrease,kind=int64)
                  deltaE   = deltaE/nPhotIncrease
 
                  if (taskid==0) &
