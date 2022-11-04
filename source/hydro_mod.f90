@@ -589,16 +589,16 @@ module elements_mod
 
                          read(121, *) i, j, ax,  i1, j1, ax1,  i2, j2, ax2,  i3, j3, ax3
 
-                         atomic_data_array(elem,ion)%a(i,j) = ax
-                         atomic_data_array(elem,ion)%a(i1,j1) = ax1
-                         atomic_data_array(elem,ion)%a(i2,j2) = ax2
-                         atomic_data_array(elem,ion)%a(i3,j3) = ax3
+                         atomic_data_array(elem,ion)%a(j,i) = ax
+                         atomic_data_array(elem,ion)%a(j1,i1) = ax1
+                         atomic_data_array(elem,ion)%a(j2,i2) = ax2
+                         atomic_data_array(elem,ion)%a(j3,i3) = ax3
                       end do
                       read(121, *) i, j, ax,  i1, j1, ax1,  i2, j2, ax2
 
-                      atomic_data_array(elem,ion)%a(i,j) = ax
-                      atomic_data_array(elem,ion)%a(i1,j1) = ax1
-                      atomic_data_array(elem,ion)%a(i2,j2) = ax2
+                      atomic_data_array(elem,ion)%a(j,i) = ax
+                      atomic_data_array(elem,ion)%a(j1,i1) = ax1
+                      atomic_data_array(elem,ion)%a(j2,i2) = ax2
                    else if (iRats == 0) then
                       k=0
                       do i = 1, safeLim
