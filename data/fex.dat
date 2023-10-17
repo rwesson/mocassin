@@ -1,57 +1,86 @@
- 50
-** Atomic data from version 7 of the CHIANTI database **
-%Observed and Theoretical energies (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
-%Observed energy levels (55-172): NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard 
-   Reference Database 61, 1995
-%theoretical energy levels (55-172): Malinovsky et al., 1980, ApJ, 235, 665
-%comment: The second column has the theoretical energies of the  scattering calculations,
-   while the third column has the theoretical energies from the SUPERSTRUCTURE calculation 
-   (with term energy corrections).
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-%   Giulio Del Zanna and Peter Young - July 20, 2005 
-%filename: fe_10.wgfa
-%Observed and Theoretical energies (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
-%Observed energy levels (55-172): NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard
-   Reference Database 61, 1995
-%theoretical energy levels (55-172): Malinovsky et al., 1980, ApJ, 235, 665
-%A values and oscillator strengths (levels 1-54): Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
-%comment: Theoretical wavelengths for levels 1-54 are obtained from the SUPERSTRUCTURE calculation
-   (with term energy corrections) in the .elvlc file, from Del Zanna, Berrington, Mason, 2004, A&A, 422, 731
-%A values (levels 55-172): A SSTRUCT run performed by P.R.Young.
-%comment: the A values for transitions between levels 55-172 have been calculated using a
-    configuration model of Fe X in SSTRUCT. The configurations included were:
+79
+** Atomic data from version 10 of the CHIANTI database **
 
-    3s2 3p5,  3s 3p6,  3s2 3p4 3d,  3s 3p5 3d,  3p6 3d
-    3s2 3p3 3d2,  3s 3p4 3d2
-    3s2 3p4 4s,  3s2 3p4 4p,  3s2 3p4 4d
-    3s2 3p4 4f,  3s2 3p4 5s,  3s2 3p4 5p
-    3s 3p5 4s,   3s 3p5 4p,   3s 3p5 5s
+Theoretical energies:
+Del Zanna, G., Storey, P.J., Badnell, N.R., Mason, H. E., 2012, A&A, 541, A90
 
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-%   Giulio Del Zanna and Peter Young - July 20, 2005
+Note: the theoretical energies are the 'best energies', i.e.
+are the empirically-adjusted theoretical energies.
 
-%filename: fe_10.splups
-%Oscillator strengths (levels 1-54): Del Zanna,  Berrington, Mason, 2004, A&A, 422, 731 (scattering calculation)
-%Collision data for transitions to the first three levels: Pelan, Berrington, A&A 2001, 365, 258
-%Collision data for transitions to levels up to 54: Del Zanna,  Berrington, Mason, 2004, A&A, 422, 731
-%collision strengths for transitions to levels 55-172: Malinovsky et al., ApJ 235, 665, 1980
-%comment: Maxwellian-averaged collision strengths have been calculated in the temperature range 2.5 10^5 - 10^7 K
-%comment:      Although for many of the transitions involving levels >62 there
-     were gf values available, they have been fitted as Type 2
-     transitions. This is because, as Type 1 transitions they were often
-     difficult to fit (the 1-89 transition is a typical example).
+Experimental energies:
+Del Zanna, G., Berrington, K. A., & Mason, H. E. 2004, A&A, 422, 731
+Del Zanna, G. 2012, A&A, 546, A97
 
-     Some of the 4s transitions (levels 55-62) showed unusual shapes
-     in the omega structure (e.g., 2-56, 1-58). I'm not sure how
-     trustworthy this data is.
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-%   Giulio Del Zanna and Peter Young - July 20, 2005
- 2 23
-  1  3s2 3p5 2P3/2
-  2  3s2 3p5 2P1/2
+
+observed energy for level 25 3s2 3p4 3d 2D3/2:  511800
+Shirai, T.; Sugar, J.; Musgrove, A.; Wiese, W. L., Monograph No. 8: ISBN 1-56396-934-3. American Institute of Physics, 2000.
+
+A few experimental energies have been changed following
+Wang,K., Jonsson,P.,  Del Zanna, G. et al., ApJSS, 2020, 246,1
+doi = {10.3847/1538-4365/ab5530}
+
+Energies of level 11(2P 3/2),  12 (4F 5/2), 19(2D 5/2) from
+
+Jupen, C., Isler, R.~C. , and Trabert}, E., 1993, MNRAS, 264, 627
+
+Energy of level 16(4P 3/2) from  Del Zanna et al. (2004)
+Energy of levels 35,36,37,38 (4F) from NIST
+
+observed energy for level 5 3s2 3p4 3d 4D7/2:
+determined utilizing the energy of level 4 and the 2.29+/-0.50 cm-1 energy difference
+between 4D7/2 and 4D5/2 measured by Landi et al. 2020, ApJ, 902, 21
+
+
+Produced for the CHIANTI database v.10 by Giulio Del Zanna  9 Oct 2020
+
+-1
+
+Theoretical energies, gf and A-values:
+Del Zanna, G., Storey, P.J., Badnell, N.R., Mason, H. E., 2012, A&A, 541, A90
+
+Note: the theoretical energies are the 'best energies', i.e.
+are the empirically-adjusted theoretical energies.
+
+
+Experimental energies:
+Del Zanna, G., Berrington, K. A., & Mason, H. E. 2004, A&A, 422, 731
+Del Zanna, G. 2012, A&A, 546, A97
+
+
+observed energy for level 25 3s2 3p4 3d 2D3/2:  511800
+Shirai, T.; Sugar, J.; Musgrove, A.; Wiese, W. L., Monograph No. 8: ISBN 1-56396-934-3. American Institute of Physics, 2000.
+
+A few experimental energies have been changed following
+Wang,K., Jonsson,P.,  Del Zanna, G. et al., ApJSS, 2020, 246,1
+doi = {10.3847/1538-4365/ab5530}
+
+Energies of level 11(2P 3/2),  12 (4F 5/2), 19(2D 5/2) from
+
+Jupen, C., Isler, R.~C. , and Trabert}, E., 1993, MNRAS, 264, 627
+
+Energy of level 16(4P 3/2) from  Del Zanna et al. (2004)
+Energy of levels 35,36,37,38 (4F) from NIST
+
+observed energy for level 5 3s2 3p4 3d 4D7/2:
+determined utilizing the energy of level 4 and the 2.29+/-0.50 cm-1 energy difference
+between 4D7/2 and 4D5/2 measured by Landi et al. 2020, ApJ, 902, 21
+
+
+Produced for the CHIANTI database v.10 by Giulio Del Zanna  9 Oct 2020
+
+-1
+
+Data from 
+Del Zanna, G., Storey, P.J., Badnell, N.R., Mason, H. E., 2012, A&A, 541, A90
+
+Only excitations form the lowest 24 levels are included.
+
+Produced for the CHIANTI database v.8 by Giulio Del Zanna  Mar 2013
+
+
+2 23
+  1  3s2 3p5 2P1
+  2  3s2 3p5 2P0
      100.0
      158.5
      251.2
@@ -66,40 +95,40 @@
    15848.9
    25118.9
    39810.7
-   63095.8
+   63095.7
   100000.0
-  158489.2
-  251188.7
-  398107.1
-  630957.6
+  158489.3
+  251188.6
+  398107.2
+  630957.3
  1000000.0
- 1584892.5
- 2511887.0
+ 1584893.2
+ 2511886.4
 0
-  1  2   3.65e+00
-  0  0   3.65e+00
-  0  0   3.65e+00
-  0  0   3.65e+00
-  0  0   3.65e+00
-  0  0   3.65e+00
-  0  0   3.64e+00
-  0  0   3.64e+00
-  0  0   3.64e+00
-  0  0   3.63e+00
-  0  0   3.61e+00
-  0  0   3.59e+00
-  0  0   3.56e+00
-  0  0   3.51e+00
-  0  0   3.44e+00
-  0  0   3.33e+00
-  0  0   3.17e+00
-  0  0   2.97e+00
-  0  0   2.69e+00
-  0  0   2.27e+00
-  0  0   1.79e+00
-  0  0   1.35e+00
-  0  0   9.90e-01
+  1  2   6.02e+00
+  0  0   6.02e+00
+  0  0   6.02e+00
+  0  0   6.02e+00
+  0  0   6.01e+00
+  0  0   6.01e+00
+  0  0   6.00e+00
+  0  0   5.99e+00
+  0  0   5.98e+00
+  0  0   5.96e+00
+  0  0   5.93e+00
+  0  0   5.90e+00
+  0  0   5.86e+00
+  0  0   5.79e+00
+  0  0   5.50e+00
+  0  0   4.83e+00
+  0  0   4.12e+00
+  0  0   3.45e+00
+  0  0   2.74e+00
+  0  0   2.08e+00
+  0  0   1.53e+00
+  0  0   1.11e+00
+  0  0   8.08e-01
  0 0 0
-  1  2   6.938e+01
+  1  2   6.940e+01
   1  4        0.0
   2  2    15683.1

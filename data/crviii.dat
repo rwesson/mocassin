@@ -1,29 +1,41 @@
- 22
-** Atomic data from version 7 of the CHIANTI database **
-%Observed energy levels: Smitt et al, 1976, Phys. Scr., 13, 293
-%Observed energy levels (3d): Shirai, T., Sugar, J., Musgrove, A., & Wiese, W.L. 2000, J.Phys.Chem.Ref.Data, Monograph 8
-%Theoretical energy levels: Landi & Young 2009, ApJ, in press
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-% Enrico Landi - Nov 2008
-%filename: cr_8.wgfa
-%Observed energy levels: Smitt et al, 1976, Phys. Scr., 13, 293
-%Observed energy levels (3d): Shirai, T., Sugar, J., Musgrove, A., & Wiese, W.L. 2000, J.Phys.Chem.Ref.Data, Monograph 8
-%Theoretical energy levels: Landi & Young 2009, ApJ, in press
-%A and gf values: Landi & Young 2009, ApJ, in press
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-% Enrico Landi - Nov 2008
-
-%filename: cr_8.splups
-%gf values: Landi & Young 2009, ApJ, in press
-%Collision strengths: Landi & Young 2009, ApJ, in press
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-% Enrico Landi - Nov 2008
- 2 23
-  1  3s2.3p5 2P3/2
-  2  3s2.3p5 2P1/2
+34
+** Atomic data from version 10 of the CHIANTI database **
+%File prepared for the CHIANTI atomic database by Peter Young.
+%File: cr_8.elvlc
+%Observed energies:
+Kramida, A., Ralchenko, Yu., Reader, J., and NIST ASD Team (2019).
+NIST Atomic Spectra Database (ver. 5.7.1), [Online].
+Available: https://physics.nist.gov/asd [2020, July 27].
+National Institute of Standards and Technology, Gaithersburg, MD.
+DOI: https://doi.org/10.18434/T4W30F
+%Theoretical energies:
+Aggarwal, K.M., Kato, T., Keenan, F.P. & Murakami, I., 2009, A&A 506, 1501
+%Comment:
+Theoretical energies come from the GRASP model with Breit and QED corrections, i.e., energy
+column 3 of the authors' Table 1.
+%File prepared for the CHIANTI atomic database by Peter Young.
+%File: cr_8.wgfa
+%A-values:
+Aggarwal, K.M., Kato, T., Keenan, F.P. & Murakami, I., 2009, A&A 506, 1501
+%Comment:
+Wavelengths are derived from energies in the elvlc file.
+%File processed with wgfa_tidy by pryoung on 27-Jul-2020
+-1
+%File prepared for the CHIANTI atomic database by Peter Young.
+%File: cr_8.scups
+%Upsilons:
+    Aggarwal, K.M., Kato, T., Keenan, F.P. & Murakami, I., 2009, A&A 506, 1501
+%Comments:
+    Energies are from the theoretical energy column of the elvlc file.
+    gf values are from the wgfa file.
+    Cr VIII has 11 metastable levels (1,2,4,8,10,19,20,21,24,81,106). Only those transitions that have one
+    of these levels as the lower level are included in this file.
+    Upsilons were assessed with write_scups.pro. 171 problem type 6 transitions were found (i.e., upsilons
+    did not tend towards high temperature limit. 102 of these transitions were manually fit with
+    write_scups_gui. The remaining 69 transitions were fit by dropping the high temperature limit point.
+2 23
+  1  3s2.3p5 2P1
+  2  3s2.3p5 2P0
      100.0
      158.5
      251.2
@@ -38,40 +50,40 @@
    15848.9
    25118.9
    39810.7
-   63095.8
+   63095.7
   100000.0
-  158489.2
-  251188.7
-  398107.1
-  630957.6
+  158489.3
+  251188.6
+  398107.2
+  630957.3
  1000000.0
- 1584892.5
- 2511887.0
+ 1584893.2
+ 2511886.4
 0
-  1  2   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.92e-01
-  0  0   3.91e-01
-  0  0   3.91e-01
-  0  0   3.90e-01
-  0  0   3.89e-01
-  0  0   3.88e-01
-  0  0   3.85e-01
-  0  0   3.82e-01
-  0  0   3.76e-01
-  0  0   3.68e-01
-  0  0   3.57e-01
-  0  0   3.44e-01
-  0  0   3.31e-01
-  0  0   3.17e-01
-  0  0   3.04e-01
+  1  2   3.95e-01
+  0  0   3.95e-01
+  0  0   3.95e-01
+  0  0   3.95e-01
+  0  0   3.95e-01
+  0  0   3.96e-01
+  0  0   3.96e-01
+  0  0   3.96e-01
+  0  0   3.96e-01
+  0  0   3.97e-01
+  0  0   3.98e-01
+  0  0   4.00e-01
+  0  0   4.02e-01
+  0  0   4.06e-01
+  0  0   4.12e-01
+  0  0   4.22e-01
+  0  0   4.34e-01
+  0  0   4.48e-01
+  0  0   4.61e-01
+  0  0   4.64e-01
+  0  0   4.52e-01
+  0  0   4.22e-01
+  0  0   3.84e-01
  0 0 0
-  1  2   1.674e+01
+  1  2   1.701e+01
   1  4        0.0
-  2  2     9891.9
+  2  2     9892.0

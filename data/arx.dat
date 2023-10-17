@@ -1,5 +1,6 @@
- 38
-** Atomic data from version 7 of the CHIANTI database **
+40
+** Atomic data from version 10 of the CHIANTI database **
+%filename: ar_10.elvlc
 %Observed energy levels (n=2 levels): Edlen, B., 1983, Physica Scripta, 28, 51
 %Observed energy levels (n=3,4 levels): Lepson, J.K., Beiersdorfer, P., Behar, E., & Kahn, S.M. 2003, ApJ, 590, 604
 %Observed energy levels (4,6,23,64,65,79): Fawcett, B.C., Gabriel, A.H., & Paget, T.M. 1971, J.Phys.B, 4, 986
@@ -7,7 +8,7 @@
 %Observed energy levels (96,97): Connerade, J.P., Peacock, N.J., Speer, R.J., 1971, Solar Physics, 18, 63
 %Observed energy levels (11-17,19,21,22,25-28,31-34,37,38,42,4350,51,54): Bengtsson, P., Engstroem, L., Jupen, C., 1994, Physica Scripta, 49, 297
 %Comment: The energies from Bengtsson et al 1994 have been calculated using their observed wavelengths and
-     the energies of levels 4 to 10 (2s2.2p4.3s configuration) from the sources listed above.
+the energies of levels 4 to 10 (2s2.2p4.3s configuration) from the sources listed above.
 %Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
@@ -20,13 +21,14 @@
 %Observed energy levels (96,97): Connerade, J.P., Peacock, N.J., Speer, R.J., 1971, Solar Physics, 18, 63
 %Observed energy levels (11-17,19,21,22,25-28,31-34,37,38,42,4350,51,54): Bengtsson, P., Engstroem, L., Jupen, C., 1994, Physica Scripta, 49, 297
 %Comment: The energies from Bengtsson et al 1994 have been calculated using their observed wavelengths and
-     the energies of levels 4 to 10 (2s2.2p4.3s configuration) from the sources listed above.
+the energies of levels 4 to 10 (2s2.2p4.3s configuration) from the sources listed above.
 %Theoretical energy levels: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
 %Radiative data: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi - Feb 2007
-
+%File processed with wgfa_tidy by pryoung on  6-Mar-2019
+-1
 %filename: ar_10.splups
 %Oscillator strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
 %Effective collision strengths: Witthoeft, M.C., Whiteford, A.D., & Badnell, N.R. 2007, J.Phys.B, 40, 2969
@@ -37,9 +39,9 @@
 % produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
 %
 % E. Landi - Jan 2007
- 2 23
-  1  2s2.2p5 2P3/2
-  2  2s2.2p5 2P1/2
+2 23
+  1  2s2.2p5 2P1
+  2  2s2.2p5 2P0
      100.0
      158.5
      251.2
@@ -54,15 +56,15 @@
    15848.9
    25118.9
    39810.7
-   63095.8
+   63095.7
   100000.0
-  158489.2
-  251188.7
-  398107.1
-  630957.6
+  158489.3
+  251188.6
+  398107.2
+  630957.3
  1000000.0
- 1584892.5
- 2511887.0
+ 1584893.2
+ 2511886.4
 0
   1  2   1.32e+00
   0  0   1.32e+00
@@ -71,22 +73,22 @@
   0  0   1.31e+00
   0  0   1.31e+00
   0  0   1.30e+00
-  0  0   1.29e+00
-  0  0   1.27e+00
-  0  0   1.24e+00
-  0  0   1.19e+00
-  0  0   1.12e+00
-  0  0   1.02e+00
-  0  0   8.70e-01
-  0  0   7.01e-01
-  0  0   5.63e-01
-  0  0   4.68e-01
+  0  0   1.28e+00
+  0  0   1.26e+00
+  0  0   1.22e+00
+  0  0   1.17e+00
+  0  0   1.09e+00
+  0  0   9.85e-01
+  0  0   8.51e-01
+  0  0   7.04e-01
+  0  0   5.70e-01
+  0  0   4.66e-01
   0  0   3.86e-01
   0  0   3.36e-01
   0  0   3.04e-01
-  0  0   2.81e-01
-  0  0   2.67e-01
-  0  0   2.41e-01
+  0  0   2.82e-01
+  0  0   2.65e-01
+  0  0   2.39e-01
  0 0 0
   1  2   1.230e+02
   1  4        0.0

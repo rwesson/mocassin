@@ -1,35 +1,65 @@
- 27
-** Atomic data from version 7 of the CHIANTI database **
-%observed energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
-   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61.
-%Theoretical energy levels: Sampson, D.H., Zhang, H.L., Fontes, C.J., 1990, ADNDT, 44, 209.
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-% K.P.Dere 1995
-%filename: s_6.wgfa
-%energy levels: Martin, W.C., Sugar, J., Musgrove, A., Dalton, G.R., 1995, 
-   NIST Database for Atomic Spectroscopy, Version 1.0, NIST Standard Reference Database 61
-%oscillator strengths: Sampson, D.H., Zhang, H.L., Fontes, C.J., 1990, ADNDT, 44, 209
-%oscillator strengths: hydrogenic values for 4f-5g
-%oscillator strengths: Wiese, W.L., Smith, M.W., Glennon, B.M.  Atomic Transition Probabilities, 
-     Vol I, Hydrogen through Neon, NSRDS-NBS-4
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-% K.P.Dere 1995
+57
+** Atomic data from version 10 of the CHIANTI database **
 
-%filename: s_6.splups
-%oscillator strengths: Sampson, D.H., Zhang, H.L., Fontes, C.J., 1990, ADNDT, 44, 209
-%oscillator strengths: Wiese, W.L., Smith, M.W., Glennon, B.M.  Atomic Transition Probabilities,
-     Vol I, Hydrogen through Neon, NSRDS-NBS-4
-%comment: hydrogenic values for 4f-5g
-%collision strengths: Sampson, D.H., Zhang, H.L., Fontes, C.J., 1990, ADNDT, 44, 209
-%produced as part of the Arcetri/Cambridge/NRL 'CHIANTI' atomic data base collaboration
-%
-% K.P.Dere 1995
- 3 23
-  1  3s 2S1/2
-  2  3p 2P1/2
-  3  3p 2P3/2
+Observed energies: Kramida, A., Ralchenko, Yu., Reader, J., and NIST ASD Team (2012).
+NIST Atomic Spectra Database (ver. 5.0), [Online]. Available: http://physics.nist.gov/
+
+Theoretical energies:
+outer shell: Liang, G. Y., Whiteford, A. D., & Badnell, N. R. 2009, A&A, 500, 1263
+doi = {10.1051/0004-6361/200911866}
+adsurl = {http://adsabs.harvard.edu/abs/2009A%26A...500.1263L}
+
+inner shell: Liang, G. Y., Whiteford, A. D., & Badnell, N. R. 2009, Journal of Physics B
+Atomic Molecular Physics, 42, 225002
+doi = {10.1088/0953-4075/42/22/225002}
+adsurl = {http://adsabs.harvard.edu/abs/2009JPhB...42v5002L}
+
+
+Produced for the CHIANTI database v.8 by Giulio Del Zanna  Nov 2013
+%file:  s_6.wgfa
+Observed energies: Kramida, A., Ralchenko, Yu., Reader, J., and NIST ASD Team (2012).
+NIST Atomic Spectra Database (ver. 5.0), [Online]. Available: http://physics.nist.gov/
+
+Theoretical energies, gf and A-values:
+outer shell: Liang, G. Y., Whiteford, A. D., & Badnell, N. R. 2009, A&A, 500, 1263
+doi = {10.1051/0004-6361/200911866}
+adsurl = {http://adsabs.harvard.edu/abs/2009A%26A...500.1263L}
+
+inner shell: Liang, G. Y., Whiteford, A. D., & Badnell, N. R. 2009, Journal of Physics B
+Atomic Molecular Physics, 42, 225002
+doi = {10.1088/0953-4075/42/22/225002}
+adsurl = {http://adsabs.harvard.edu/abs/2009JPhB...42v5002L}
+
+Note: only transitions with a branching ratio of 10^-5 have been retained.
+
+The autoionization rates have been calculated using AUTOSTRUCTURE v.24.24 and
+the same set of scaling parameters used by Liang et al.
+
+Produced for the CHIANTI database v.8 by Giulio Del Zanna 20 Jan 2015
+
+autoionization values moved to s_6.auto - K. Dere 2017 Dec 17
+%File processed with wgfa_tidy by pryoung on  6-Mar-2019
+-1
+
+
+Data from:
+outer shell: Liang, G. Y., Whiteford, A. D., & Badnell, N. R. 2009, A&A, 500, 1263
+   doi = {10.1051/0004-6361/200911866}
+   adsurl = {http://adsabs.harvard.edu/abs/2009A%26A...500.1263L}
+   
+inner shell: Liang, G. Y., Whiteford, A. D., & Badnell, N. R. 2009, Journal of Physics B
+Atomic Molecular Physics, 42, 225002
+    doi = {10.1088/0953-4075/42/22/225002}
+   adsurl = {http://adsabs.harvard.edu/abs/2009JPhB...42v5002L}
+
+      
+Produced for the CHIANTI database v.8 by Giulio Del Zanna  Nov 2013
+
+
+3 23
+  1  3s 2S0
+  2  3p 2P0
+  3  3p 2P1
      100.0
      158.5
      251.2
@@ -44,88 +74,88 @@
    15848.9
    25118.9
    39810.7
-   63095.8
+   63095.7
   100000.0
-  158489.2
-  251188.7
-  398107.1
-  630957.6
+  158489.3
+  251188.6
+  398107.2
+  630957.3
  1000000.0
- 1584892.5
- 2511887.0
+ 1584893.2
+ 2511886.4
 0
-  1  2   4.22e+00
-  0  0   4.22e+00
-  0  0   4.22e+00
-  0  0   4.22e+00
-  0  0   4.22e+00
-  0  0   4.22e+00
-  0  0   4.23e+00
-  0  0   4.23e+00
-  0  0   4.24e+00
-  0  0   4.24e+00
-  0  0   4.26e+00
-  0  0   4.28e+00
-  0  0   4.32e+00
-  0  0   4.37e+00
-  0  0   4.44e+00
-  0  0   4.55e+00
-  0  0   4.70e+00
-  0  0   4.91e+00
-  0  0   5.18e+00
-  0  0   5.53e+00
-  0  0   5.98e+00
-  0  0   6.53e+00
-  0  0   7.16e+00
-  1  3   8.40e+00
-  0  0   8.40e+00
-  0  0   8.41e+00
-  0  0   8.41e+00
-  0  0   8.41e+00
-  0  0   8.41e+00
-  0  0   8.42e+00
-  0  0   8.42e+00
-  0  0   8.43e+00
-  0  0   8.45e+00
-  0  0   8.48e+00
-  0  0   8.53e+00
-  0  0   8.59e+00
-  0  0   8.70e+00
-  0  0   8.85e+00
-  0  0   9.06e+00
-  0  0   9.36e+00
-  0  0   9.77e+00
-  0  0   1.03e+01
+  1  2   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.81e+00
+  0  0   3.80e+00
+  0  0   3.79e+00
+  0  0   3.79e+00
+  0  0   3.80e+00
+  0  0   3.85e+00
+  0  0   3.93e+00
+  0  0   4.04e+00
+  0  0   4.17e+00
+  0  0   4.35e+00
+  0  0   4.62e+00
+  0  0   4.99e+00
+  0  0   5.47e+00
+  0  0   6.05e+00
+  0  0   6.70e+00
+  1  3   7.53e+00
+  0  0   7.53e+00
+  0  0   7.53e+00
+  0  0   7.53e+00
+  0  0   7.54e+00
+  0  0   7.54e+00
+  0  0   7.54e+00
+  0  0   7.54e+00
+  0  0   7.54e+00
+  0  0   7.54e+00
+  0  0   7.54e+00
+  0  0   7.55e+00
+  0  0   7.60e+00
+  0  0   7.72e+00
+  0  0   7.90e+00
+  0  0   8.12e+00
+  0  0   8.37e+00
+  0  0   8.73e+00
+  0  0   9.27e+00
+  0  0   1.00e+01
   0  0   1.10e+01
-  0  0   1.19e+01
-  0  0   1.30e+01
-  0  0   1.43e+01
-  2  3   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.25e+00
-  0  0   1.24e+00
-  0  0   1.24e+00
-  0  0   1.23e+00
-  0  0   1.22e+00
-  0  0   1.20e+00
-  0  0   1.18e+00
-  0  0   1.15e+00
-  0  0   1.11e+00
-  0  0   1.08e+00
-  0  0   1.04e+00
-  0  0   1.00e+00
-  0  0   9.69e-01
-  0  0   9.41e-01
+  0  0   1.21e+01
+  0  0   1.34e+01
+  2  3   3.54e+00
+  0  0   3.54e+00
+  0  0   3.54e+00
+  0  0   3.53e+00
+  0  0   3.53e+00
+  0  0   3.53e+00
+  0  0   3.52e+00
+  0  0   3.50e+00
+  0  0   3.47e+00
+  0  0   3.41e+00
+  0  0   3.30e+00
+  0  0   3.17e+00
+  0  0   3.22e+00
+  0  0   3.52e+00
+  0  0   3.56e+00
+  0  0   3.31e+00
+  0  0   2.96e+00
+  0  0   2.53e+00
+  0  0   2.10e+00
+  0  0   1.76e+00
+  0  0   1.50e+00
+  0  0   1.31e+00
+  0  0   1.17e+00
  0 0 0
-  1  2   1.702e+09
-  1  3   1.767e+09
+  1  2   1.690e+09
+  1  3   1.740e+09
   2  3   0.000e+00
   1  2        0.0
   2  2   105873.6
