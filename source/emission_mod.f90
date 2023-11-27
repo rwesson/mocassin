@@ -812,6 +812,10 @@ module emission_mod
         end if
 
         ! data from Benjamin, Skillman and Smits ApJ514(1999)307 [e-25 ergs*cm^3/s]
+
+        if(T4<0.5) T4 =0.5 ! the coefficients are only defined between 5000 and 20000K
+        if(T4>2.) T4 = 2.
+
         if (denint>0.and.denint<3) then
            do i = 1, 34
               x1=HeIrecLineCoeff(i,denint,1)*(T4**(HeIrecLineCoeff(i,denint,2)))*exp(HeIrecLineCoeff(i,denint,3)/T4)
