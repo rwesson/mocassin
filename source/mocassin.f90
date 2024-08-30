@@ -50,6 +50,9 @@ program MoCaSSiN
     real, dimension(2) :: timing              ! cputimer
     integer         :: nhours, nminutes, nseconds
 
+    integer         :: narg
+    CHARACTER(len=2):: option
+
     call cpu_time(timing(1))
     call mpi_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, taskid, ierr)
@@ -60,6 +63,16 @@ program MoCaSSiN
         print*, "Data directories: ",PREFIX,"/share/mocassin/data,"
         print*, "                  ",PREFIX,"/share/mocassin/dustData"
         print*, " "
+    endif
+
+    narg = IARGC()
+    if (narg.eq.1) then
+      call get_command_argument(1,option)
+      if (option .eq. "-v") then
+        call exit(0)
+      else
+        print *,"unrecognised command line option",option,". ignoring..."
+      endif
     endif
 
     ! read the input parameters of the simulation
