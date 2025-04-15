@@ -3090,8 +3090,8 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
             stop
          end if
          viewPointPhi = 0.
-         read(77, *) (viewPointTheta(i), i = 1, nAngleBins)
-         read(77, *) (viewPointPhi(i), i = 1, nAngleBins)
+         read(77, *) (viewPointTheta(i), i = 0, nAngleBins)
+         read(77, *) (viewPointPhi(i), i = 0, nAngleBins)
       end if
       read(77, *) contCube(1),contCube(2)
       read(77, *) lgPhotoelectric
@@ -3144,6 +3144,7 @@ if (allocated(ionDenUsed)) deallocate (ionDenUsed)
          print*,  resLinesTransfer, ' resLinesTransfer'
          print*,  lgDustScattering, ' lgDustScattering'
          print*,  nAngleBins, ' nAngleBins'
+         print*,  (viewPointTheta(i), i = 1, nAngleBins)
          print*,  contCube(1),contCube(2), 'continuumCube'
          print*,  lgPhotoelectric, ' lgPhotoelectric'
          print*,  lgTraceHeating, ' lgTraceHeating'
