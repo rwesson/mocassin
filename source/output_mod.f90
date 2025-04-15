@@ -2723,7 +2723,7 @@ endif
     end subroutine writeSED
 
 
-    subroutine writeContCube(grid, freq1,freq2)
+    subroutine writeContCube(grid, wave1,wave2)
       implicit none
 
       type(grid_type), intent(in) :: grid(*)
