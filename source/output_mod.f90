@@ -2731,7 +2731,8 @@ endif
       integer :: ios,ix,iy,iz, iG        ! I/O error status, counters
       integer ::  freq, imu, ifreq1, ifreq2      ! counters
 
-      real, intent(inout)         :: freq1,freq2 ! wavelengths in um
+      real, intent(in)            :: wave1,wave2 ! wavelengths in um
+      real                        :: freq1,freq2
       real                        :: contI(0:nanglebins) ! continuum int in band
 
       print*, 'in writeContCube'
@@ -2745,14 +2746,16 @@ endif
          stop
       end if
 
-      freq1 = c/(freq1*1.e-4*fr1Ryd)
-      freq2 = c/(freq2*1.e-4*fr1Ryd)
+      freq1 = c/(wave1*1.e-4*fr1Ryd)
+      freq2 = c/(wave2*1.e-4*fr1Ryd)
 
       call locate(nuArray(1:nbins), freq1, ifreq2)
       if (ifreq2 <= 0) ifreq2=1
 
       call locate(nuArray(1:nbins), freq2, ifreq1)
       if (ifreq1 <= 0) ifreq1=1
+
+      print*,'! writeContCube: nuArray indices used - ',ifreq1, ifreq2, freq1,freq2
 
 
       do iG = 1, nGrids
@@ -2766,8 +2769,7 @@ endif
 
                      do imu=0,nanglebins
                         contI(imu)=0.
-!                        do freq = ifreq1, ifreq2
-                        do freq = 1, nbins
+                        do freq = ifreq1, ifreq2
                            contI(imu) = contI(imu)+&
                                 & grid(iG)%escapedPackets(grid(iG)%active(ix,iy,iz),freq,imu)
                         end do
