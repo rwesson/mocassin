@@ -293,7 +293,7 @@ module set_input_mod
                 read(unit=10, fmt=*, iostat=ios) keyword
                 lg1D = .true.
                 !print*, keyword
-                print*, 'ERROR: oneD option is not currently avalable!!!!'
+                print*, 'ERROR: oneD option is not currently available!!!!'
                 stop
              case ("densityFile")
                  backspace 10

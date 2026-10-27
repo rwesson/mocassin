@@ -1971,7 +1971,7 @@ module photon_mod
                    else if ( (dS == dSz) .and. (vHat%z < 0.) ) then
                       zP = zP-1
                    else
-                      print*, '! pathSegment: insanity occurred in dS assignement &
+                      print*, '! pathSegment: insanity occurred in dS assignment &
                            & [dS,dSx,dSy,dSz,vHat]', dS,dSx,dSy,dSz,vHat
                    end if
                 else
